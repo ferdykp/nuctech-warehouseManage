@@ -30,4 +30,9 @@ class SparepartHistory extends Model
     {
         return $this->belongsTo(Site::class, 'to_site_id');
     }
+
+    public function site()
+    {
+        return $this->belongsTo(Site::class);
+    }
 }

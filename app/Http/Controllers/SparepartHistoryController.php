@@ -19,14 +19,21 @@ class SparepartHistoryController extends Controller
     public function store(array $data)
     {
         SparepartHistory::create([
-            'sparepart_id'   => $data['sparepart_id'],
-            'from_site_id'   => $data['from_site_id'] ?? null,
-            'to_site_id'     => $data['to_site_id'] ?? null,
-            'action'         => $data['action'],
-            'old_condition'  => $data['old_condition'] ?? null,
-            'new_condition'  => $data['new_condition'] ?? null,
-            'quantity'       => $data['quantity'] ?? 0,
-            'note'           => $data['note'] ?? null,
+            // 'sparepart_id'   => $data['sparepart_id'],
+            // 'from_site_id'   => $data['from_site_id'] ?? null,
+            // 'to_site_id'     => $data['to_site_id'] ?? null,
+            // 'action'         => $data['action'],
+            // 'old_condition'  => $data['old_condition'] ?? null,
+            // 'new_condition'  => $data['new_condition'] ?? null,
+            // 'quantity'       => $data['quantity'] ?? 0,
+            // 'note'           => $data['note'] ?? null,
+            'sparepart_id' => $data['sparepart_id'],
+            'from_site_id' => $data['from_site_id'] ?? null,
+            'to_site_id'   => $data['to_site_id'] ?? null,
+            'action'       => $data['action'],
+            'condition'    => $data['condition'] ?? null,
+            'qty'          => $data['qty'] ?? 0,
+            'note'         => $data['note'] ?? null,
         ]);
     }
 }

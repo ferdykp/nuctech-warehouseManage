@@ -17,6 +17,10 @@
 
             {{-- BODY --}}
             <div class="p-6">
+                @php
+                    $stock = $data->stocks->first();
+                @endphp
+
                 <form action="/{{ $site }}/{{ $data->id }}" method="POST" enctype="multipart/form-data"
                     class="space-y-8">
                     @csrf
@@ -33,8 +37,7 @@
                             {{-- ITEM NAME --}}
                             <div>
                                 <label class="block mb-1 text-sm font-medium">Item Name</label>
-                                <input type="text" name="item_name"
-                                    value="{{ old('item_name', $data->sparepart->item_name) }}"
+                                <input type="text" name="item_name" value="{{ old('item_name', $data->item_name) }}"
                                     class="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-200 focus:outline-none
                                 @error('item_name') border-red-500 @enderror"
                                     required>
@@ -46,7 +49,7 @@
                             {{-- TYPE --}}
                             <div>
                                 <label class="block mb-1 text-sm font-medium">Type</label>
-                                <input type="text" name="type" value="{{ old('type', $data->sparepart->type) }}"
+                                <input type="text" name="type" value="{{ old('type', $data->type) }}"
                                     class="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-200 focus:outline-none
                                 @error('type') border-red-500 @enderror"
                                     required>
@@ -59,9 +62,19 @@
                             <div class="grid gap-5 md:grid-cols-3 md:col-span-2">
 
                                 {{-- STOCK --}}
-                                <div>
+                                {{-- <div>
                                     <label class="block mb-1 text-sm font-medium">Stock</label>
                                     <input type="number" name="qty" value="{{ old('qty', $data->qty) }}"
+                                        class="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-200 focus:outline-none
+                                    @error('qty') border-red-500 @enderror"
+                                        required>
+                                    @error('qty')
+                                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div> --}}
+                                <div>
+                                    <label class="block mb-1 text-sm font-medium">Stock</label>
+                                    <input type="number" name="qty" value="{{ old('qty', $stock?->qty) }}"
                                         class="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-200 focus:outline-none
                                     @error('qty') border-red-500 @enderror"
                                         required>
@@ -114,12 +127,19 @@
                                             ];
                                         @endphp
 
-                                        @foreach ($conditions as $value => $label)
+                                        {{-- @foreach ($conditions as $value => $label)
                                             <option value="{{ $value }}"
                                                 {{ old('condition', $data->condition) == $value ? 'selected' : '' }}>
                                                 {{ $label }}
                                             </option>
+                                        @endforeach --}}
+                                        @foreach ($conditions as $value => $label)
+                                            <option value="{{ $value }}"
+                                                {{ old('condition', $stock?->condition) == $value ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
                                         @endforeach
+
                                     </select>
 
                                     @error('condition')
@@ -146,7 +166,7 @@
                             <label class="block mb-1 text-sm font-medium">Note</label>
                             <textarea name="note" rows="3"
                                 class="w-full px-4 py-2 border rounded-lg focus:ring focus:ring-blue-200 focus:outline-none
-                            @error('note') border-red-500 @enderror">{{ old('note', $data->sparepart->note) }}</textarea>
+                            @error('note') border-red-500 @enderror">{{ old('note', $data->note) }}</textarea>
                             @error('note')
                                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                             @enderror
@@ -156,8 +176,8 @@
                         <div>
                             <label class="block mb-1 text-sm font-medium">Image</label>
 
-                            @if ($data->sparepart->image)
-                                <img src="{{ asset('storage/' . $data->sparepart->image) }}"
+                            @if ($data->image)
+                                <img src="{{ asset('storage/' . $data->image) }}"
                                     class="object-cover w-24 h-24 mb-3 rounded-lg shadow">
                             @endif
 

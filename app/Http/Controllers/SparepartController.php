@@ -16,56 +16,81 @@ class SparepartController extends Controller
     /* =====================
         HELPER
     ====================== */
-    private function getSite(string $code): Site
+    // private function getSite(string $code): Site
+    // {
+    //     return Site::where('code', $code)->firstOrFail();
+    // }
+    private function getSite(string $slug): Site
     {
-        return Site::where('code', $code)->firstOrFail();
+        return Site::where('slug', $slug)->firstOrFail();
     }
 
-    private function viewPrefix(string $site): string
+    private function viewPrefix(): string
     {
-        return match ($site) {
-            'ebeam' => 'ebeam',
-            'fsjkt' => 'fsjkt',
-            'fssby' => 'fssby',
-            'fssmg' => 'fssmg',
-            'ctmic' => 'ctmic',
-        };
+        return 'spareparts';
     }
 
     /* =====================
         INDEX
     ====================== */
-    public function index(string $site)
+    // public function index(string $site)
+    // {
+    //     $siteData = $this->getSite($site);
+
+    //     $data = Sparepart::whereHas('stocks', function ($q) use ($siteData) {
+    //         $q->where('site_id', $siteData->id);
+    //     })
+    //         ->with([
+    //             // stock hanya untuk site aktif
+    //             'stocks' => function ($q) use ($siteData) {
+    //                 $q->where('site_id', $siteData->id)->with('site');
+    //             },
+
+    //             // history lengkap (untuk modal)
+    //             'histories.fromSite',
+    //             'histories.toSite',
+    //         ])
+    //         ->withSum([
+    //             'stocks as total_qty' => function ($q) use ($siteData) {
+    //                 $q->where('site_id', $siteData->id);
+    //             }
+    //         ], 'qty')
+    //         ->latest()
+    //         ->paginate(10);
+
+    //     $sites = Site::all();
+
+    //     return view(
+    //         $this->viewPrefix($site) . '.index',
+    //         compact('data', 'site', 'siteData', 'sites')
+    //     );
+    // }
+    public function index(string $slug)
     {
-        $siteData = $this->getSite($site);
+        $siteData = $this->getSite($slug);
 
         $data = Sparepart::whereHas('stocks', function ($q) use ($siteData) {
             $q->where('site_id', $siteData->id);
         })
             ->with([
-                // stock hanya untuk site aktif
-                'stocks' => function ($q) use ($siteData) {
-                    $q->where('site_id', $siteData->id)->with('site');
-                },
-
-                // history lengkap (untuk modal)
+                // Memastikan relasi untuk Modal Detail ter-load semua
+                'stocks.site',
                 'histories.fromSite',
                 'histories.toSite',
             ])
-            ->withSum([
-                'stocks as total_qty' => function ($q) use ($siteData) {
-                    $q->where('site_id', $siteData->id);
-                }
-            ], 'qty')
+            ->withSum(['stocks as total_qty' => function ($q) use ($siteData) {
+                $q->where('site_id', $siteData->id);
+            }], 'qty')
             ->latest()
             ->paginate(10);
 
+        // Variabel untuk modal MOVE (Site selain site aktif)
+        $all_sites = Site::with('branch')->where('id', '!=', $siteData->id)->get();
+
+        // Variabel untuk modal DETAIL (Dibutuhkan oleh openDetailModal)
         $sites = Site::all();
 
-        return view(
-            $this->viewPrefix($site) . '.index',
-            compact('data', 'site', 'siteData', 'sites')
-        );
+        return view('spareparts.index', compact('data', 'slug', 'siteData', 'all_sites', 'sites'));
     }
 
 
@@ -87,7 +112,54 @@ class SparepartController extends Controller
     /* =====================
         STORE
     ====================== */
-    public function store(Request $request, string $site)
+    // public function store(Request $request, string $site)
+    // {
+    //     $request->validate([
+    //         'item_name' => 'required|string',
+    //         'type'      => 'required|string',
+    //         'uom'       => 'required|string',
+    //         'qty'       => 'required|integer|min:1',
+    //         'condition' => 'required|in:new,used-good,damaged,repaired',
+    //         'image'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', // ✅
+
+    //     ]);
+
+    //     $siteData = $this->getSite($site);
+    //     $imagePath = null;
+
+    //     if ($request->hasFile('image')) {
+    //         $imagePath = $request->file('image')->store('spareparts', 'public');
+    //     }
+
+
+    //     $sparepart = Sparepart::create([
+    //         'item_name' => $request->item_name,
+    //         'type'      => $request->type,
+    //         'uom'       => $request->uom,
+    //         'note'      => $request->note,
+    //         'image'     => $imagePath, // ✅
+
+    //     ]);
+
+    //     SparepartStock::create([
+    //         'sparepart_id' => $sparepart->id,
+    //         'site_id'      => $siteData->id,
+    //         'condition'    => $request->condition,
+    //         'qty'          => $request->qty,
+    //     ]);
+
+    //     SparepartHistory::create([
+    //         'sparepart_id' => $sparepart->id,
+    //         'to_site_id'   => $siteData->id,
+    //         'action'       => 'CREATE',
+    //         'condition'    => $request->condition,
+    //         'qty'          => $request->qty,
+    //         'note'         => $request->note,
+    //     ]);
+
+    //     return redirect("/$site")->with('success', 'Sparepart berhasil ditambahkan');
+    // }
+    public function store(Request $request, string $slug)
     {
         $request->validate([
             'item_name' => 'required|string',
@@ -95,25 +167,22 @@ class SparepartController extends Controller
             'uom'       => 'required|string',
             'qty'       => 'required|integer|min:1',
             'condition' => 'required|in:new,used-good,damaged,repaired',
-            'image'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', // ✅
-
+            'image'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
-        $siteData = $this->getSite($site);
+        $siteData = $this->getSite($slug);
         $imagePath = null;
 
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('spareparts', 'public');
         }
 
-
         $sparepart = Sparepart::create([
             'item_name' => $request->item_name,
             'type'      => $request->type,
             'uom'       => $request->uom,
             'note'      => $request->note,
-            'image'     => $imagePath, // ✅
-
+            'image'     => $imagePath,
         ]);
 
         SparepartStock::create([
@@ -132,25 +201,40 @@ class SparepartController extends Controller
             'note'         => $request->note,
         ]);
 
-        return redirect("/$site")->with('success', 'Sparepart berhasil ditambahkan');
+        // Redirect menggunakan SLUG yang aktif
+        return redirect()->route('sparepart.index', $slug)->with('success', 'Sparepart berhasil ditambahkan');
     }
 
     /* =====================
         EDIT
     ====================== */
+    // public function edit(string $site, int $id)
+    // {
+    //     $siteData = $this->getSite($site);
+
+    //     $data = Sparepart::whereHas('stocks', function ($q) use ($siteData) {
+    //         $q->where('site_id', $siteData->id);
+    //     })->findOrFail($id);
+
+    //     return view(
+    //         $this->viewPrefix($site) . '.edit',
+    //         compact('data', 'site', 'siteData')
+    //     );
+    // }
     public function edit(string $site, int $id)
     {
         $siteData = $this->getSite($site);
 
-        $data = Sparepart::whereHas('stocks', function ($q) use ($siteData) {
+        $data = Sparepart::with(['stocks' => function ($q) use ($siteData) {
             $q->where('site_id', $siteData->id);
-        })->findOrFail($id);
+        }])->findOrFail($id);
 
         return view(
             $this->viewPrefix($site) . '.edit',
             compact('data', 'site', 'siteData')
         );
     }
+
 
     /* =====================
         UPDATE (MASTER DATA)
@@ -193,36 +277,22 @@ class SparepartController extends Controller
     /* =====================
         SEARCH
     ====================== */
-    public function search(Request $request, string $site)
+    public function search(Request $request, string $slug)
     {
-        $siteData = $this->getSite($site);
+        $siteData = $this->getSite($slug);
         $query = $request->input('search');
 
         $data = Sparepart::query()
-            ->whereHas('stocks', fn($q) => $q->where('site_id', $siteData->id)) // pastikan punya stok di site
-
+            ->whereHas('stocks', fn($q) => $q->where('site_id', $siteData->id))
             ->when($query, function ($q) use ($query, $siteData) {
                 $q->where(function ($sub) use ($query, $siteData) {
-
-                    // 🔹 Search di Sparepart
                     $sub->where('item_name', 'like', "%{$query}%")
                         ->orWhere('type', 'like', "%{$query}%")
-                        ->orWhere('uom', 'like', "%{$query}%")
-
-                        // 🔹 Search di Stock
-                        ->orWhereHas('stocks', function ($q2) use ($query, $siteData) {
-                            $q2->where('site_id', $siteData->id)
-                                ->where(function ($q3) use ($query) {
-                                    // Condition string
-                                    $q3->where('condition', 'like', "%{$query}%")
-                                        // Qty integer: bisa exact match
-                                        ->orWhere('qty', $query);
-                                });
-                        });
+                        ->orWhere('uom', 'like', "%{$query}%");
                 });
             })
             ->with([
-                'stocks' => fn($q) => $q->where('site_id', $siteData->id)->with('site'),
+                'stocks.site',
                 'histories.fromSite',
                 'histories.toSite',
             ])
@@ -231,22 +301,23 @@ class SparepartController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-
+        // Data tambahan untuk Modal yang ada di dalam table.blade.php
+        $all_sites = Site::with('branch')->where('id', '!=', $siteData->id)->get();
         $sites = Site::all();
 
         if ($request->ajax()) {
             return response()->json([
-                'html' => view(
-                    $this->viewPrefix($site) . '.table',
-                    compact('data', 'site', 'siteData', 'sites')
-                )->render()
+                'html' => view('spareparts.table', [
+                    'assets' => $data, // Nama variabel harus konsisten dengan table.blade.php
+                    'slug' => $slug,
+                    'siteData' => $siteData,
+                    'all_sites' => $all_sites,
+                    'sites' => $sites
+                ])->render()
             ]);
         }
 
-        return view(
-            $this->viewPrefix($site) . '.index',
-            compact('data', 'site', 'siteData', 'sites')
-        );
+        return view('spareparts.index', compact('data', 'slug', 'siteData', 'all_sites', 'sites'));
     }
 
 

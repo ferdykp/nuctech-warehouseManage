@@ -33,6 +33,10 @@
                         class="px-4 py-2 text-sm font-medium text-white transition bg-blue-600 rounded-lg hover:bg-blue-700">
                         Manage All Accounts
                     </a>
+                    {{-- <a href="{{ route('site.index') }}"
+                        class="px-4 py-2 text-sm font-medium text-white transition bg-blue-600 rounded-lg hover:bg-blue-700">
+                        Add Site
+                    </a> --}}
                 @endif
             </div>
 

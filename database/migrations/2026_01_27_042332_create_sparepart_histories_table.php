@@ -14,6 +14,11 @@ return new class extends Migration
         Schema::create('sparepart_histories', function (Blueprint $table) {
             $table->id();
 
+            $table->foreignId('site_id')
+                ->nullable()
+                ->constrained()
+                ->nullOnDelete();
+
             $table->foreignId('sparepart_id')
                 ->constrained()
                 ->cascadeOnDelete();

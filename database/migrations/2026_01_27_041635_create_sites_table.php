@@ -13,10 +13,12 @@ return new class extends Migration
     {
         Schema::create('sites', function (Blueprint $table) {
             $table->id();
-            $table->string('code')->unique();   // ebeam, fs6000sby
-            $table->string('name');             // E-Beam Jakarta
-            $table->string('machine_type');
-            $table->boolean('is_active')->default(true);
+            $table->foreignId('branch_id')->constrained('branches')->onDelete('cascade');
+            // $table->string('name');
+            $table->string('machine_name');
+            $table->string('slug')->unique();
+            // $table->string('machine_type');
+            // $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
