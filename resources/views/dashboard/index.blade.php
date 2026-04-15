@@ -9,9 +9,9 @@
                 <div class="flex items-center justify-between p-6">
                     <div>
                         <p class="text-xs font-semibold tracking-wide text-gray-400 uppercase">
-                            Total Laporan Kerusakan
+                            Total Branch
                         </p>
-                        <p class="mt-2 text-3xl font-bold text-gray-800">{{ $totalReport }}</p>
+                        <p class="mt-2 text-3xl font-bold text-gray-800">{{ $totalBranch }}</p>
                     </div>
                     <div class="w-12 h-12 bg-blue-100 rounded-full"></div>
                 </div>
@@ -33,7 +33,7 @@
                 <div class="flex items-center justify-between p-6">
                     <div>
                         <p class="text-xs font-semibold tracking-wide text-gray-400 uppercase">
-                            Jumlah Mesin
+                            Total Machine
                         </p>
                         <p class="mt-2 text-3xl font-bold text-gray-800"> {{ $totalMachine }}
                         </p>
@@ -48,7 +48,7 @@
             <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
                 @foreach (\App\Models\Site::with('branch')->get() as $site)
                     {{-- <a href="{{ route('sites.inventory', $site->slug) }}" --}}
-                    <a href="{{ route('sites.index', $site->slug) }}"
+                    <a href="{{ route('sparepart.index', $site->slug) }}"
                         class="p-4 transition border rounded-lg hover:bg-blue-50 hover:border-blue-300 group">
                         <span
                             class="block font-bold text-blue-600 group-hover:text-blue-800">{{ $site->machine_name }}</span>

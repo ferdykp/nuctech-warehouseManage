@@ -79,10 +79,21 @@
             class="p-6">
             @csrf
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div class="md:col-span-2">
+                {{-- <div class="md:col-span-2">
                     <label class="block mb-1 text-sm font-semibold text-gray-700">Nama Item / Sparepart</label>
                     <input type="text" name="item_name" required placeholder="Contoh: Roller Conveyor"
                         class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition-all">
+                </div> --}}
+                <div>
+                    <label class="block mb-1 text-sm font-semibold text-gray-700">Item Name</label>
+                    <input type="text" name="item_name" required placeholder="Contoh: Roller Conveyor"
+                        class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none">
+                </div>
+
+                <div>
+                    <label class="block mb-1 text-sm font-semibold text-gray-700">Serial Number</label>
+                    <input type="text" name="serial_number" required placeholder="NUC1234"
+                        class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none">
                 </div>
 
                 <div>

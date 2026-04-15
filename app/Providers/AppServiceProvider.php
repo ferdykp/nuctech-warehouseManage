@@ -3,12 +3,14 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\View\View;
-use Illuminate\Support\Facades\Auth;
+// use Illuminate\View\View;
+use Illuminate\Support\Facades\View;
+// use Illuminate\Support\Facades\Auth;
 
 use App\Models\Site;
 use App\Models\Sparepart;
 use App\Models\Report;
+use App\Models\Branch;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -26,21 +28,29 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        view()->composer('*', function ($view) {
-            $role = Auth::check() ? Auth::user()->role : null;
+        $this->app->booted(function () {
 
-            $machineQuery = Site::query();
-            $sparepartQuery = Sparepart::query();
-            $reportQuery = Report::query();
+            \Illuminate\Support\Facades\View::composer('*', function ($view) {
 
-            $dataCounts = [
-                'totalMachine' => $machineQuery->count(),
-                'totalSparepart' => $sparepartQuery->count(),
-                'totalReport' => $reportQuery->count(),
+                // ===== Dashboard Counters =====
+                $dataCounts = [
+                    'totalMachine'   => \App\Models\Site::count(),
+                    'totalSparepart' => \App\Models\Sparepart::count(),
+                    'totalReport'    => \App\Models\Report::count(),
+                    'totalBranch'    => \App\Models\Branch::count()
+                ];
 
-            ];
+                // ===== Sidebar Data =====
+                $sidebarSites = \App\Models\Site::with('branch')
+                    ->orderBy('machine_name')
+                    ->get();
 
-            $view->with($dataCounts);
+                $sidebarBranches = \App\Models\Branch::orderBy('branch_name')->get();
+
+                $view->with($dataCounts)
+                    ->with('sidebarSites', $sidebarSites)
+                    ->with('sidebarBranches', $sidebarBranches);
+            });
         });
     }
 }

@@ -9,65 +9,60 @@
     class="fixed inset-y-0 left-0 z-50 w-64 px-4 py-6 m-3 space-y-6 transition-transform duration-300 ease-in-out 
     bg-[#1B3C53] rounded-lg md:translate-x-0 md:relative md:block h-[calc(100vh-1.5rem)] overflow-y-auto">
 
+
+    {{-- LOGO --}}
     <div class="flex items-center justify-center p-3 bg-white border shadow-sm rounded-xl">
         <a href="/" class="flex items-center space-x-4 group">
             <img src="{{ asset('img/logo-txt-removebg.png') }}"
-                class="h-8 transition-transform duration-300 group-hover:scale-110" alt="ERP Logo">
+                class="h-8 transition-transform duration-300 group-hover:scale-110">
         </a>
     </div>
 
     <nav class="mt-10 space-y-1">
+
+        {{-- DASHBOARD --}}
         <a href="{{ route('dashboard') }}"
-            class="flex items-center px-4 py-2 text-md rounded-lg text-white transition-colors duration-200
-            {{ request()->routeIs('dashboard') ? 'bg-[#2d729b]' : 'hover:bg-[#2d729b]' }}">
-            <i class="w-6 fa-solid fa-gauge-high"></i>
+            class="flex items-center gap-3 px-4 py-2 text-white rounded-lg
+        {{ request()->routeIs('dashboard') ? 'bg-[#2d729b]' : 'hover:bg-[#2d729b]' }}">
+            <i class="w-5 text-center fa-solid fa-gauge-high"></i>
             <span>Dashboard</span>
         </a>
 
-        {{-- MACHINE DROPDOWN --}}
-        {{-- <div x-data="{ open: {{ request()->routeIs('sparepart.*') ? 'true' : 'false' }} }" class="space-y-1">
+        {{-- BRANCHES --}}
+        <a href="{{ route('branches.index') }}"
+            class="flex items-center gap-3 px-4 py-2 text-white rounded-lg
+        {{ request()->routeIs('branches.*') ? 'bg-[#2d729b]' : 'hover:bg-[#2d729b]' }}">
+            <i class="w-5 text-center fa-solid fa-building"></i>
+            <span>Branches</span>
+        </a>
+
+        {{-- MACHINE GROUP --}}
+        <div x-data="{ open: {{ request()->routeIs('sites.*') || request()->routeIs('spareparts.*') ? 'true' : 'false' }} }">
+
             <button @click="open = !open"
-                class="flex items-center justify-between w-full px-4 py-2 text-md text-white rounded-lg hover:bg-[#2d729b] transition-colors duration-200">
-                <div class="flex items-center">
-                    <i class="w-6 fa-solid fa-microchip"></i>
-                    <span>Machine</span>
+                class="flex items-center justify-between w-full px-4 py-2 text-white rounded-lg hover:bg-[#2d729b]">
+
+                <div class="flex items-center gap-3">
+                    <i class="w-5 text-center fa-solid fa-microchip"></i>
+                    <span class="font-medium">Machine</span>
                 </div>
+
                 <i class="text-xs transition-transform duration-300 fa-solid fa-chevron-down"
                     :class="{ 'rotate-180': open }"></i>
             </button>
 
-            <div x-show="open" x-cloak x-transition class="ml-6 space-y-1 border-l border-gray-500/50">
-                @foreach (['fsjkt' => 'FS6000 Jakarta', 'fssby' => 'FS6000 Surabaya', 'fssmg' => 'FS6000 Semarang', 'ebeam' => 'E-Beam'] as $site => $label)
-                    <a href="{{ route('sparepart.index', ['site' => $site]) }}"
-                        class="flex items-center px-4 py-2 text-sm text-white rounded-r-lg hover:bg-[#2d729b]/50 transition-all
-                        {{ request()->route('site') === $site ? 'bg-[#2d729b] border-l-2 border-white' : '' }}">
-                        <i
-                            class="fa-solid {{ $site === 'ebeam' ? 'fa-bolt' : 'fa-location-dot' }} mr-3 text-[10px]"></i>
-                        {{ $label }}
-                    </a>
-                @endforeach
-            </div>
+            {{-- SUB MENU --}}
+            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                class="pl-4 mt-1 ml-3 space-y-1 border-l border-gray-500/50">
 
-        </div> --}}
-
-        {{-- MACHINE DROPDOWN --}}
-        <div x-data="{ open: {{ request()->routeIs('sites.*') ? 'true' : 'false' }} }" class="space-y-1">
-            <button @click="open = !open"
-                class="flex items-center justify-between w-full px-4 py-2 text-md text-white rounded-lg hover:bg-[#2d729b] transition-colors duration-200">
-                <div class="flex items-center">
-                    <i class="w-6 fa-solid fa-microchip"></i>
-                    <span>Machine</span>
-                </div>
-                <i class="text-xs transition-transform duration-300 fa-solid fa-chevron-down"
-                    :class="{ 'rotate-180': open }"></i>
-            </button>
-
-            <div x-show="open" x-cloak x-transition class="ml-6 space-y-1 border-l border-gray-500/50">
-                @foreach (\App\Models\Site::with('branch')->get() as $site)
+                @foreach ($sidebarSites as $site)
                     <a href="{{ route('sparepart.index', $site->slug) }}"
-                        class="flex items-center px-4 py-2 text-sm text-white rounded-r-lg hover:bg-[#2d729b]/50 transition-all">
-                        <i class="fa-solid fa-location-dot  mr-3 text-[10px]"></i>
-                        {{ $site->machine_name }}
+                        class="flex items-center gap-3 py-2 pl-3 pr-2 text-sm text-white rounded-lg hover:bg-[#2d729b]/60
+                    {{ request()->segment(2) == $site->slug ? 'bg-[#2d729b] font-semibold text-emerald-300 border-l-2 border-emerald-400' : '' }}">
+
+                        <i class="fa-solid fa-circle text-[7px] opacity-70"></i>
+                        <span class="truncate">{{ $site->machine_name }}</span>
                     </a>
                 @endforeach
 
@@ -76,24 +71,22 @@
                         class="flex items-center w-full px-4 py-2 text-sm transition-all rounded-r-lg text-emerald-300 hover:bg-emerald-500/20">
                         <i class="mr-3 fa-solid fa-plus"></i> Add Machine </button>
                 @endif
-            </div>
 
+            </div>
         </div>
-        <a href="{{ route('branches.index') }}"
-            class="flex items-center px-4 py-2 text-md rounded-lg text-white transition-colors duration-200
-            {{ request()->routeIs('report') ? 'bg-[#2d729b]' : 'hover:bg-[#2d729b]' }}">
-            <i class="w-6 fa-solid fa fa-file"></i>
-            <span>Branches</span>
-        </a>
+
+        {{-- REPORT --}}
         <a href="{{ route('report.index') }}"
-            class="flex items-center px-4 py-2 text-md rounded-lg text-white transition-colors duration-200
-            {{ request()->routeIs('report') ? 'bg-[#2d729b]' : 'hover:bg-[#2d729b]' }}">
-            <i class="w-6 fa-solid fa fa-file"></i>
+            class="flex items-center gap-3 px-4 py-2 text-white rounded-lg
+        {{ request()->routeIs('report.*') ? 'bg-[#2d729b]' : 'hover:bg-[#2d729b]' }}">
+            <i class="w-5 text-center fa-solid fa-file"></i>
             <span>Failure Report</span>
         </a>
-    </nav>
-</aside>
 
+    </nav>
+
+
+</aside>
 
 {{-- ADD MACHINE MODAL --}}
 

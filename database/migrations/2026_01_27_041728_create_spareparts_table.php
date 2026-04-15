@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('spareparts', function (Blueprint $table) {
             $table->id();
             $table->string('item_name');
+            $table->string('serial_number')->nullable();
             $table->string('type');
             $table->string('uom');
             $table->string('image')->nullable();

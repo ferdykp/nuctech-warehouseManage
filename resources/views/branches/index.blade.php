@@ -1,38 +1,3 @@
-{{-- @extends('layouts.app')
-@section('content')
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div class="p-6 bg-white rounded-lg shadow">
-            <h3 class="mb-4 font-bold">Tambah Branch</h3>
-            <form action="{{ route('branches.store') }}" method="POST">
-                @csrf
-                <input type="text" name="branch_name" placeholder="Nama Cabang" class="w-full p-2 mb-3 border rounded">
-                <input type="text" name="branch_code" placeholder="Kode (SBY, JKT)"
-                    class="w-full p-2 mb-3 border rounded">
-                <textarea name="address" placeholder="Alamat" class="w-full p-2 mb-3 border rounded"></textarea>
-                <button class="w-full py-2 text-white bg-blue-600 rounded">Simpan</button>
-            </form>
-        </div>
-        <div class="p-6 text-sm bg-white rounded-lg shadow md:col-span-2">
-            <table class="w-full border-collapse">
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th class="p-2 border">Kode</th>
-                        <th class="p-2 border">Nama</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($branches as $b)
-                        <tr>
-                            <td class="p-2 border">{{ $b->branch_code }}</td>
-                            <td class="p-2 border">{{ $b->branch_name }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-@endsection --}}
-
 @extends('layout.master')
 
 @section('content')

@@ -15,7 +15,8 @@ class SiteController extends Controller
         $site = Site::with('branch')->get();
         // return Site::all();
         // return view('site.siteList', compact('site'));
-        return view('spareparts.index', compact('site'));
+        return view('dashboard.index', compact('site'));
+        // return view('spareparts.index', compact('site', 'branches'));
     }
 
     public function create()
@@ -25,27 +26,7 @@ class SiteController extends Controller
         return view('site.create', compact('branches'));
     }
 
-    // public function store(Request $request)
-    // {
-    //     $request->validate([
-    //         'name' => 'required|string|max:255',
-    //         'is_active' => 'required|boolean',
-    //     ]);
 
-    //     // Ambil kata pertama dari name
-    //     $firstWord = explode(' ', trim($request->name))[0];
-
-    //     Site::create([
-    //         'code' => 'IDN_' . strtoupper($firstWord),
-    //         'name' => $request->name,
-    //         'machine_type' => strtolower($firstWord),
-    //         'is_active' => $request->is_active,
-    //     ]);
-
-    //     return redirect()
-    //         ->route('site.index')
-    //         ->with('success', 'Site berhasil ditambahkan');
-    // }
     public function store(Request $request)
     {
         $request->validate([
@@ -69,11 +50,7 @@ class SiteController extends Controller
         $site = Site::findOrFail($code); // Akan melempar error 404 jika user tidak ditemukan
     }
 
-    // public function edit($id)
-    // {
-    //     $site = Site::findOrFail($id);
-    //     return view('site.siteEdit', compact('site'));
-    // }
+
     public function edit($id)
     {
         $site = Site::findOrFail($id);
@@ -81,30 +58,7 @@ class SiteController extends Controller
         return view('site.siteEdit', compact('site', 'branches'));
     }
 
-    // public function update(Request $request, Site $site)
-    // {
-    //     $validatedData = $request->validate([
-    //         'code' => 'required|string|max:255',
-    //         'name' => 'required|string|max:255' . $site->id,
-    //         'machine_type' => 'required|string|max:255' . $site->id,
-    //         'is_active' => 'required|string',
-    //     ]);
 
-    //     // Update data site
-    //     $site->name = $validatedData['code'];
-    //     $site->site = $validatedData['name'];
-    //     $site->email = $validatedData['machine_type'];
-    //     $site->role = $validatedData['is_active'];
-
-    //     // Jika password diisi, baru diupdate
-    //     if (!empty($validatedData['password'])) {
-    //         $site->password = bcrypt($validatedData['password']);
-    //     }
-
-    //     $site->save();
-
-    //     return redirect()->route('site.index')->with('success', 'Site berhasil diperbarui');
-    // }
 
     public function update(Request $request, Site $site)
     {
@@ -123,17 +77,7 @@ class SiteController extends Controller
         return redirect()->route('site.index')->with('success', 'Site berhasil diperbarui');
     }
 
-    // public function destroy($id)
-    // {
-    //     $site = Site::findOrFail($id);
 
-    //     // Log sebelum penghapusan
-
-    //     $site->delete();
-
-    //     // Log setelah penghapusan
-    //     return redirect()->route('site.index')->with('success', 'Site berhasil dihapus.');
-    // }
     public function destroy($id)
     {
         $site = Site::findOrFail($id);

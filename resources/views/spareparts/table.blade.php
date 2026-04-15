@@ -3,7 +3,7 @@
         <tr>
             <th class="px-4 py-3 text-center">No</th>
             <th class="px-4 py-3 text-center">Item Name</th>
-            <th class="px-4 py-3 text-center">Type</th>
+            <th class="px-4 py-3 text-center">Serial Number</th>
             <th class="px-4 py-3 text-center">Total Qty</th>
             {{-- <th class="px-4 py-3 text-center">UOM</th> --}}
             <th class="px-4 py-3 text-center">Conditions</th>
@@ -20,7 +20,7 @@
                     {{ ($assets->currentPage() - 1) * $assets->perPage() + $loop->iteration }}
                 </td>
                 <td class="px-4 py-3 font-bold text-center">{{ $item->item_name }}</td>
-                <td class="px-4 py-3 text-center">{{ $item->type }}</td>
+                <td class="px-4 py-3 text-center">{{ $item->serial_number }}</td>
                 <td class="px-4 py-3 text-center">
                     <div
                         class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-100 rounded-full">
@@ -235,7 +235,7 @@
                 <div>
                     <h3 id="d_item_name" class="text-2xl font-bold text-gray-800"></h3>
                     <p id="d_type" class="font-mono text-gray-500"></p>
-                    <span id="d_uom"
+                    <span id="d_serial_number"
                         class="inline-block mt-1 px-2 py-0.5 bg-gray-200 text-gray-700 text-xs rounded font-bold"></span>
                 </div>
             </div>
@@ -299,7 +299,7 @@
         // Basic Info
         document.getElementById('d_item_name').innerText = item.item_name;
         document.getElementById('d_type').innerText = "Type: " + item.type;
-        document.getElementById('d_uom').innerText = item.uom;
+        document.getElementById('d_serial_number').innerText = "SN: " + item.serial_number;
         document.getElementById('d_image').src = item.image ? `/storage/${item.image}` : '/no-image.png';
 
         // STOCK TABLE

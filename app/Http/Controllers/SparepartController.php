@@ -13,13 +13,6 @@ use App\Exports\SparepartExport;
 
 class SparepartController extends Controller
 {
-    /* =====================
-        HELPER
-    ====================== */
-    // private function getSite(string $code): Site
-    // {
-    //     return Site::where('code', $code)->firstOrFail();
-    // }
     private function getSite(string $slug): Site
     {
         return Site::where('slug', $slug)->firstOrFail();
@@ -30,41 +23,6 @@ class SparepartController extends Controller
         return 'spareparts';
     }
 
-    /* =====================
-        INDEX
-    ====================== */
-    // public function index(string $site)
-    // {
-    //     $siteData = $this->getSite($site);
-
-    //     $data = Sparepart::whereHas('stocks', function ($q) use ($siteData) {
-    //         $q->where('site_id', $siteData->id);
-    //     })
-    //         ->with([
-    //             // stock hanya untuk site aktif
-    //             'stocks' => function ($q) use ($siteData) {
-    //                 $q->where('site_id', $siteData->id)->with('site');
-    //             },
-
-    //             // history lengkap (untuk modal)
-    //             'histories.fromSite',
-    //             'histories.toSite',
-    //         ])
-    //         ->withSum([
-    //             'stocks as total_qty' => function ($q) use ($siteData) {
-    //                 $q->where('site_id', $siteData->id);
-    //             }
-    //         ], 'qty')
-    //         ->latest()
-    //         ->paginate(10);
-
-    //     $sites = Site::all();
-
-    //     return view(
-    //         $this->viewPrefix($site) . '.index',
-    //         compact('data', 'site', 'siteData', 'sites')
-    //     );
-    // }
     public function index(string $slug)
     {
         $siteData = $this->getSite($slug);
@@ -94,9 +52,6 @@ class SparepartController extends Controller
     }
 
 
-    /* =====================
-        CREATE
-    ====================== */
     public function create(string $site)
     {
         abort_if(!Auth::check() || Auth::user()->role !== 'admin', 403);
@@ -108,61 +63,11 @@ class SparepartController extends Controller
             compact('site', 'siteData')
         );
     }
-
-    /* =====================
-        STORE
-    ====================== */
-    // public function store(Request $request, string $site)
-    // {
-    //     $request->validate([
-    //         'item_name' => 'required|string',
-    //         'type'      => 'required|string',
-    //         'uom'       => 'required|string',
-    //         'qty'       => 'required|integer|min:1',
-    //         'condition' => 'required|in:new,used-good,damaged,repaired',
-    //         'image'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', // ✅
-
-    //     ]);
-
-    //     $siteData = $this->getSite($site);
-    //     $imagePath = null;
-
-    //     if ($request->hasFile('image')) {
-    //         $imagePath = $request->file('image')->store('spareparts', 'public');
-    //     }
-
-
-    //     $sparepart = Sparepart::create([
-    //         'item_name' => $request->item_name,
-    //         'type'      => $request->type,
-    //         'uom'       => $request->uom,
-    //         'note'      => $request->note,
-    //         'image'     => $imagePath, // ✅
-
-    //     ]);
-
-    //     SparepartStock::create([
-    //         'sparepart_id' => $sparepart->id,
-    //         'site_id'      => $siteData->id,
-    //         'condition'    => $request->condition,
-    //         'qty'          => $request->qty,
-    //     ]);
-
-    //     SparepartHistory::create([
-    //         'sparepart_id' => $sparepart->id,
-    //         'to_site_id'   => $siteData->id,
-    //         'action'       => 'CREATE',
-    //         'condition'    => $request->condition,
-    //         'qty'          => $request->qty,
-    //         'note'         => $request->note,
-    //     ]);
-
-    //     return redirect("/$site")->with('success', 'Sparepart berhasil ditambahkan');
-    // }
     public function store(Request $request, string $slug)
     {
         $request->validate([
             'item_name' => 'required|string',
+            'serial_number' => 'nullable|string',
             'type'      => 'required|string',
             'uom'       => 'required|string',
             'qty'       => 'required|integer|min:1',
@@ -179,6 +84,7 @@ class SparepartController extends Controller
 
         $sparepart = Sparepart::create([
             'item_name' => $request->item_name,
+            'serial_number' => $request->serial_number,
             'type'      => $request->type,
             'uom'       => $request->uom,
             'note'      => $request->note,
@@ -205,22 +111,6 @@ class SparepartController extends Controller
         return redirect()->route('sparepart.index', $slug)->with('success', 'Sparepart berhasil ditambahkan');
     }
 
-    /* =====================
-        EDIT
-    ====================== */
-    // public function edit(string $site, int $id)
-    // {
-    //     $siteData = $this->getSite($site);
-
-    //     $data = Sparepart::whereHas('stocks', function ($q) use ($siteData) {
-    //         $q->where('site_id', $siteData->id);
-    //     })->findOrFail($id);
-
-    //     return view(
-    //         $this->viewPrefix($site) . '.edit',
-    //         compact('data', 'site', 'siteData')
-    //     );
-    // }
     public function edit(string $site, int $id)
     {
         $siteData = $this->getSite($site);
@@ -236,13 +126,11 @@ class SparepartController extends Controller
     }
 
 
-    /* =====================
-        UPDATE (MASTER DATA)
-    ====================== */
     public function update(Request $request, string $site, int $id)
     {
         $request->validate([
             'item_name' => 'required|string',
+            'serial_number' => 'nullable|string',
             'type'      => 'required|string',
             'uom'       => 'required|string',
         ]);
@@ -256,6 +144,7 @@ class SparepartController extends Controller
 
         $sparepart->update($request->only(
             'item_name',
+            'serial_number',
             'type',
             'uom',
             'note'
@@ -264,9 +153,7 @@ class SparepartController extends Controller
         return redirect("/$site")->with('success', 'Data sparepart diperbarui');
     }
 
-    /* =====================
-        DELETE (MASTER)
-    ====================== */
+
     public function destroy(string $site, int $id)
     {
         Sparepart::findOrFail($id)->delete();
@@ -274,9 +161,6 @@ class SparepartController extends Controller
         return redirect("/$site")->with('success', 'Sparepart dihapus');
     }
 
-    /* =====================
-        SEARCH
-    ====================== */
     public function search(Request $request, string $slug)
     {
         $siteData = $this->getSite($slug);
@@ -287,6 +171,7 @@ class SparepartController extends Controller
             ->when($query, function ($q) use ($query, $siteData) {
                 $q->where(function ($sub) use ($query, $siteData) {
                     $sub->where('item_name', 'like', "%{$query}%")
+                        ->orWhere('serial_number', 'like', "%{$query}%")
                         ->orWhere('type', 'like', "%{$query}%")
                         ->orWhere('uom', 'like', "%{$query}%");
                 });
@@ -322,9 +207,7 @@ class SparepartController extends Controller
 
 
 
-    /* =====================
-        EXPORT
-    ====================== */
+
     public function exportExcel(string $site)
     {
         return Excel::download(

@@ -8,6 +8,7 @@ class Sparepart extends Model
 {
     protected $fillable = [
         'item_name',
+        'serial_number',
         'type',
         'uom',
         'image',
