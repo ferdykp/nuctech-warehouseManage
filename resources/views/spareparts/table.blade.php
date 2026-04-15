@@ -22,8 +22,7 @@
                 <td class="px-4 py-3 font-bold text-center">{{ $item->item_name }}</td>
                 <td class="px-4 py-3 text-center">{{ $item->serial_number }}</td>
                 <td class="px-4 py-3 text-center">
-                    <div
-                        class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-100 rounded-full">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-100 rounded-full">
                         <span class="font-bold text-blue-700">
                             {{ $item->total_qty }}
                         </span>
@@ -43,15 +42,13 @@
                 @if (Auth::user()->role === 'admin')
                     <td class="px-4 py-3 text-center">
                         <div class="flex justify-center gap-2">
-                            <button
-                                onclick='openDetailModal(@json($item), @json($sites))'
+                            <button onclick='openDetailModal(@json($item), @json($sites))'
                                 class="px-3 py-1 text-xs text-white bg-gray-600 rounded hover:bg-gray-700">
                                 DETAIL
                             </button>
 
                             @if (Auth::user()->role === 'admin')
-                                <button
-                                    onclick="openMoveModal({{ $item->id }}, '{{ $item->item_name }}', {{ $item->total_qty }})"
+                                <button onclick="openMoveModal({{ $item->id }}, '{{ $item->item_name }}', {{ $item->total_qty }})"
                                     class="px-3 py-1 text-xs text-white bg-orange-500 rounded hover:bg-orange-600">
                                     MOVE
                                 </button>
@@ -112,7 +109,8 @@
             </div>
             <div class="mb-6">
                 <label class="block mb-1 text-sm font-medium text-gray-700">Catatan Pemindahan:</label>
-                <textarea name="note" class="w-full h-24 p-2 text-sm border rounded outline-none focus:ring-2 focus:ring-orange-500"
+                <textarea name="note"
+                    class="w-full h-24 p-2 text-sm border rounded outline-none focus:ring-2 focus:ring-orange-500"
                     placeholder="Alasan pemindahan..."></textarea>
             </div>
             <div class="flex justify-end gap-3">
@@ -174,7 +172,7 @@
     }
 
     // klik area gelap untuk tutup
-    window.addEventListener('click', function(e) {
+    window.addEventListener('click', function (e) {
         const modal = document.getElementById('asset-modal');
         if (e.target === modal) closeAssetModal();
     });
@@ -199,8 +197,12 @@
         modal.classList.remove('hidden');
     }
 
+    function closeMoveModal() {
+        document.getElementById('modal-move').classList.add('hidden');
+    }
+
     // Tambahan: Validasi saat user mengetik manual
-    document.getElementById('move-quantity').addEventListener('input', function() {
+    document.getElementById('move-quantity').addEventListener('input', function () {
         const max = parseInt(this.max);
         const val = parseInt(this.value);
         const info = document.getElementById('max-info');
@@ -216,7 +218,7 @@
     });
 
     // Menutup modal jika area di luar kotak putih di-klik
-    window.onclick = function(event) {
+    window.onclick = function (event) {
         const modal = document.getElementById('modal-move');
         if (event.target == modal) {
             closeMoveModal();

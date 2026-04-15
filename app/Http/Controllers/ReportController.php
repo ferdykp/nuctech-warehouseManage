@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 
 class ReportController extends Controller
@@ -44,7 +45,9 @@ class ReportController extends Controller
             "Failed Sub-System:\n" . $request->failed_subsystem .
             "\n\nFailure Phenomenon:\n" . $request->failure_phenomenon;
 
-        $imagePath = $request->file('image')->store('report', 'public');
+        $imagePath = $request->hasFile('image')
+            ? $request->file('image')->store('report', 'public')
+            : null;
 
         Report::create([
             'attendant' => $request->attendant,
@@ -57,7 +60,7 @@ class ReportController extends Controller
             'image'     => $imagePath,
         ]);
 
-        return redirect()->route('report')->with('success', 'Added');
+        return redirect()->route('report.index')->with('success', 'Added');
     }
 
     public function edit(string $id)
@@ -128,7 +131,7 @@ class ReportController extends Controller
 
         Report::findOrFail($id)->delete();
 
-        return redirect()->route('report')
+        return redirect()->route('report.index')
             ->with('success', 'Data berhasil dihapus.');
     }
 
