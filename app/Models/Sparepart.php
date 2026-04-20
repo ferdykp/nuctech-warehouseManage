@@ -17,7 +17,7 @@ class Sparepart extends Model
 
     public function stocks()
     {
-        return $this->hasMany(SparepartStock::class);
+        return $this->hasMany(SparepartStock::class)->with('site');
     }
 
     public function histories()

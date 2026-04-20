@@ -46,6 +46,7 @@ class SparepartExport implements
         return [
             'No',
             'Item Name',
+            'Serial Number',
             'Type',
             'Stock',
             'UOM',
@@ -61,16 +62,18 @@ class SparepartExport implements
     public function map($row): array
     {
         static $no = 1;
+        $firstStock = $row->stocks->first(); 
 
         return [
             $no++,
             $row->item_name,
+            $row->serial_number,
             $row->type,
-            $row->stock,
+            $firstStock ? $firstStock->qty : 0,
             $row->uom,
-            $row->condition,
+            $firstStock ? ucfirst($firstStock->condition) : '-',
             $row->note,
-            '', // kolom image (diisi Drawing)
+            '', 
         ];
     }
 
