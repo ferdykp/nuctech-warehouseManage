@@ -43,10 +43,10 @@
                             </button> --}}
 
 
-                            {{-- <a href="{{ route('branches.edit', $b->id) }}"
+                            <a href="{{ route('branches.edit', $branch->id) }}"
                                 class="px-3 py-2 font-semibold text-white bg-blue-600 rounded-lg text-md hover:bg-blue-700">
                                 Edit
-                            </a> --}}
+                            </a>
 
                             {{-- Delete --}}
                             <div x-data="{ open: false }">
