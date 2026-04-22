@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SparepartExport;
+use App\Imports\SparepartImport;
 
 class SparepartController extends Controller
 {
@@ -20,12 +21,26 @@ class SparepartController extends Controller
         return Site::where('slug', $slug)->firstOrFail();
     }
 
-    public function index(string $slug)
+    public function index(Request $request, string $slug)
     {
         $siteData = $this->getSite($slug);
         
-        $data = Sparepart::whereHas('stocks', function ($q) use ($siteData) {
+        // --- FITUR FILTER & SEARCH ---
+        $search = $request->input('search');
+        $condition = $request->input('condition');
+
+        $data = Sparepart::whereHas('stocks', function ($q) use ($siteData, $condition) {
             $q->where('site_id', $siteData->id);
+            if ($condition) {
+                $q->where('condition', $condition);
+            }
+        })
+        ->when($search, function ($q) use ($search) {
+            $q->where(function ($sub) use ($search) {
+                $sub->where('item_name', 'like', "%{$search}%")
+                  ->orWhere('serial_number', 'like', "%{$search}%")
+                  ->orWhere('type', 'like', "%{$search}%");
+            });
         })
         ->with([
             'stocks.site',
@@ -36,10 +51,24 @@ class SparepartController extends Controller
             $q->where('site_id', $siteData->id);
         }], 'qty')
         ->latest()
-        ->paginate(10);
+        ->paginate(10)
+        ->withQueryString();
 
         $all_sites = Site::with('branch')->where('id', '!=', $siteData->id)->get();
         $sites = Site::all();
+
+        // Support AJAX untuk Search Real-time
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('spareparts.table', [
+                    'assets' => $data,
+                    'slug' => $slug,
+                    'siteData' => $siteData,
+                    'all_sites' => $all_sites,
+                    'sites' => $sites
+                ])->render()
+            ]);
+        }
 
         return view('spareparts.index', compact('data', 'slug', 'siteData', 'all_sites', 'sites'));
     }
@@ -111,6 +140,23 @@ class SparepartController extends Controller
         $sparepart->update($request->only('item_name', 'serial_number', 'type', 'uom', 'note'));
 
         return redirect()->route('sparepart.index', $site)->with('success', 'Data sparepart diperbarui');
+    }
+
+    // --- FITUR IMPORT EXCEL ---
+    public function importExcel(Request $request, $slug)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:2048'
+        ]);
+
+        $siteData = $this->getSite($slug);
+
+        try {
+            Excel::import(new SparepartImport($siteData->id), $request->file('file'));
+            return redirect()->back()->with('success', 'Import Excel berhasil!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal import: ' . $e->getMessage());
+        }
     }
 
     public function exportExcel(string $site)
