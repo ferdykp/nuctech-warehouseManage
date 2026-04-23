@@ -16,8 +16,10 @@ class SiteController extends Controller
         // return Site::all();
         // return view('site.siteList', compact('site'));
         // return view('dashboard.index', compact('site'));
+        $branches = Branch::all();
         $sites = Site::with('branch')->paginate(10);
-        return view('site.index', compact('sites'));
+        // return view('site.index', compact('sites, branches'));
+        return view('site.index', compact('sites', 'branches'));
         // return view('spareparts.index', compact('site', 'branches'));
     }
 

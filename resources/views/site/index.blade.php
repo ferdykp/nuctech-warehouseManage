@@ -19,7 +19,7 @@
             @endif
         </div>
 
-        {{-- STATS SUMMARY (Optional) --}}
+        {{-- STATS SUMMARY --}}
         <div class="grid grid-cols-1 gap-6 mb-6 md:grid-cols-3">
             <div class="p-5 bg-white border-l-4 border-blue-500 shadow-sm rounded-2xl">
                 <p class="text-xs font-bold tracking-wider text-gray-400 uppercase">Total Machine</p>
@@ -43,8 +43,7 @@
                         <tr class="bg-gray-50/50">
                             <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase">Machine Info</th>
                             <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase">Branch</th>
-                            <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase">Slug / Identifier
-                            </th>
+                            <th class="px-6 py-4 text-xs font-bold tracking-wider text-gray-500 uppercase">Slug</th>
                             <th class="px-6 py-4 text-xs font-bold tracking-wider text-center text-gray-500 uppercase">Aksi
                             </th>
                         </tr>
@@ -69,7 +68,7 @@
                                 <td class="px-6 py-4">
                                     <span
                                         class="px-3 py-1 text-xs font-semibold text-gray-600 bg-gray-100 border rounded-full">
-                                        {{ $site->branch->name ?? 'N/A' }}
+                                        {{ $site->branch->branch_name ?? 'N/A' }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">
@@ -84,9 +83,11 @@
                                         </a>
 
                                         @if (auth()->user()->role === 'superadmin')
-                                            <button class="p-2 text-blue-600 transition-colors rounded-lg hover:bg-blue-50">
+                                            <button onclick="openEditModal({{ json_encode($site) }})"
+                                                class="p-2 text-blue-600 transition-colors rounded-lg hover:bg-blue-50">
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </button>
+
                                             <form action="{{ route('site.destroy', $site->id) }}" method="POST"
                                                 onsubmit="return confirm('Hapus machine ini?')">
                                                 @csrf @method('DELETE')
@@ -110,8 +111,6 @@
                     </tbody>
                 </table>
             </div>
-
-            {{-- PAGINATION --}}
             @if ($sites->hasPages())
                 <div class="px-6 py-4 border-t bg-gray-50/50">
                     {{ $sites->links() }}
@@ -119,4 +118,129 @@
             @endif
         </div>
     </div>
+
+    {{-- MODAL CREATE --}}
+    <div id="modal-create" class="fixed inset-0 z-50 items-center justify-center hidden px-4 bg-black/50 backdrop-blur-sm">
+        <div class="w-full max-w-md overflow-hidden bg-white shadow-2xl rounded-2xl">
+            <div class="flex items-center justify-between px-6 py-4 border-b">
+                <h3 class="text-lg font-bold text-gray-800">Tambah Machine Site Baru</h3>
+                <button onclick="closeCreateModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form action="{{ route('site.store') }}" method="POST" class="px-6 py-5 space-y-4">
+                @csrf
+                <div>
+                    <label class="block mb-1 text-sm font-semibold text-gray-700">Machine Name</label>
+                    <input type="text" name="machine_name" required
+                        class="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400"
+                        placeholder="Contoh: FS6000 Jakarta">
+                </div>
+                <div>
+                    <label class="block mb-1 text-sm font-semibold text-gray-700">Branch</label>
+                    <select name="branch_id" required
+                        class="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
+                        <option value="">-- Select Branch --</option>
+                        @foreach ($branches as $branch)
+                            <option value="{{ $branch->id }}">{{ $branch->branch_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block mb-1 text-sm font-semibold text-gray-700">Location / Address</label>
+                    <textarea name="location" rows="3"
+                        class="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400"
+                        placeholder="Alamat lengkap site..."></textarea>
+                </div>
+                <div class="flex justify-end gap-3 pt-3">
+                    <button type="button" onclick="closeCreateModal()"
+                        class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                    <button type="submit"
+                        class="px-5 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg shadow-lg hover:bg-blue-700 shadow-blue-100">Save
+                        Machine</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- MODAL EDIT --}}
+    <div id="modal-edit" class="fixed inset-0 z-50 items-center justify-center hidden px-4 bg-black/50 backdrop-blur-sm">
+        <div class="w-full max-w-md overflow-hidden bg-white shadow-2xl rounded-2xl">
+            <div class="flex items-center justify-between px-6 py-4 text-gray-800 border-b">
+                <h3 class="text-lg font-bold">Edit Machine Site</h3>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form id="form-edit" method="POST" class="px-6 py-5 space-y-4">
+                @csrf
+                @method('PUT')
+                <div>
+                    <label class="block mb-1 text-sm font-semibold text-gray-700">Machine Name</label>
+                    <input type="text" id="edit_machine_name" name="machine_name" required
+                        class="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <div>
+                    <label class="block mb-1 text-sm font-semibold text-gray-700">Branch</label>
+                    <select id="edit_branch_id" name="branch_id" required
+                        class="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
+                        @foreach ($branches as $branch)
+                            <option value="{{ $branch->id }}">{{ $branch->branch_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block mb-1 text-sm font-semibold text-gray-700">Location / Address</label>
+                    <textarea id="edit_location" name="location" rows="3"
+                        class="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+                </div>
+                <div class="flex justify-end gap-3 pt-3">
+                    <button type="button" onclick="closeEditModal()"
+                        class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                    <button type="submit"
+                        class="px-5 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg shadow-lg hover:bg-blue-700 shadow-blue-100">Update
+                        Machine</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openCreateModal() {
+            const m = document.getElementById('modal-create');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+
+        function closeCreateModal() {
+            const m = document.getElementById('modal-create');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+
+        function openEditModal(site) {
+            const modal = document.getElementById('modal-edit');
+            const form = document.getElementById('form-edit');
+
+            form.action = `/site/${site.id}`; // Sesuaikan dengan route update Anda
+
+            document.getElementById('edit_machine_name').value = site.machine_name;
+            document.getElementById('edit_branch_id').value = site.branch_id;
+            document.getElementById('edit_location').value = site.location || '';
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('modal-edit');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        window.onclick = function(event) {
+            if (event.target.id === 'modal-create') closeCreateModal();
+            if (event.target.id === 'modal-edit') closeEditModal();
+        }
+    </script>
 @endsection
