@@ -23,7 +23,7 @@ class SparepartExport implements
 
     public function __construct(string $siteCode)
     {
-        $site = Site::where('code', $siteCode)->firstOrFail();
+        $site = Site::where('slug', $siteCode)->firstOrFail();
 
         $this->data = Sparepart::whereHas('stocks', function ($q) use ($site) {
             $q->where('site_id', $site->id);
