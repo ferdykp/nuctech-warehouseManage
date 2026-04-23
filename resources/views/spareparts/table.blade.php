@@ -69,8 +69,6 @@
 
                             {{-- Tombol Move/Request --}}
                             @php
-                                // Cek apakah stok ini milik site user sekarang
-                                // Kita asumsikan stok yang tampil di tabel adalah stok site aktif
                                 $currentStock = $item->stocks->where('site_id', $siteData->id)->first();
                             @endphp
 
