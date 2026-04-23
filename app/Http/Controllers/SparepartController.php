@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SparepartExport;
 use App\Imports\SparepartImport;
+use App\Models\Category;
 
 class SparepartController extends Controller
 {
@@ -56,6 +57,7 @@ class SparepartController extends Controller
 
         $all_sites = Site::with('branch')->where('id', '!=', $siteData->id)->get();
         $sites = Site::all();
+        $categories = Category::all();
 
         // Support AJAX untuk Search Real-time
         if ($request->ajax()) {
@@ -65,12 +67,13 @@ class SparepartController extends Controller
                     'slug' => $slug,
                     'siteData' => $siteData,
                     'all_sites' => $all_sites,
-                    'sites' => $sites
+                    'sites' => $sites,
+                    'categories' => $categories
                 ])->render()
             ]);
         }
 
-        return view('spareparts.index', compact('data', 'slug', 'siteData', 'all_sites', 'sites'));
+        return view('spareparts.index', compact('data', 'slug', 'siteData', 'all_sites', 'sites', 'categories'));
     }
 
     public function store(Request $request, string $slug)
@@ -78,6 +81,7 @@ class SparepartController extends Controller
         $request->validate([
             'item_name'     => 'required|string',
             'serial_number' => 'nullable|string|unique:spareparts,serial_number',
+            'category_id'   => 'nullable|exists:categories,id',
             'type'          => 'required|string',
             'uom'           => 'required|string',
             'qty'           => 'required|integer|min:1',
@@ -95,10 +99,12 @@ class SparepartController extends Controller
             $sparepart = Sparepart::create([
                 'item_name'     => $request->item_name,
                 'serial_number' => $request->serial_number,
+                'category_id'   => $request->category_id,
                 'type'          => $request->type,
                 'uom'           => $request->uom,
                 'note'          => $request->note,
                 'image'         => $imagePath,
+                'source_data'   => 'Manual Input',
             ]);
 
             SparepartStock::create([
@@ -126,6 +132,7 @@ class SparepartController extends Controller
         $request->validate([
             'item_name'     => 'required|string',
             'serial_number' => 'nullable|string|unique:spareparts,serial_number,'.$id,
+            'category_id'   => 'nullable|exists:categories,id',
             'type'          => 'required|string',
             'uom'           => 'required|string',
         ]);
@@ -137,7 +144,7 @@ class SparepartController extends Controller
             $sparepart->image = $request->file('image')->store('spareparts', 'public');
         }
 
-        $sparepart->update($request->only('item_name', 'serial_number', 'type', 'uom', 'note'));
+        $sparepart->update($request->only('item_name', 'serial_number', 'category_id', 'type', 'uom', 'note'));
 
         return redirect()->route('sparepart.index', $site)->with('success', 'Data sparepart diperbarui');
     }
@@ -145,16 +152,60 @@ class SparepartController extends Controller
     // --- FITUR IMPORT EXCEL ---
     public function importExcel(Request $request, $slug)
     {
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:2048'
-        ]);
+        try {
+            $request->validate([
+                'file' => 'required|mimes:xlsx,xls,csv|max:10240'
+            ]);
+        } catch (ValidationException $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                $errors = $e->errors();
+                $msg = collect($errors)->flatten()->first() ?? 'File tidak valid.';
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            throw $e;
+        }
 
         $siteData = $this->getSite($slug);
+        $filename = $request->file('file')->getClientOriginalName();
 
         try {
-            Excel::import(new SparepartImport($siteData->id), $request->file('file'));
-            return redirect()->back()->with('success', 'Import Excel berhasil!');
+            // Baca daftar sheet dari file Excel
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($request->file('file')->getPathname());
+            $sheetNames = $spreadsheet->getSheetNames();
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+
+            $import = new SparepartImport($siteData->id, $filename, $sheetNames);
+            Excel::import($import, $request->file('file'));
+
+            $summary = $import->getSummary();
+
+            // Bangun pesan detail
+            $msg = "Import berhasil! {$summary['total_imported']} data diimport, {$summary['total_skipped']} baris di-skip.";
+            if (!empty($summary['sheets'])) {
+                $sheetInfo = [];
+                foreach ($summary['sheets'] as $sheet => $detail) {
+                    $sheetInfo[] = "{$sheet}: {$detail['imported']} imported";
+                }
+                $msg .= ' (' . implode(', ', $sheetInfo) . ')';
+            }
+
+            if (!empty($summary['errors'])) {
+                $errorCount = count($summary['errors']);
+                $msg .= " — {$errorCount} error(s) terjadi.";
+            }
+
+            // Return JSON untuk AJAX, redirect untuk normal request
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => $msg]);
+            }
+
+            return redirect()->back()->with('success', $msg);
         } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Gagal import: ' . $e->getMessage()], 500);
+            }
+
             return redirect()->back()->with('error', 'Gagal import: ' . $e->getMessage());
         }
     }

@@ -2,57 +2,78 @@
 
 namespace App\Imports;
 
-use App\Models\Sparepart;
-use App\Models\SparepartStock;
-use App\Models\SparepartHistory;
-use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-class SparepartImport implements ToModel, WithHeadingRow
+/**
+ * Multi-sheet import untuk data Sparepart.
+ * 
+ * Mendukung file Excel dengan banyak sheet — setiap sheet akan diproses
+ * secara independen menggunakan SparepartSheetImport.
+ */
+class SparepartImport implements WithMultipleSheets
 {
     protected $siteId;
+    protected $filename;
+    protected $sheetNames;
 
-    public function __construct($siteId)
+    /** @var SparepartSheetImport[] */
+    protected $sheetImports = [];
+
+    /**
+     * @param int    $siteId     ID site tujuan import
+     * @param string $filename   Nama file asli untuk tracking
+     * @param array  $sheetNames Daftar nama sheet dari spreadsheet
+     */
+    public function __construct(int $siteId, ?string $filename = null, array $sheetNames = [])
     {
         $this->siteId = $siteId;
+        $this->filename = $filename;
+        $this->sheetNames = $sheetNames;
+
+        // Buat import handler untuk setiap sheet
+        foreach ($sheetNames as $index => $name) {
+            $import = new SparepartSheetImport($this->siteId, $this->filename, $name);
+            $this->sheetImports[$index] = $import;
+        }
     }
 
-    public function model(array $row)
+    /**
+     * Registrasi handler untuk setiap sheet berdasarkan index.
+     */
+    public function sheets(): array
     {
-        return DB::transaction(function () use ($row) {
-            // 1. Update atau Create data sparepart berdasarkan Serial Number 
-            $sparepart = Sparepart::updateOrCreate(
-                ['serial_number' => $row['serial_number']],
-                [
-                    'item_name' => $row['item_name'],
-                    'type'      => $row['type'],
-                    'uom'       => $row['uom'],
-                    'note'      => $row['note'] ?? null,
-                ]
-            );
+        return $this->sheetImports;
+    }
 
-            // 2. Simpan Stok ke Site terkait
-            SparepartStock::updateOrCreate(
-                [
-                    'sparepart_id' => $sparepart->id,
-                    'site_id'      => $this->siteId,
-                    'condition'    => strtolower($row['condition']),
-                ],
-                ['qty' => $row['qty']]
-            );
+    /**
+     * Ambil summary import dari semua sheet.
+     */
+    public function getSummary(): array
+    {
+        $totalImported = 0;
+        $totalSkipped = 0;
+        $allErrors = [];
+        $sheetDetails = [];
 
-            // 3. Catat History sebagai 'IMPORT'
-            SparepartHistory::create([
-                'sparepart_id' => $sparepart->id,
-                'to_site_id'   => $this->siteId,
-                'action'       => 'CREATE',
-                'condition'    => strtolower($row['condition']),
-                'qty'          => $row['qty'],
-                'note'         => 'Import via Excel'
-            ]);
+        foreach ($this->sheetImports as $index => $import) {
+            $sheetName = $this->sheetNames[$index] ?? "Sheet {$index}";
+            $totalImported += $import->imported;
+            $totalSkipped += $import->skipped;
+            $allErrors = array_merge($allErrors, $import->errors);
 
-            return $sparepart;
-        });
+            if ($import->imported > 0 || $import->skipped > 0) {
+                $sheetDetails[$sheetName] = [
+                    'imported' => $import->imported,
+                    'skipped'  => $import->skipped,
+                ];
+            }
+        }
+
+        return [
+            'total_imported' => $totalImported,
+            'total_skipped'  => $totalSkipped,
+            'errors'         => $allErrors,
+            'sheets'         => $sheetDetails,
+        ];
     }
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\SiteController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SparepartController;
 use App\Http\Controllers\SparepartStockController;
+use App\Http\Controllers\CategoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [AuthController::class, 'login'])->name('login');
@@ -19,6 +20,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('branches', BranchController::class);
+    Route::resource('categories', CategoryController::class);
     Route::resource('sites', SiteController::class);
     Route::get('inventory/{slug}', [SiteController::class, 'showInventory'])->name('sites.inventory');
 
@@ -37,9 +39,9 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('/import', [SparepartController::class, 'importExcel'])->name('sparepart.import');
     });
 
-    Route::get('/sparepart/{id}/edit', [SparepartController::class, 'edit'])->name('sparepart.edit');
-    Route::put('/sparepart/{id}', [SparepartController::class, 'update'])->name('sparepart.update');
-    Route::delete('/sparepart/{id}', [SparepartController::class, 'destroy'])->name('sparepart.destroy');
+    Route::get('/sparepart/{slug}/{id}/edit', [SparepartController::class, 'edit'])->name('sparepart.edit');
+    Route::put('/sparepart/{slug}/{id}', [SparepartController::class, 'update'])->name('sparepart.update');
+    Route::delete('/sparepart/{slug}/{id}', [SparepartController::class, 'destroy'])->name('sparepart.destroy');
     Route::post('/sparepart/bulk-delete', [SparepartController::class, 'bulkDelete'])->name('sparepart.bulkDelete');
 
     Route::post('/movement/move/{id}', [SparepartStockController::class, 'move'])->name('stock.move');
@@ -50,3 +52,5 @@ Route::middleware(['auth', 'nocache', 'role:admin'])->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('site', SiteController::class);
 });
+
+

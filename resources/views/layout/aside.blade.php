@@ -36,6 +36,14 @@
             <span>Branches</span>
         </a>
 
+        {{-- CATEGORIES --}}
+        <a href="{{ route('categories.index') }}"
+            class="flex items-center gap-3 px-4 py-2 text-white rounded-lg
+        {{ request()->routeIs('categories.*') ? 'bg-[#2d729b]' : 'hover:bg-[#2d729b]' }}">
+            <i class="w-5 text-center fa-solid fa-tags"></i>
+            <span>Categories</span>
+        </a>
+
         {{-- MACHINE GROUP --}}
         <div x-data="{ open: {{ request()->routeIs('sites.*') || request()->routeIs('spareparts.*') ? 'true' : 'false' }} }">
 

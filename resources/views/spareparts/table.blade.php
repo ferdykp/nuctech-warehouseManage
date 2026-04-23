@@ -19,8 +19,23 @@
                 <td class="px-4 py-3 text-center">
                     {{ ($assets->currentPage() - 1) * $assets->perPage() + $loop->iteration }}
                 </td>
-                <td class="px-4 py-3 font-bold text-center">{{ $item->item_name }}</td>
-                <td class="px-4 py-3 text-center">{{ $item->serial_number }}</td>
+                <td class="px-4 py-3 text-center">
+                    <div class="font-bold">{{ $item->item_name }}</div>
+                    @if($item->type && strtolower(trim($item->type)) !== strtolower(trim($item->item_name)))
+                        <div class="text-xs text-gray-500 mt-0.5">{{ $item->type }}</div>
+                    @endif
+                </td>
+                <td class="px-4 py-3 text-center">
+                    @php
+                        $sn = trim($item->serial_number);
+                        $isDuplicate = strtolower($sn) === strtolower(trim($item->type)) || strtolower($sn) === strtolower(trim($item->item_name));
+                    @endphp
+                    @if($sn && !$isDuplicate)
+                        <span class="font-mono text-sm">{{ $sn }}</span>
+                    @else
+                        <span class="text-xs italic text-gray-400">-</span>
+                    @endif
+                </td>
                 <td class="px-4 py-3 text-center">
                     <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-100 rounded-full">
                         <span class="font-bold text-blue-700">
@@ -51,6 +66,10 @@
                                 <button onclick="openMoveModal({{ $item->id }}, '{{ $item->item_name }}', {{ $item->total_qty }})"
                                     class="px-3 py-1 text-xs text-white bg-orange-500 rounded hover:bg-orange-600">
                                     MOVE
+                                </button>
+                                <button type="button" onclick="openEditModal(this)" data-item="{{ json_encode($item) }}"
+                                    class="px-3 py-1 text-xs text-white bg-blue-500 rounded hover:bg-blue-600">
+                                    EDIT
                                 </button>
                             @endif
                         </div>
@@ -239,6 +258,8 @@
                     <p id="d_type" class="font-mono text-gray-500"></p>
                     <span id="d_serial_number"
                         class="inline-block mt-1 px-2 py-0.5 bg-gray-200 text-gray-700 text-xs rounded font-bold"></span>
+                    <span id="d_source_data"
+                        class="inline-block mt-1 ml-2 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs rounded font-bold"></span>
                 </div>
             </div>
             <button onclick="closeDetailModal()" class="text-3xl text-gray-400 hover:text-red-500">&times;</button>
@@ -302,6 +323,7 @@
         document.getElementById('d_item_name').innerText = item.item_name;
         document.getElementById('d_type').innerText = "Type: " + item.type;
         document.getElementById('d_serial_number').innerText = "SN: " + item.serial_number;
+        document.getElementById('d_source_data').innerText = "Source: " + (item.source_data || 'Manual Input');
         document.getElementById('d_image').src = item.image ? `/storage/${item.image}` : '/no-image.png';
 
         // STOCK TABLE

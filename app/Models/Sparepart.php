@@ -9,11 +9,18 @@ class Sparepart extends Model
     protected $fillable = [
         'item_name',
         'serial_number',
+        'category_id',
         'type',
         'uom',
         'image',
         'note',
+        'source_data',
     ];
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 
     public function stocks()
     {

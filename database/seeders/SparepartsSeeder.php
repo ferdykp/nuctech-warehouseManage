@@ -3,53 +3,47 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use App\Models\Sparepart;
 
 class SparepartsSeeder extends Seeder
 {
     public function run(): void
     {
-        // Sesuaikan dengan id site yang ada setelah SiteSeeder dijalankan
-        // Asumsikan situs 1..5 telah terisi (id autoincrement)
-        \App\Models\Sparepart::create([
-            'owner_site_id'   => 1,
-            'current_site_id' => 1,
-            'item_name'       => 'Laser Crown',
-            'type'            => 'Component',
-            'stock'           => 50,
-            'uom'             => 'pcs',
-            'condition'       => 'good',
-            'image'           => null,
-            'note'            => 'Original sparepart',
-            'save_loc' => null, // <-- tambahkan ini
+        $spareparts = [
+            [
+                'item_name' => 'Laser Crown',
+                'serial_number' => 'LC-123456',
+                'type' => 'Component',
+                'uom' => 'pcs',
+                'image' => null,
+                'note' => 'Original sparepart',
+                'category_id' => 1,
+                'source_data' => 'system',
+            ],
+            [
+                'item_name' => 'Beam Shield',
+                'serial_number' => 'BS-987654',
+                'type' => 'Consumable',
+                'uom' => 'pcs',
+                'image' => null,
+                'note' => 'Replacement shield',
+                'category_id' => 4,
+                'source_data' => 'system',
+            ],
+            [
+                'item_name' => 'Control Board',
+                'serial_number' => 'CB-112233',
+                'type' => 'Electrical',
+                'uom' => 'pcs',
+                'image' => null,
+                'note' => 'Main control board',
+                'category_id' => 2,
+                'source_data' => 'system',
+            ],
+        ];
 
-        ]);
-
-        \App\Models\Sparepart::create([
-            'owner_site_id'   => 2,
-            'current_site_id' => 2,
-            'item_name'       => 'Beam Shield',
-            'type'            => 'Consumable',
-            'stock'           => 30,
-            'uom'             => 'pcs',
-            'condition'       => 'good',
-            'image'           => null,
-            'note'            => 'Second site stock',
-            'save_loc' => null, // <-- tambahkan ini
-
-        ]);
-
-        \App\Models\Sparepart::create([
-            'owner_site_id'   => 3,
-            'current_site_id' => 3,
-            'item_name'       => 'Cooling Pad',
-            'type'            => 'Accessory',
-            'stock'           => 20,
-            'uom'             => 'pcs',
-            'condition'       => 'good',
-            'image'           => null,
-            'note'            => 'New arrival',
-            'save_loc' => null, // <-- tambahkan ini
-
-        ]);
+        foreach ($spareparts as $sparepart) {
+            Sparepart::create($sparepart);
+        }
     }
 }
