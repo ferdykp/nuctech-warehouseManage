@@ -101,6 +101,13 @@
                                 class="p-3 text-sm font-semibold text-white rounded-lg shadow-md bg-emerald-600 hover:bg-emerald-700">
                                 Export Excel
                             </a>
+
+                            {{-- TAMBAHKAN TOMBOL IMPORT DI SINI --}}
+                            <button onclick="openImportModal()"
+                                class="flex items-center gap-2 p-3 text-sm font-semibold text-white transition-all bg-blue-600 rounded-lg shadow-md hover:bg-blue-700">
+                                <i class="fa-solid fa-file-import"></i>
+                                Import Excel
+                            </button>
                         @endif
                     </div>
 
@@ -497,6 +504,12 @@
 
         function closeEditModal() {
             document.getElementById('modal-edit').classList.add('hidden');
+        }
+
+        function openImportModal() {
+            const modal = document.getElementById('modal-import');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex'); // Tambahkan flex agar modal berada di tengah
         }
     </script>
 @endsection

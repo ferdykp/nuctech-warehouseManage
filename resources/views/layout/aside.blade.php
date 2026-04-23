@@ -46,8 +46,8 @@
         <a href="{{ route('site.index') }}"
             class="flex items-center gap-3 px-4 py-2 text-white rounded-lg
         {{ request()->routeIs('sites.*') ? 'bg-[#2d729b]' : 'hover:bg-[#2d729b]' }}">
-            <i class="w-5 text-center fa-solid fa-tags"></i>
-            <span>Machine</span>
+            <i class="w-5 text-center fa-solid fa-map"></i>
+            <span>Site List</span>
         </a>
 
         {{-- MACHINE GROUP --}}
