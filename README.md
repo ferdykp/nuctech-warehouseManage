@@ -1,59 +1,100 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Nuctech Warehouse Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem manajemen inventaris dan sparepart berbasis web yang dirancang khusus untuk memonitor, melacak, dan mengelola pergerakan stok sparepart mesin Nuctech di berbagai cabang dan lokasi (site) di seluruh Indonesia.
 
-## About Laravel
+## 🌟 Fitur Utama
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Multi-Branch & Multi-Site Management**: Mengelola sparepart berdasarkan hierarki Cabang (Branch) dan Lokasi Mesin (Site).
+- **Manajemen Inventaris Terpadu**: Melacak status dan kondisi stok setiap sparepart secara detail (Baru, Bekas, Rusak, atau Hasil Perbaikan).
+- **Tracking & Movement (Transfer Stok)**: Memindahkan stok sparepart dari satu mesin/lokasi ke lokasi lain lengkap dengan pencatatan riwayat (History) otomatis.
+- **Bulk Import Excel (Smart Mapping)**: Fitur cerdas untuk mengimpor data sparepart secara massal melalui file Excel (.xlsx, .xls, .csv). Sistem akan secara otomatis mendeteksi kolom yang relevan dan menggunakan antarmuka AJAX dengan progress *real-time toast*.
+- **Export Excel dengan Gambar**: Mengekspor daftar inventaris sparepart pada suatu site ke dalam format Excel, lengkap dengan gambar (thumbnail) barang.
+- **Reporting System**: Pencatatan pelaporan (report) harian/berkala yang dilengkapi dengan dokumentasi foto.
+- **Role-based Access**: Hak akses yang dibedakan antara `Admin` (akses penuh untuk CRUD dan pemindahan stok) dan `User` (hanya melihat/read-only).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🛠️ Teknologi yang Digunakan
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Framework**: Laravel 12.x
+- **Bahasa**: PHP 8.4
+- **Database**: MySQL
+- **Frontend**: Tailwind CSS, FontAwesome, Vanilla JS (AJAX)
+- **Library Tambahan**: 
+  - `maatwebsite/excel` (Untuk Import & Export Excel)
+  - `phpoffice/phpspreadsheet` (Pemrosesan raw file Excel)
 
-## Learning Laravel
+## 🚀 Panduan Instalasi (Local Development)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Ikuti langkah-langkah di bawah ini untuk menjalankan aplikasi di komputer lokal:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 1. Kebutuhan Sistem (Prerequisites)
+Pastikan Anda sudah menginstal:
+- PHP >= 8.4
+- Composer
+- Node.js & NPM
+- MySQL Server
 
-## Laravel Sponsors
+> [!IMPORTANT]  
+> **Konfigurasi `php.ini`**: Karena aplikasi ini memiliki fitur *Bulk Import Excel* untuk data yang cukup besar, Anda **wajib** mengubah nilai konfigurasi berikut pada file `php.ini` server Anda (misal: Herd/XAMPP):
+> ```ini
+> upload_max_filesize = 20M
+> post_max_size = 20M
+> ```
+> *Jangan lupa restart PHP / Web Server setelah mengubah konfigurasi.*
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 2. Instalasi Aplikasi
 
-### Premium Partners
+1. Clone repositori ini atau ekstrak source code ke direktori lokal Anda.
+2. Buka terminal, masuk ke folder proyek, lalu instal dependensi PHP:
+   ```bash
+   composer install
+   ```
+3. Salin file environment bawaan:
+   ```bash
+   cp .env.example .env
+   ```
+4. Generate application key:
+   ```bash
+   php artisan key:generate
+   ```
+5. Buka file `.env` dan atur koneksi database Anda:
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=sparepart-nuctech
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
+6. Buat tautan storage (agar gambar yang diupload bisa diakses publik):
+   ```bash
+   php artisan storage:link
+   ```
+7. Jalankan migrasi database dan *seeder* (untuk mengisi data awal / dummy data):
+   ```bash
+   php artisan migrate --seed
+   ```
+8. Instal dependensi frontend dan *compile* aset Tailwind CSS:
+   ```bash
+   npm install
+   npm run build
+   ```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 3. Menjalankan Server
+Jalankan development server Laravel:
+```bash
+php artisan serve
+```
+Aplikasi sekarang dapat diakses di browser pada: `http://127.0.0.1:8000`
 
-## Contributing
+## 👥 Akun Default (Seeder)
+Jika Anda menjalankan perintah `php artisan migrate --seed`, aplikasi akan memiliki dua akun bawaan yang bisa digunakan untuk login:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- **Admin**
+  - Email: `admin@gmail.com`
+  - Password: `password`
+- **User Biasa**
+  - Email: `user@gmail.com`
+  - Password: `password`
 
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 📄 Lisensi
+Aplikasi ini bersifat tertutup (Proprietary) dan ditujukan khusus untuk keperluan manajemen internal Nuctech. Menggandakan atau mendistribusikan source code tanpa izin tidak diperkenankan.
