@@ -66,7 +66,9 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         [SparepartController::class, 'bulkDelete']
     )->name('sparepart.bulkDelete');
 
-    Route::get('/export', [SparepartController::class, 'exportExcel'])
+    // Route::get('/export', [SparepartController::class, 'exportExcel'])
+    //     ->name('sparepart.export');
+    Route::get('/inventory/{site}/export', [SparepartController::class, 'exportExcel'])
         ->name('sparepart.export');
 
 
@@ -74,13 +76,17 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     // Route::post('/sparepart/{sparepart}/move', [SparepartStockController::class, 'move'])->name('sparepart.move');
     // Route::post('/sparepart/{sparepart}/change-condition', [SparepartStockController::class, 'changeCondition'])->name('sparepart.changeCondition');
 
-
+    Route::prefix('movement')->group(function () {
+        Route::post('/request/{id}', [SparepartStockController::class, 'requestMove'])->name('movement.request');
+        Route::post('/approve/{id}', [SparepartStockController::class, 'approveMove'])->name('movement.approve');
+        Route::post('/receive/{id}', [SparepartStockController::class, 'receiveMove'])->name('movement.receive');
+    });
 });
 
 
 
 
-Route::middleware(['auth', 'nocache', 'role:admin'])->group(function () {
+Route::middleware(['auth', 'nocache', 'role:superadmin'])->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('site', SiteController::class);
 });

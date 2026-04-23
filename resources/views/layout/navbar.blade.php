@@ -46,15 +46,25 @@
                 <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
                     x-transition:enter-start="transform opacity-0 scale-95"
                     x-transition:enter-end="transform opacity-100 scale-100"
-                    class="absolute right-0 z-50 mt-2 overflow-hidden bg-white border border-gray-100 shadow-xl w-44 rounded-xl">
+                    class="absolute right-0 z-50 w-48 mt-2 overflow-hidden bg-white border border-gray-100 shadow-xl rounded-xl">
 
-                    @if (auth()->user()->role === 'admin')
-                        <a href="{{ route('users.show', auth()->id()) }}"
+                    {{-- 1. Link Profile (Bisa diakses semua role untuk melihat profil sendiri) --}}
+                    <a href="{{ route('users.show', auth()->id()) }}"
+                        class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
+                        <i class="w-4 text-blue-600 fa-solid fa-user"></i> Profile Saya
+                    </a>
+
+                    {{-- 2. Link Kelola User (Hanya muncul untuk Superadmin) --}}
+                    @if (auth()->user()->role === 'superadmin')
+                        <a href="{{ route('users.index') }}"
                             class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                            <i class="w-4 text-blue-600 fa-solid fa-user-gear"></i> Profile
+                            <i class="w-4 text-orange-500 fa-solid fa-users-gear"></i> Kelola Akun
                         </a>
                     @endif
 
+                    <div class="border-t border-gray-100"></div>
+
+                    {{-- 3. Logout --}}
                     <a href="{{ route('auth.logout') }}"
                         class="flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
                         <i class="w-4 fa-solid fa-right-from-bracket"></i> Logout

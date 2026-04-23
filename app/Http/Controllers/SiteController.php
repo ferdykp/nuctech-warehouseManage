@@ -44,10 +44,10 @@ class SiteController extends Controller
     }
 
 
-    public function show($code)
+    public function show($slug)
     {
         // return Site::where('code', $code)->firstOrFail();
-        $site = Site::findOrFail($code); // Akan melempar error 404 jika user tidak ditemukan
+        $site = Site::findOrFail($slug); // Akan melempar error 404 jika user tidak ditemukan
     }
 
 

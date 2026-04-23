@@ -4,27 +4,70 @@ namespace App\Http\Controllers;
 
 use App\Models\SparepartStock;
 use App\Models\SparepartHistory;
+use App\Models\SparepartTransfer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SparepartStockController extends Controller
 {
-    /* =====================
-        MOVE STOCK
-    ====================== */
-    // public function move(Request $request)
+    // public function move(Request $request, $id)
     // {
     //     $request->validate([
-    //         'sparepart_id' => 'required|exists:spareparts,id',
-    //         'from_site_id' => 'required|exists:sites,id',
-    //         'to_site_id'   => 'required|exists:sites,id|different:from_site_id',
+    //         'to_site_id'   => 'required|exists:sites,id',
     //         'condition'    => 'required|in:new,used-good,damaged,repaired',
     //         'qty'          => 'required|integer|min:1',
     //     ]);
 
+    //     $from = SparepartStock::findOrFail($id);
+
+    //     if ($from->qty < $request->qty) {
+    //         return back()->with('error', 'Stock tidak cukup! Stok tersedia: ' . $from->qty);
+    //     }
+
+    //     $from->decrement('qty', $request->qty);
+
+    //     $currentQty = $from->qty;
+    //     if ($currentQty <= 0) {
+    //         $from->delete();
+    //     }
+
+    //     $to = SparepartStock::firstOrCreate(
+    //         [
+    //             'sparepart_id' => $from->sparepart_id,
+    //             'site_id'      => $request->to_site_id,
+    //             'condition'    => $request->condition,
+    //         ],
+    //         ['qty' => 0]
+    //     );
+    //     $to->increment('qty', $request->qty);
+
+    //     SparepartHistory::create([
+    //         'sparepart_id' => $from->sparepart_id,
+    //         'from_site_id' => $from->site_id, 
+    //         'to_site_id'   => $request->to_site_id,
+    //         'action'       => 'MOVE',
+    //         'condition'    => $request->condition,
+    //         'qty'          => $request->qty,
+    //         'note'         => $request->note,
+    //     ]);
+
+    //     return back()->with('success', 'Stock berhasil dipindahkan');
+    // }
+
+    // public function changeCondition(Request $request)
+    // {
+    //     $request->validate([
+    //         'sparepart_id' => 'required|exists:spareparts,id',
+    //         'site_id'      => 'required|exists:sites,id',
+    //         'from_condition' => 'required|in:new,used-good,damaged,repaired',
+    //         'to_condition'   => 'required|in:new,used-good,damaged,repaired',
+    //         'qty'            => 'required|integer|min:1',
+    //     ]);
+
     //     $from = SparepartStock::where([
     //         'sparepart_id' => $request->sparepart_id,
-    //         'site_id'      => $request->from_site_id,
-    //         'condition'    => $request->condition,
+    //         'site_id'      => $request->site_id,
+    //         'condition'    => $request->from_condition,
     //     ])->firstOrFail();
 
     //     abort_if($from->qty < $request->qty, 400, 'Stock tidak cukup');
@@ -34,8 +77,8 @@ class SparepartStockController extends Controller
     //     $to = SparepartStock::firstOrCreate(
     //         [
     //             'sparepart_id' => $request->sparepart_id,
-    //             'site_id'      => $request->to_site_id,
-    //             'condition'    => $request->condition,
+    //             'site_id'      => $request->site_id,
+    //             'condition'    => $request->to_condition,
     //         ],
     //         ['qty' => 0]
     //     );
@@ -44,118 +87,150 @@ class SparepartStockController extends Controller
 
     //     SparepartHistory::create([
     //         'sparepart_id' => $request->sparepart_id,
-    //         'from_site_id' => $request->from_site_id,
-    //         'to_site_id'   => $request->to_site_id,
-    //         'action'       => 'MOVE',
-    //         'condition'    => $request->condition,
+    //         'from_site_id' => $request->site_id,
+    //         'action'       => 'CHANGE_CONDITION',
+    //         'old_condition' => $request->from_condition,
+    //         'new_condition' => $request->to_condition,
     //         'qty'          => $request->qty,
     //         'note'         => $request->note,
     //     ]);
 
-    //     $from->decrement('qty', $request->qty);
-
-    //     if ($from->qty - $request->qty <= 0) {
-    //         $from->delete();
-    //     }
-
-
-    //     return back()->with('success', 'Stock berhasil dipindahkan');
+    //     return back()->with('success', 'Kondisi berhasil diubah');
     // }
 
-    public function move(Request $request, $id) // Tangkap ID dari URL
+
+    /**
+     * TAHAP 1: REQUEST (Dilakukan oleh Cabang SMG)
+     * Membuat permintaan tanpa memotong stok sama sekali.
+     */
+    public function requestMove(Request $request, $id)
     {
         $request->validate([
-            'to_site_id'   => 'required|exists:sites,id',
-            'condition'    => 'required|in:new,used-good,damaged,repaired',
-            'qty'          => 'required|integer|min:1',
+            'to_site_id' => 'required|exists:sites,id',
+            'qty'        => 'required|integer|min:1',
         ]);
 
-        // Cari data stok asal berdasarkan ID yang dikirim di URL
         $from = SparepartStock::findOrFail($id);
 
-        // Validasi stok cukup
         if ($from->qty < $request->qty) {
-            return back()->with('error', 'Stock tidak cukup! Stok tersedia: ' . $from->qty);
+            return back()->with('error', 'Stok tidak mencukupi.');
         }
 
-        // 1. Kurangi stok asal
-        $from->decrement('qty', $request->qty);
-
-        // Hapus record jika stok habis agar tidak mengotori tabel
-        $currentQty = $from->qty;
-        if ($currentQty <= 0) {
-            $from->delete();
-        }
-
-        // 2. Tambah/Buat stok di tujuan
-        $to = SparepartStock::firstOrCreate(
-            [
-                'sparepart_id' => $from->sparepart_id,
-                'site_id'      => $request->to_site_id,
-                'condition'    => $request->condition,
-            ],
-            ['qty' => 0]
-        );
-        $to->increment('qty', $request->qty);
-
-        // 3. Catat History
-        SparepartHistory::create([
+        SparepartTransfer::create([
             'sparepart_id' => $from->sparepart_id,
-            'from_site_id' => $from->site_id, // Ambil otomatis dari data stok asal
+            'from_site_id' => $from->site_id,
             'to_site_id'   => $request->to_site_id,
-            'action'       => 'MOVE',
-            'condition'    => $request->condition,
             'qty'          => $request->qty,
+            'condition'    => $from->condition,
+            'status'       => 'pending',
             'note'         => $request->note,
         ]);
 
-        return back()->with('success', 'Stock berhasil dipindahkan');
+        return back()->with('success', 'Permintaan mutasi berhasil dikirim.');
     }
 
-    /* =====================
-        CHANGE CONDITION
-    ====================== */
-    public function changeCondition(Request $request)
+    /**
+     * TAHAP 2: APPROVE (Dilakukan oleh Cabang SBY)
+     * Stok SBY berkurang, tapi stok SMG BELUM bertambah.
+     * Barang dianggap "In-Transit".
+     */
+    public function approveMove($transferId)
     {
-        $request->validate([
-            'sparepart_id' => 'required|exists:spareparts,id',
-            'site_id'      => 'required|exists:sites,id',
-            'from_condition' => 'required|in:new,used-good,damaged,repaired',
-            'to_condition'   => 'required|in:new,used-good,damaged,repaired',
-            'qty'            => 'required|integer|min:1',
-        ]);
+        $transfer = SparepartTransfer::findOrFail($transferId);
 
-        $from = SparepartStock::where([
-            'sparepart_id' => $request->sparepart_id,
-            'site_id'      => $request->site_id,
-            'condition'    => $request->from_condition,
-        ])->firstOrFail();
+        if (auth()->user()->role !== 'superadmin' && auth()->user()->site_id !== $transfer->from_site_id) {
+            return back()->with('error', 'Anda tidak memiliki otoritas di site asal ini.');
+        }
 
-        abort_if($from->qty < $request->qty, 400, 'Stock tidak cukup');
+        if ($transfer->status !== 'pending') {
+            return back()->with('error', 'Transaksi ini sudah diproses.');
+        }
 
-        $from->decrement('qty', $request->qty);
+        // Cari stok di site asal
+        $stockSource = SparepartStock::where([
+            'sparepart_id' => $transfer->sparepart_id,
+            'site_id'      => $transfer->from_site_id,
+            'condition'    => $transfer->condition
+        ])->first();
 
-        $to = SparepartStock::firstOrCreate(
-            [
-                'sparepart_id' => $request->sparepart_id,
-                'site_id'      => $request->site_id,
-                'condition'    => $request->to_condition,
-            ],
-            ['qty' => 0]
-        );
+        if (!$stockSource || $stockSource->qty < $transfer->qty) {
+            return back()->with('error', 'Stok di gudang asal tidak cukup.');
+        }
 
-        $to->increment('qty', $request->qty);
+        DB::transaction(function () use ($transfer, $stockSource) {
+            // 1. Kurangi stok asal
+            $stockSource->decrement('qty', $transfer->qty);
+            if ($stockSource->qty <= 0) {
+                $stockSource->delete();
+            }
 
-        SparepartHistory::create([
-            'sparepart_id' => $request->sparepart_id,
-            'from_site_id' => $request->site_id,
-            'action'       => 'CHANGE_CONDITION',
-            'old_condition' => $request->from_condition,
-            'new_condition' => $request->to_condition,
-            'qty'          => $request->qty,
-            'note'         => $request->note,
-        ]);
+            // 2. Update status transfer
+            $transfer->update([
+                'status' => 'approved',
+                'approved_at' => now()
+            ]);
 
-        return back()->with('success', 'Kondisi berhasil diubah');
+            // 3. Catat History (Status: Dikirim)
+            SparepartHistory::create([
+                'sparepart_id' => $transfer->sparepart_id,
+                'from_site_id' => $transfer->from_site_id,
+                'to_site_id'   => $transfer->to_site_id,
+                'action'       => 'OUT_TRANSFER',
+                'condition'    => $transfer->condition,
+                'qty'          => $transfer->qty,
+                'note'         => 'Barang dalam perjalanan (Approved)',
+            ]);
+        });
+
+        return back()->with('success', 'Barang disetujui dan sedang dalam pengiriman.');
+    }
+
+    /**
+     * TAHAP 3: RECEIVE (Dilakukan oleh Cabang SMG)
+     * Konfirmasi fisik sampai, baru stok SMG bertambah.
+     */
+    public function receiveMove($transferId)
+    {
+        $transfer = SparepartTransfer::findOrFail($transferId);
+
+        if (auth()->user()->role !== 'superadmin' && auth()->user()->site_id !== $transfer->to_site_id) {
+            return back()->with('error', 'Hanya admin site tujuan yang boleh melakukan konfirmasi terima.');
+        }
+
+        if ($transfer->status !== 'approved') {
+            return back()->with('error', 'Barang belum di-approve oleh pengirim.');
+        }
+
+        DB::transaction(function () use ($transfer) {
+            // 1. Tambah/Buat stok di tujuan
+            $toStock = SparepartStock::firstOrCreate(
+                [
+                    'sparepart_id' => $transfer->sparepart_id,
+                    'site_id'      => $transfer->to_site_id,
+                    'condition'    => $transfer->condition,
+                ],
+                ['qty' => 0]
+            );
+            $toStock->increment('qty', $transfer->qty);
+
+            // 2. Update status transfer
+            $transfer->update([
+                'status' => 'received',
+                'received_at' => now()
+            ]);
+
+            // 3. Catat History Final
+            SparepartHistory::create([
+                'sparepart_id' => $transfer->sparepart_id,
+                'from_site_id' => $transfer->from_site_id,
+                'to_site_id'   => $transfer->to_site_id,
+                'action'       => 'IN_TRANSFER',
+                'condition'    => $transfer->condition,
+                'qty'          => $transfer->qty,
+                'note'         => 'Barang diterima oleh tujuan',
+            ]);
+        });
+
+        return back()->with('success', 'Barang berhasil diterima dan masuk ke stok.');
     }
 }

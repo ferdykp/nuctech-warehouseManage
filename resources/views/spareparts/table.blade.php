@@ -7,7 +7,8 @@
             <th class="px-4 py-3 text-center">Total Qty</th>
             {{-- <th class="px-4 py-3 text-center">UOM</th> --}}
             <th class="px-4 py-3 text-center">Conditions</th>
-            @if (Auth::user()->role === 'admin')
+            @if (Auth::user()->role === 'superadmin' ||
+                    (Auth::user()->role === 'admin_site' && Auth::user()->site_id === $siteData->id))
                 <th class="px-4 py-3 text-center">Action</th>
             @endif
         </tr>
@@ -22,7 +23,8 @@
                 <td class="px-4 py-3 font-bold text-center">{{ $item->item_name }}</td>
                 <td class="px-4 py-3 text-center">{{ $item->serial_number }}</td>
                 <td class="px-4 py-3 text-center">
-                    <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-100 rounded-full">
+                    <div
+                        class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-100 rounded-full">
                         <span class="font-bold text-blue-700">
                             {{ $item->total_qty }}
                         </span>
@@ -39,8 +41,9 @@
                     @endforeach
                 </td>
 
-                @if (Auth::user()->role === 'admin')
-                    <td class="px-4 py-3 text-center">
+                @if (Auth::user()->role === 'superadmin' ||
+                        (Auth::user()->role === 'admin_site' && Auth::user()->site_id === $siteData->id))
+                    {{-- <td class="px-4 py-3 text-center">
                         <div class="flex justify-center gap-2">
                             <button onclick='openDetailModal(@json($item), @json($sites))'
                                 class="px-3 py-1 text-xs text-white bg-gray-600 rounded hover:bg-gray-700">
@@ -51,6 +54,31 @@
                                 <button onclick="openMoveModal({{ $item->id }}, '{{ $item->item_name }}', {{ $item->total_qty }})"
                                     class="px-3 py-1 text-xs text-white bg-orange-500 rounded hover:bg-orange-600">
                                     MOVE
+                                </button>
+                            @endif
+                        </div>
+                    </td> --}}
+
+                    <td class="px-4 py-3 text-center">
+                        <div class="flex justify-center gap-2">
+                            <button
+                                onclick='openDetailModal(@json($item), @json($all_sites))'
+                                class="px-3 py-1 text-xs text-white bg-gray-600 rounded hover:bg-gray-700">
+                                DETAIL
+                            </button>
+
+                            {{-- Tombol Move/Request --}}
+                            @php
+                                // Cek apakah stok ini milik site user sekarang
+                                // Kita asumsikan stok yang tampil di tabel adalah stok site aktif
+                                $currentStock = $item->stocks->where('site_id', $siteData->id)->first();
+                            @endphp
+
+                            @if ($currentStock)
+                                <button
+                                    onclick="openMoveModal({{ $currentStock->id }}, '{{ $item->item_name }}', {{ $currentStock->qty }})"
+                                    class="px-3 py-1 text-xs text-white bg-orange-500 rounded hover:bg-orange-600">
+                                    REQUEST MOVE
                                 </button>
                             @endif
                         </div>
@@ -109,8 +137,7 @@
             </div>
             <div class="mb-6">
                 <label class="block mb-1 text-sm font-medium text-gray-700">Catatan Pemindahan:</label>
-                <textarea name="note"
-                    class="w-full h-24 p-2 text-sm border rounded outline-none focus:ring-2 focus:ring-orange-500"
+                <textarea name="note" class="w-full h-24 p-2 text-sm border rounded outline-none focus:ring-2 focus:ring-orange-500"
                     placeholder="Alasan pemindahan..."></textarea>
             </div>
             <div class="flex justify-end gap-3">
@@ -172,7 +199,7 @@
     }
 
     // klik area gelap untuk tutup
-    window.addEventListener('click', function (e) {
+    window.addEventListener('click', function(e) {
         const modal = document.getElementById('asset-modal');
         if (e.target === modal) closeAssetModal();
     });
@@ -202,7 +229,7 @@
     }
 
     // Tambahan: Validasi saat user mengetik manual
-    document.getElementById('move-quantity').addEventListener('input', function () {
+    document.getElementById('move-quantity').addEventListener('input', function() {
         const max = parseInt(this.max);
         const val = parseInt(this.value);
         const info = document.getElementById('max-info');
@@ -218,7 +245,7 @@
     });
 
     // Menutup modal jika area di luar kotak putih di-klik
-    window.onclick = function (event) {
+    window.onclick = function(event) {
         const modal = document.getElementById('modal-move');
         if (event.target == modal) {
             closeMoveModal();
@@ -380,5 +407,22 @@
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }, 200);
+    }
+
+    function openMoveModal(stockId, itemName, currentQty) {
+        const modal = document.getElementById('modal-move');
+        const qtyInput = document.getElementById('move-quantity');
+        const maxInfo = document.getElementById('max-info');
+
+        document.getElementById('move-asset-tag').innerText = "REQUEST TRANSFER: " + itemName;
+
+        // Sesuaikan URL ini dengan route requestMove Anda
+        document.getElementById('form-move').action = "/movement/request/" + stockId;
+
+        qtyInput.max = currentQty;
+        qtyInput.value = 1;
+        maxInfo.innerText = "* Stok tersedia di site ini: " + currentQty + " pcs";
+
+        modal.classList.remove('hidden');
     }
 </script>

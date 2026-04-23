@@ -18,53 +18,73 @@ class SparepartController extends Controller
         return Site::where('slug', $slug)->firstOrFail();
     }
 
-    private function viewPrefix(): string
+    // Middleware check untuk memastikan admin tidak mengutak-atik site orang lain
+    private function authorizeSiteAccess(Site $siteData)
     {
-        return 'spareparts';
+
+        $user = Auth::user();
+        if ($user->role !== 'superadmin' && $user->site_id !== $siteData->id) {
+            abort(403, 'Anda tidak memiliki akses ke site ini.');
+        }
     }
 
+    // public function index(string $slug)
+    // {
+    //     $siteData = $this->getSite($slug);
+
+    //     // Hanya superadmin atau admin dari site ini yang bisa melihat halaman ini
+    //     // Jika Anda ingin admin SBY bisa melihat stok SMG (Read Only), hapus baris di bawah ini
+    //     $this->authorizeSiteAccess($siteData);
+
+    //     $data = Sparepart::whereHas('stocks', function ($q) use ($siteData) {
+    //         $q->where('site_id', $siteData->id);
+    //     })
+    //         ->with([
+    //             'stocks.site',
+    //             'histories.fromSite',
+    //             'histories.toSite',
+    //         ])
+    //         ->withSum(['stocks as total_qty' => function ($q) use ($siteData) {
+    //             $q->where('site_id', $siteData->id);
+    //         }], 'qty')
+    //         ->latest()
+    //         ->paginate(10);
+
+    //     $all_sites = Site::with('branch')->where('id', '!=', $siteData->id)->get();
+    //     $sites = Site::all();
+
+    //     return view('spareparts.index', compact('data', 'slug', 'siteData', 'all_sites', 'sites'));
+    // }
     public function index(string $slug)
     {
         $siteData = $this->getSite($slug);
 
+        // HAPUS ATAU KOMENTAR BARIS INI agar admin bisa buka site lain (Read Only)
+        // $this->authorizeSiteAccess($siteData); 
+
         $data = Sparepart::whereHas('stocks', function ($q) use ($siteData) {
             $q->where('site_id', $siteData->id);
         })
-            ->with([
-                // Memastikan relasi untuk Modal Detail ter-load semua
-                'stocks.site',
-                'histories.fromSite',
-                'histories.toSite',
-            ])
+            ->with(['stocks.site', 'histories.fromSite', 'histories.toSite'])
             ->withSum(['stocks as total_qty' => function ($q) use ($siteData) {
                 $q->where('site_id', $siteData->id);
             }], 'qty')
             ->latest()
             ->paginate(10);
 
-        // Variabel untuk modal MOVE (Site selain site aktif)
         $all_sites = Site::with('branch')->where('id', '!=', $siteData->id)->get();
-
-        // Variabel untuk modal DETAIL (Dibutuhkan oleh openDetailModal)
         $sites = Site::all();
 
         return view('spareparts.index', compact('data', 'slug', 'siteData', 'all_sites', 'sites'));
     }
 
-
-    public function create(string $site)
-    {
-        abort_if(!Auth::check() || Auth::user()->role !== 'admin', 403);
-
-        $siteData = $this->getSite($site);
-
-        return view(
-            $this->viewPrefix($site) . '.create',
-            compact('site', 'siteData')
-        );
-    }
     public function store(Request $request, string $slug)
     {
+        $siteData = $this->getSite($slug);
+
+        // VALIDASI KEAMANAN: Cek apakah user berhak menambah barang di site ini
+        $this->authorizeSiteAccess($siteData);
+
         $request->validate([
             'item_name' => 'required|string',
             'serial_number' => 'nullable|string',
@@ -75,9 +95,7 @@ class SparepartController extends Controller
             'image'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
-        $siteData = $this->getSite($slug);
         $imagePath = null;
-
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('spareparts', 'public');
         }
@@ -104,120 +122,29 @@ class SparepartController extends Controller
             'action'       => 'CREATE',
             'condition'    => $request->condition,
             'qty'          => $request->qty,
-            'note'         => $request->note,
+            'note'         => "Created by " . Auth::user()->name . " at " . $siteData->name,
         ]);
 
-        // Redirect menggunakan SLUG yang aktif
         return redirect()->route('sparepart.index', $slug)->with('success', 'Sparepart berhasil ditambahkan');
     }
 
-    public function edit(string $site, int $id)
-    {
-        $siteData = $this->getSite($site);
-
-        $data = Sparepart::with(['stocks' => function ($q) use ($siteData) {
-            $q->where('site_id', $siteData->id);
-        }])->findOrFail($id);
-
-        return view(
-            $this->viewPrefix($site) . '.edit',
-            compact('data', 'site', 'siteData')
-        );
-    }
-
-
-    public function update(Request $request, string $site, int $id)
-    {
-        $request->validate([
-            'item_name' => 'required|string',
-            'serial_number' => 'nullable|string',
-            'type'      => 'required|string',
-            'uom'       => 'required|string',
-        ]);
-
-        $sparepart = Sparepart::findOrFail($id);
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('spareparts', 'public');
-            $sparepart->image = $imagePath;
-        }
-
-
-        $sparepart->update($request->only(
-            'item_name',
-            'serial_number',
-            'type',
-            'uom',
-            'note'
-        ));
-
-        return redirect("/$site")->with('success', 'Data sparepart diperbarui');
-    }
-
-
     public function destroy(string $site, int $id)
     {
-        Sparepart::findOrFail($id)->delete();
+        $siteData = $this->getSite($site);
+        $this->authorizeSiteAccess($siteData);
 
-        return redirect("/$site")->with('success', 'Sparepart dihapus');
+        // Cari sparepart yang HANYA ada di site ini untuk dihapus stoknya
+        // Catatan: Jika Sparepart ini global, sebaiknya hanya hapus stoknya, bukan model Sparepart-nya
+        $sparepart = Sparepart::findOrFail($id);
+        $sparepart->delete();
+
+        return redirect()->route('sparepart.index', $site)->with('success', 'Sparepart dihapus');
     }
 
-    public function search(Request $request, string $slug)
-    {
-        $siteData = $this->getSite($slug);
-        $query = $request->input('search');
-
-        $data = Sparepart::query()
-            ->whereHas('stocks', fn($q) => $q->where('site_id', $siteData->id))
-            ->when($query, function ($q) use ($query, $siteData) {
-                $q->where(function ($sub) use ($query, $siteData) {
-                    $sub->where('item_name', 'like', "%{$query}%")
-                        ->orWhere('serial_number', 'like', "%{$query}%")
-                        ->orWhere('type', 'like', "%{$query}%")
-                        ->orWhere('uom', 'like', "%{$query}%");
-                });
-            })
-            ->with([
-                'stocks.site',
-                'histories.fromSite',
-                'histories.toSite',
-            ])
-            ->withSum(['stocks as total_qty' => fn($q) => $q->where('site_id', $siteData->id)], 'qty')
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
-
-        // Data tambahan untuk Modal yang ada di dalam table.blade.php
-        $all_sites = Site::with('branch')->where('id', '!=', $siteData->id)->get();
-        $sites = Site::all();
-
-        if ($request->ajax()) {
-            return response()->json([
-                'html' => view('spareparts.table', [
-                    'assets' => $data, // Nama variabel harus konsisten dengan table.blade.php
-                    'slug' => $slug,
-                    'siteData' => $siteData,
-                    'all_sites' => $all_sites,
-                    'sites' => $sites
-                ])->render()
-            ]);
-        }
-
-        return view('spareparts.index', compact('data', 'slug', 'siteData', 'all_sites', 'sites'));
-    }
-
-
-
-
-    public function exportExcel(string $site)
-    {
-        return Excel::download(
-            new SparepartExport($site),
-            strtoupper($site) . '_SPAREPART_' . now()->format('Ymd_His') . '.xlsx'
-        );
-    }
     public function bulkDelete(Request $request, string $site)
     {
-        abort_if(!Auth::check() || Auth::user()->role !== 'admin', 403);
+        $siteData = $this->getSite($site);
+        $this->authorizeSiteAccess($siteData);
 
         $request->validate([
             'ids' => 'required|array',

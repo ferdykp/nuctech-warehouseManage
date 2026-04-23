@@ -13,18 +13,75 @@
                 <div class="w-32 mt-2 border-b-4 border-red-600"></div>
             </div>
 
+            {{-- NOTIFICATION PANEL UNTUK APPROVAL & RECEIVE --}}
+            @php
+                $pendingApprovals = \App\Models\SparepartTransfer::where('from_site_id', $siteData->id)
+                    ->where('status', 'pending')
+                    ->get();
+                $pendingReceipts = \App\Models\SparepartTransfer::where('to_site_id', $siteData->id)
+                    ->where('status', 'approved')
+                    ->get();
+            @endphp
+
+            @if ($pendingApprovals->count() > 0 || $pendingReceipts->count() > 0)
+                <div class="p-6 space-y-4">
+                    @foreach ($pendingApprovals as $t)
+                        <div
+                            class="flex items-center justify-between p-4 border-l-4 border-yellow-500 bg-yellow-50 rounded-r-xl">
+                            <div>
+                                <p class="text-sm font-bold text-yellow-800">REQUEST MASUK: {{ $t->sparepart->item_name }}
+                                    ({{ $t->qty }} pcs)
+                                </p>
+                                <p class="text-xs text-yellow-600">Diminta oleh: {{ $t->toSite->machine_name }} • Kondisi:
+                                    {{ $t->condition }}</p>
+                            </div>
+                            <form action="{{ route('movement.approve', $t->id) }}" method="POST">
+                                @csrf
+                                <button type="submit"
+                                    class="px-4 py-2 text-xs font-bold text-white bg-green-600 rounded-lg hover:bg-green-700">APPROVE
+                                    & KIRIM</button>
+                            </form>
+                        </div>
+                    @endforeach
+
+                    @if (Auth::user()->role === 'superadmin' ||
+                            (Auth::user()->role === 'admin_site' && Auth::user()->site_id === $siteData->id))
+                        @foreach ($pendingReceipts as $t)
+                            <div
+                                class="flex items-center justify-between p-4 border-l-4 border-blue-500 bg-blue-50 rounded-r-xl">
+                                <div>
+                                    <p class="text-sm font-bold text-blue-800">BARANG DATANG: {{ $t->sparepart->item_name }}
+                                        ({{ $t->qty }} pcs)
+                                    </p>
+                                    <p class="text-xs text-blue-600">Dikirim dari: {{ $t->fromSite->machine_name }} • Tunggu
+                                        Konfirmasi Fisik</p>
+                                </div>
+                                <form action="{{ route('movement.receive', $t->id) }}" method="POST">
+                                    @csrf
+                                    <button type="submit"
+                                        class="px-4 py-2 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700">KONFIRMASI
+                                        TERIMA</button>
+                                </form>
+                            </div>
+                        @endforeach
+                    @endif
+                </div>
+            @endif
+
             {{-- ACTION --}}
             <div class="p-6">
                 <div class="flex flex-col gap-3 mb-4 md:flex-row md:items-center md:justify-between">
                     <div class="flex flex-wrap gap-2">
-                        @if (Auth::user()->role === 'admin')
-                            {{-- Gunakan parameter $slug --}}
-                            {{-- <a href="{{ route('sparepart.create', $slug) }}"
-                                class="p-3 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700">
-                                Tambah Item
-                            </a> --}}
+                        {{-- 
+        Cek: 
+        1. Apakah user adalah superadmin? 
+        ATAU 
+        2. Apakah user adalah admin_site DAN site_id user sama dengan id site yang sedang dibuka?
+    --}}
+                        @if (Auth::user()->role === 'superadmin' ||
+                                (Auth::user()->role === 'admin_site' && Auth::user()->site_id === $siteData->id))
                             <button onclick="openCreateModal()"
-                                class="flex items-center gap-2 p-3 text-sm font-semibold text-white transition-all bg-green-600 rounded-lg hover:bg-green-700">
+                                class="flex items-center gap-2 p-3 text-sm font-semibold text-white transition-all bg-green-600 rounded-lg shadow-md hover:bg-green-700">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20"
                                     fill="currentColor">
                                     <path fill-rule="evenodd"
@@ -35,7 +92,7 @@
                             </button>
 
                             <a href="{{ route('sparepart.export', $slug) }}"
-                                class="p-3 text-sm font-semibold text-white rounded-lg bg-emerald-600 hover:bg-emerald-700">
+                                class="p-3 text-sm font-semibold text-white rounded-lg shadow-md bg-emerald-600 hover:bg-emerald-700">
                                 Export Excel
                             </a>
                         @endif

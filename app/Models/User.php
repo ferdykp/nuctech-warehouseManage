@@ -22,7 +22,8 @@ class User extends Authenticatable
         'username',
         'email',
         'password',
-        'role'
+        'role',
+        'site_id', // <--- Pastikan ini ada!
     ];
 
     /**
@@ -46,5 +47,15 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function site()
+    {
+        return $this->belongsTo(Site::class, 'site_id');
+    }
+
+    public function isSuperAdmin()
+    {
+        return $this->role === 'superadmin';
     }
 }

@@ -37,7 +37,9 @@ return new class extends Migration
                 'CREATE',
                 'MOVE',
                 'RETURN',
-                'CONDITION_CHANGE'
+                'CONDITION_CHANGE',
+                'OUT_TRANSFER', // Tambahkan ini
+                'IN_TRANSFER'   // Tambahkan ini
             ]);
 
             $table->enum('condition', ['new', 'used-good', 'damaged', 'repair'])->nullable();

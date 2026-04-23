@@ -66,7 +66,7 @@
                     </a>
                 @endforeach
 
-                @if (Auth::user()->role === 'admin')
+                @if (Auth::user()->role === 'superadmin')
                     <button @click="$dispatch('open-add-machine')"
                         class="flex items-center w-full px-4 py-2 text-sm transition-all rounded-r-lg text-emerald-300 hover:bg-emerald-500/20">
                         <i class="mr-3 fa-solid fa-plus"></i> Add Machine </button>

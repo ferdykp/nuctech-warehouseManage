@@ -23,7 +23,7 @@ class SparepartExport implements
 
     public function __construct(string $siteCode)
     {
-        $site = Site::where('code', $siteCode)->firstOrFail();
+        $site = Site::where('slug', $siteCode)->firstOrFail();
 
         $this->data = Sparepart::whereHas('stocks', function ($q) use ($site) {
             $q->where('site_id', $site->id);
@@ -45,10 +45,11 @@ class SparepartExport implements
     {
         return [
             'No',
+            'Serial Number',
             'Item Name',
             'Type',
             'Stock',
-            'UOM',
+            // 'UOM',
             'Condition',
             'Note',
             'Image',
@@ -61,14 +62,21 @@ class SparepartExport implements
     public function map($row): array
     {
         static $no = 1;
+        $totalQty = $row->stocks->sum('qty');
+        $condition = $row->stocks->first() ? $row->stocks->first()->condition : '-';
+        $stockAndUom = $totalQty . ' ' . $row->uom;
 
         return [
             $no++,
+            $row->serial_number,
             $row->item_name,
             $row->type,
-            $row->stock,
-            $row->uom,
-            $row->condition,
+            // $row->qty,
+            // $totalQty,
+            // $row->uom,
+            $stockAndUom,
+            // $row->condition,
+            $condition, // Sekarang mengambil dari relasi stocks
             $row->note,
             '', // kolom image (diisi Drawing)
         ];
@@ -117,6 +125,8 @@ class SparepartExport implements
                 $sheet->getColumnDimension('F')->setWidth(15);
                 $sheet->getColumnDimension('G')->setWidth(30);
                 $sheet->getColumnDimension('H')->setWidth(20);
+                // $sheet->getColumnDimension('I')->setWidth(20);
+
 
                 // Tinggi baris untuk gambar
                 foreach ($this->data as $index => $item) {
