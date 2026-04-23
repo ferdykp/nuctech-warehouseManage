@@ -47,6 +47,7 @@ class SparepartExport implements
             'No',
             'Serial Number',
             'Item Name',
+            'Serial Number',
             'Type',
             'Stock',
             // 'UOM',
@@ -62,23 +63,34 @@ class SparepartExport implements
     public function map($row): array
     {
         static $no = 1;
+<<<<<<< HEAD
         $totalQty = $row->stocks->sum('qty');
         $condition = $row->stocks->first() ? $row->stocks->first()->condition : '-';
         $stockAndUom = $totalQty . ' ' . $row->uom;
+=======
+        $firstStock = $row->stocks->first(); 
+>>>>>>> winnn-nerusintajri
 
         return [
             $no++,
             $row->serial_number,
             $row->item_name,
+            $row->serial_number,
             $row->type,
+<<<<<<< HEAD
             // $row->qty,
             // $totalQty,
             // $row->uom,
             $stockAndUom,
             // $row->condition,
             $condition, // Sekarang mengambil dari relasi stocks
+=======
+            $firstStock ? $firstStock->qty : 0,
+            $row->uom,
+            $firstStock ? ucfirst($firstStock->condition) : '-',
+>>>>>>> winnn-nerusintajri
             $row->note,
-            '', // kolom image (diisi Drawing)
+            '', 
         ];
     }
 

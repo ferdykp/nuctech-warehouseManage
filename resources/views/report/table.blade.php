@@ -2,7 +2,7 @@
 @forelse ($data as $index => $item)
     <tr class="border-b hover:bg-gray-50">
 
-        @if (Auth::user()->role === 'admin')
+        @if (Auth::user()->role === 'superadmin')
             <td class="px-4 py-3 text-center">
                 <input type="checkbox" class="w-4 h-4 checkbox_id" value="{{ $item->id }}">
             </td>
@@ -46,7 +46,7 @@
                     Detail
                 </button>
 
-                @if (Auth::user()->role === 'admin')
+                @if (Auth::user()->role === 'superadmin')
                     <a href="{{ route('report.edit', $item->id) }}"
                         class="px-3 py-2 font-semibold text-white bg-blue-600 rounded-lg text-md hover:bg-blue-700">
                         Edit

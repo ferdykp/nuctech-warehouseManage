@@ -20,7 +20,7 @@
                 <div class="flex flex-col gap-3 mb-4 md:flex-row md:items-center md:justify-between">
 
                     <div class="flex flex-wrap gap-2">
-                        @if (Auth::user()->role === 'admin')
+                        @if (Auth::user()->role === 'superadmin')
                             <a href="{{ route('report.create') }}"
                                 class="p-3 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700">
                                 Tambah Item
@@ -51,7 +51,7 @@
                 <table class="w-full text-sm border-collapse">
                     <thead class="text-gray-700 bg-gray-100">
                         <tr>
-                            @if (Auth::user()->role === 'admin')
+                            @if (Auth::user()->role === 'superadmin')
                                 <th class="px-4 py-3 text-center">
                                     <input type="checkbox" id="select_all_id">
                                 </th>
@@ -64,7 +64,7 @@
                                 <th class="px-4 py-3 text-center">Location</th>
                                 <th class="px-4 py-3 text-center">Note</th>
                                 <th class="px-4 py-3 text-center">Image</th> --}}
-                            @if (Auth::user()->role === 'admin')
+                            @if (Auth::user()->role === 'superadmin')
                                 <th class="px-4 py-3 text-center">Action</th>
                             @endif
                         </tr>

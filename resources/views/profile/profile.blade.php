@@ -26,7 +26,7 @@
         <div class="max-w-6xl mx-auto mt-6 bg-white shadow-lg rounded-2xl">
             {{-- HEADER --}}
             <div class="flex items-center justify-between px-6 py-4 border-b">
-                @if (Auth::user()->role == 'admin')
+                @if (Auth::user()->role == 'superadmin')
                     <p class="font-semibold text-gray-700">Edit Profile</p>
 
                     <a href="{{ route('users.index') }}"

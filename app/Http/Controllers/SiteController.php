@@ -12,10 +12,12 @@ class SiteController extends Controller
     public function index()
     {
         // $site = Site::all();
-        $site = Site::with('branch')->get();
+        // $site = Site::with('branch')->get();
         // return Site::all();
         // return view('site.siteList', compact('site'));
-        return view('dashboard.index', compact('site'));
+        // return view('dashboard.index', compact('site'));
+        $sites = Site::with('branch')->paginate(10);
+        return view('site.index', compact('sites'));
         // return view('spareparts.index', compact('site', 'branches'));
     }
 

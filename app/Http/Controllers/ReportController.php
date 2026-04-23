@@ -23,7 +23,7 @@ class ReportController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::check() || Auth::user()->role !== 'admin') {
+        if (!Auth::check() || Auth::user()->role !== 'superadmin') {
             return redirect()->route('ebeam.index')
                 ->with('error', 'Tidak memiliki akses');
         }
@@ -65,7 +65,7 @@ class ReportController extends Controller
 
     public function edit(string $id)
     {
-        if (!Auth::check() || Auth::user()->role !== 'admin') {
+        if (!Auth::check() || Auth::user()->role !== 'superadmin') {
             return redirect()->route('report.index')
                 ->with('error', 'Tidak memiliki akses');
         }
@@ -76,7 +76,7 @@ class ReportController extends Controller
 
     public function update(Request $request, string $id)
     {
-        if (!Auth::check() || Auth::user()->role !== 'admin') {
+        if (!Auth::check() || Auth::user()->role !== 'superadmin') {
             return redirect()->route('report.index')
                 ->with('error', 'Tidak memiliki akses');
         }
@@ -124,7 +124,7 @@ class ReportController extends Controller
 
     public function destroy(string $id)
     {
-        if (!Auth::check() || Auth::user()->role !== 'admin') {
+        if (!Auth::check() || Auth::user()->role !== 'superadmin') {
             return redirect()->route('report.index')
                 ->with('error', 'Anda tidak memiliki akses.');
         }

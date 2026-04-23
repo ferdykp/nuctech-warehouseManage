@@ -43,7 +43,7 @@
                 <div class="flex flex-col gap-3 mb-4 md:flex-row md:items-center md:justify-between">
 
                     <div class="flex flex-wrap gap-2">
-                        @if (Auth::user()->role === 'admin')
+                        @if (Auth::user()->role === 'superadmin')
                             <a href="/{{ $site }}/create"
                                 class="p-3 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700">
                                 Tambah Item

@@ -2,7 +2,7 @@
 <table class="w-full border-collapse">
     <thead class="text-gray-700 bg-gray-100">
         <tr>
-            @if (Auth::user()->role === 'admin')
+            @if (Auth::user()->role === 'superadmin')
                 <th class="px-4 py-3 text-center">
                     <input type="checkbox" id="select_all_id">
                 </th>
@@ -13,7 +13,7 @@
             <th class="px-4 py-3 text-center">Stock</th>
             <th class="px-4 py-3 text-center">UOM</th>
             <th class="px-4 py-3 text-center">Condition</th>
-            @if (Auth::user()->role === 'admin')
+            @if (Auth::user()->role === 'superadmin')
                 <th class="px-4 py-3 text-center">Action</th>
             @endif
         </tr>
@@ -22,7 +22,7 @@
     <tbody>
         @forelse ($data as $item)
             <tr class="border-b hover:bg-gray-50">
-                @if (Auth::user()->role === 'admin')
+                @if (Auth::user()->role === 'superadmin')
                     <td class="px-4 py-3 text-center">
                         <input type="checkbox" class="checkbox-id" value="{{ $item->id }}">
                     </td>
@@ -61,7 +61,7 @@
 
 
                 </td>
-                @if (Auth::user()->role === 'admin')
+                @if (Auth::user()->role === 'superadmin')
                     <td class="px-4 py-3 text-center">
                         <div class="flex justify-center gap-2">
                             {{-- <button onclick='openDetailModal(@json($item))'

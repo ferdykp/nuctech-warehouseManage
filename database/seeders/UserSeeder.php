@@ -36,11 +36,11 @@ class UserSeeder extends Seeder
         // }
         // Superadmin tetap null
         User::create([
-            'username' => 'pusat_admin',
+            'username' => 'superadmin',
             'name'     => 'Super Admin Nuctech',
             'email'    => 'admin@nuctech.com',
             'role'     => 'superadmin',
-            'password' => Hash::make('password123'),
+            'password' => Hash::make('123456'),
             'site_id'  => null,
         ]);
 

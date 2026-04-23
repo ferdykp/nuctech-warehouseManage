@@ -2,7 +2,7 @@
 <table class="w-full border-collapse">
     <thead class="text-gray-700 bg-gray-100">
         <tr>
-            {{-- @if (Auth::user()->role === 'admin')
+            {{-- @if (Auth::user()->role === 'superadmin')
                 <th class="px-4 py-3 text-center">
                     <input type="checkbox" id="select_all_id">
                 </th>
@@ -10,7 +10,7 @@
             <th class="px-4 py-3 text-center">No</th>
             <th class="px-4 py-3 text-center">Kode</th>
             <th class="px-4 py-3 text-center">City</th>
-            @if (Auth::user()->role === 'admin')
+            @if (Auth::user()->role === 'superadmin')
                 <th class="px-4 py-3 text-center">Action</th>
             @endif
         </tr>
@@ -19,7 +19,7 @@
     <tbody>
         @forelse ($branches as $b)
             <tr class="border-b hover:bg-gray-50">
-                {{-- @if (Auth::user()->role === 'admin')
+                {{-- @if (Auth::user()->role === 'superadmin')
                     <td class="px-4 py-3 text-center">
                         <input type="checkbox" class="checkbox-id" value="{{ $b->id }}">
                     </td>
@@ -30,7 +30,7 @@
                 <td class="px-4 py-3 text-center">{{ $b->branch_code }}</td>
                 <td class="px-4 py-3 text-center">{{ $b->branch_name }}</td>
 
-                @if (Auth::user()->role === 'admin')
+                @if (Auth::user()->role === 'superadmin')
                     <td class="px-4 py-3 text-center">
                         <div class="flex justify-center gap-2">
                             {{-- <button onclick='openDetailModal(@json($item))'

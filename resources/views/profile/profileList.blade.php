@@ -53,7 +53,7 @@
                                 <td class="px-4 py-3 text-center">
                                     <span
                                         class="px-3 py-1 text-xs font-medium rounded-full
-                                    {{ $user->role === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
+                                    {{ $user->role === 'superadmin' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
                                         {{ ucfirst($user->role) }}
                                     </span>
                                 </td>
