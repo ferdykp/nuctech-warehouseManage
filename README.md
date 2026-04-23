@@ -58,12 +58,7 @@ Pastikan Anda sudah menginstal:
    ```
 5. Buka file `.env` dan atur koneksi database Anda:
    ```env
-   DB_CONNECTION=mysql
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_DATABASE=sparepart-nuctech
-   DB_USERNAME=root
-   DB_PASSWORD=
+
    ```
 6. Buat tautan storage (agar gambar yang diupload bisa diakses publik):
    ```bash
@@ -85,16 +80,6 @@ Jalankan development server Laravel:
 php artisan serve
 ```
 Aplikasi sekarang dapat diakses di browser pada: `http://127.0.0.1:8000`
-
-## 👥 Akun Default (Seeder)
-Jika Anda menjalankan perintah `php artisan migrate --seed`, aplikasi akan memiliki dua akun bawaan yang bisa digunakan untuk login:
-
-- **Admin**
-  - Email: `admin@gmail.com`
-  - Password: `password`
-- **User Biasa**
-  - Email: `user@gmail.com`
-  - Password: `password`
 
 ## 📄 Lisensi
 Aplikasi ini bersifat tertutup (Proprietary) dan ditujukan khusus untuk keperluan manajemen internal Nuctech. Menggandakan atau mendistribusikan source code tanpa izin tidak diperkenankan.
