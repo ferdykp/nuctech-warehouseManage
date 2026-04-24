@@ -262,20 +262,22 @@ class SparepartController extends Controller
 
         $allStocks = SparepartStock::with(['sparepart', 'site.branch'])
             ->when($search, function ($query) use ($search) {
-                $query->whereHas('sparepart', function ($q) use ($search) {
-                    $q->where('item_name', 'LIKE', "%{$search}%")
-                        ->orWhere('serial_number', 'LIKE', "%{$search}%");
-                })
-                    ->orWhereHas('site', function ($q) use ($search) {
-                        $q->where('machine_name', 'LIKE', "%{$search}%");
-                    });
+                $query->where(function ($root) use ($search) {
+                    $root->whereHas('sparepart', function ($q) use ($search) {
+                        $q->where('item_name', 'LIKE', "%{$search}%")
+                            ->orWhere('serial_number', 'LIKE', "%{$search}%");
+                    })
+                        ->orWhereHas('site', function ($q) use ($search) {
+                            $q->where('machine_name', 'LIKE', "%{$search}%");
+                        });
+                });
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(20)
+            ->paginate(10)
             ->withQueryString();
 
-        // CEK AJAX
         if ($request->ajax()) {
+            // Langsung return string HTML dari view partial
             return view('spareparts.all_table', compact('allStocks'))->render();
         }
 

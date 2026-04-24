@@ -1,147 +1,156 @@
 @extends('layout.master')
 
 @section('content')
-    <div class="w-full px-6 py-6">
+    <div class="w-full px-6 py-8">
 
-        <div class="bg-white shadow rounded-2xl">
+        <div class="flex flex-col gap-2 mb-6">
+            <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">Branch Management</h1>
+            <p class="text-sm text-gray-500">Organize and monitor all business branch locations from one place.</p>
+        </div>
 
-            {{-- HEADER --}}
-            <div class="px-6 py-4 border-b">
-                <h2 class="text-xl font-semibold uppercase">
-                    Branch
-                </h2>
-                <div class="w-32 mt-2 border-b-4 border-red-600"></div>
-            </div>
+        <div class="overflow-hidden bg-white shadow-sm ring-1 ring-gray-200 rounded-2xl">
 
-            {{-- ACTION --}}
-            <div class="p-6">
-                <div class="flex flex-col gap-3 mb-4 md:flex-row md:items-center md:justify-between">
+            <div class="p-6 border-b border-gray-100 bg-gray-50/50">
+                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 
-                    <div class="flex flex-wrap gap-2">
-                        @if (Auth::user()->role === 'superadmin')
-                            <button id="openModal"
-                                class="px-4 py-2 font-semibold text-white transition bg-green-600 rounded-lg hover:bg-green-700 active:scale-95">
-                                + Tambah Branch
-                            </button>
-
-                            {{-- <button id="btn-delete"
-                                class="px-4 py-2 font-semibold text-white transition bg-red-600 rounded-lg hover:bg-red-700 active:scale-95">
-                                Delete Selected
-                            </button> --}}
-                        @endif
+                    <div class="relative w-full md:w-80">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input type="text" id="search" placeholder="Search by name or code..."
+                            class="block w-full py-2.5 pl-10 pr-3 text-sm border-gray-200 rounded-xl bg-white focus:border-blue-500 focus:ring-blue-500 transition-all outline-none border shadow-sm">
                     </div>
 
-                    {{-- SEARCH --}}
-                    <div class="w-full md:w-72">
-                        <input type="text" id="search" name="search" placeholder="Search item..." autocomplete="off"
-                            class="w-full px-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                    <div class="flex items-center gap-3">
+                        @if (Auth::user()->role === 'superadmin')
+                            <button id="openModal"
+                                class="flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-white transition-all bg-blue-600 rounded-xl hover:bg-blue-700 hover:shadow-lg active:scale-95">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4v16m8-8H4" />
+                                </svg>
+                                Add New Branch
+                            </button>
+                        @endif
                     </div>
                 </div>
             </div>
 
-            {{-- TABLE --}}
-            <div id="table-container">
+            <div id="table-container" class="bg-white">
                 @include('branches.table')
             </div>
 
         </div>
-
     </div>
 
-    {{-- ================= MODAL ================= --}}
+    {{-- ================= MODAL REDESIGN ================= --}}
 
     <div id="modal"
-        class="fixed inset-0 z-50 flex items-center justify-center invisible transition-all duration-200 opacity-0 bg-black/40 backdrop-blur-sm">
+        class="fixed inset-0 z-50 flex items-center justify-center invisible p-4 transition-all duration-300 opacity-0 bg-gray-900/60 backdrop-blur-sm">
 
-        {{-- CARD --}}
+        {{-- MODAL BOX --}}
         <div id="modalBox"
-            class="w-full max-w-lg p-0 mx-4 transition-all duration-200 scale-95 translate-y-6 bg-white shadow-2xl rounded-2xl">
+            class="w-full max-w-lg overflow-hidden transition-all duration-300 transform scale-95 translate-y-8 bg-white shadow-2xl rounded-3xl">
 
-            {{-- HEADER --}}
-            <div class="flex items-center justify-between px-6 py-4 border-b">
-                <h3 class="text-lg font-bold text-gray-800">Tambah Branch</h3>
-                <button id="closeModal"
-                    class="text-2xl font-bold text-gray-400 transition hover:text-red-500">&times;</button>
+            {{-- MODAL HEADER --}}
+            <div class="relative px-8 pt-8 pb-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Create New Branch</h3>
+                        <p class="text-sm text-gray-500">Fill in the details to register a new location.</p>
+                    </div>
+                    <button id="closeModal"
+                        class="p-2 text-gray-400 transition-colors bg-gray-100 rounded-full hover:bg-red-50 hover:text-red-500">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             {{-- FORM --}}
-            <form action="{{ route('branches.store') }}" method="POST" class="px-6 py-5 space-y-4">
+            <form action="{{ route('branches.store') }}" method="POST" class="px-8 py-6 space-y-5">
                 @csrf
 
-                <div>
-                    <label class="block mb-1 text-sm font-semibold">Nama Cabang</label>
-                    <input type="text" name="branch_name"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                        required>
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <div class="md:col-span-1">
+                        <label class="block mb-2 text-sm font-bold text-gray-700">Branch Name</label>
+                        <input type="text" name="branch_name" required
+                            class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
+                            placeholder="e.g. Jakarta HQ">
+                    </div>
+
+                    <div class="md:col-span-1">
+                        <label class="block mb-2 text-sm font-bold text-gray-700">Branch Code</label>
+                        <input type="text" name="branch_code" required
+                            class="w-full px-4 py-2.5 text-sm uppercase border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
+                            placeholder="e.g. JKT01">
+                    </div>
                 </div>
 
                 <div>
-                    <label class="block mb-1 text-sm font-semibold">Kode Cabang</label>
-                    <input type="text" name="branch_code"
-                        class="w-full px-4 py-2 uppercase border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                        placeholder="SBY / JKT" required>
-                </div>
-
-                <div>
-                    <label class="block mb-1 text-sm font-semibold">Alamat</label>
+                    <label class="block mb-2 text-sm font-bold text-gray-700">Detailed Address</label>
                     <textarea name="address" rows="3"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"></textarea>
+                        class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
+                        placeholder="Street name, Building, City..."></textarea>
                 </div>
 
-                {{-- ACTION --}}
-                <div class="flex justify-end gap-3 pt-3">
+                {{-- MODAL FOOTER --}}
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
                     <button type="button" id="cancelModal"
-                        class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
-                        Batal
+                        class="px-5 py-2.5 text-sm font-bold text-gray-600 transition-colors bg-white border border-gray-200 rounded-xl hover:bg-gray-50">
+                        Discard
                     </button>
 
                     <button type="submit"
-                        class="px-5 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">
-                        Simpan
+                        class="px-6 py-2.5 text-sm font-bold text-white transition-all bg-blue-600 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200">
+                        Confirm & Save
                     </button>
                 </div>
             </form>
-
         </div>
-
     </div>
-
-    {{-- ================= SCRIPT ================= --}}
 
     <script>
         const modal = document.getElementById('modal');
         const modalBox = document.getElementById('modalBox');
-
         const openBtn = document.getElementById('openModal');
         const closeBtn = document.getElementById('closeModal');
         const cancelBtn = document.getElementById('cancelModal');
 
         function openModal() {
-            modal.classList.remove('invisible', 'opacity-0');
-            modal.classList.add('opacity-100');
-            modalBox.classList.remove('scale-95', 'translate-y-6');
-            modalBox.classList.add('scale-100', 'translate-y-0');
-            document.body.classList.add('overflow-hidden');
+            modal.classList.remove('invisible');
+            modal.classList.add('flex', 'opacity-100');
+            setTimeout(() => {
+                modalBox.classList.remove('scale-95', 'translate-y-8', 'opacity-0');
+                modalBox.classList.add('scale-100', 'translate-y-0', 'opacity-100');
+            }, 10);
+            document.body.style.overflow = 'hidden';
         }
 
         function closeModal() {
+            modalBox.classList.add('scale-95', 'translate-y-8', 'opacity-0');
+            modal.classList.remove('opacity-100');
             modal.classList.add('opacity-0');
-            modalBox.classList.add('scale-95', 'translate-y-6');
-            document.body.classList.remove('overflow-hidden');
-            setTimeout(() => modal.classList.add('invisible'), 200);
+            document.body.style.overflow = 'auto';
+            setTimeout(() => {
+                modal.classList.add('invisible');
+            }, 300);
         }
 
-        openBtn.onclick = openModal;
-        closeBtn.onclick = closeModal;
-        cancelBtn.onclick = closeModal;
-
-        // klik background
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) closeModal();
+        if (openBtn) openBtn.onclick = openModal;
+        [closeBtn, cancelBtn].forEach(btn => {
+            if (btn) btn.onclick = closeModal;
         });
 
-        // ESC key
-        document.addEventListener('keydown', function(e) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+        document.addEventListener('keydown', (e) => {
             if (e.key === "Escape") closeModal();
         });
     </script>

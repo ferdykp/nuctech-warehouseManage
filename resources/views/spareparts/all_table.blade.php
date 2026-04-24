@@ -2,11 +2,11 @@
     <table class="w-full text-left border-collapse">
         <thead>
             <tr class="bg-gray-50/50">
-                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-nowrap">Sparepart Info</th>
-                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-nowrap">Lokasi Site</th>
-                <th class="px-6 py-4 text-xs font-bold text-center text-gray-500 uppercase text-nowrap">Stok</th>
-                <th class="px-6 py-4 text-xs font-bold text-center text-gray-500 uppercase text-nowrap">Kondisi</th>
-                <th class="px-6 py-4 text-xs font-bold text-center text-gray-500 uppercase text-nowrap">Aksi</th>
+                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-nowrap">Spare Part Info</th>
+                <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-nowrap">Site Location</th>
+                <th class="px-6 py-4 text-xs font-bold text-center text-gray-500 uppercase text-nowrap">Stock</th>
+                <th class="px-6 py-4 text-xs font-bold text-center text-gray-500 uppercase text-nowrap">Condition</th>
+                <th class="px-6 py-4 text-xs font-bold text-center text-gray-500 uppercase text-nowrap">Action</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
@@ -27,7 +27,7 @@
                                 <span
                                     class="text-sm font-semibold text-gray-700">{{ $stock->site->machine_name }}</span>
                                 <span
-                                    class="text-[10px] text-gray-400 uppercase leading-none">{{ $stock->site->branch->branch_name }}</span>
+                                    class="text-[10px] text-gray-400 uppercase leading-none">{{ $stock->site->branch->branch_name ?? 'No Branch' }}</span>
                             </div>
                         </div>
                     </td>
@@ -54,19 +54,36 @@
                     <td class="px-6 py-4 text-center">
                         <a href="{{ route('sparepart.index', $stock->site->slug) }}"
                             class="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:underline">
-                            Lihat Site <i class="fa-solid fa-arrow-right"></i>
+                            View Site <i class="fa-solid fa-arrow-right"></i>
                         </a>
                     </td>
                 </tr>
             @empty
                 <tr>
                     <td colspan="5" class="px-6 py-10 italic text-center text-gray-400">
-                        Data sparepart tidak ditemukan.
+                        No spare part data found.
                     </td>
                 </tr>
             @endforelse
         </tbody>
     </table>
+
+    {{-- AREA PAGINASI --}}
+    <div class="px-8 py-6 border-t border-gray-100 bg-gray-50/30">
+        <div class="flex flex-col items-center justify-between gap-4 md:flex-row custom-pagination">
+            {{-- Info Status --}}
+            <div class="text-sm text-gray-500">
+                Showing <span class="font-bold text-gray-800">{{ $allStocks->firstItem() ?? 0 }}</span>
+                to <span class="font-bold text-gray-800">{{ $allStocks->lastItem() ?? 0 }}</span>
+                of <span class="font-bold text-gray-800">{{ $allStocks->total() }}</span> entries
+            </div>
+
+            {{-- Navigasi Link --}}
+            <div>
+                {{ $allStocks->links() }}
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="px-6 py-4 border-t pagination">

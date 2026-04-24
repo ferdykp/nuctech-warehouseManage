@@ -1,292 +1,110 @@
-{{-- TABLE BODY --}}
 @forelse ($data as $index => $item)
-    <tr class="border-b hover:bg-gray-50">
-
+    <tr class="transition-colors border-b group border-slate-50 hover:bg-slate-50/50">
         @if (Auth::user()->role === 'superadmin')
-            <td class="px-4 py-3 text-center">
-                <input type="checkbox" class="w-4 h-4 checkbox_id" value="{{ $item->id }}">
+            <td class="p-4 text-center">
+                <input type="checkbox"
+                    class="w-4 h-4 text-red-600 rounded border-slate-300 focus:ring-red-500 checkbox_id"
+                    value="{{ $item->id }}">
             </td>
         @endif
 
-        {{-- NO --}}
-        <td class="px-4 py-3 text-center">
+        <td class="p-4 font-medium text-center text-slate-400">
             {{ $index + 1 + ($data->currentPage() - 1) * $data->perPage() }}
         </td>
 
         @php
             $siteLabels = [
-                'fsjkt' => 'FS6000 Jakarta',
-                'fssmg' => 'FS6000 Semarang',
-                'fssby' => 'FS6000 Surabaya',
-                'ebeam' => 'E-Beam',
+                'fsjkt' => ['label' => 'FS6000 Jakarta', 'color' => 'bg-blue-50 text-blue-700'],
+                'fssmg' => ['label' => 'FS6000 Semarang', 'color' => 'bg-indigo-50 text-indigo-700'],
+                'fssby' => ['label' => 'FS6000 Surabaya', 'color' => 'bg-purple-50 text-purple-700'],
+                'ebeam' => ['label' => 'E-Beam', 'color' => 'bg-amber-50 text-amber-700'],
+            ];
+            $site = $siteLabels[$item->site_machine] ?? [
+                'label' => $item->site_machine,
+                'color' => 'bg-slate-100 text-slate-700',
             ];
         @endphp
 
-        <td class="px-4 py-3 text-center">
-            {{ $siteLabels[$item->site_machine] ?? $item->site_machine }}
+        <td class="p-4">
+            <span class="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-tighter {{ $site['color'] }}">
+                {{ $site['label'] }}
+            </span>
         </td>
 
-        {{-- TYPE --}}
-        <td class="px-4 py-3 text-center">
-            {{ $item->attendant }}
+        <td class="p-4">
+            <div class="flex items-center gap-2">
+                <div
+                    class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600 uppercase">
+                    {{ substr($item->attendant, 0, 2) }}
+                </div>
+                <span class="font-bold text-slate-700">{{ $item->attendant }}</span>
+            </div>
         </td>
 
-        {{-- STOCK --}}
-        <td class="px-4 py-3 text-center">
-            {{ $item->failure_date }}
+        <td class="p-4 text-center">
+            <span class="text-sm font-medium text-slate-500">
+                <i class="mr-1 opacity-50 fa-regular fa-calendar-check"></i>
+                {{ \Carbon\Carbon::parse($item->failure_date)->format('d M Y') }}
+            </span>
         </td>
 
-        {{-- ACTION --}}
-        <td class="px-4 py-3">
-            <div class="flex justify-center gap-2">
-
-                {{-- DETAIL --}}
+        <td class="p-4">
+            <div class="flex items-center justify-center gap-2">
+                {{-- DETAIL BUTTON --}}
                 <button onclick='openDetailModal(@json($item))'
-                    class="px-3 py-2 font-semibold text-white bg-gray-600 rounded-lg text-md hover:bg-gray-700">
-                    Detail
+                    class="p-2 transition-all rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                    title="View Detail">
+                    <i class="text-lg fa-solid fa-eye"></i>
                 </button>
 
                 @if (Auth::user()->role === 'superadmin')
                     <a href="{{ route('report.edit', $item->id) }}"
-                        class="px-3 py-2 font-semibold text-white bg-blue-600 rounded-lg text-md hover:bg-blue-700">
-                        Edit
+                        class="p-2 transition-all rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50"
+                        title="Edit Report">
+                        <i class="text-lg fa-solid fa-pen-to-square"></i>
                     </a>
 
-                    <div x-data="{ open: false }">
+                    <div x-data="{ open: false }" class="inline-block">
                         <button @click="open = true"
-                            class="px-3 py-2 font-semibold text-white bg-red-600 rounded-lg text-md hover:bg-red-700">
-                            Delete
+                            class="p-2 transition-all rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50"
+                            title="Delete Report">
+                            <i class="text-lg fa-solid fa-trash-can"></i>
                         </button>
 
-                        {{-- MODAL --}}
+                        {{-- DELETE MODAL --}}
                         <div x-show="open" x-cloak x-transition.opacity
-                            class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                            class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
                             <div @click.outside="open = false" x-transition
-                                class="w-full max-w-md p-6 bg-white shadow-2xl rounded-2xl">
-                                <h3 class="mb-2 text-lg font-semibold text-gray-800">
-                                    Konfirmasi Hapus
-                                </h3>
-
-                                <p class="mb-6 text-sm text-gray-600">
-                                    Apakah kamu yakin ingin menghapus data ini?
-                                    <span class="font-semibold text-red-600">Tindakan ini tidak bisa dibatalkan.</span>
-                                </p>
-
-                                <div class="flex justify-end gap-3">
+                                class="w-full max-w-sm p-8 text-center bg-white shadow-2xl rounded-3xl">
+                                <div
+                                    class="flex items-center justify-center w-20 h-20 mx-auto mb-6 text-3xl text-red-500 rounded-full bg-red-50">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                </div>
+                                <h3 class="mb-2 text-xl font-black text-slate-800">Konfirmasi Hapus</h3>
+                                <p class="mb-8 text-sm font-medium text-slate-500">Data report ini akan dihapus permanen
+                                    dari sistem.</p>
+                                <div class="flex gap-3">
                                     <button @click="open = false"
-                                        class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300">
-                                        Batal
-                                    </button>
-
-                                    <form action="{{ route('report.destroy', $item->id) }}" method="POST">
-                                        @csrf
-                                        @method('DELETE')
-
+                                        class="flex-1 py-3 text-xs font-black tracking-widest uppercase transition-colors text-slate-400 hover:text-slate-600">Batal</button>
+                                    <form action="{{ route('report.destroy', $item->id) }}" method="POST"
+                                        class="flex-1">
+                                        @csrf @method('DELETE')
                                         <button type="submit"
-                                            class="px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700">
-                                            Ya, Hapus
-                                        </button>
+                                            class="w-full py-3 text-xs font-black tracking-widest text-white uppercase transition-all bg-red-600 shadow-lg rounded-xl hover:bg-red-700 shadow-red-200">Hapus</button>
                                     </form>
                                 </div>
                             </div>
                         </div>
                     </div>
                 @endif
-
             </div>
         </td>
     </tr>
 @empty
     <tr>
-        <td colspan="10" class="py-6 text-center text-gray-500">
-            Belum ada report
+        <td colspan="10" class="p-20 text-center">
+            <i class="block mb-4 text-5xl fa-solid fa-folder-open text-slate-200"></i>
+            <p class="text-xs font-bold tracking-widest uppercase text-slate-400">Belum ada laporan kerusakan</p>
         </td>
     </tr>
 @endforelse
-
-
-{{-- ================= MODAL DETAIL (REPORT STYLE) ================= --}}
-<div id="detailModal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black/60 backdrop-blur-sm">
-
-    <div id="modalWrapper"
-        class="w-full max-w-4xl overflow-hidden transition-all duration-300 transform scale-95 bg-white shadow-2xl opacity-0 rounded-2xl">
-
-        {{-- HEADER --}}
-        <div class="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-gray-800 to-gray-700">
-            <div>
-                <h2 class="text-lg font-semibold text-white">
-                    Report Detail
-                </h2>
-                <p class="text-xs text-gray-300">
-                    Failure & Troubleshooting Report
-                </p>
-            </div>
-            <button onclick="closeDetailModal()" class="text-2xl font-bold text-gray-300 hover:text-red-400">
-                &times;
-            </button>
-        </div>
-
-        {{-- BODY --}}
-        <div class="grid grid-cols-1 gap-6 p-6 lg:grid-cols-3">
-
-            {{-- LEFT: IMAGE / EVIDENCE --}}
-            <div class="lg:col-span-1">
-                <p class="mb-2 text-xs font-semibold text-gray-500 uppercase">
-                    Evidence Image
-                </p>
-                <div
-                    class="flex items-center justify-center w-full overflow-hidden border border-dashed h-72 rounded-xl bg-gray-50">
-                    <img id="d_image" class="hidden object-contain w-full h-full">
-                    <span id="no_image" class="text-sm text-gray-400">
-                        No Image Available
-                    </span>
-                </div>
-            </div>
-
-            {{-- RIGHT: REPORT CONTENT --}}
-            <div class="space-y-6 lg:col-span-2">
-
-                {{-- META INFO --}}
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div class="p-4 border rounded-xl bg-gray-50">
-                        <p class="text-xs text-gray-500">Attendant</p>
-                        <p class="font-semibold text-gray-800" id="d_attendant"></p>
-                    </div>
-
-                    <div class="p-4 border rounded-xl bg-gray-50">
-                        <p class="text-xs text-gray-500">Site Machine</p>
-                        <p class="font-semibold text-gray-800" id="d_site_machine"></p>
-                    </div>
-
-                    <div class="p-4 border rounded-xl bg-gray-50">
-                        <p class="text-xs text-gray-500">Series Machine</p>
-                        <p class="font-semibold text-gray-800" id="d_series_machine"></p>
-                    </div>
-
-                    <div class="p-4 border rounded-xl bg-gray-50">
-                        <p class="text-xs text-gray-500">Failure Date</p>
-                        <p class="font-semibold text-gray-800" id="d_failure_date"></p>
-                    </div>
-                </div>
-
-                {{-- FAILURE SECTION --}}
-                <div class="p-5 border-l-4 border-red-500 rounded-xl bg-red-50">
-                    <h3 class="mb-3 text-sm font-bold text-red-700 uppercase">
-                        Failure Information
-                    </h3>
-
-                    <div class="mb-4">
-                        <p class="text-xs text-gray-500">Failed Sub-System</p>
-                        <p class="font-semibold text-gray-800 whitespace-pre-line" id="d_failed_subsystem"></p>
-                    </div>
-
-                    <div>
-                        <p class="text-xs text-gray-500">Failure Phenomenon</p>
-                        <p class="font-semibold text-gray-800 whitespace-pre-line" id="d_failure_phenomenon"></p>
-                    </div>
-                </div>
-
-                {{-- TROUBLESHOOT --}}
-                <div class="p-5 border-l-4 border-blue-500 rounded-xl bg-blue-50">
-                    <h3 class="mb-3 text-sm font-bold text-blue-700 uppercase">
-                        Troubleshooting Procedure
-                    </h3>
-                    <p class="font-semibold text-gray-800 whitespace-pre-line" id="d_ts_procedure"></p>
-                </div>
-
-                {{-- TIMESTAMP --}}
-                <div class="flex flex-wrap gap-4 pt-2 text-xs text-gray-500">
-                    <div>
-                        Created:
-                        <span class="font-semibold text-gray-700" id="d_created_at"></span>
-                    </div>
-                    <div>
-                        Last Update:
-                        <span class="font-semibold text-gray-700" id="d_updated_at"></span>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        {{-- FOOTER --}}
-        <div class="flex justify-end px-6 py-4 border-t bg-gray-50">
-            <button onclick="closeDetailModal()"
-                class="px-6 py-2 text-sm font-semibold text-white bg-gray-700 rounded-lg hover:bg-gray-800">
-                Close
-            </button>
-        </div>
-    </div>
-</div>
-
-
-
-<script>
-    function openDetailModal(item) {
-
-        const siteLabels = {
-            fsjkt: 'FS6000 Jakarta',
-            fssmg: 'FS6000 Semarang',
-            fssby: 'FS6000 Surabaya',
-            ebeam: 'E-Beam'
-        };
-
-        const formatDate = d =>
-            d ? new Date(d).toLocaleDateString('en-GB') : '-';
-
-        const formatDateTime = d =>
-            d ? new Date(d).toLocaleString('en-GB') : '-';
-
-        // ===== PARSE FAILURE NOTE =====
-        let failedSubsystem = '-';
-        let failurePhenomenon = '-';
-
-        if (item.failure_note) {
-            const parts = item.failure_note.split('\n\nFailure Phenomenon:\n');
-            failedSubsystem = parts[0]?.replace('Failed Sub-System:\n', '') ?? '-';
-            failurePhenomenon = parts[1] ?? '-';
-        }
-
-        // ===== FILL TEXT =====
-        d_attendant.innerText = item.attendant;
-        d_site_machine.innerText = siteLabels[item.site_machine] ?? item.site_machine;
-        d_series_machine.innerText = item.series_machine;
-        d_failure_date.innerText = formatDate(item.failure_date);
-
-        d_failed_subsystem.innerText = failedSubsystem;
-        d_failure_phenomenon.innerText = failurePhenomenon;
-        d_ts_procedure.innerText = item.ts_procedure ?? '-';
-
-        d_created_at.innerText = formatDateTime(item.created_at);
-        d_updated_at.innerText = formatDateTime(item.updated_at);
-
-        // ===== IMAGE =====
-        if (item.image) {
-            d_image.src = `/storage/${item.image}`;
-            d_image.classList.remove('hidden');
-            no_image.classList.add('hidden');
-        } else {
-            d_image.classList.add('hidden');
-            no_image.classList.remove('hidden');
-        }
-
-        // ===== SHOW =====
-        detailModal.classList.remove('hidden');
-        detailModal.classList.add('flex');
-
-        setTimeout(() => {
-            modalWrapper.classList.remove('scale-95', 'opacity-0');
-            modalWrapper.classList.add('scale-100', 'opacity-100');
-        }, 10);
-    }
-
-    function closeDetailModal() {
-        modalWrapper.classList.add('scale-95', 'opacity-0');
-        modalWrapper.classList.remove('scale-100', 'opacity-100');
-
-        setTimeout(() => {
-            detailModal.classList.add('hidden');
-            detailModal.classList.remove('flex');
-        }, 200);
-    }
-</script>
