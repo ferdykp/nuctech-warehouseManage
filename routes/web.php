@@ -16,6 +16,7 @@ Route::post('/login/auth', [AuthController::class, 'loginAuth'])->name('auth.log
 Route::get('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
 Route::middleware(['auth', 'nocache'])->group(function () {
+    Route::get('/spareparts/all', [SparepartController::class, 'allSpareparts'])->name('sparepart.all');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 

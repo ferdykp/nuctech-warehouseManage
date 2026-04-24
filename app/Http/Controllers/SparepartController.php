@@ -255,4 +255,30 @@ class SparepartController extends Controller
             strtoupper($site) . '_SPAREPART_' . now()->format('Ymd_His') . '.xlsx'
         );
     }
+
+    public function allSpareparts(Request $request)
+    {
+        $search = $request->query('search');
+
+        $allStocks = SparepartStock::with(['sparepart', 'site.branch'])
+            ->when($search, function ($query) use ($search) {
+                $query->whereHas('sparepart', function ($q) use ($search) {
+                    $q->where('item_name', 'LIKE', "%{$search}%")
+                        ->orWhere('serial_number', 'LIKE', "%{$search}%");
+                })
+                    ->orWhereHas('site', function ($q) use ($search) {
+                        $q->where('machine_name', 'LIKE', "%{$search}%");
+                    });
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(20)
+            ->withQueryString();
+
+        // CEK AJAX
+        if ($request->ajax()) {
+            return view('spareparts.all_table', compact('allStocks'))->render();
+        }
+
+        return view('spareparts.all', compact('allStocks'));
+    }
 }
