@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('from_site_id');
             $table->foreignId('to_site_id');
             $table->integer('qty');
+            $table->string('from_condition'); // Tambahkan ini: Kondisi barang saat di ASAL
             $table->string('condition');
             $table->enum('status', ['pending', 'approved', 'rejected', 'received'])->default('pending');
             $table->timestamp('approved_at')->nullable();

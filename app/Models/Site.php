@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Site extends Model
 {
     // protected $fillable = ['name', 'code', 'machine_type'];
-    protected $fillable = ['branch_id', 'machine_name', 'slug'];
+    protected $fillable = ['branch_id', 'machine_name', 'slug', 'location'];
 
     public function branch(): BelongsTo
     {

@@ -38,11 +38,16 @@
 
             {{-- 2. NOTIFICATION PANEL --}}
             @php
+                // Ambil data transfer yang butuh Approval (Admin Site Asal)
                 $pendingApprovals = \App\Models\SparepartTransfer::where('from_site_id', $siteData->id)
                     ->where('status', 'pending')
+                    ->with('sparepart')
                     ->get();
+
+                // Ambil data transfer yang butuh Receipt (Admin Site Tujuan)
                 $pendingReceipts = \App\Models\SparepartTransfer::where('to_site_id', $siteData->id)
                     ->where('status', 'approved')
+                    ->with('sparepart')
                     ->get();
             @endphp
 
@@ -50,6 +55,7 @@
                 <div class="px-8 py-6 space-y-3 bg-white border-b border-slate-100">
                     <h4 class="mb-2 text-xs font-black tracking-widest uppercase text-slate-400">Attention Required</h4>
 
+                    {{-- Section APPROVAL (Barang Keluar) --}}
                     @foreach ($pendingApprovals as $t)
                         <div
                             class="flex flex-col justify-between gap-4 p-4 border border-orange-100 md:flex-row md:items-center bg-orange-50 rounded-2xl">
@@ -61,21 +67,25 @@
                                 <div>
                                     <p class="text-sm font-extrabold text-orange-900">Transfer Request:
                                         {{ $t->sparepart->item_name }}</p>
-                                    <p class="text-xs italic font-medium text-orange-700">Destination:
-                                        {{ $t->toSite->machine_name }} • Qty: {{ $t->qty }}
-                                        {{ $t->sparepart->uom }}</p>
+                                    <p class="text-xs italic font-medium text-orange-700">
+                                        Destination: {{ $t->toSite->machine_name }} •
+                                        Qty: {{ $t->qty }} {{ $t->sparepart->uom }} •
+                                        <span class="font-bold">Condition at Source:
+                                            {{ strtoupper($t->from_condition) }}</span>
+                                    </p>
                                 </div>
                             </div>
                             <form action="{{ route('movement.approve', $t->id) }}" method="POST">
                                 @csrf
                                 <button type="submit"
                                     class="w-full md:w-auto px-6 py-2.5 text-xs font-black text-white bg-orange-600 rounded-xl hover:bg-orange-700 transition-all shadow-md shadow-orange-200">
-                                    APPROVE & PROCESS
+                                    APPROVE & DEDUCT STOCK
                                 </button>
                             </form>
                         </div>
                     @endforeach
 
+                    {{-- Section RECEIPT (Barang Masuk) --}}
                     @if (Auth::user()->role === 'superadmin' ||
                             (Auth::user()->role === 'admin_site' && Auth::user()->site_id === $siteData->id))
                         @foreach ($pendingReceipts as $t)
@@ -89,15 +99,18 @@
                                     <div>
                                         <p class="text-sm font-extrabold text-blue-900">Items In Transit:
                                             {{ $t->sparepart->item_name }}</p>
-                                        <p class="text-xs italic font-medium text-blue-700">From:
-                                            {{ $t->fromSite->machine_name }} • Confirm once physical items arrive</p>
+                                        <p class="text-xs italic font-medium text-blue-700">
+                                            From: {{ $t->fromSite->machine_name }} •
+                                            Incoming Condition: <span
+                                                class="font-bold text-blue-800">{{ strtoupper($t->condition) }}</span>
+                                        </p>
                                     </div>
                                 </div>
                                 <form action="{{ route('movement.receive', $t->id) }}" method="POST">
                                     @csrf
                                     <button type="submit"
                                         class="w-full md:w-auto px-6 py-2.5 text-xs font-black text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-200">
-                                        CONFIRM RECEIPT
+                                        CONFIRM AS {{ strtoupper($t->condition) }}
                                     </button>
                                 </form>
                             </div>

@@ -20,97 +20,78 @@ class SparepartExport implements
     WithEvents
 {
     protected $data;
+    protected $siteId;
 
     public function __construct(string $siteCode)
     {
         $site = Site::where('slug', $siteCode)->firstOrFail();
+        $this->siteId = $site->id;
 
-        $this->data = Sparepart::whereHas('stocks', function ($q) use ($site) {
-            $q->where('site_id', $site->id);
-        })->with('stocks')->get();
+        // Ambil sparepart yang HANYA ada di site tersebut
+        $this->data = Sparepart::whereHas('stocks', function ($q) {
+            $q->where('site_id', $this->siteId);
+        })->with(['stocks' => function ($q) {
+            $q->where('site_id', $this->siteId);
+        }])->get();
     }
 
-    /* =====================
-        DATA
-    ====================== */
     public function collection()
     {
         return $this->data;
     }
 
-    /* =====================
-        HEADER
-    ====================== */
     public function headings(): array
     {
         return [
             'No',
-            'Serial Number',
             'Item Name',
             'Serial Number',
             'Type',
-            'Stock',
-            // 'UOM',
+            'Stock Quantity',
             'Condition',
             'Note',
             'Image',
         ];
     }
 
-    /* =====================
-        ROW MAPPING
-    ====================== */
     public function map($row): array
     {
         static $no = 1;
-<<<<<<< HEAD
+
+        // Menghitung total qty di site tersebut
         $totalQty = $row->stocks->sum('qty');
-        $condition = $row->stocks->first() ? $row->stocks->first()->condition : '-';
+
+        // Menggabungkan semua kondisi yang ada di site tersebut (jika ada lebih dari satu)
+        $conditions = $row->stocks->pluck('condition')->unique()->implode(', ');
+
         $stockAndUom = $totalQty . ' ' . $row->uom;
-=======
-        $firstStock = $row->stocks->first(); 
->>>>>>> winnn-nerusintajri
 
         return [
             $no++,
-            $row->serial_number,
             $row->item_name,
             $row->serial_number,
             $row->type,
-<<<<<<< HEAD
-            // $row->qty,
-            // $totalQty,
-            // $row->uom,
             $stockAndUom,
-            // $row->condition,
-            $condition, // Sekarang mengambil dari relasi stocks
-=======
-            $firstStock ? $firstStock->qty : 0,
-            $row->uom,
-            $firstStock ? ucfirst($firstStock->condition) : '-',
->>>>>>> winnn-nerusintajri
+            strtoupper($conditions),
             $row->note,
-            '', 
+            '', // Kolom H untuk Image
         ];
     }
 
-    /* =====================
-        IMAGE
-    ====================== */
     public function drawings()
     {
         $drawings = [];
 
         foreach ($this->data as $index => $item) {
             if ($item->image && file_exists(storage_path('app/public/' . $item->image))) {
-
                 $drawing = new Drawing();
                 $drawing->setName($item->item_name);
-                $drawing->setDescription('Sparepart Image');
                 $drawing->setPath(storage_path('app/public/' . $item->image));
                 $drawing->setHeight(60);
+                // Kolom H adalah kolom ke-8
                 $drawing->setCoordinates('H' . ($index + 2));
-
+                $drawing->setOffsetX(10);
+                $drawing->setOffsetY(10);
                 $drawings[] = $drawing;
             }
         }
@@ -118,33 +99,32 @@ class SparepartExport implements
         return $drawings;
     }
 
-    /* =====================
-        STYLING
-    ====================== */
     public function registerEvents(): array
     {
         return [
             AfterSheet::class => function (AfterSheet $event) {
-
                 $sheet = $event->sheet->getDelegate();
 
-                // Lebar kolom
-                $sheet->getColumnDimension('A')->setWidth(6);
-                $sheet->getColumnDimension('B')->setWidth(30);
-                $sheet->getColumnDimension('C')->setWidth(20);
-                $sheet->getColumnDimension('D')->setWidth(10);
-                $sheet->getColumnDimension('E')->setWidth(10);
-                $sheet->getColumnDimension('F')->setWidth(15);
-                $sheet->getColumnDimension('G')->setWidth(30);
-                $sheet->getColumnDimension('H')->setWidth(20);
-                // $sheet->getColumnDimension('I')->setWidth(20);
+                // Styling Header
+                $sheet->getStyle('A1:H1')->getFont()->setBold(true);
 
+                // Setting Lebar Kolom
+                $sheet->getColumnDimension('A')->setWidth(5);   // No
+                $sheet->getColumnDimension('B')->setWidth(25);  // Item Name
+                $sheet->getColumnDimension('C')->setWidth(20);  // Serial
+                $sheet->getColumnDimension('D')->setWidth(15);  // Type
+                $sheet->getColumnDimension('E')->setWidth(15);  // Stock
+                $sheet->getColumnDimension('F')->setWidth(15);  // Condition
+                $sheet->getColumnDimension('G')->setWidth(30);  // Note
+                $sheet->getColumnDimension('H')->setWidth(20);  // Image (Harus lebar untuk gambar)
 
-                // Tinggi baris untuk gambar
+                // Tinggi baris untuk semua data agar gambar muat
                 foreach ($this->data as $index => $item) {
-                    if ($item->image) {
-                        $sheet->getRowDimension($index + 2)->setRowHeight(70);
-                    }
+                    $sheet->getRowDimension($index + 2)->setRowHeight(70);
+                    // Vertical center agar teks di tengah baris yang tinggi
+                    $sheet->getStyle('A' . ($index + 2) . ':G' . ($index + 2))
+                        ->getAlignment()
+                        ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
                 }
             },
         ];

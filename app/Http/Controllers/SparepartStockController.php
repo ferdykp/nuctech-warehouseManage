@@ -108,6 +108,7 @@ class SparepartStockController extends Controller
         $request->validate([
             'to_site_id' => 'required|exists:sites,id',
             'qty'        => 'required|integer|min:1',
+            'condition'  => 'required|in:new,used-good,damaged,repaired', // Validasi input kondisi baru
         ]);
 
         $from = SparepartStock::findOrFail($id);
@@ -121,7 +122,9 @@ class SparepartStockController extends Controller
             'from_site_id' => $from->site_id,
             'to_site_id'   => $request->to_site_id,
             'qty'          => $request->qty,
-            'condition'    => $from->condition,
+            // 'condition'    => $from->condition,
+            'from_condition' => $from->condition, // Mencatat 'new'
+            'condition'      => $request->condition,      // Mencatat 'used-good' (sesuai input user)
             'status'       => 'pending',
             'note'         => $request->note,
         ]);
@@ -134,6 +137,56 @@ class SparepartStockController extends Controller
      * Stok SBY berkurang, tapi stok SMG BELUM bertambah.
      * Barang dianggap "In-Transit".
      */
+    // public function approveMove($transferId)
+    // {
+    //     $transfer = SparepartTransfer::findOrFail($transferId);
+
+    //     if (auth()->user()->role !== 'superadmin' && auth()->user()->site_id !== $transfer->from_site_id) {
+    //         return back()->with('error', 'Anda tidak memiliki otoritas di site asal ini.');
+    //     }
+
+    //     if ($transfer->status !== 'pending') {
+    //         return back()->with('error', 'Transaksi ini sudah diproses.');
+    //     }
+
+    //     // Cari stok di site asal
+    //     $stockSource = SparepartStock::where([
+    //         'sparepart_id' => $transfer->sparepart_id,
+    //         'site_id'      => $transfer->from_site_id,
+    //         'condition'    => $transfer->condition
+    //     ])->first();
+
+    //     if (!$stockSource || $stockSource->qty < $transfer->qty) {
+    //         return back()->with('error', 'Stok di gudang asal tidak cukup.');
+    //     }
+
+    //     DB::transaction(function () use ($transfer, $stockSource) {
+    //         // 1. Kurangi stok asal
+    //         $stockSource->decrement('qty', $transfer->qty);
+    //         if ($stockSource->qty <= 0) {
+    //             $stockSource->delete();
+    //         }
+
+    //         // 2. Update status transfer
+    //         $transfer->update([
+    //             'status' => 'approved',
+    //             'approved_at' => now()
+    //         ]);
+
+    //         // 3. Catat History (Status: Dikirim)
+    //         SparepartHistory::create([
+    //             'sparepart_id' => $transfer->sparepart_id,
+    //             'from_site_id' => $transfer->from_site_id,
+    //             'to_site_id'   => $transfer->to_site_id,
+    //             'action'       => 'OUT_TRANSFER',
+    //             'condition'    => $transfer->condition,
+    //             'qty'          => $transfer->qty,
+    //             'note'         => 'Barang dalam perjalanan (Approved)',
+    //         ]);
+    //     });
+
+    //     return back()->with('success', 'Barang disetujui dan sedang dalam pengiriman.');
+    // }
     public function approveMove($transferId)
     {
         $transfer = SparepartTransfer::findOrFail($transferId);
@@ -146,19 +199,24 @@ class SparepartStockController extends Controller
             return back()->with('error', 'Transaksi ini sudah diproses.');
         }
 
-        // Cari stok di site asal
+        // --- PERBAIKAN DI SINI ---
+        // Jangan cari berdasarkan $transfer->condition karena itu adalah KONDISI TARGET.
+        // Cari stok yang MEMANG ADA di gudang asal untuk barang tersebut.
         $stockSource = SparepartStock::where([
             'sparepart_id' => $transfer->sparepart_id,
             'site_id'      => $transfer->from_site_id,
-            'condition'    => $transfer->condition
+            'condition'    => $transfer->from_condition // Mencari yang 'new'
         ])->first();
+        // Jika satu barang punya banyak kondisi di satu site, 
+        // idealnya kamu menyimpan 'from_stock_id' di tabel transfers saat request.
+        // -------------------------
 
         if (!$stockSource || $stockSource->qty < $transfer->qty) {
             return back()->with('error', 'Stok di gudang asal tidak cukup.');
         }
 
         DB::transaction(function () use ($transfer, $stockSource) {
-            // 1. Kurangi stok asal
+            // 1. Kurangi stok asal (apapun kondisinya di gudang asal)
             $stockSource->decrement('qty', $transfer->qty);
             if ($stockSource->qty <= 0) {
                 $stockSource->delete();
@@ -170,15 +228,15 @@ class SparepartStockController extends Controller
                 'approved_at' => now()
             ]);
 
-            // 3. Catat History (Status: Dikirim)
+            // 3. Catat History (Gunakan kondisi BARU/TARGET agar terlacak perubahan statusnya)
             SparepartHistory::create([
                 'sparepart_id' => $transfer->sparepart_id,
                 'from_site_id' => $transfer->from_site_id,
                 'to_site_id'   => $transfer->to_site_id,
                 'action'       => 'OUT_TRANSFER',
-                'condition'    => $transfer->condition,
+                'condition'    => $transfer->condition, // Ini akan mencatat kondisi target (misal: used)
                 'qty'          => $transfer->qty,
-                'note'         => 'Barang dalam perjalanan (Approved)',
+                'note'         => 'Barang keluar (Approved). Status berubah menjadi: ' . $transfer->condition,
             ]);
         });
 

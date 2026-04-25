@@ -41,7 +41,9 @@ class SiteController extends Controller
         Site::create([
             'branch_id' => $request->branch_id,
             'machine_name' => $request->machine_name,
-            'slug'         => Str::slug($request->machine_name) . '-' . Str::random(5)
+            'slug'         => Str::slug($request->machine_name) . '-' . Str::random(5),
+            'location' => $request->location,
+
         ]);
         return redirect()->route('site.index')->with('success', 'Site berhasil dibuat');
         // return redirect()->back()->with('success', 'Site berhasil dibuat');
@@ -75,7 +77,9 @@ class SiteController extends Controller
             'branch_id'    => $request->branch_id,
             'machine_name' => $request->machine_name,
             // Update slug jika nama mesin berubah
-            'slug'         => Str::slug($request->machine_name) . '-' . Str::random(5)
+            'slug'         => Str::slug($request->machine_name) . '-' . Str::random(5),
+            'location' => $request->location,
+
         ]);
 
         return redirect()->route('site.index')->with('success', 'Site berhasil diperbarui');

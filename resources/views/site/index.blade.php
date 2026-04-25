@@ -88,8 +88,9 @@
                         <tr class="border-b border-gray-100 bg-gray-50/50">
                             <th class="px-8 py-5 text-xs font-bold tracking-widest text-gray-500 uppercase">Machine Identity
                             </th>
-                            <th class="px-8 py-5 text-xs font-bold tracking-widest text-gray-500 uppercase">Location</th>
-                            <th class="px-8 py-5 text-xs font-bold tracking-widest text-gray-500 uppercase">System Slug</th>
+                            <th class="px-8 py-5 text-xs font-bold tracking-widest text-gray-500 uppercase">Branch</th>
+                            <th class="px-8 py-5 text-xs font-bold tracking-widest text-gray-500 uppercase">Location /
+                                Address</th>
                             <th class="px-8 py-5 text-xs font-bold tracking-widest text-right text-gray-500 uppercase">
                                 Actions</th>
                         </tr>
@@ -115,22 +116,46 @@
                                         </div>
                                     </div>
                                 </td>
+
                                 <td class="px-8 py-5">
                                     <div
-                                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-100 text-gray-700 border border-gray-200">
-                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                         <span
-                                            class="text-xs font-bold">{{ $site->branch->branch_name ?? 'Unassigned' }}</span>
+                                            class="text-xs font-bold tracking-wider uppercase">{{ $site->branch->branch_name ?? 'Unassigned' }}</span>
                                     </div>
                                 </td>
+
                                 <td class="px-8 py-5">
-                                    <span
-                                        class="px-3 py-1 font-mono text-xs text-blue-600 border border-blue-100 rounded-lg bg-blue-50">
-                                        {{ $site->slug }}
-                                    </span>
+                                    <div class="flex flex-col max-w-[250px]">
+                                        <div class="flex items-center gap-1.5 text-gray-900 mb-0.5">
+                                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                            <span class="text-sm font-semibold truncate">{{ $site->location }}</span>
+                                        </div>
+                                        <span class="text-xs leading-relaxed text-gray-500 line-clamp-2">
+                                            {{ $site->address ?? 'No detailed address provided' }}
+                                        </span>
+                                    </div>
                                 </td>
+
                                 <td class="px-8 py-5">
                                     <div class="flex items-center justify-end gap-3">
+                                        <button onclick="openDetailModal({{ json_encode($site->load('branch')) }})"
+                                            class="p-2.5 text-gray-400 transition-colors rounded-xl hover:bg-gray-100 hover:text-gray-900"
+                                            title="View Details">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                        </button>
                                         <a href="{{ route('sparepart.index', $site->slug) }}"
                                             class="flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-700 transition-all bg-white border border-gray-200 rounded-xl hover:bg-gray-900 hover:text-white hover:border-gray-900">
                                             Open Vault
@@ -147,50 +172,19 @@
                                                 </svg>
                                             </button>
 
-                                            <form action="{{ route('site.destroy', $site->id) }}" method="POST"
-                                                class="inline" onsubmit="return confirm('Archive this site?')">
-                                                @csrf @method('DELETE')
-                                                {{-- <button type="submit"
-                                                    class="p-2.5 text-gray-400 transition-colors rounded-xl hover:bg-red-50 hover:text-red-600">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
-                                                </button> --}}
-                                                {{-- Ganti form delete lama dengan button ini --}}
-                                                <button type="button" onclick="openDeleteModal({{ json_encode($site) }})"
-                                                    class="p-2.5 text-gray-400 transition-colors rounded-xl hover:bg-red-50 hover:text-red-600">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
-                                                </button>
-                                            </form>
+                                            <button type="button" onclick="openDeleteModal({{ json_encode($site) }})"
+                                                class="p-2.5 text-gray-400 transition-colors rounded-xl hover:bg-red-50 hover:text-red-600">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
                                         @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="4" class="px-8 py-20 text-center">
-                                    <div class="flex flex-col items-center max-w-xs mx-auto">
-                                        <div class="p-4 mb-4 rounded-full bg-gray-50">
-                                            <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-3m-3 0h-3m-3 0H4" />
-                                            </svg>
-                                        </div>
-                                        <h3 class="text-sm font-bold text-gray-900">No sites found</h3>
-                                        <p class="mt-1 text-xs text-gray-500">Start by registering your first machine site
-                                            to the system.</p>
-                                    </div>
-                                </td>
-                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -200,6 +194,84 @@
 
     {{-- MODAL STYLING (SAME FOR BOTH) --}}
     @php $modalBase = "fixed inset-0 z-50 flex items-center justify-center hidden px-4 bg-gray-900/60 backdrop-blur-sm transition-all duration-300"; @endphp
+
+    {{-- MODAL DETAIL --}}
+    <div id="modal-detail" class="{{ $modalBase }}">
+        <div class="w-full max-w-2xl overflow-hidden transition-all transform scale-100 bg-white shadow-2xl rounded-3xl">
+            <div class="relative px-8 pt-8 pb-4 border-b border-gray-50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center justify-center w-12 h-12 text-blue-600 rounded-2xl bg-blue-50">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 id="det_title" class="text-xl font-black text-gray-900">Site Information</h3>
+                            <p id="det_subtitle" class="text-xs font-medium tracking-widest text-gray-400 uppercase"></p>
+                        </div>
+                    </div>
+                    <button onclick="closeDetailModal()"
+                        class="p-2 text-gray-400 transition-colors bg-gray-100 rounded-full hover:text-red-500">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-8">
+                <div class="grid grid-cols-2 gap-8">
+                    {{-- Column 1 --}}
+                    <div class="space-y-6">
+                        <div>
+                            <label
+                                class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Branch
+                                Office</label>
+                            <p id="det_branch" class="text-sm font-bold text-gray-800"></p>
+                        </div>
+                        <div>
+                            <label
+                                class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Registration
+                                Date</label>
+                            <p id="det_created" class="text-sm font-medium text-gray-600"></p>
+                        </div>
+                    </div>
+                    {{-- Column 2 --}}
+                    <div class="space-y-6">
+                        <div>
+                            <label
+                                class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Status</label>
+                            <span
+                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                Active Online
+                            </span>
+                        </div>
+                    </div>
+                    {{-- Full Width --}}
+                    <div class="col-span-2 p-5 border border-gray-100 bg-gray-50/50 rounded-2xl">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Detailed
+                            Location / Address</label>
+                        <p id="det_location" class="text-sm italic font-medium leading-relaxed text-gray-700"></p>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-10">
+                    <button onclick="closeDetailModal()"
+                        class="w-full px-4 py-3 text-sm font-bold text-gray-600 transition-colors bg-gray-100 rounded-2xl hover:bg-gray-200">
+                        Close Preview
+                    </button>
+                    <a id="det_vault_link" href="#"
+                        class="w-full px-4 py-3 text-sm font-bold text-center text-white transition-all bg-blue-600 shadow-lg rounded-2xl hover:bg-blue-700 shadow-blue-100">
+                        Access Inventory Vault
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
     {{-- MODAL CREATE --}}
     <div id="modal-create" class="{{ $modalBase }}">
@@ -360,6 +432,46 @@
     </div>
 
     <script>
+        function openDetailModal(site) {
+            const modal = document.getElementById('modal-detail');
+
+            // Mapping data ke elemen modal
+            document.getElementById('det_title').innerText = site.machine_name;
+            document.getElementById('det_subtitle').innerText = `System ID: #ST-${String(site.id).padStart(4, '0')}`;
+            document.getElementById('det_branch').innerText = site.branch ? site.branch.branch_name : 'Unassigned';
+            document.getElementById('det_location').innerText = site.location || 'No address specified.';
+            document.getElementById('det_created').innerText = new Date(site.created_at).toLocaleDateString('id-ID', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            // Update link vault
+            document.getElementById('det_vault_link').href = `/spareparts/${site.slug}`;
+
+            // Tampilkan modal
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('opacity-100'), 10);
+        }
+
+        function closeDetailModal() {
+            const modal = document.getElementById('modal-detail');
+            modal.classList.add('hidden');
+        }
+
+        // Update juga window.onclick agar menutup modal detail saat klik luar area
+        window.onclick = function(event) {
+            const modalCreate = document.getElementById('modal-create');
+            const modalEdit = document.getElementById('modal-edit');
+            const modalDelete = document.getElementById('modal-delete');
+            const modalDetail = document.getElementById('modal-detail');
+
+            if (event.target == modalCreate) closeCreateModal();
+            if (event.target == modalEdit) closeEditModal();
+            if (event.target == modalDelete) closeDeleteModal();
+            if (event.target == modalDetail) closeDetailModal();
+        }
+
         // Create Modal Logic
         function openCreateModal() {
             const modal = document.getElementById('modal-create');

@@ -6,7 +6,7 @@
                 <th class="px-6 py-4 text-center">No</th>
                 <th class="px-6 py-4 text-left">Item Information</th>
                 <th class="px-6 py-4 text-center">Serial Number</th>
-                <th class="px-6 py-4 text-center">Availability</th>
+                <th class="px-6 py-4 text-center">Availability (Site)</th>
                 <th class="px-6 py-4 text-left">Condition Breakdowns</th>
                 @if (Auth::user()->role === 'superadmin' ||
                         (Auth::user()->role === 'admin_site' && Auth::user()->site_id === $siteData->id))
@@ -17,6 +17,11 @@
 
         <tbody class="divide-y divide-gray-50">
             @forelse ($assets as $item)
+                @php
+                    // FILTER: Hanya ambil stok untuk site yang sedang dibuka
+                    $siteStocks = $item->stocks->where('site_id', $siteData->id);
+                    $totalQtyAtSite = $siteStocks->sum('qty');
+                @endphp
                 <tr class="transition-colors hover:bg-blue-50/30 group">
                     <td class="px-6 py-4 text-sm font-medium text-center text-gray-400">
                         {{ ($assets->currentPage() - 1) * $assets->perPage() + $loop->iteration }}
@@ -48,13 +53,13 @@
                     <td class="px-6 py-4 text-center">
                         <div
                             class="inline-flex flex-col items-center justify-center min-w-[60px] py-1 bg-white border-2 border-blue-100 rounded-lg shadow-sm">
-                            <span class="text-lg font-black leading-none text-blue-700">{{ $item->total_qty }}</span>
+                            <span class="text-lg font-black leading-none text-blue-700">{{ $totalQtyAtSite }}</span>
                             <span class="text-[9px] font-bold text-blue-400 uppercase mt-1">{{ $item->uom }}</span>
                         </div>
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex flex-wrap gap-1.5">
-                            @foreach ($item->stocks as $stock)
+                            @forelse ($siteStocks as $stock)
                                 @php
                                     $colorMap = [
                                         'new' => 'bg-emerald-50 text-emerald-600 border-emerald-100',
@@ -68,37 +73,37 @@
                                     class="px-2 py-0.5 text-[10px] font-bold uppercase border rounded-md {{ $style }}">
                                     {{ str_replace('-', ' ', $stock->condition) }}: {{ $stock->qty }}
                                 </span>
-                            @endforeach
+                            @empty
+                                <span class="text-[10px] italic text-gray-400">Empty at this site</span>
+                            @endforelse
                         </div>
                     </td>
 
                     @if (Auth::user()->role === 'superadmin' ||
                             (Auth::user()->role === 'admin_site' && Auth::user()->site_id === $siteData->id))
+                        {{-- Ganti bagian Actions pada resources/views/spareparts/table.blade.php --}}
+
                         <td class="px-6 py-4 text-right">
                             <div class="flex justify-end gap-2">
+                                {{-- Tombol View Detail --}}
                                 <button
                                     onclick='openDetailModal(@json($item), @json($all_sites))'
                                     class="p-2 text-gray-400 transition-all rounded-lg hover:text-blue-600 hover:bg-blue-50"
                                     title="View Details">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                    </svg>
+                                    <i class="text-lg fa-solid fa-eye"></i>
                                 </button>
 
-                                @php $currentStock = $item->stocks->where('site_id', $siteData->id)->first(); @endphp
-                                @if ($currentStock)
+                                {{-- Tombol Request Move Tunggal --}}
+                                @php
+                                    // Mengambil baris stok pertama yang tersedia di site ini untuk inisialisasi modal
+                                    $firstAvailableStock = $siteStocks->first();
+                                @endphp
+
+                                @if ($firstAvailableStock)
                                     <button
-                                        onclick="openMoveModal({{ $currentStock->id }}, '{{ $item->item_name }}', {{ $currentStock->qty }})"
+                                        onclick="openMoveModal({{ $firstAvailableStock->id }}, '{{ $item->item_name }}', {{ $firstAvailableStock->qty }}, '{{ $firstAvailableStock->condition }}')"
                                         class="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-white bg-orange-500 hover:bg-orange-600 rounded-lg shadow-sm transition-all shadow-orange-100 uppercase tracking-tighter">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                        </svg>
+                                        <i class="fa-solid fa-truck-fast"></i>
                                         Request Move
                                     </button>
                                 @endif
@@ -109,16 +114,9 @@
             @empty
                 <tr>
                     <td colspan="6" class="px-6 py-20 text-center">
-                        <div class="flex flex-col items-center justify-center">
-                            <div class="p-4 mb-3 rounded-full bg-gray-50">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-300" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                                </svg>
-                            </div>
-                            <span class="text-sm italic font-medium text-gray-400">Data sparepart tidak ditemukan di
-                                site ini.</span>
+                        <div class="flex flex-col items-center justify-center text-gray-300">
+                            <i class="mb-4 text-5xl fa-solid fa-box-open"></i>
+                            <span class="text-sm italic font-medium">Data sparepart tidak ditemukan di site ini.</span>
                         </div>
                     </td>
                 </tr>
@@ -131,21 +129,16 @@
     {{ $assets->links() }}
 </div>
 
+{{-- MODAL MOVE --}}
 <div id="modal-move"
     class="fixed inset-0 z-[60] flex items-center justify-center hidden px-4 bg-black/60 backdrop-blur-sm">
-    <div
-        class="w-full max-w-md overflow-hidden transition-all transform bg-white border border-gray-100 shadow-2xl rounded-2xl">
-        {{-- Header Modal --}}
+    <div class="w-full max-w-md overflow-hidden bg-white border border-gray-100 shadow-2xl rounded-2xl">
         <div class="flex items-center gap-3 px-6 py-4 border-b border-orange-100 bg-orange-50">
             <div class="p-2 text-white bg-orange-500 rounded-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
+                <i class="text-lg fa-solid fa-truck-fast"></i>
             </div>
             <div>
-                <h3 class="text-lg font-bold leading-tight text-gray-800">Transfer Barang</h3>
+                <h3 class="text-lg font-bold leading-tight text-gray-800">Transfer Request</h3>
                 <p id="move-asset-tag" class="font-mono text-xs font-bold text-orange-600 uppercase"></p>
             </div>
         </div>
@@ -153,35 +146,38 @@
         <form id="form-move" method="POST" class="p-6 space-y-4">
             @csrf
             <div>
-                <label class="block mb-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Tujuan
+                <label class="block mb-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Destination
                     Site</label>
                 <select name="to_site_id"
                     class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all outline-none text-sm font-medium"
                     required>
-                    <option value="">Pilih Lokasi Baru</option>
+                    <option value="">Select Destination</option>
                     @foreach ($all_sites as $s)
-                        <option value="{{ $s->id }}">{{ $s->machine_name }} ({{ $s->branch->branch_name }})
-                        </option>
+                        @if ($s->id !== $siteData->id)
+                            <option value="{{ $s->id }}">{{ $s->machine_name }}
+                                ({{ $s->branch->branch_name }})
+                            </option>
+                        @endif
                     @endforeach
                 </select>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block mb-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Kondisi
-                        Saat Ini</label>
-                    <select name="condition"
+                    <label class="block mb-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Target
+                        Condition</label>
+                    <select name="condition" id="target-condition"
                         class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all outline-none text-sm font-medium"
                         required>
                         <option value="new">NEW</option>
-                        <option value="used-good">USED</option>
-                        <option value="damaged">BROKEN</option>
-                        <option value="repaired">REFURBISHED</option>
+                        <option value="used-good">USED GOOD</option>
+                        <option value="damaged">DAMAGED</option>
+                        <option value="repaired">REPAIRED</option>
                     </select>
                 </div>
                 <div>
                     <label
-                        class="block mb-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Jumlah</label>
+                        class="block mb-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Quantity</label>
                     <input type="number" name="qty" id="move-quantity" min="1" value="1"
                         class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all outline-none text-sm font-bold"
                         required>
@@ -190,20 +186,18 @@
             <p id="max-info" class="text-[10px] font-bold text-right text-gray-400 italic mt-0"></p>
 
             <div>
-                <label
-                    class="block mb-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Catatan</label>
+                <label class="block mb-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Note</label>
                 <textarea name="note"
                     class="w-full h-24 px-4 py-3 text-sm transition-all border border-gray-200 outline-none bg-gray-50 rounded-xl focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 placeholder:text-gray-300"
-                    placeholder="Contoh: Pemindahan stok untuk maintenance bulanan..."></textarea>
+                    placeholder="Reason for transfer..."></textarea>
             </div>
 
             <div class="flex gap-3 pt-2">
                 <button type="button" onclick="closeMoveModal()"
-                    class="flex-1 px-4 py-3 text-sm font-bold text-gray-500 transition-colors bg-gray-100 hover:bg-gray-200 rounded-xl">Batal</button>
+                    class="flex-1 px-4 py-3 text-sm font-bold text-gray-500 transition-colors bg-gray-100 hover:bg-gray-200 rounded-xl">Cancel</button>
                 <button type="submit"
-                    class="flex-[2] px-4 py-3 text-sm font-bold text-white bg-orange-600 hover:bg-orange-700 rounded-xl shadow-lg shadow-orange-200 transition-all active:scale-95">
-                    Konfirmasi Pindah
-                </button>
+                    class="flex-[2] px-4 py-3 text-sm font-bold text-white bg-orange-600 hover:bg-orange-700 rounded-xl shadow-lg shadow-orange-200 transition-all">Request
+                    Transfer</button>
             </div>
         </form>
     </div>
@@ -265,18 +259,21 @@
 
 
 <script>
-    function openMoveModal(id, tag, currentQty) {
+    function openMoveModal(stockId, itemName, currentQty, currentCondition) {
         const modal = document.getElementById('modal-move');
         const qtyInput = document.getElementById('move-quantity');
         const maxInfo = document.getElementById('max-info');
+        const targetCond = document.getElementById('target-condition');
 
-        document.getElementById('move-asset-tag').innerText = "TRANSFER TAG: " + tag;
-        document.getElementById('form-move').action = "/movement/move/" + id;
+        document.getElementById('move-asset-tag').innerText = itemName + " (" + currentCondition.toUpperCase() + ")";
+        document.getElementById('form-move').action = "/movement/request/" + stockId;
 
-        // KUNCI UTAMA: Set atribut max pada input number
+        // Set default target condition sama dengan asal
+        targetCond.value = currentCondition;
+
         qtyInput.max = currentQty;
-        qtyInput.value = 1; // Default pindah 1
-        maxInfo.innerText = "* Stok tersedia: " + currentQty + " pcs";
+        qtyInput.value = 1;
+        maxInfo.innerText = "* Available at source: " + currentQty + " pcs";
         maxInfo.classList.remove('text-red-500');
 
         modal.classList.remove('hidden');

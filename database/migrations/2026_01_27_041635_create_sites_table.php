@@ -17,6 +17,7 @@ return new class extends Migration
             // $table->string('name');
             $table->string('machine_name');
             $table->string('slug')->unique();
+            $table->string('location');
             // $table->string('machine_type');
             // $table->boolean('is_active')->default(true);
             $table->timestamps();

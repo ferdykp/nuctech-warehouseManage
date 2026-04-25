@@ -84,6 +84,11 @@
                 <i class="w-5 fa-solid fa-tags"></i>
                 <span>Categories</span>
             </a>
+            <a href="{{ route('site.index') }}"
+                class="{{ $navItemClass }} {{ request()->routeIs('site.index') ? $activeClass : '' }}">
+                <i class="w-5 fa-solid fa-map-pin"></i>
+                <span>All Sites</span>
+            </a>
             <a href="{{ route('sparepart.all') }}"
                 class="{{ $navItemClass }} {{ request()->routeIs('sparepart.all') ? $activeClass : '' }}">
                 <i class="w-5 fa-solid fa-boxes-stacked"></i>

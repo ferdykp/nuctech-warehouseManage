@@ -15,7 +15,8 @@ class SparepartTransfer extends Model
         'status', // 'pending', 'approved', 'rejected', 'received'
         'note',
         'approved_at',
-        'received_at'
+        'received_at',
+        'from_condition', // Tambahkan ini
     ];
 
     // Relasi agar mudah memanggil nama barang/site di view
