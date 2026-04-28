@@ -179,72 +179,179 @@
 
     {{-- MODAL CREATE --}}
     <div id="modal-create"
-        class="fixed inset-0 z-50 flex items-center justify-center hidden px-4 bg-black/60 backdrop-blur-sm">
-        <div class="relative w-full max-w-2xl overflow-hidden bg-white shadow-2xl rounded-2xl">
-            <div class="flex items-center justify-between px-6 py-4 border-b bg-gray-50">
-                <h3 class="text-xl font-bold text-gray-800">Add New Sparepart</h3>
-                <button onclick="closeCreateModal()" class="text-gray-400 transition-colors hover:text-red-500">
-                    <i class="text-xl fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <form action="{{ route('sparepart.store', $slug) }}" method="POST" enctype="multipart/form-data"
-                class="p-6">
-                @csrf
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div>
-                        <label class="block mb-1 text-sm font-semibold text-gray-700">Item Name</label>
-                        <input type="text" name="item_name" required placeholder="Example: Roller Conveyor"
-                            class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none">
+        class="fixed inset-0 z-50 flex items-center justify-center hidden px-4 transition-all duration-300 bg-slate-900/60 backdrop-blur-sm">
+        <div class="relative w-full max-w-3xl overflow-hidden transition-all transform bg-white shadow-2xl rounded-3xl">
+            {{-- Header --}}
+            <div class="flex items-center justify-between px-8 py-6 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center justify-center w-12 h-12 text-emerald-600 bg-emerald-50 rounded-2xl">
+                        <i class="text-xl fa-solid fa-boxes-stacked"></i>
                     </div>
                     <div>
-                        <label class="block mb-1 text-sm font-semibold text-gray-700">Category</label>
-                        <select name="category_id"
-                            class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none">
-                            <option value="">-- Select Category --</option>
-                            @foreach ($categories as $category)
-                                <option value="{{ $category->id }}">{{ $category->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block mb-1 text-sm font-semibold text-gray-700">Serial Number</label>
-                        <input type="text" name="serial_number" required placeholder="NUC1234"
-                            class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block mb-1 text-sm font-semibold text-gray-700">Type / Model</label>
-                        <input type="text" name="type" required placeholder="Example: FS6000-X1"
-                            class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block mb-1 text-sm font-semibold text-gray-700">Unit of Measure (UOM)</label>
-                        <select name="uom" required class="w-full p-2.5 border rounded-lg outline-none">
-                            <option value="PCS">PCS</option>
-                            <option value="SET">SET</option>
-                            <option value="UNIT">UNIT</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block mb-1 text-sm font-semibold text-gray-700">Initial Stock Quantity</label>
-                        <input type="number" name="qty" required min="1" value="1"
-                            class="w-full p-2.5 border rounded-lg outline-none">
-                    </div>
-                    <div>
-                        <label class="block mb-1 text-sm font-semibold text-gray-700">Condition</label>
-                        <select name="condition" required class="w-full p-2.5 border rounded-lg outline-none">
-                            <option value="new">NEW</option>
-                            <option value="used-good">USED (Good)</option>
-                            <option value="damaged">DAMAGED</option>
-                            <option value="repair">REPAIRED</option>
-                        </select>
+                        <h3 class="text-xl font-black tracking-tight text-slate-800">Add New Sparepart</h3>
+                        <p class="text-xs font-bold tracking-wider uppercase text-slate-400">Inventory Inbound &bull;
+                            {{ $siteData->name ?? 'Site' }}</p>
                     </div>
                 </div>
-                <div class="flex justify-end gap-3 mt-8">
+                <button onclick="closeCreateModal()"
+                    class="flex items-center justify-center w-10 h-10 transition-colors rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+                    <i class="text-lg fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form action="{{ route('sparepart.store', $slug) }}" method="POST" enctype="multipart/form-data"
+                class="max-h-[80vh] overflow-y-auto">
+                @csrf
+                <div class="p-8 space-y-6">
+                    {{-- Grid Utama --}}
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+
+                        {{-- Item Name --}}
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Item
+                                Name</label>
+                            <input type="text" name="item_name" required placeholder="Example: Roller Conveyor"
+                                class="w-full px-4 py-3 text-sm font-bold transition-all border outline-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-700">
+                        </div>
+
+                        {{-- Category --}}
+                        <div class="space-y-2">
+                            <label
+                                class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Category</label>
+                            <div class="relative">
+                                <select name="category_id"
+                                    class="w-full px-4 py-3 text-sm font-bold transition-all border outline-none appearance-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-emerald-500 text-slate-700">
+                                    <option value="">-- Select Category --</option>
+                                    @foreach ($categories as $category)
+                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    @endforeach
+                                </select>
+                                <i
+                                    class="absolute text-xs -translate-y-1/2 pointer-events-none right-4 top-1/2 fa-solid fa-chevron-down text-slate-400"></i>
+                            </div>
+                        </div>
+
+                        {{-- Serial Number --}}
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Serial
+                                Number</label>
+                            <input type="text" name="serial_number" placeholder="SN-XXXXX (Optional)"
+                                class="w-full px-4 py-3 text-sm font-bold transition-all border outline-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-700">
+                        </div>
+
+                        {{-- Type / Model --}}
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Type /
+                                Model</label>
+                            <input type="text" name="type" required placeholder="Example: FS6000-X1"
+                                class="w-full px-4 py-3 text-sm font-bold transition-all border outline-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-700">
+                        </div>
+
+                        {{-- Qty & UOM --}}
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Quantity &
+                                UOM</label>
+                            <div class="flex gap-0">
+                                <input type="number" name="qty" required min="1" value="1"
+                                    class="w-full px-4 py-3 text-sm font-bold transition-all border border-r-0 outline-none border-slate-200 bg-slate-50 rounded-l-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-700">
+                                <select name="uom" required
+                                    class="w-32 px-2 py-3 text-sm font-bold border outline-none border-slate-200 bg-slate-100 rounded-r-xl focus:ring-2 focus:ring-emerald-500 text-slate-700 border-l-slate-300">
+                                    <option value="" disabled selected>Select Unit</option>
+
+                                    <option value="PCS">PCS</option>
+                                    <option value="SET">SET</option>
+                                    <option value="UNIT">UNIT</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Condition --}}
+                        <div class="space-y-2">
+                            <label
+                                class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Condition</label>
+                            <select name="condition" required
+                                class="w-full px-4 py-3 text-sm font-bold transition-all border outline-none appearance-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-emerald-500 text-slate-700">
+                                <option value="" disabled selected>Select Condition</option>
+                                <option value="new">NEW</option>
+                                <option value="used-good">USED (Good)</option>
+                                <option value="damaged">DAMAGED</option>
+                                <option value="repaired">REPAIRED</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Image Upload --}}
+                    {{-- <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Sparepart
+                            Image</label>
+                        <div class="flex items-center justify-center w-full">
+                            <label
+                                class="flex flex-col items-center justify-center w-full h-32 transition-colors border-2 border-dashed cursor-pointer rounded-2xl border-slate-200 bg-slate-50 hover:bg-slate-100">
+                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                    <i class="mb-2 text-2xl fa-solid fa-cloud-arrow-up text-slate-400"></i>
+                                    <p class="text-xs font-bold text-slate-500">Click to upload or drag and drop</p>
+                                    <p class="text-[10px] text-slate-400 uppercase mt-1">PNG, JPG, WEBP (Max 2MB)</p>
+                                </div>
+                                <input type="file" name="image" class="hidden" accept="image/*" />
+                            </label>
+                        </div>
+                    </div> --}}
+
+                    {{-- Image Upload --}}
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Sparepart
+                            Image</label>
+                        <div class="flex flex-col items-center justify-center w-full gap-4">
+                            {{-- Area Upload --}}
+                            <label id="upload-label"
+                                class="flex flex-col items-center justify-center w-full h-32 transition-colors border-2 border-dashed cursor-pointer rounded-2xl border-slate-200 bg-slate-50 hover:bg-slate-100">
+                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                    <i class="mb-2 text-2xl fa-solid fa-cloud-arrow-up text-slate-400"></i>
+                                    <p class="text-xs font-bold text-slate-500">Click to upload or drag and drop</p>
+                                    <p class="text-[10px] text-slate-400 uppercase mt-1">PNG, JPG, WEBP (Max 2MB)</p>
+                                </div>
+                                <input type="file" name="image" id="image-input" class="hidden" accept="image/*"
+                                    onchange="previewImage(this)" />
+                            </label>
+
+                            {{-- Area Preview (Hidden by default) --}}
+                            {{-- Area Preview (Hidden by default) --}}
+                            <div id="preview-container" class="relative hidden w-full group">
+                                {{-- PERUBAHAN DI SINI: Ganti 'object-cover' menjadi 'object-contain' --}}
+                                <img id="image-preview" src="#" alt="Preview"
+                                    class="object-contain w-full h-48 border-2 border-emerald-500 rounded-2xl bg-slate-50">
+
+                                <button type="button" onclick="resetImage()"
+                                    class="absolute flex items-center justify-center w-8 h-8 text-white transition-all bg-red-500 rounded-full shadow-lg top-2 right-2 hover:bg-red-600">
+                                    <i class="text-xs fa-solid fa-trash"></i>
+                                </button>
+                                <div class="absolute bottom-2 left-2">
+                                    <span
+                                        class="px-3 py-1 text-[10px] font-bold text-white uppercase bg-emerald-600 rounded-lg shadow-sm">Image
+                                        Selected</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Notes --}}
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Notes</label>
+                        <textarea name="note" rows="2" placeholder="Add additional information here..."
+                            class="w-full px-4 py-3 text-sm font-bold transition-all border outline-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-700"></textarea>
+                    </div>
+                </div>
+
+                {{-- Footer --}}
+                <div class="flex items-center justify-end gap-3 px-8 py-6 border-t bg-slate-50/50 border-slate-100">
                     <button type="button" onclick="closeCreateModal()"
-                        class="px-6 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                        class="px-6 py-3 text-xs font-black tracking-widest uppercase transition-all text-slate-500 rounded-xl hover:bg-slate-100">
+                        Cancel
+                    </button>
                     <button type="submit"
-                        class="px-6 py-2.5 text-sm font-bold text-white bg-green-600 rounded-lg hover:bg-green-700">Save
-                        Sparepart</button>
+                        class="px-8 py-3 text-xs font-black tracking-widest text-white uppercase transition-all shadow-lg bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-emerald-100">
+                        <i class="mr-2 fa-solid fa-save"></i> Save Sparepart
+                    </button>
                 </div>
             </form>
         </div>
@@ -456,69 +563,133 @@
 
     {{-- MODAL EDIT --}}
     <div id="modal-edit"
-        class="fixed inset-0 z-50 flex items-center justify-center hidden px-4 bg-black/60 backdrop-blur-sm">
-        <div class="relative w-full max-w-2xl overflow-hidden bg-white shadow-2xl rounded-2xl">
-            <div class="flex items-center justify-between px-6 py-4 border-b bg-gray-50">
-                <h3 class="text-xl font-bold text-gray-800">Edit Sparepart</h3>
-                <button onclick="closeEditModal()" class="text-gray-400 transition-colors hover:text-red-500">
-                    <i class="text-xl fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <form id="form-edit" method="POST" enctype="multipart/form-data" class="p-6">
-                @csrf
-                @method('PUT')
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div>
-                        <label class="block mb-1 text-sm font-semibold text-gray-700">Item Name</label>
-                        <input type="text" id="edit_item_name" name="item_name" required
-                            class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+        class="fixed inset-0 z-50 flex items-center justify-center hidden px-4 transition-all duration-300 bg-slate-900/60 backdrop-blur-sm">
+        <div class="relative w-full max-w-3xl overflow-hidden transition-all transform bg-white shadow-2xl rounded-3xl">
+            {{-- Header --}}
+            <div class="flex items-center justify-between px-8 py-6 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center justify-center w-12 h-12 text-blue-600 bg-blue-50 rounded-2xl">
+                        <i class="text-xl fa-solid fa-pen-to-square"></i>
                     </div>
                     <div>
-                        <label class="block mb-1 text-sm font-semibold text-gray-700">Category</label>
-                        <select id="edit_category_id" name="category_id"
-                            class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                            <option value="">-- Select Category --</option>
-                            @foreach ($categories as $category)
-                                <option value="{{ $category->id }}">{{ $category->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block mb-1 text-sm font-semibold text-gray-700">Serial Number</label>
-                        <input type="text" id="edit_serial_number" name="serial_number"
-                            class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block mb-1 text-sm font-semibold text-gray-700">Type / Model</label>
-                        <input type="text" id="edit_type" name="type" required
-                            class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block mb-1 text-sm font-semibold text-gray-700">Unit of Measure (UOM)</label>
-                        <select id="edit_uom" name="uom" required
-                            class="w-full p-2.5 border rounded-lg outline-none">
-                            <option value="PCS">PCS</option>
-                            <option value="SET">SET</option>
-                            <option value="UNIT">UNIT</option>
-                        </select>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block mb-1 text-sm font-semibold text-gray-700">Note / Description</label>
-                        <textarea id="edit_note" name="note" rows="2"
-                            class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block mb-1 text-sm font-semibold text-gray-700">Update Image (Optional)</label>
-                        <input type="file" name="image"
-                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        <h3 class="text-xl font-black tracking-tight text-slate-800">Edit Sparepart</h3>
+                        <p class="text-xs font-bold tracking-wider uppercase text-slate-400">Inventory Management &bull;
+                            Update Data</p>
                     </div>
                 </div>
-                <div class="flex justify-end gap-3 mt-8">
+                <button onclick="closeEditModal()"
+                    class="flex items-center justify-center w-10 h-10 transition-colors rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+                    <i class="text-lg fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="form-edit" method="POST" enctype="multipart/form-data" class="max-h-[80vh] overflow-y-auto">
+                @csrf
+                @method('PUT')
+                <div class="p-8 space-y-6">
+                    {{-- Grid Utama --}}
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+
+                        {{-- Item Name --}}
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Item
+                                Name</label>
+                            <input type="text" id="edit_item_name" name="item_name" required
+                                placeholder="Example: Roller Conveyor"
+                                class="w-full px-4 py-3 text-sm font-bold transition-all border outline-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-700">
+                        </div>
+
+                        {{-- Category --}}
+                        <div class="space-y-2">
+                            <label
+                                class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Category</label>
+                            <div class="relative">
+                                <select id="edit_category_id" name="category_id"
+                                    class="w-full px-4 py-3 text-sm font-bold transition-all border outline-none appearance-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-700">
+                                    <option value="">-- Select Category --</option>
+                                    @foreach ($categories as $category)
+                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    @endforeach
+                                </select>
+                                <i
+                                    class="absolute text-xs -translate-y-1/2 pointer-events-none right-4 top-1/2 fa-solid fa-chevron-down text-slate-400"></i>
+                            </div>
+                        </div>
+
+                        {{-- Serial Number --}}
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Serial
+                                Number</label>
+                            <input type="text" id="edit_serial_number" name="serial_number" placeholder="SN-XXXXX"
+                                class="w-full px-4 py-3 text-sm font-bold transition-all border outline-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-700">
+                        </div>
+
+                        {{-- Type / Model --}}
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Type /
+                                Model</label>
+                            <input type="text" id="edit_type" name="type" required
+                                placeholder="Example: FS6000-X1"
+                                class="w-full px-4 py-3 text-sm font-bold transition-all border outline-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-700">
+                        </div>
+
+                        {{-- Unit of Measure --}}
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Unit of
+                                Measure (UOM)</label>
+                            <div class="relative">
+                                <select id="edit_uom" name="uom" required
+                                    class="w-full px-4 py-3 text-sm font-bold transition-all border outline-none appearance-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-700">
+                                    <option value="PCS">PCS</option>
+                                    <option value="SET">SET</option>
+                                    <option value="UNIT">UNIT</option>
+                                </select>
+                                <i
+                                    class="absolute text-xs -translate-y-1/2 pointer-events-none right-4 top-1/2 fa-solid fa-chevron-down text-slate-400"></i>
+                            </div>
+                        </div>
+
+                        {{-- Note: Field Qty & Condition biasanya tidak diedit di modal sparepart utama 
+                         karena menyangkut stok historis di database (sesuai controllermu), 
+                         tapi jika ingin ditampilkan untuk info saja, bisa ditambahkan. --}}
+                    </div>
+
+                    {{-- Image Upload --}}
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Update Image
+                            (Optional)</label>
+                        <div class="flex items-center justify-center w-full">
+                            <label
+                                class="flex flex-col items-center justify-center w-full h-32 transition-colors border-2 border-dashed cursor-pointer rounded-2xl border-slate-200 bg-slate-50 hover:bg-slate-100">
+                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                    <i class="mb-2 text-2xl fa-solid fa-image text-slate-400"></i>
+                                    <p class="text-xs font-bold text-slate-500">Click to replace current image</p>
+                                    <p class="text-[10px] text-slate-400 uppercase mt-1">PNG, JPG, WEBP (Max 2MB)</p>
+                                </div>
+                                <input type="file" name="image" class="hidden" accept="image/*" />
+                            </label>
+                        </div>
+                    </div>
+
+                    {{-- Notes --}}
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Notes /
+                            Description</label>
+                        <textarea id="edit_note" name="note" rows="2" placeholder="Add additional information here..."
+                            class="w-full px-4 py-3 text-sm font-bold transition-all border outline-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-700"></textarea>
+                    </div>
+                </div>
+
+                {{-- Footer --}}
+                <div class="flex items-center justify-end gap-3 px-8 py-6 border-t bg-slate-50/50 border-slate-100">
                     <button type="button" onclick="closeEditModal()"
-                        class="px-6 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                        class="px-6 py-3 text-xs font-black tracking-widest uppercase transition-all text-slate-500 rounded-xl hover:bg-slate-100">
+                        Cancel
+                    </button>
                     <button type="submit"
-                        class="px-6 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Update
-                        Sparepart</button>
+                        class="px-8 py-3 text-xs font-black tracking-widest text-white uppercase transition-all bg-blue-600 shadow-lg rounded-xl hover:bg-blue-700 shadow-blue-100">
+                        <i class="mr-2 fa-solid fa-rotate"></i> Update Sparepart
+                    </button>
                 </div>
             </form>
         </div>
@@ -546,6 +717,181 @@
             const modal = document.getElementById('modal-import');
             modal.classList.remove('hidden');
             modal.classList.add('flex'); // Keep it centered
+        }
+    </script>
+
+    {{-- MODAL STOCK ADJUSTMENT --}}
+    <div id="modal-adjustment"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden px-4 transition-all duration-300 bg-slate-900/60 backdrop-blur-sm">
+        <div class="relative w-full max-w-2xl overflow-hidden transition-all transform bg-white shadow-2xl rounded-3xl">
+
+            {{-- Header --}}
+            <div class="flex items-center justify-between px-8 py-6 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center justify-center w-12 h-12 text-amber-600 bg-amber-50 rounded-2xl">
+                        <i class="text-xl fa-solid fa-sliders"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black tracking-tight text-slate-800">Stock Adjustment</h3>
+                        <p id="adj_item_display" class="text-xs italic font-bold tracking-wider uppercase text-slate-400">
+                            Item Name Here</p>
+                    </div>
+                </div>
+                <button onclick="closeAdjustmentModal()"
+                    class="flex items-center justify-center w-10 h-10 transition-colors rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+                    <i class="text-lg fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="form-adjustment" method="POST" class="p-8">
+                @csrf
+                {{-- Kita asumsikan menggunakan method POST karena ini membuat record history baru --}}
+                <div class="space-y-6">
+
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        {{-- Current Stock (Read Only) --}}
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Current
+                                Stock</label>
+                            <input type="text" id="adj_current_qty" readonly
+                                class="w-full px-4 py-3 text-sm font-black border-none cursor-not-allowed bg-slate-100 rounded-xl text-slate-500">
+                        </div>
+
+                        {{-- Condition (Read Only / Locked) --}}
+                        <div class="space-y-2">
+                            <label
+                                class="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Condition</label>
+                            <input type="text" id="adj_condition_display" readonly
+                                class="w-full px-4 py-3 text-sm font-black uppercase border-none cursor-not-allowed bg-slate-100 rounded-xl text-slate-500">
+                            <input type="hidden" name="condition" id="adj_condition_value">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        {{-- Adjustment Type --}}
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Action
+                                Type</label>
+                            <select name="action" required
+                                class="w-full px-4 py-3 text-sm font-bold border outline-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-amber-500 text-slate-700">
+                                <option value="IN">Stock In (Add)</option>
+                                <option value="OUT">Stock Out (Reduce)</option>
+                                <option value="ADJUST">Correction (Set Value)</option>
+                            </select>
+                        </div>
+
+                        {{-- Qty Adjustment --}}
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Adjustment
+                                Qty</label>
+                            <input type="number" name="qty" required min="1" placeholder="Enter amount..."
+                                class="w-full px-4 py-3 text-sm font-bold transition-all border outline-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white text-slate-700">
+                        </div>
+                    </div>
+
+                    {{-- Reason / Note --}}
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Reason for
+                            Adjustment</label>
+                        <textarea name="note" required rows="3"
+                            placeholder="e.g., Damaged during transit, Yearly audit correction..."
+                            class="w-full px-4 py-3 text-sm font-bold transition-all border outline-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white text-slate-700"></textarea>
+                    </div>
+                </div>
+
+                {{-- Footer --}}
+                <div class="flex items-center justify-end gap-3 pt-6 mt-8 border-t border-slate-100">
+                    <button type="button" onclick="closeAdjustmentModal()"
+                        class="px-6 py-3 text-xs font-black tracking-widest uppercase transition-all text-slate-500 rounded-xl hover:bg-slate-100">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-8 py-3 text-xs font-black tracking-widest text-white uppercase transition-all shadow-lg bg-amber-600 rounded-xl hover:bg-amber-700 shadow-amber-100">
+                        <i class="mr-2 fa-solid fa-check-double"></i> Process Adjustment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function previewImage(input) {
+            const previewContainer = document.getElementById('preview-container');
+            const previewImage = document.getElementById('image-preview');
+            const uploadLabel = document.getElementById('upload-label');
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    previewContainer.classList.remove('hidden');
+                    uploadLabel.classList.add('hidden'); // Sembunyikan tombol upload agar rapi
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function resetImage() {
+            const input = document.getElementById('image-input');
+            const previewContainer = document.getElementById('preview-container');
+            const uploadLabel = document.getElementById('upload-label');
+            const previewImage = document.getElementById('image-preview');
+
+            input.value = ""; // Reset input file
+            previewImage.src = "#";
+            previewContainer.classList.add('hidden');
+            uploadLabel.classList.remove('hidden');
+        }
+
+        // Pastikan reset dipanggil saat modal ditutup agar gambar lama tidak nyangkut
+        function closeCreateModal() {
+            document.getElementById('modal-create').classList.add('hidden');
+            resetImage();
+        }
+        /**
+         * Membuka Modal Adjustment dan mengisi data awal
+         */
+        function openAdjustmentModal(data) {
+            const modal = document.getElementById('modal-adjustment');
+            const form = document.getElementById('form-adjustment');
+
+            // Reset form agar input qty dan note dari sesi sebelumnya hilang
+            form.reset();
+
+            // Set Action URL (Sesuaikan dengan route Laravel kamu)
+            form.action = `/sparepart/adjustment/${data.slug}/${data.id}`;
+
+            // Binding Data ke UI
+            document.getElementById('adj_item_display').innerText = data.item_name;
+            document.getElementById('adj_current_qty').value = `${data.qty} ${data.uom}`;
+            document.getElementById('adj_condition_display').value = data.condition.toUpperCase();
+            document.getElementById('adj_condition_value').value = data.condition;
+
+            // Tampilkan Modal dengan menghapus class 'hidden'
+            modal.classList.remove('hidden');
+
+            // Opsional: Tambahkan sedikit delay untuk animasi smooth jika diperlukan
+            modal.style.opacity = "1";
+        }
+
+        /**
+         * Menutup Modal Adjustment
+         */
+        function closeAdjustmentModal() {
+            const modal = document.getElementById('modal-adjustment');
+
+            // Sembunyikan Modal
+            modal.classList.add('hidden');
+        }
+
+        // Tambahan: Menutup modal jika user mengklik area di luar box putih (backdrop)
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal-adjustment');
+            if (event.target == modal) {
+                closeAdjustmentModal();
+            }
         }
     </script>
 @endsection

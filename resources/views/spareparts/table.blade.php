@@ -83,8 +83,40 @@
                             (Auth::user()->role === 'admin_site' && Auth::user()->site_id === $siteData->id))
                         {{-- Ganti bagian Actions pada resources/views/spareparts/table.blade.php --}}
 
+
+
                         <td class="px-6 py-4 text-right">
                             <div class="flex justify-end gap-2">
+
+                                {{-- Tombol Stock Adjustment (BARU) --}}
+                                @php
+                                    // Ambil stok spesifik site ini (misal dari baris pertama yang ditemukan)
+                                    $currentSiteStock = $siteStocks->first();
+                                @endphp
+
+                                @if ($currentSiteStock)
+                                    <button
+                                        onclick="openAdjustmentModal({
+                id: {{ $item->id }},
+                item_name: '{{ $item->item_name }}',
+                qty: {{ $currentSiteStock->qty }},
+                uom: '{{ $item->uom }}',
+                condition: '{{ $currentSiteStock->condition }}',
+                slug: '{{ $slug }}'
+            })"
+                                        class="flex items-center justify-center transition-all shadow-sm text-amber-600 group w-9 h-9 bg-amber-50 rounded-xl hover:bg-amber-600 hover:text-white shadow-amber-100"
+                                        title="Adjust Stock">
+                                        <i
+                                            class="fa-solid fa-sliders text-[14px] transition-transform group-hover:scale-110"></i>
+                                    </button>
+                                @endif
+
+                                <button onclick="openEditModal(this)" data-item='@json($item)'
+                                    class="flex items-center justify-center text-blue-600 transition-all shadow-sm group w-9 h-9 bg-blue-50 rounded-xl hover:bg-blue-600 hover:text-white shadow-blue-100"
+                                    title="Edit Sparepart">
+                                    <i
+                                        class="fa-solid fa-pen-to-square text-[14px] transition-transform group-hover:scale-110"></i>
+                                </button>
                                 {{-- Tombol View Detail --}}
                                 <button
                                     onclick='openDetailModal(@json($item), @json($all_sites))'
@@ -107,6 +139,19 @@
                                         Request Move
                                     </button>
                                 @endif
+                                <form action="{{ route('sparepart.destroy', [$slug, $item->id]) }}" method="POST"
+                                    onsubmit="return confirm('Apakah Anda yakin ingin menghapus sparepart ini? Tindakan ini tidak dapat dibatalkan.')">
+                                    @csrf
+                                    @method('DELETE')
+                                    {{-- Tombol Delete yang Dimodifikasi --}}
+                                    <button type="button"
+                                        onclick="openDeleteModal('{{ route('sparepart.destroy', [$slug, $item->id]) }}', '{{ $item->item_name }}')"
+                                        class="flex items-center justify-center transition-all shadow-sm group w-9 h-9 text-rose-600 bg-rose-50 rounded-xl hover:bg-rose-600 hover:text-white shadow-rose-100"
+                                        title="Delete Sparepart">
+                                        <i
+                                            class="fa-solid fa-trash-can text-[14px] transition-transform group-hover:scale-110"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     @endif
@@ -129,6 +174,47 @@
     {{ $assets->links() }}
 </div>
 
+{{-- MODAL DELETE CONFIRMATION --}}
+<div id="modal-delete"
+    class="fixed inset-0 z-[100] flex items-center justify-center hidden px-4 bg-slate-900/40 backdrop-blur-md transition-all duration-500">
+    <div
+        class="relative w-full max-w-sm transform transition-all duration-300 scale-95 opacity-0 modal-content bg-white shadow-2xl rounded-[32px] overflow-hidden">
+
+        <div class="p-8 text-center">
+            {{-- Icon Danger --}}
+            <div class="flex justify-center mb-6">
+                <div
+                    class="flex items-center justify-center w-20 h-20 text-rose-600 bg-rose-50 rounded-3xl animate-pulse">
+                    <i class="text-3xl fa-solid fa-triangle-exclamation"></i>
+                </div>
+            </div>
+
+            <h3 class="mb-2 text-xl font-black text-slate-800">Are you sure?</h3>
+            <p class="mb-8 text-sm font-medium text-slate-500">
+                You are about to delete <span id="delete-item-name" class="font-bold text-slate-800"></span>. This
+                action cannot be undone.
+            </p>
+
+            {{-- Hidden Form --}}
+            <form id="form-confirm-delete" method="POST">
+                @csrf
+                @method('DELETE')
+
+                <div class="flex flex-col gap-3">
+                    <button type="submit"
+                        class="w-full py-4 text-xs font-black tracking-widest text-white uppercase transition-all shadow-lg bg-rose-600 rounded-2xl hover:bg-rose-700 shadow-rose-100">
+                        Yes, Delete Permanently
+                    </button>
+                    <button type="button" onclick="closeDeleteModal()"
+                        class="w-full py-4 text-xs font-black tracking-widest uppercase transition-all text-slate-400 bg-slate-50 rounded-2xl hover:bg-slate-100">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {{-- MODAL MOVE --}}
 <div id="modal-move"
     class="fixed inset-0 z-[60] flex items-center justify-center hidden px-4 bg-black/60 backdrop-blur-sm">
@@ -149,9 +235,9 @@
                 <label class="block mb-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Destination
                     Site</label>
                 <select name="to_site_id"
-                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all outline-none text-sm font-medium"
+                    class="w-full px-4 py-3 text-sm font-bold transition-all border outline-none appearance-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-emerald-500 text-slate-700"
                     required>
-                    <option value="">Select Destination</option>
+                    <option value="" disabled selected>Select Destination</option>
                     @foreach ($all_sites as $s)
                         @if ($s->id !== $siteData->id)
                             <option value="{{ $s->id }}">{{ $s->machine_name }}
@@ -167,8 +253,9 @@
                     <label class="block mb-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Target
                         Condition</label>
                     <select name="condition" id="target-condition"
-                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all outline-none text-sm font-medium"
+                        class="w-full px-4 py-3 text-sm font-bold transition-all border outline-none appearance-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-emerald-500 text-slate-700"
                         required>
+                        <option value="" disabled selected>Select Condition</option>
                         <option value="new">NEW</option>
                         <option value="used-good">USED GOOD</option>
                         <option value="damaged">DAMAGED</option>
@@ -221,6 +308,44 @@
     </div>
 </div>
 <script>
+    function openDeleteModal(url, itemName) {
+        const modal = document.getElementById('modal-delete');
+        const content = modal.querySelector('.modal-content');
+        const form = document.getElementById('form-confirm-delete');
+        const nameDisplay = document.getElementById('delete-item-name');
+
+        // Set form action and item name
+        form.action = url;
+        nameDisplay.innerText = itemName;
+
+        // Show Modal with Animation
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => {
+            content.classList.remove('scale-95', 'opacity-0');
+            content.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+
+    function closeDeleteModal() {
+        const modal = document.getElementById('modal-delete');
+        const content = modal.querySelector('.modal-content');
+
+        content.classList.remove('scale-100', 'opacity-100');
+        content.classList.add('scale-95', 'opacity-0');
+
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }, 300);
+    }
+
+    // Tambahkan ke window listener untuk klik luar
+    window.addEventListener('click', (e) => {
+        const modalDelete = document.getElementById('modal-delete');
+        if (e.target === modalDelete) closeDeleteModal();
+    });
+
     function openAssetDetail(tag) {
         const modal = document.getElementById('asset-modal');
         const content = document.getElementById('asset-modal-content');

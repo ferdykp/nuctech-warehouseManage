@@ -107,8 +107,7 @@ class SparepartController extends Controller
             'type'          => 'required|string',
             'uom'           => 'required|string',
             'qty'           => 'required|integer|min:1',
-            'condition'     => 'required|in:new,used-good,damaged,repaired',
-            'image'         => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'note'          => 'nullable|string', // Tambahkan ini agar aman
         ]);
 
         return DB::transaction(function () use ($request, $siteData, $slug) {

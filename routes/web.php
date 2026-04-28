@@ -11,95 +11,77 @@ use App\Http\Controllers\SparepartStockController;
 use App\Http\Controllers\CategoryController;
 use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| Public Routes
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/', [AuthController::class, 'login'])->name('login');
 Route::post('/login/auth', [AuthController::class, 'loginAuth'])->name('auth.login');
 Route::get('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
-Route::middleware(['auth', 'nocache'])->group(function () {
-    Route::get('/spareparts/all', [SparepartController::class, 'allSpareparts'])->name('sparepart.all');
+/*
+|--------------------------------------------------------------------------
+| Authenticated Routes
+|--------------------------------------------------------------------------
+*/
 
+Route::middleware(['auth', 'nocache'])->group(function () {
+
+    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Resources
     Route::resource('branches', BranchController::class);
     Route::resource('categories', CategoryController::class);
     Route::resource('sites', SiteController::class);
-    Route::get('inventory/{slug}', [SiteController::class, 'showInventory'])->name('sites.inventory');
+    Route::resource('site', SiteController::class);
 
-    Route::resource('report', ReportController::class);
-    Route::get('/report', [ReportController::class, 'index'])->name('report.index');
-    Route::get('/report-export', [ReportController::class, 'export'])->name('report.export');
-    Route::post('/report/bulk-delete', [ReportController::class, 'bulkDelete'])->name('report.bulk-delete');
-    Route::post('/report/search', [ReportController::class, 'search'])->name('report.search');
-
-    Route::get('/inventory/{slug}', [SparepartController::class, 'index'])->name('sparepart.index');
-    Route::get('/inventory/{slug}/create', [SparepartController::class, 'create'])->name('sparepart.create');
-    Route::post('/inventory/{slug}/store', [SparepartController::class, 'store'])->name('sparepart.store');
-
-    Route::get('/{id}/edit', [SparepartController::class, 'edit'])
-        ->name('sparepart.edit');
-
-    Route::put('/{id}', [SparepartController::class, 'update'])
-        ->name('sparepart.update');
-    // MASTER SPAREPART (GLOBAL)
-    // Route::get('/sparepart/{id}/edit', [SparepartController::class, 'edit']);
-    // Route::put('/sparepart/{id}', [SparepartController::class, 'update']);
-
-    // // STOCK PER SITE
-    // Route::get('/stock/{stockId}/edit', [SparepartStockController::class, 'edit']);
-    // Route::put('/stock/{stockId}', [SparepartStockController::class, 'update']);
-
-    Route::delete('/{id}', [SparepartController::class, 'destroy'])
-        ->name('sparepart.destroy');
-
-    // Route::get('/sparepart/search', [SparepartController::class, 'search'])
-    //     ->name('sparepart.search');
-    // Cari baris ini dan ubah
-    Route::get('/inventory/{slug}/search', [SparepartController::class, 'search'])
-        ->name('sparepart.search');
-
-    Route::post(
-        '/sparepart/bulk-delete',
-        [SparepartController::class, 'bulkDelete']
-    )->name('sparepart.bulkDelete');
-
-    // Route::get('/export', [SparepartController::class, 'exportExcel'])
-    //     ->name('sparepart.export');
-    Route::get('/inventory/{site}/export', [SparepartController::class, 'exportExcel'])
-        ->name('sparepart.export');
-    Route::prefix('inventory/{slug}')->group(function () {
-        Route::get('/', [SparepartController::class, 'index'])->name('sparepart.index');
-        Route::get('/search', [SparepartController::class, 'index'])->name('sparepart.search');
-        Route::get('/create', [SparepartController::class, 'create'])->name('sparepart.create');
-        Route::post('/store', [SparepartController::class, 'store'])->name('sparepart.store');
-        Route::get('/export', [SparepartController::class, 'exportExcel'])->name('sparepart.export');
-        Route::post('/import', [SparepartController::class, 'importExcel'])->name('sparepart.import');
+    // Report
+    Route::prefix('report')->name('report.')->group(function () {
+        Route::get('/', [ReportController::class, 'index'])->name('index');
+        Route::get('/export', [ReportController::class, 'export'])->name('export');
+        Route::post('/bulk-delete', [ReportController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::post('/search', [ReportController::class, 'search'])->name('search');
+        Route::resource('/', ReportController::class)->except(['index']);
     });
 
-    Route::get('/sparepart/{slug}/{id}/edit', [SparepartController::class, 'edit'])->name('sparepart.edit');
-    Route::put('/sparepart/{slug}/{id}', [SparepartController::class, 'update'])->name('sparepart.update');
-    Route::delete('/sparepart/{slug}/{id}', [SparepartController::class, 'destroy'])->name('sparepart.destroy');
+    // Inventory / Sparepart
+    Route::get('/spareparts/all', [SparepartController::class, 'allSpareparts'])->name('sparepart.all');
+
+    Route::prefix('inventory/{slug}')->name('sparepart.')->group(function () {
+        Route::get('/', [SparepartController::class, 'index'])->name('index');
+        Route::get('/search', [SparepartController::class, 'index'])->name('search');
+        Route::get('/create', [SparepartController::class, 'create'])->name('create');
+        Route::post('/store', [SparepartController::class, 'store'])->name('store');
+        Route::get('/export', [SparepartController::class, 'exportExcel'])->name('export');
+        Route::post('/import', [SparepartController::class, 'importExcel'])->name('import');
+    });
+
+    Route::prefix('sparepart/{slug}/{id}')->name('sparepart.')->group(function () {
+        Route::get('/edit', [SparepartController::class, 'edit'])->name('edit');
+        Route::put('/', [SparepartController::class, 'update'])->name('update');
+        Route::delete('/', [SparepartController::class, 'destroy'])->name('destroy');
+    });
+
     Route::post('/sparepart/bulk-delete', [SparepartController::class, 'bulkDelete'])->name('sparepart.bulkDelete');
 
-    Route::post('/movement/move/{id}', [SparepartStockController::class, 'move'])->name('stock.move');
-    // Route::post('/sparepart/{sparepart}/move', [SparepartStockController::class, 'move'])->name('sparepart.move');
-    // Route::post('/sparepart/{sparepart}/change-condition', [SparepartStockController::class, 'changeCondition'])->name('sparepart.changeCondition');
-
-    Route::prefix('movement')->group(function () {
-        Route::post('/request/{id}', [SparepartStockController::class, 'requestMove'])->name('movement.request');
-        Route::post('/approve/{id}', [SparepartStockController::class, 'approveMove'])->name('movement.approve');
-        Route::post('/receive/{id}', [SparepartStockController::class, 'receiveMove'])->name('movement.receive');
+    // Stock Movement
+    Route::prefix('movement')->name('movement.')->group(function () {
+        Route::post('/move/{id}', [SparepartStockController::class, 'move'])->name('move');
+        Route::post('/request/{id}', [SparepartStockController::class, 'requestMove'])->name('request');
+        Route::post('/approve/{id}', [SparepartStockController::class, 'approveMove'])->name('approve');
+        Route::post('/receive/{id}', [SparepartStockController::class, 'receiveMove'])->name('receive');
     });
 });
 
-
-
+/*
+|--------------------------------------------------------------------------
+| Superadmin Routes
+|--------------------------------------------------------------------------
+*/
 
 Route::middleware(['auth', 'nocache', 'role:superadmin'])->group(function () {
     Route::resource('users', UserController::class);
-    Route::resource('site', SiteController::class);
 });
-
-// Route::middleware(['auth', 'nocache', 'role:admin'])->group(function () {
-//     Route::resource('users', UserController::class);
-//     Route::resource('site', SiteController::class);
-// });
