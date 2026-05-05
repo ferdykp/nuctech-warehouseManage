@@ -20,7 +20,7 @@
                     class="p-3 text-gray-400 transition-all bg-white border border-gray-200 shadow-sm rounded-2xl hover:text-blue-600 hover:bg-blue-50">
                     <i class="fa-solid fa-rotate"></i>
                 </button>
-                <a href="#"
+                <a href="javascript:void(0)" onclick="exportGlobalReport()"
                     class="inline-flex items-center gap-2 px-6 py-3 text-sm font-bold text-white transition-all bg-gray-900 shadow-xl rounded-2xl hover:bg-black shadow-gray-200 active:scale-95">
                     <i class="fa-solid fa-file-export"></i>
                     Export Report
@@ -187,5 +187,17 @@
         window.onpopstate = function() {
             fetchSpareparts(window.location.href);
         };
+    </script>
+    <script>
+        function exportGlobalReport() {
+            const search = document.getElementById('global-search').value;
+            const url = new URL('{{ route('report.export_all') }}');
+
+            if (search) {
+                url.searchParams.set('search', search);
+            }
+
+            window.location.href = url.href;
+        }
     </script>
 @endsection

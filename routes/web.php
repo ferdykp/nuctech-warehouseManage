@@ -45,12 +45,14 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('/bulk-delete', [ReportController::class, 'bulkDelete'])->name('bulk-delete');
         Route::post('/search', [ReportController::class, 'search'])->name('search');
         Route::resource('/', ReportController::class)->except(['index']);
+        Route::get('/global/export', [ReportController::class, 'exportAll'])->name('export_all');
     });
 
     // Inventory / Sparepart
     Route::get('/spareparts/all', [SparepartController::class, 'allSpareparts'])->name('sparepart.all');
 
     Route::prefix('inventory/{slug}')->name('sparepart.')->group(function () {
+        Route::post('/adjust/{id}', [SparepartController::class, 'adjust'])->name('adjust');
         Route::get('/', [SparepartController::class, 'index'])->name('index');
         Route::get('/search', [SparepartController::class, 'index'])->name('search');
         Route::get('/create', [SparepartController::class, 'create'])->name('create');
@@ -58,6 +60,8 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::get('/export', [SparepartController::class, 'exportExcel'])->name('export');
         Route::post('/import', [SparepartController::class, 'importExcel'])->name('import');
     });
+
+    Route::delete('/inventory/{site}/stock/{id}', [SparepartController::class, 'destroyStock'])->name('sparepart.stock.destroy');
 
     Route::prefix('sparepart/{slug}/{id}')->name('sparepart.')->group(function () {
         Route::get('/edit', [SparepartController::class, 'edit'])->name('edit');

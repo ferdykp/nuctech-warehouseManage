@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SparepartExport;
 use App\Imports\SparepartImport;
+
 // use Illuminate\Validation\ValidationException;
 
 class SparepartController extends Controller
@@ -38,58 +39,101 @@ class SparepartController extends Controller
     /**
      * Menampilkan daftar sparepart dengan filter dan search.
      */
+    // public function index(Request $request, string $slug)
+    // {
+    //     $siteData = $this->getSite($slug);
+
+    //     $search = $request->input('search');
+    //     $condition = $request->input('condition');
+
+    //     $query = Sparepart::query();
+
+    //     // Filter berdasarkan Site & Kondisi
+    //     $query->whereHas('stocks', function ($q) use ($siteData, $condition) {
+    //         $q->where('site_id', $siteData->id);
+    //         if ($condition) {
+    //             $q->where('condition', $condition);
+    //         }
+    //     });
+
+    //     // Fitur Search
+    //     $query->when($search, function ($q) use ($search) {
+    //         $q->where(function ($sub) use ($search) {
+    //             $sub->where('item_name', 'like', "%{$search}%")
+    //                 ->orWhere('serial_number', 'like', "%{$search}%")
+    //                 ->orWhere('type', 'like', "%{$search}%");
+    //         });
+    //     });
+
+    //     $data = $query->with(['stocks.site', 'histories.fromSite', 'histories.toSite'])
+    //         ->withSum(['stocks as total_qty' => function ($q) use ($siteData) {
+    //             $q->where('site_id', $siteData->id);
+    //         }], 'qty')
+    //         ->latest()
+    //         ->paginate(10)
+    //         ->withQueryString();
+
+    //     $all_sites = Site::with('branch')->where('id', '!=', $siteData->id)->get();
+    //     $sites = Site::all();
+    //     $categories = Category::all();
+
+    //     if ($request->ajax()) {
+    //         return response()->json([
+    //             'html' => view('spareparts.table', [
+    //                 'assets' => $data,
+    //                 'slug' => $slug,
+    //                 'siteData' => $siteData,
+    //                 'all_sites' => $all_sites,
+    //                 'sites' => $sites,
+    //                 'categories' => $categories
+    //             ])->render()
+    //         ]);
+    //     }
+
+    //     return view('spareparts.index', compact('data', 'slug', 'siteData', 'all_sites', 'sites', 'categories'));
+    // }
     public function index(Request $request, string $slug)
     {
         $siteData = $this->getSite($slug);
-
         $search = $request->input('search');
         $condition = $request->input('condition');
 
-        $query = Sparepart::query();
+        // Tambahkan histories.fromSite dan histories.toSite untuk modal detail
+        $query = SparepartStock::with([
+            'sparepart.category',
+            'sparepart.stocks.site',
+            'sparepart.histories.fromSite',
+            'sparepart.histories.toSite',
+            'site'
+        ])->where('site_id', $siteData->id);
 
-        // Filter berdasarkan Site & Kondisi
-        $query->whereHas('stocks', function ($q) use ($siteData, $condition) {
-            $q->where('site_id', $siteData->id);
-            if ($condition) {
-                $q->where('condition', $condition);
-            }
-        });
+        if ($condition) {
+            $query->where('condition', $condition);
+        }
 
-        // Fitur Search
-        $query->when($search, function ($q) use ($search) {
-            $q->where(function ($sub) use ($search) {
-                $sub->where('item_name', 'like', "%{$search}%")
+        if ($search) {
+            $query->whereHas('sparepart', function ($q) use ($search) {
+                $q->where('item_name', 'like', "%{$search}%")
                     ->orWhere('serial_number', 'like', "%{$search}%")
                     ->orWhere('type', 'like', "%{$search}%");
             });
-        });
+        }
 
-        $data = $query->with(['stocks.site', 'histories.fromSite', 'histories.toSite'])
-            ->withSum(['stocks as total_qty' => function ($q) use ($siteData) {
-                $q->where('site_id', $siteData->id);
-            }], 'qty')
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+        $data = $query->latest()->paginate(10)->withQueryString();
 
         $all_sites = Site::with('branch')->where('id', '!=', $siteData->id)->get();
         $sites = Site::all();
         $categories = Category::all();
 
-        if ($request->ajax()) {
-            return response()->json([
-                'html' => view('spareparts.table', [
-                    'assets' => $data,
-                    'slug' => $slug,
-                    'siteData' => $siteData,
-                    'all_sites' => $all_sites,
-                    'sites' => $sites,
-                    'categories' => $categories
-                ])->render()
-            ]);
-        }
-
-        return view('spareparts.index', compact('data', 'slug', 'siteData', 'all_sites', 'sites', 'categories'));
+        return view('spareparts.index', [
+            'data' => $data,
+            'assets' => $data,
+            'slug' => $slug,
+            'siteData' => $siteData,
+            'all_sites' => $all_sites,
+            'sites' => $sites,
+            'categories' => $categories
+        ]);
     }
 
     /**
@@ -188,6 +232,28 @@ class SparepartController extends Controller
         return redirect()->route('sparepart.index', $site)->with('success', 'Sparepart dihapus');
     }
 
+    public function destroyStock(string $site, int $stockId)
+    {
+        $siteData = $this->getSite($site);
+        $this->authorizeSiteAccess($siteData);
+
+        $stock = SparepartStock::findOrFail($stockId);
+
+        // Opsional: Buat history bahwa stok ini dihapus manual
+        SparepartHistory::create([
+            'sparepart_id' => $stock->sparepart_id,
+            'to_site_id'   => $siteData->id,
+            'action'       => 'ADJUSTMENT',
+            'qty'          => $stock->qty,
+            'condition'    => $stock->condition,
+            'note'         => "Stock baris ini dihapus oleh " . Auth::user()->name,
+        ]);
+
+        $stock->delete();
+
+        return redirect()->route('sparepart.index', $site)->with('success', 'Baris stok berhasil dihapus');
+    }
+
     /**
      * Bulk Delete.
      */
@@ -281,5 +347,81 @@ class SparepartController extends Controller
         }
 
         return view('spareparts.all', compact('allStocks'));
+    }
+
+    public function adjust(Request $request, $slug, $id)
+    {
+        try {
+            $siteData = Site::where('slug', $slug)->firstOrFail();
+
+            $request->validate([
+                'adjustment_type'   => 'required|in:update,split',
+                'qty_to_move'       => 'required|integer|min:1',
+                'new_condition'     => 'required',
+                'current_condition' => 'required'
+            ]);
+
+            $currentStock = SparepartStock::where('sparepart_id', $id)
+                ->where('site_id', $siteData->id)
+                ->where('condition', $request->current_condition)
+                ->first();
+
+            if (!$currentStock) {
+                return back()->with('error', "Stok tidak ditemukan untuk kondisi: {$request->current_condition}");
+            }
+
+            return DB::transaction(function () use ($request, $currentStock, $siteData, $id) {
+                if ($request->adjustment_type === 'split') {
+                    if ($request->qty_to_move >= $currentStock->qty) {
+                        return back()->with('error', 'Qty split tidak boleh melebihi/sama dengan stok saat ini.');
+                    }
+
+                    $currentStock->decrement('qty', $request->qty_to_move);
+
+                    $targetStock = SparepartStock::where('sparepart_id', $id)
+                        ->where('site_id', $siteData->id)
+                        ->where('condition', $request->new_condition)
+                        ->first();
+
+                    if ($targetStock) {
+                        $targetStock->increment('qty', $request->qty_to_move);
+                    } else {
+                        SparepartStock::create([
+                            'sparepart_id' => $id,
+                            'site_id'      => $siteData->id,
+                            'condition'    => $request->new_condition,
+                            'qty'          => $request->qty_to_move,
+                        ]);
+                    }
+
+                    SparepartHistory::create([
+                        'sparepart_id' => $id,
+                        'from_site_id' => $siteData->id,
+                        'to_site_id'   => $siteData->id,
+                        'action'       => 'CONDITION_CHANGE',
+                        'qty'          => $request->qty_to_move,
+                        'condition'    => $request->new_condition,
+                        'note'         => "Split dari " . strtoupper($currentStock->condition) . " ke " . strtoupper($request->new_condition),
+                    ]);
+                } else {
+                    $oldQty = $currentStock->qty;
+                    $currentStock->update(['qty' => $request->qty_to_move]);
+
+                    SparepartHistory::create([
+                        'sparepart_id' => $id,
+                        'to_site_id'   => $siteData->id,
+                        'action'       => 'ADJUSTMENT',
+                        'qty'          => $request->qty_to_move,
+                        'condition'    => $currentStock->condition,
+                        'note'         => "Update stok dari $oldQty ke $request->qty_to_move",
+                    ]);
+                }
+
+                return back()->with('success', 'Stok berhasil diperbarui.');
+            });
+        } catch (\Exception $e) {
+            // Ini akan memunculkan pesan error aslinya di browser
+            return back()->with('error', 'System Error: ' . $e->getMessage());
+        }
     }
 }

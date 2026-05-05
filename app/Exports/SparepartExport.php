@@ -11,6 +11,8 @@ use Maatwebsite\Excel\Concerns\WithDrawings;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class SparepartExport implements
     FromCollection,
@@ -21,13 +23,14 @@ class SparepartExport implements
 {
     protected $data;
     protected $siteId;
+    protected $machineName; // Menampung machine_name untuk judul
 
     public function __construct(string $siteCode)
     {
         $site = Site::where('slug', $siteCode)->firstOrFail();
         $this->siteId = $site->id;
+        $this->machineName = $site->machine_name; // Mengambil machine_name sesuai kode blade Anda
 
-        // Ambil sparepart yang HANYA ada di site tersebut
         $this->data = Sparepart::whereHas('stocks', function ($q) {
             $q->where('site_id', $this->siteId);
         })->with(['stocks' => function ($q) {
@@ -43,27 +46,27 @@ class SparepartExport implements
     public function headings(): array
     {
         return [
-            'No',
-            'Item Name',
-            'Serial Number',
-            'Type',
-            'Stock Quantity',
-            'Condition',
-            'Note',
-            'Image',
+            // Baris 1: Judul Site (Akan di-merge di AfterSheet)
+            [$this->machineName],
+            // Baris 2: Header Kolom
+            [
+                'No',
+                'Item Name',
+                'Serial Number',
+                'Type',
+                'Stock Quantity',
+                'Condition',
+                'Note',
+                'Image',
+            ]
         ];
     }
 
     public function map($row): array
     {
         static $no = 1;
-
-        // Menghitung total qty di site tersebut
         $totalQty = $row->stocks->sum('qty');
-
-        // Menggabungkan semua kondisi yang ada di site tersebut (jika ada lebih dari satu)
         $conditions = $row->stocks->pluck('condition')->unique()->implode(', ');
-
         $stockAndUom = $totalQty . ' ' . $row->uom;
 
         return [
@@ -74,28 +77,27 @@ class SparepartExport implements
             $stockAndUom,
             strtoupper($conditions),
             $row->note,
-            '', // Kolom H untuk Image
+            '',
         ];
     }
 
     public function drawings()
     {
         $drawings = [];
-
         foreach ($this->data as $index => $item) {
             if ($item->image && file_exists(storage_path('app/public/' . $item->image))) {
                 $drawing = new Drawing();
                 $drawing->setName($item->item_name);
                 $drawing->setPath(storage_path('app/public/' . $item->image));
                 $drawing->setHeight(60);
-                // Kolom H adalah kolom ke-8
-                $drawing->setCoordinates('H' . ($index + 2));
+
+                // Koordinat dimulai dari Baris 3 (karena baris 1 judul, baris 2 header)
+                $drawing->setCoordinates('H' . ($index + 3));
                 $drawing->setOffsetX(10);
                 $drawing->setOffsetY(10);
                 $drawings[] = $drawing;
             }
         }
-
         return $drawings;
     }
 
@@ -105,26 +107,50 @@ class SparepartExport implements
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
-                // Styling Header
-                $sheet->getStyle('A1:H1')->getFont()->setBold(true);
+                // 1. Merge Baris Judul (A1 sampai H1)
+                $sheet->mergeCells('A1:H1');
 
-                // Setting Lebar Kolom
-                $sheet->getColumnDimension('A')->setWidth(5);   // No
-                $sheet->getColumnDimension('B')->setWidth(25);  // Item Name
-                $sheet->getColumnDimension('C')->setWidth(20);  // Serial
-                $sheet->getColumnDimension('D')->setWidth(15);  // Type
-                $sheet->getColumnDimension('E')->setWidth(15);  // Stock
-                $sheet->getColumnDimension('F')->setWidth(15);  // Condition
-                $sheet->getColumnDimension('G')->setWidth(30);  // Note
-                $sheet->getColumnDimension('H')->setWidth(20);  // Image (Harus lebar untuk gambar)
+                // 2. Styling Judul (Machine Name)
+                $sheet->getStyle('A1')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 14,
+                        'color' => ['rgb' => 'FFFFFF'],
+                    ],
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                        'vertical' => Alignment::VERTICAL_CENTER,
+                    ],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => '4F46E5'], // Warna Indigo
+                    ],
+                ]);
+                $sheet->getRowDimension(1)->setRowHeight(30);
 
-                // Tinggi baris untuk semua data agar gambar muat
+                // 3. Styling Header Kolom (Baris 2)
+                $sheet->getStyle('A2:H2')->applyFromArray([
+                    'font' => ['bold' => true],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                ]);
+
+                // 4. Pengaturan Lebar Kolom
+                $sheet->getColumnDimension('A')->setWidth(5);
+                $sheet->getColumnDimension('B')->setWidth(25);
+                $sheet->getColumnDimension('C')->setWidth(20);
+                $sheet->getColumnDimension('D')->setWidth(15);
+                $sheet->getColumnDimension('E')->setWidth(15);
+                $sheet->getColumnDimension('F')->setWidth(15);
+                $sheet->getColumnDimension('G')->setWidth(30);
+                $sheet->getColumnDimension('H')->setWidth(20);
+
+                // 5. Styling Baris Data (Mulai Baris 3)
                 foreach ($this->data as $index => $item) {
-                    $sheet->getRowDimension($index + 2)->setRowHeight(70);
-                    // Vertical center agar teks di tengah baris yang tinggi
-                    $sheet->getStyle('A' . ($index + 2) . ':G' . ($index + 2))
+                    $currentRow = $index + 3;
+                    $sheet->getRowDimension($currentRow)->setRowHeight(70);
+                    $sheet->getStyle('A' . $currentRow . ':G' . $currentRow)
                         ->getAlignment()
-                        ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                        ->setVertical(Alignment::VERTICAL_CENTER);
                 }
             },
         ];

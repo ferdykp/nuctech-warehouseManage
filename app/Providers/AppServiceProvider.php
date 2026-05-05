@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 // use Illuminate\View\View;
 use Illuminate\Support\Facades\View;
 // use Illuminate\Support\Facades\Auth;
+// use Illuminate\Support\Facades\URL;
+
 
 use App\Models\Site;
 use App\Models\Sparepart;
@@ -28,6 +30,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // FORCE HTTPS DI PRODUCTION
+        // if ($this->app->environment('production')) {
+        //     URL::forceScheme('https');
+        // }
+
         $this->app->booted(function () {
 
             \Illuminate\Support\Facades\View::composer('*', function ($view) {

@@ -6,6 +6,8 @@ use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Exports\GlobalSparepartExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 
 class ReportController extends Controller
@@ -180,5 +182,13 @@ class ReportController extends Controller
             return redirect()->route('report.index')
                 ->with('error', 'Terjadi kesalahan saat search');
         }
+    }
+
+    public function exportAll(Request $request)
+    {
+        $searchTerm = $request->get('search');
+        $fileName = 'Global_Inventory_Report_' . now()->format('Y-m-d_His') . '.xlsx';
+
+        return Excel::download(new GlobalSparepartExport($searchTerm), $fileName);
     }
 }

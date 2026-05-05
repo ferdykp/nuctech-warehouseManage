@@ -68,22 +68,6 @@
         </tbody>
     </table>
 
-    {{-- AREA PAGINASI --}}
-    <div class="px-8 py-6 border-t border-gray-100 bg-gray-50/30">
-        <div class="flex flex-col items-center justify-between gap-4 md:flex-row custom-pagination">
-            {{-- Info Status --}}
-            <div class="text-sm text-gray-500">
-                Showing <span class="font-bold text-gray-800">{{ $allStocks->firstItem() ?? 0 }}</span>
-                to <span class="font-bold text-gray-800">{{ $allStocks->lastItem() ?? 0 }}</span>
-                of <span class="font-bold text-gray-800">{{ $allStocks->total() }}</span> entries
-            </div>
-
-            {{-- Navigasi Link --}}
-            <div>
-                {{ $allStocks->links() }}
-            </div>
-        </div>
-    </div>
 </div>
 
 <div class="px-6 py-4 border-t pagination">

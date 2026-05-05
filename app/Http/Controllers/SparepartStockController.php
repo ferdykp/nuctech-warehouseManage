@@ -108,7 +108,7 @@ class SparepartStockController extends Controller
         $request->validate([
             'to_site_id' => 'required|exists:sites,id',
             'qty'        => 'required|integer|min:1',
-            'condition'  => 'required|in:new,used-good,damaged,repaired', // Validasi input kondisi baru
+            'condition'  => 'required|in:new,used-good,damaged,repair', // Validasi input kondisi baru
         ]);
 
         $from = SparepartStock::findOrFail($id);

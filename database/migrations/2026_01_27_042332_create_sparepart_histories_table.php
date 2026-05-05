@@ -34,12 +34,22 @@ return new class extends Migration
                 ->nullOnDelete();
 
             $table->enum('action', [
+                // 'CREATE',
+                // 'MOVE',
+                // 'RETURN',
+                // 'CONDITION_CHANGE',
+                // 'OUT_TRANSFER', // Tambahkan ini
+                // 'IN_TRANSFER'   // Tambahkan ini
                 'CREATE',
                 'MOVE',
                 'RETURN',
                 'CONDITION_CHANGE',
-                'OUT_TRANSFER', // Tambahkan ini
-                'IN_TRANSFER'   // Tambahkan ini
+                'OUT_TRANSFER',
+                'IN_TRANSFER',
+                'SPLIT',
+                'ADJUSTMENT'
+
+                // 'CREATE','MOVE','RETURN','CONDITION_CHANGE','OUT_TRANSFER','IN_TRANSFER'
             ]);
 
             $table->enum('condition', ['new', 'used-good', 'damaged', 'repair'])->nullable();

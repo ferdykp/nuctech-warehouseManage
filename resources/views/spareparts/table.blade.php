@@ -6,8 +6,8 @@
                 <th class="px-6 py-4 text-center">No</th>
                 <th class="px-6 py-4 text-left">Item Information</th>
                 <th class="px-6 py-4 text-center">Serial Number</th>
-                <th class="px-6 py-4 text-center">Availability (Site)</th>
-                <th class="px-6 py-4 text-left">Condition Breakdowns</th>
+                <th class="px-6 py-4 text-center">Quantity</th>
+                <th class="px-6 py-4 text-left">Condition</th>
                 @if (Auth::user()->role === 'superadmin' ||
                         (Auth::user()->role === 'admin_site' && Auth::user()->site_id === $siteData->id))
                     <th class="px-6 py-4 text-right">Actions</th>
@@ -17,430 +17,150 @@
 
         <tbody class="divide-y divide-gray-50">
             @forelse ($assets as $item)
-                @php
-                    // FILTER: Hanya ambil stok untuk site yang sedang dibuka
-                    $siteStocks = $item->stocks->where('site_id', $siteData->id);
-                    $totalQtyAtSite = $siteStocks->sum('qty');
-                @endphp
                 <tr class="transition-colors hover:bg-blue-50/30 group">
-                    <td class="px-6 py-4 text-sm font-medium text-center text-gray-400">
+                    <td class="px-6 py-4 text-sm text-center text-gray-400">
                         {{ ($assets->currentPage() - 1) * $assets->perPage() + $loop->iteration }}
                     </td>
+
                     <td class="px-6 py-4">
                         <div class="flex flex-col">
-                            <span
-                                class="font-bold text-gray-800 transition-colors group-hover:text-blue-600">{{ $item->item_name }}</span>
-                            @if ($item->type && strtolower(trim($item->type)) !== strtolower(trim($item->item_name)))
-                                <span
-                                    class="text-[11px] text-gray-500 font-medium uppercase tracking-tight">{{ $item->type }}</span>
-                            @endif
+                            <span class="font-bold text-gray-800">{{ $item->sparepart->item_name }}</span>
+                            <span class="text-[11px] text-gray-500 italic">{{ $item->sparepart->type }}</span>
                         </div>
                     </td>
+
                     <td class="px-6 py-4 text-center">
-                        @php
-                            $sn = trim($item->serial_number);
-                            $isDuplicate =
-                                strtolower($sn) === strtolower(trim($item->type ?? '')) ||
-                                strtolower($sn) === strtolower(trim($item->item_name));
-                        @endphp
-                        @if ($sn && !$isDuplicate)
-                            <span
-                                class="px-2 py-1 font-mono text-xs text-gray-600 bg-gray-100 border border-gray-200 rounded">{{ $sn }}</span>
-                        @else
-                            <span class="text-xs italic text-gray-300">-</span>
-                        @endif
+                        <span class="px-2 py-1 font-mono text-xs bg-gray-100 rounded">
+                            {{ $item->sparepart->serial_number ?? '-' }}
+                        </span>
                     </td>
+
                     <td class="px-6 py-4 text-center">
                         <div
-                            class="inline-flex flex-col items-center justify-center min-w-[60px] py-1 bg-white border-2 border-blue-100 rounded-lg shadow-sm">
-                            <span class="text-lg font-black leading-none text-blue-700">{{ $totalQtyAtSite }}</span>
-                            <span class="text-[9px] font-bold text-blue-400 uppercase mt-1">{{ $item->uom }}</span>
+                            class="inline-flex flex-col items-center justify-center min-w-[60px] py-1 bg-white border-2 border-blue-100 rounded-lg">
+                            <span class="text-lg font-black text-blue-700">{{ $item->qty }}</span>
+                            <span
+                                class="text-[9px] font-bold text-blue-400 uppercase">{{ $item->sparepart->uom }}</span>
                         </div>
                     </td>
+
                     <td class="px-6 py-4">
-                        <div class="flex flex-wrap gap-1.5">
-                            @forelse ($siteStocks as $stock)
-                                @php
-                                    $colorMap = [
-                                        'new' => 'bg-emerald-50 text-emerald-600 border-emerald-100',
-                                        'used-good' => 'bg-blue-50 text-blue-600 border-blue-100',
-                                        'damaged' => 'bg-red-50 text-red-600 border-red-100',
-                                        'repaired' => 'bg-amber-50 text-amber-600 border-amber-100',
-                                    ];
-                                    $style = $colorMap[$stock->condition] ?? 'bg-gray-50 text-gray-600 border-gray-100';
-                                @endphp
-                                <span
-                                    class="px-2 py-0.5 text-[10px] font-bold uppercase border rounded-md {{ $style }}">
-                                    {{ str_replace('-', ' ', $stock->condition) }}: {{ $stock->qty }}
-                                </span>
-                            @empty
-                                <span class="text-[10px] italic text-gray-400">Empty at this site</span>
-                            @endforelse
-                        </div>
+                        @php
+                            $colorMap = [
+                                'new' => 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                                'used-good' => 'bg-blue-50 text-blue-600 border-blue-100',
+                                'damaged' => 'bg-red-50 text-red-600 border-red-100',
+                                'repair' => 'bg-amber-50 text-amber-600 border-amber-100',
+                            ];
+                            $style = $colorMap[$item->condition] ?? 'bg-gray-50 text-gray-600 border-gray-100';
+                        @endphp
+                        <span class="px-2 py-0.5 text-[10px] font-bold uppercase border rounded-md {{ $style }}">
+                            {{ str_replace('-', ' ', $item->condition) }}
+                        </span>
                     </td>
 
-                    @if (Auth::user()->role === 'superadmin' ||
-                            (Auth::user()->role === 'admin_site' && Auth::user()->site_id === $siteData->id))
-                        {{-- Ganti bagian Actions pada resources/views/spareparts/table.blade.php --}}
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex justify-end gap-2">
+                            {{-- ADJUST --}}
+                            <button
+                                onclick="openAdjustModal({{ $item->sparepart_id }}, '{{ addslashes($item->sparepart->item_name) }}', {{ $item->qty }}, '{{ $item->condition }}')"
+                                class="flex items-center justify-center w-8 h-8 transition-all rounded-lg text-amber-600 bg-amber-50 hover:bg-amber-600 hover:text-white">
+                                <i class="fa-solid fa-sliders"></i>
+                            </button>
 
+                            {{-- EDIT --}}
+                            <button onclick="openEditModal(this)" data-item='@json($item->sparepart)'
+                                class="flex items-center justify-center w-8 h-8 text-blue-600 transition-all rounded-lg bg-blue-50 hover:bg-blue-600 hover:text-white">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
 
+                            {{-- DETAIL (VIEW) --}}
+                            <button
+                                onclick='openDetailModal(@json($item->sparepart), @json($all_sites))'
+                                class="flex items-center justify-center w-8 h-8 text-gray-500 transition-all bg-gray-100 rounded-lg hover:bg-gray-800 hover:text-white"
+                                title="View Details">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
 
-                        <td class="px-6 py-4 text-right">
-                            <div class="flex justify-end gap-2">
+                            {{-- MOVE --}}
+                            <button
+                                onclick="openMoveModal({{ $item->id }}, '{{ addslashes($item->sparepart->item_name) }}', {{ $item->qty }}, '{{ $item->condition }}')"
+                                class="px-3 py-1 text-[11px] font-bold text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-all">
+                                MOVE
+                            </button>
 
-                                {{-- Tombol Stock Adjustment (BARU) --}}
-                                @php
-                                    // Ambil stok spesifik site ini (misal dari baris pertama yang ditemukan)
-                                    $currentSiteStock = $siteStocks->first();
-                                @endphp
-
-                                @if ($currentSiteStock)
-                                    <button
-                                        onclick="openAdjustmentModal({
-                id: {{ $item->id }},
-                item_name: '{{ $item->item_name }}',
-                qty: {{ $currentSiteStock->qty }},
-                uom: '{{ $item->uom }}',
-                condition: '{{ $currentSiteStock->condition }}',
-                slug: '{{ $slug }}'
-            })"
-                                        class="flex items-center justify-center transition-all shadow-sm text-amber-600 group w-9 h-9 bg-amber-50 rounded-xl hover:bg-amber-600 hover:text-white shadow-amber-100"
-                                        title="Adjust Stock">
-                                        <i
-                                            class="fa-solid fa-sliders text-[14px] transition-transform group-hover:scale-110"></i>
-                                    </button>
-                                @endif
-
-                                <button onclick="openEditModal(this)" data-item='@json($item)'
-                                    class="flex items-center justify-center text-blue-600 transition-all shadow-sm group w-9 h-9 bg-blue-50 rounded-xl hover:bg-blue-600 hover:text-white shadow-blue-100"
-                                    title="Edit Sparepart">
-                                    <i
-                                        class="fa-solid fa-pen-to-square text-[14px] transition-transform group-hover:scale-110"></i>
-                                </button>
-                                {{-- Tombol View Detail --}}
-                                <button
-                                    onclick='openDetailModal(@json($item), @json($all_sites))'
-                                    class="p-2 text-gray-400 transition-all rounded-lg hover:text-blue-600 hover:bg-blue-50"
-                                    title="View Details">
-                                    <i class="text-lg fa-solid fa-eye"></i>
-                                </button>
-
-                                {{-- Tombol Request Move Tunggal --}}
-                                @php
-                                    // Mengambil baris stok pertama yang tersedia di site ini untuk inisialisasi modal
-                                    $firstAvailableStock = $siteStocks->first();
-                                @endphp
-
-                                @if ($firstAvailableStock)
-                                    <button
-                                        onclick="openMoveModal({{ $firstAvailableStock->id }}, '{{ $item->item_name }}', {{ $firstAvailableStock->qty }}, '{{ $firstAvailableStock->condition }}')"
-                                        class="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-white bg-orange-500 hover:bg-orange-600 rounded-lg shadow-sm transition-all shadow-orange-100 uppercase tracking-tighter">
-                                        <i class="fa-solid fa-truck-fast"></i>
-                                        Request Move
-                                    </button>
-                                @endif
-                                <form action="{{ route('sparepart.destroy', [$slug, $item->id]) }}" method="POST"
-                                    onsubmit="return confirm('Apakah Anda yakin ingin menghapus sparepart ini? Tindakan ini tidak dapat dibatalkan.')">
-                                    @csrf
-                                    @method('DELETE')
-                                    {{-- Tombol Delete yang Dimodifikasi --}}
-                                    <button type="button"
-                                        onclick="openDeleteModal('{{ route('sparepart.destroy', [$slug, $item->id]) }}', '{{ $item->item_name }}')"
-                                        class="flex items-center justify-center transition-all shadow-sm group w-9 h-9 text-rose-600 bg-rose-50 rounded-xl hover:bg-rose-600 hover:text-white shadow-rose-100"
-                                        title="Delete Sparepart">
-                                        <i
-                                            class="fa-solid fa-trash-can text-[14px] transition-transform group-hover:scale-110"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    @endif
+                            {{-- DELETE --}}
+                            {{-- <button type="button"
+                                onclick="openDeleteModal('{{ route('sparepart.destroy', [$slug, $item->sparepart_id]) }}', '{{ addslashes($item->sparepart->item_name) }}')"
+                                class="flex items-center justify-center w-8 h-8 transition-all rounded-lg text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button> --}}
+                            {{-- Tombol Delete yang sudah diperbaiki --}}
+                            <button type="button"
+                                onclick="openDeleteModal('{{ route('sparepart.stock.destroy', [$slug, $item->id]) }}', '{{ addslashes($item->sparepart->item_name) }} ({{ strtoupper($item->condition) }})')"
+                                class="flex items-center justify-center w-8 h-8 transition-all rounded-lg text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white"
+                                title="Delete This Condition Only">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </td>
                 </tr>
             @empty
-                <tr>
-                    <td colspan="6" class="px-6 py-20 text-center">
-                        <div class="flex flex-col items-center justify-center text-gray-300">
-                            <i class="mb-4 text-5xl fa-solid fa-box-open"></i>
-                            <span class="text-sm italic font-medium">Data sparepart tidak ditemukan di site ini.</span>
-                        </div>
-                    </td>
-                </tr>
+                {{-- Empty State --}}
             @endforelse
         </tbody>
     </table>
 </div>
+<div class="mt-6">{{ $assets->links() }}</div>
 
-<div class="mt-6">
-    {{ $assets->links() }}
-</div>
+<div class="mt-6">{{ $assets->links() }}</div>
 
-{{-- MODAL DELETE CONFIRMATION --}}
-<div id="modal-delete"
-    class="fixed inset-0 z-[100] flex items-center justify-center hidden px-4 bg-slate-900/40 backdrop-blur-md transition-all duration-500">
-    <div
-        class="relative w-full max-w-sm transform transition-all duration-300 scale-95 opacity-0 modal-content bg-white shadow-2xl rounded-[32px] overflow-hidden">
+<!-- =========================================================================
+     MODAL SECTION
+     ========================================================================= -->
 
-        <div class="p-8 text-center">
-            {{-- Icon Danger --}}
-            <div class="flex justify-center mb-6">
-                <div
-                    class="flex items-center justify-center w-20 h-20 text-rose-600 bg-rose-50 rounded-3xl animate-pulse">
-                    <i class="text-3xl fa-solid fa-triangle-exclamation"></i>
-                </div>
-            </div>
-
-            <h3 class="mb-2 text-xl font-black text-slate-800">Are you sure?</h3>
-            <p class="mb-8 text-sm font-medium text-slate-500">
-                You are about to delete <span id="delete-item-name" class="font-bold text-slate-800"></span>. This
-                action cannot be undone.
-            </p>
-
-            {{-- Hidden Form --}}
-            <form id="form-confirm-delete" method="POST">
-                @csrf
-                @method('DELETE')
-
-                <div class="flex flex-col gap-3">
-                    <button type="submit"
-                        class="w-full py-4 text-xs font-black tracking-widest text-white uppercase transition-all shadow-lg bg-rose-600 rounded-2xl hover:bg-rose-700 shadow-rose-100">
-                        Yes, Delete Permanently
-                    </button>
-                    <button type="button" onclick="closeDeleteModal()"
-                        class="w-full py-4 text-xs font-black tracking-widest uppercase transition-all text-slate-400 bg-slate-50 rounded-2xl hover:bg-slate-100">
-                        Cancel
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-{{-- MODAL MOVE --}}
-<div id="modal-move"
-    class="fixed inset-0 z-[60] flex items-center justify-center hidden px-4 bg-black/60 backdrop-blur-sm">
-    <div class="w-full max-w-md overflow-hidden bg-white border border-gray-100 shadow-2xl rounded-2xl">
-        <div class="flex items-center gap-3 px-6 py-4 border-b border-orange-100 bg-orange-50">
-            <div class="p-2 text-white bg-orange-500 rounded-lg">
-                <i class="text-lg fa-solid fa-truck-fast"></i>
-            </div>
-            <div>
-                <h3 class="text-lg font-bold leading-tight text-gray-800">Transfer Request</h3>
-                <p id="move-asset-tag" class="font-mono text-xs font-bold text-orange-600 uppercase"></p>
-            </div>
-        </div>
-
-        <form id="form-move" method="POST" class="p-6 space-y-4">
-            @csrf
-            <div>
-                <label class="block mb-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Destination
-                    Site</label>
-                <select name="to_site_id"
-                    class="w-full px-4 py-3 text-sm font-bold transition-all border outline-none appearance-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-emerald-500 text-slate-700"
-                    required>
-                    <option value="" disabled selected>Select Destination</option>
-                    @foreach ($all_sites as $s)
-                        @if ($s->id !== $siteData->id)
-                            <option value="{{ $s->id }}">{{ $s->machine_name }}
-                                ({{ $s->branch->branch_name }})
-                            </option>
-                        @endif
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block mb-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Target
-                        Condition</label>
-                    <select name="condition" id="target-condition"
-                        class="w-full px-4 py-3 text-sm font-bold transition-all border outline-none appearance-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-emerald-500 text-slate-700"
-                        required>
-                        <option value="" disabled selected>Select Condition</option>
-                        <option value="new">NEW</option>
-                        <option value="used-good">USED GOOD</option>
-                        <option value="damaged">DAMAGED</option>
-                        <option value="repaired">REPAIRED</option>
-                    </select>
-                </div>
-                <div>
-                    <label
-                        class="block mb-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Quantity</label>
-                    <input type="number" name="qty" id="move-quantity" min="1" value="1"
-                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all outline-none text-sm font-bold"
-                        required>
-                </div>
-            </div>
-            <p id="max-info" class="text-[10px] font-bold text-right text-gray-400 italic mt-0"></p>
-
-            <div>
-                <label class="block mb-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">Note</label>
-                <textarea name="note"
-                    class="w-full h-24 px-4 py-3 text-sm transition-all border border-gray-200 outline-none bg-gray-50 rounded-xl focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 placeholder:text-gray-300"
-                    placeholder="Reason for transfer..."></textarea>
-            </div>
-
-            <div class="flex gap-3 pt-2">
-                <button type="button" onclick="closeMoveModal()"
-                    class="flex-1 px-4 py-3 text-sm font-bold text-gray-500 transition-colors bg-gray-100 hover:bg-gray-200 rounded-xl">Cancel</button>
-                <button type="submit"
-                    class="flex-[2] px-4 py-3 text-sm font-bold text-white bg-orange-600 hover:bg-orange-700 rounded-xl shadow-lg shadow-orange-200 transition-all">Request
-                    Transfer</button>
-            </div>
-        </form>
-    </div>
-</div>
-{{-- ASSET DETAIL MODAL --}}
-<div id="asset-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden px-4 bg-black/60">
-
-    <div class="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl">
-
-        <button onclick="closeAssetModal()" class="absolute text-2xl text-gray-500 top-3 right-4 hover:text-red-500">
-            ✕
-        </button>
-
-        <div id="asset-modal-content" class="p-6">
-            {{-- nanti detail.blade.php masuk ke sini --}}
-            <div class="py-20 text-center text-gray-400">
-                Loading asset detail...
-            </div>
-        </div>
-
-    </div>
-</div>
-<script>
-    function openDeleteModal(url, itemName) {
-        const modal = document.getElementById('modal-delete');
-        const content = modal.querySelector('.modal-content');
-        const form = document.getElementById('form-confirm-delete');
-        const nameDisplay = document.getElementById('delete-item-name');
-
-        // Set form action and item name
-        form.action = url;
-        nameDisplay.innerText = itemName;
-
-        // Show Modal with Animation
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        setTimeout(() => {
-            content.classList.remove('scale-95', 'opacity-0');
-            content.classList.add('scale-100', 'opacity-100');
-        }, 10);
-    }
-
-    function closeDeleteModal() {
-        const modal = document.getElementById('modal-delete');
-        const content = modal.querySelector('.modal-content');
-
-        content.classList.remove('scale-100', 'opacity-100');
-        content.classList.add('scale-95', 'opacity-0');
-
-        setTimeout(() => {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }, 300);
-    }
-
-    // Tambahkan ke window listener untuk klik luar
-    window.addEventListener('click', (e) => {
-        const modalDelete = document.getElementById('modal-delete');
-        if (e.target === modalDelete) closeDeleteModal();
-    });
-
-    function openAssetDetail(tag) {
-        const modal = document.getElementById('asset-modal');
-        const content = document.getElementById('asset-modal-content');
-
-        // tampilkan modal dulu
-        modal.classList.remove('hidden');
-
-        // loading state
-        content.innerHTML = `
-        <div class="py-20 text-center">
-            <div class="text-lg font-semibold text-gray-500">Loading asset detail...</div>
-        </div>
-    `;
-
-        // fetch ke laravel
-        fetch(`{{ url('/assets/track') }}/${tag}`)
-            .then(response => response.text())
-            .then(html => {
-                content.innerHTML = html;
-            })
-            .catch(() => {
-                content.innerHTML = `<div class="text-center text-red-500">Gagal mengambil data</div>`;
-            });
-    }
-
-    function closeAssetModal() {
-        document.getElementById('asset-modal').classList.add('hidden');
-    }
-
-    // klik area gelap untuk tutup
-    window.addEventListener('click', function(e) {
-        const modal = document.getElementById('asset-modal');
-        if (e.target === modal) closeAssetModal();
-    });
-</script>
-
-
-<script>
-    function openMoveModal(stockId, itemName, currentQty, currentCondition) {
-        const modal = document.getElementById('modal-move');
-        const qtyInput = document.getElementById('move-quantity');
-        const maxInfo = document.getElementById('max-info');
-        const targetCond = document.getElementById('target-condition');
-
-        document.getElementById('move-asset-tag').innerText = itemName + " (" + currentCondition.toUpperCase() + ")";
-        document.getElementById('form-move').action = "/movement/request/" + stockId;
-
-        // Set default target condition sama dengan asal
-        targetCond.value = currentCondition;
-
-        qtyInput.max = currentQty;
-        qtyInput.value = 1;
-        maxInfo.innerText = "* Available at source: " + currentQty + " pcs";
-        maxInfo.classList.remove('text-red-500');
-
-        modal.classList.remove('hidden');
-    }
-
-    function closeMoveModal() {
-        document.getElementById('modal-move').classList.add('hidden');
-    }
-
-    // Tambahan: Validasi saat user mengetik manual
-    document.getElementById('move-quantity').addEventListener('input', function() {
-        const max = parseInt(this.max);
-        const val = parseInt(this.value);
-        const info = document.getElementById('max-info');
-
-        if (val > max) {
-            info.innerText = "⚠️ Angka melebihi stok (" + max + ")!";
-            info.classList.add('text-red-500');
-            this.value = max; // Paksa kembali ke maksimal
-        } else {
-            info.innerText = "* Stok tersedia: " + max + " pcs";
-            info.classList.remove('text-red-500');
-        }
-    });
-
-    // Menutup modal jika area di luar kotak putih di-klik
-    window.onclick = function(event) {
-        const modal = document.getElementById('modal-move');
-        if (event.target == modal) {
-            closeMoveModal();
-        }
-    }
-</script>
-
+<!-- MODAL DETAIL ASSET -->
 <div id="detailModal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black/50 backdrop-blur-sm">
     <div id="modalWrapper"
         class="w-full max-w-4xl overflow-hidden transition transform scale-95 bg-white shadow-2xl opacity-0 rounded-2xl">
-
         {{-- HEADER --}}
         <div class="flex items-center justify-between p-6 border-b bg-gray-50">
             <div class="flex items-center gap-6">
-                <img id="d_image" class="object-cover w-32 h-32 bg-white border rounded-lg shadow-sm">
+                <!-- Image Wrapper dengan Tampilan yang Dirapikan -->
+                <div class="relative group">
+                    <!-- Kontainer utama gambar -->
+                    <div id="d_image_container"
+                        class="relative w-32 h-32 overflow-hidden transition-all bg-white border-2 border-gray-100 shadow-sm cursor-pointer rounded-2xl ring-offset-2 hover:ring-2 hover:ring-blue-500"
+                        onclick="expandImage()">
+
+                        <!-- Gambar Utama -->
+                        <img id="d_image"
+                            class="object-cover w-full h-full transition-all duration-500 group-hover:scale-110 group-hover:brightness-75">
+
+                        <!-- Overlay Tengah (Rapi & Minimalis) -->
+                        <div
+                            class="absolute inset-0 z-10 flex flex-col items-center justify-center transition-all duration-300 opacity-0 pointer-events-none bg-black/40 group-hover:opacity-100">
+                            <div class="p-2 mb-1 rounded-full shadow-inner bg-white/20 backdrop-blur-md">
+                                <i class="text-lg text-white fa-solid fa-magnifying-glass-plus"></i>
+                            </div>
+                            <span class="text-[10px] font-bold text-white uppercase tracking-tighter shadow-sm">View
+                                Full</span>
+                        </div>
+
+                        <!-- Label Kecil di Pojok Bawah (Indikator saat tidak hover) -->
+                        <div
+                            class="absolute flex items-center justify-center w-6 h-6 transition-opacity border border-gray-100 rounded-lg shadow-sm bottom-2 right-2 bg-white/90 backdrop-blur-sm group-hover:opacity-0">
+                            <i class="fa-solid fa-expand text-blue-600 text-[10px]"></i>
+                        </div>
+                    </div>
+
+                    <!-- Placeholder No Image (Dibuat senada dengan kontainer gambar) -->
+                    <div id="no-image-placeholder"
+                        class="flex-col items-center justify-center hidden w-32 h-32 text-gray-300 border-2 border-gray-200 border-dashed bg-gray-50 rounded-2xl">
+                        <i class="mb-2 text-3xl opacity-50 fa-solid fa-image-slash"></i>
+                        <span class="text-[10px] font-black uppercase tracking-widest opacity-60">No Image</span>
+                    </div>
+                </div>
                 <div>
                     <h3 id="d_item_name" class="text-2xl font-bold text-gray-800"></h3>
                     <p id="d_type" class="font-mono text-gray-500"></p>
@@ -454,16 +174,9 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2">
-            {{-- STOCK TABLE (LEFT) --}}
             <div class="p-6 border-r">
-                <p class="flex items-center gap-2 mb-4 font-bold text-gray-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-600" viewBox="0 0 20 20"
-                        fill="currentColor">
-                        <path
-                            d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
-                    </svg>
-                    Distribution Stock
-                </p>
+                <p class="flex items-center gap-2 mb-4 font-bold text-gray-700"><i
+                        class="text-blue-600 fa-solid fa-layer-group"></i> Distribution Stock</p>
                 <div class="overflow-hidden border rounded-lg">
                     <table class="w-full text-sm">
                         <thead class="text-gray-600 bg-gray-100">
@@ -477,56 +190,156 @@
                     </table>
                 </div>
             </div>
-
-            {{-- HISTORY TRACKING (RIGHT) --}}
             <div class="p-6 bg-gray-50">
-                <p class="flex items-center gap-2 mb-4 font-bold text-gray-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-orange-600" viewBox="0 0 20 20"
-                        fill="currentColor">
-                        <path fill-rule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                            clip-rule="evenodd" />
-                    </svg>
-                    Tracking History
-                </p>
+                <p class="flex items-center gap-2 mb-4 font-bold text-gray-700"><i
+                        class="text-orange-600 fa-solid fa-clock-rotate-left"></i> Tracking History</p>
                 <div class="relative pl-6 border-l-2 border-orange-200 space-y-6 max-h-[300px] overflow-y-auto"
-                    id="d_history">
-                </div>
+                    id="d_history"></div>
             </div>
         </div>
 
         <div class="p-4 text-right bg-white border-t">
             <button onclick="closeDetailModal()"
-                class="px-6 py-2 font-bold text-white transition-all bg-gray-800 rounded-lg hover:bg-black">
-                Close Detail
-            </button>
+                class="px-6 py-2 font-bold text-white transition-all bg-gray-800 rounded-lg hover:bg-black">Close
+                Detail</button>
         </div>
     </div>
 </div>
 
+<!-- MODAL FULLSCREEN IMAGE VIEW -->
+<div id="image-viewer"
+    class="fixed inset-0 z-[100] hidden bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+    <button onclick="closeImageViewer()"
+        class="absolute z-10 p-2 text-white transition-all top-5 right-5 hover:scale-110">
+        <i class="text-4xl fa-solid fa-xmark"></i>
+    </button>
+    <img id="full-image" src=""
+        class="max-w-full max-h-full transition-all duration-300 transform scale-95 rounded-lg shadow-2xl"
+        alt="Full Preview">
+</div>
+
+<!-- MODAL DELETE -->
+<div id="modal-delete"
+    class="fixed inset-0 z-[100] flex items-center justify-center hidden px-4 bg-slate-900/40 backdrop-blur-md transition-all">
+    <div
+        class="relative w-full max-w-sm transform transition-all duration-300 scale-95 opacity-0 modal-content bg-white shadow-2xl rounded-[32px] p-8 text-center">
+        <div class="flex justify-center mb-6">
+            <div class="flex items-center justify-center w-20 h-20 text-rose-600 bg-rose-50 rounded-3xl animate-pulse">
+                <i class="text-3xl fa-solid fa-triangle-exclamation"></i>
+            </div>
+        </div>
+        <h3 class="mb-2 text-xl font-black text-slate-800">Are you sure?</h3>
+        <p class="mb-8 text-sm font-medium text-slate-500">You are about to delete <span id="delete-item-name"
+                class="font-bold text-slate-800"></span>.</p>
+        <form id="form-confirm-delete" method="POST">
+            @csrf @method('DELETE')
+            <div class="flex flex-col gap-3">
+                <button type="submit"
+                    class="w-full py-4 text-xs font-black tracking-widest text-white uppercase shadow-lg bg-rose-600 rounded-2xl hover:bg-rose-700">Yes,
+                    Delete Permanently</button>
+                <button type="button" onclick="closeDeleteModal()"
+                    class="w-full py-4 text-xs font-black tracking-widest uppercase text-slate-400 bg-slate-50 rounded-2xl hover:bg-slate-100">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL MOVE (Transfer) -->
+<div id="modal-move"
+    class="fixed inset-0 z-[60] flex items-center justify-center hidden px-4 bg-black/60 backdrop-blur-sm">
+    <div class="w-full max-w-md overflow-hidden bg-white border border-gray-100 shadow-2xl rounded-2xl">
+        <div class="flex items-center gap-3 px-6 py-4 border-b border-orange-100 bg-orange-50">
+            <div class="p-2 text-white bg-orange-500 rounded-lg"><i class="text-lg fa-solid fa-truck-fast"></i></div>
+            <div>
+                <h3 class="text-lg font-bold leading-tight text-gray-800">Transfer Request</h3>
+                <p id="move-asset-tag" class="font-mono text-xs font-bold text-orange-600 uppercase"></p>
+            </div>
+        </div>
+        <form id="form-move" method="POST" class="p-6 space-y-4">
+            @csrf
+            <div>
+                <label class="block mb-1.5 text-[11px] font-bold text-gray-400 uppercase">Destination Site</label>
+                <select name="to_site_id"
+                    class="w-full px-4 py-3 text-sm font-bold border outline-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-emerald-500"
+                    required>
+                    <option value="" disabled selected>Select Destination</option>
+                    @foreach ($all_sites as $s)
+                        @if ($s->id !== $siteData->id)
+                            <option value="{{ $s->id }}">{{ $s->machine_name }}
+                                ({{ $s->branch->branch_name }})
+                            </option>
+                        @endif
+                    @endforeach
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block mb-1.5 text-[11px] font-bold text-gray-400 uppercase">Condition</label>
+                    <select name="condition" id="target-condition"
+                        class="w-full px-4 py-3 text-sm font-bold border outline-none border-slate-200 bg-slate-50 rounded-xl"
+                        required>
+                        <option value="new">NEW</option>
+                        <option value="used-good">USED GOOD</option>
+                        <option value="damaged">DAMAGED</option>
+                        <option value="repair">REPAIRED</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block mb-1.5 text-[11px] font-bold text-gray-400 uppercase">Quantity</label>
+                    <input type="number" name="qty" id="move-quantity" min="1"
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none text-sm font-bold"
+                        required>
+                </div>
+            </div>
+            <p id="max-info" class="text-[10px] font-bold text-right text-gray-400 italic mt-0"></p>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeMoveModal()"
+                    class="flex-1 px-4 py-3 text-sm font-bold text-gray-500 bg-gray-100 rounded-xl">Cancel</button>
+                <button type="submit"
+                    class="flex-[2] px-4 py-3 text-sm font-bold text-white bg-orange-600 rounded-xl shadow-lg">Request
+                    Transfer</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script>
+    // --- Detail Modal Functions ---
     function openDetailModal(item, sites) {
-        // Basic Info
         document.getElementById('d_item_name').innerText = item.item_name;
-        document.getElementById('d_type').innerText = "Type: " + item.type;
-        document.getElementById('d_serial_number').innerText = "SN: " + item.serial_number;
+        document.getElementById('d_type').innerText = "Type: " + (item.type || '-');
+        document.getElementById('d_serial_number').innerText = "SN: " + (item.serial_number || '-');
         document.getElementById('d_source_data').innerText = "Source: " + (item.source_data || 'Manual Input');
-        document.getElementById('d_image').src = item.image ? `/storage/${item.image}` : '/no-image.png';
 
-        // STOCK TABLE
+        // Bagian dalam fungsi openDetailModal
+        const imgElement = document.getElementById('d_image');
+        const imgContainer = document.getElementById('d_image_container');
+        const placeholder = document.getElementById('no-image-placeholder');
+
+        if (item.image) {
+            imgElement.src = `/storage/${item.image}`;
+
+            // PASTIKAN INI: Tampilkan kontainer, dan pastikan img itu sendiri tidak hidden
+            imgContainer.classList.remove('hidden');
+            imgElement.classList.remove('hidden'); // Tambahkan ini agar img tidak tertinggal hidden
+
+            placeholder.classList.add('hidden');
+            placeholder.classList.remove('flex');
+        } else {
+            imgContainer.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            placeholder.classList.add('flex');
+        }
+
         const stockTable = document.getElementById('d_stock_table');
         stockTable.innerHTML = '';
-
         if (item.stocks && item.stocks.length > 0) {
             item.stocks.forEach(s => {
                 stockTable.innerHTML += `
                 <tr class="transition-colors hover:bg-blue-50">
                     <td class="p-3 font-medium text-gray-700">${s.site.machine_name}</td>
                     <td class="p-3 font-bold text-center text-blue-600">${s.qty}</td>
-                    <td class="p-3 text-center">
-                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-gray-200 font-bold uppercase">${s.condition}</span>
-                    </td>
+                    <td class="p-3 text-center"><span class="text-[10px] px-2 py-0.5 rounded-full bg-gray-200 font-bold uppercase">${s.condition}</span></td>
                 </tr>`;
             });
         } else {
@@ -534,78 +347,122 @@
                 '<tr><td colspan="3" class="p-4 italic text-center text-gray-400">No active stock</td></tr>';
         }
 
-        // HISTORY
         const historyContainer = document.getElementById('d_history');
-        historyContainer.innerHTML = '';
-
-        if (item.histories && item.histories.length > 0) {
+        historyContainer.innerHTML = (item.histories && item.histories.length > 0) ? '' :
+            '<p class="text-sm italic text-gray-400">No history records found.</p>';
+        if (item.histories) {
             item.histories.forEach(h => {
-                const date = new Date(h.created_at).toLocaleDateString('id-ID', {
+                const date = new Date(h.created_at).toLocaleString('id-ID', {
                     day: 'numeric',
                     month: 'short',
                     year: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit'
                 });
-
-                const fromSite = h.from_site ? h.from_site.machine_name : 'Initial';
-                const toSite = h.to_site ? h.to_site.machine_name : 'Unknown';
-
                 historyContainer.innerHTML += `
                 <div class="relative">
-                    <div class="absolute -left-[31px] mt-1.5 w-4 h-4 rounded-full bg-orange-500 border-4 border-white shadow-sm"></div>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">${date}</p>
+                    <div class="absolute -left-[31px] mt-1.5 w-4 h-4 rounded-full bg-orange-500 border-4 border-white"></div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase">${date}</p>
                     <p class="text-sm font-bold text-gray-800">${h.action}</p>
-                    <p class="text-xs text-gray-600">
-                        <span class="font-semibold text-blue-600">${fromSite}</span> 
-                        <span class="mx-1 text-gray-400">➔</span> 
-                        <span class="font-semibold text-green-600">${toSite}</span>
-                    </p>
-                    <p class="mt-1 font-mono text-xs italic text-gray-500">Qty: ${h.qty} | Cond: ${h.condition}</p>
-                    ${h.note ? `<p class="p-1 mt-1 text-xs italic text-gray-500 bg-white border rounded">"${h.note}"</p>` : ''}
+                    <p class="text-xs text-gray-600">${h.from_site?.machine_name || 'Initial'} ➔ ${h.to_site?.machine_name || 'Unknown'}</p>
+                    <p class="text-[10px] italic text-gray-500">Qty: ${h.qty} | ${h.condition}</p>
+                    <p class="text-[10px] italic text-gray-500">Note: ${h.note}</p>
+
                 </div>`;
             });
-        } else {
-            historyContainer.innerHTML = '<p class="text-sm italic text-gray-400">No history records found.</p>';
         }
 
-        // SHOW MODAL ANIMATION
         const modal = document.getElementById('detailModal');
         const wrapper = document.getElementById('modalWrapper');
-
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         setTimeout(() => {
-            wrapper.classList.remove('scale-95', 'opacity-0');
-            wrapper.classList.add('scale-100', 'opacity-100');
+            wrapper.classList.replace('scale-95', 'scale-100');
+            wrapper.classList.replace('opacity-0', 'opacity-100');
         }, 10);
     }
 
     function closeDetailModal() {
         const modal = document.getElementById('detailModal');
         const wrapper = document.getElementById('modalWrapper');
-
-        wrapper.classList.add('scale-95', 'opacity-0');
+        wrapper.classList.replace('scale-100', 'scale-95');
+        wrapper.classList.replace('opacity-100', 'opacity-0');
         setTimeout(() => {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }, 200);
     }
 
-    function openMoveModal(stockId, itemName, currentQty) {
+    // --- Image Viewer Functions ---
+    function expandImage() {
+        const imgElement = document.getElementById('d_image');
+        // Pastikan kita tidak memperbesar jika yang tampil adalah placeholder
+        if (imgElement.classList.contains('hidden')) return;
+
+        const imgSrc = imgElement.src;
+        const viewer = document.getElementById('image-viewer');
+        const fullImg = document.getElementById('full-image');
+
+        fullImg.src = imgSrc;
+        viewer.classList.remove('hidden');
+        viewer.classList.add('flex');
+
+        // Animasi zoom in saat modal terbuka
+        setTimeout(() => {
+            fullImg.classList.replace('scale-95', 'scale-100');
+        }, 10);
+    }
+
+    function closeImageViewer() {
+        const viewer = document.getElementById('image-viewer');
+        const fullImg = document.getElementById('full-image');
+        fullImg.classList.replace('scale-100', 'scale-95');
+        setTimeout(() => viewer.classList.add('hidden'), 200);
+    }
+
+    // --- Delete Modal Functions ---
+    function openDeleteModal(url, itemName) {
+        document.getElementById('form-confirm-delete').action = url;
+        document.getElementById('delete-item-name').innerText = itemName;
+        const modal = document.getElementById('modal-delete');
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modal.querySelector('.modal-content').classList.replace('scale-95', 'scale-100');
+            modal.querySelector('.modal-content').classList.replace('opacity-0', 'opacity-100');
+        }, 10);
+    }
+
+    function closeDeleteModal() {
+        const modal = document.getElementById('modal-delete');
+        modal.querySelector('.modal-content').classList.replace('scale-100', 'scale-95');
+        modal.querySelector('.modal-content').classList.replace('opacity-100', 'opacity-0');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    // --- Move Modal Functions ---
+    function openMoveModal(stockId, itemName, currentQty, currentCondition) {
         const modal = document.getElementById('modal-move');
-        const qtyInput = document.getElementById('move-quantity');
-        const maxInfo = document.getElementById('max-info');
-
-        document.getElementById('move-asset-tag').innerText = "REQUEST TRANSFER: " + itemName;
-
-        // Sesuaikan URL ini dengan route requestMove Anda
+        document.getElementById('move-asset-tag').innerText = itemName + " (" + currentCondition.toUpperCase() + ")";
         document.getElementById('form-move').action = "/movement/request/" + stockId;
+        document.getElementById('target-condition').value = currentCondition;
 
+        const qtyInput = document.getElementById('move-quantity');
         qtyInput.max = currentQty;
         qtyInput.value = 1;
-        maxInfo.innerText = "* Stok tersedia di site ini: " + currentQty + " pcs";
+        document.getElementById('max-info').innerText = "* Available: " + currentQty + " pcs";
 
         modal.classList.remove('hidden');
+    }
+
+    function closeMoveModal() {
+        document.getElementById('modal-move').classList.add('hidden');
+    }
+
+    // Close modals on outside click
+    window.onclick = function(event) {
+        if (event.target.id === 'detailModal') closeDetailModal();
+        if (event.target.id === 'modal-delete') closeDeleteModal();
+        if (event.target.id === 'modal-move') closeMoveModal();
+        if (event.target.id === 'image-viewer') closeImageViewer();
     }
 </script>

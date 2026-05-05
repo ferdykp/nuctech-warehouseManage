@@ -36,29 +36,68 @@ class SparepartSheetImport implements ToModel, WithHeadingRow, WithCalculatedFor
      */
     protected static $columnAliases = [
         'item_name' => [
-            'item_name', 'item', 'items', 'name', 'device_name', 'nama_item',
-            'nama_barang', 'barang', 'spare_part', 'sparepart', 'part_name',
-            'description', 'deskripsi', 'item_description',
+            'item_name',
+            'item',
+            'items',
+            'name',
+            'device_name',
+            'nama_item',
+            'nama_barang',
+            'barang',
+            'spare_part',
+            'sparepart',
+            'part_name',
+            'description',
+            'deskripsi',
+            'item_description',
         ],
         'type' => [
-            'type', 'model_no', 'model_number', 'model', 'tipe',
-            'part_number', 'part_no', 'pn', 'type_model',
+            'type',
+            'model_no',
+            'model_number',
+            'model',
+            'tipe',
+            'part_number',
+            'part_no',
+            'pn',
+            'type_model',
         ],
         'uom' => [
-            'uom', 'unit', 'satuan', 'unit_of_measure',
+            'uom',
+            'unit',
+            'satuan',
+            'unit_of_measure',
         ],
         'qty' => [
-            'qty', 'quantity', 'jumlah', 'stock', 'stok', 'amount',
+            'qty',
+            'quantity',
+            'jumlah',
+            'stock',
+            'stok',
+            'amount',
         ],
         'condition' => [
-            'condition', 'status', 'kondisi', 'state',
+            'condition',
+            'status',
+            'kondisi',
+            'state',
         ],
         'serial_number' => [
-            'serial_number', 'sn', 'serial', 'serial_no', 'nomor_seri',
+            'serial_number',
+            'sn',
+            'serial',
+            'serial_no',
+            'nomor_seri',
         ],
         'note' => [
-            'note', 'notes', 'comment', 'comments', 'keterangan',
-            'remark', 'remarks', 'catatan',
+            'note',
+            'notes',
+            'comment',
+            'comments',
+            'keterangan',
+            'remark',
+            'remarks',
+            'catatan',
         ],
     ];
 
@@ -117,12 +156,16 @@ class SparepartSheetImport implements ToModel, WithHeadingRow, WithCalculatedFor
     protected function isValidRow(array $row): bool
     {
         $itemName = $this->getMappedValue($row, 'item_name');
-        $type = $this->getMappedValue($row, 'type');
+        // $type = $this->getMappedValue($row, 'type');
 
-        // Minimal harus ada salah satu: item_name atau type
-        if (empty($itemName) && empty($type)) {
+        if (empty($itemName)) {
             return false;
         }
+
+        // Minimal harus ada salah satu: item_name atau type
+        // if (empty($itemName) && empty($type)) {
+        //     return false;
+        // }
 
         // Qty harus valid (angka > 0), atau tidak ada (default ke 1)
         $qty = $this->getMappedValue($row, 'qty');

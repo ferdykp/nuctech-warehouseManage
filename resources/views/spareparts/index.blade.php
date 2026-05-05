@@ -275,7 +275,7 @@
                                 <option value="new">NEW</option>
                                 <option value="used-good">USED (Good)</option>
                                 <option value="damaged">DAMAGED</option>
-                                <option value="repaired">REPAIRED</option>
+                                <option value="repair">REPAIRED</option>
                             </select>
                         </div>
                     </div>
@@ -303,25 +303,25 @@
                             Image</label>
                         <div class="flex flex-col items-center justify-center w-full gap-4">
                             {{-- Area Upload --}}
-                            <label id="upload-label"
+                            <label id="edit-upload-label"
                                 class="flex flex-col items-center justify-center w-full h-32 transition-colors border-2 border-dashed cursor-pointer rounded-2xl border-slate-200 bg-slate-50 hover:bg-slate-100">
                                 <div class="flex flex-col items-center justify-center pt-5 pb-6">
                                     <i class="mb-2 text-2xl fa-solid fa-cloud-arrow-up text-slate-400"></i>
                                     <p class="text-xs font-bold text-slate-500">Click to upload or drag and drop</p>
                                     <p class="text-[10px] text-slate-400 uppercase mt-1">PNG, JPG, WEBP (Max 2MB)</p>
                                 </div>
-                                <input type="file" name="image" id="image-input" class="hidden" accept="image/*"
-                                    onchange="previewImage(this)" />
+                                <input type="file" name="image" id="edit-image-input" class="hidden"
+                                    accept="image/*" onchange="previewEditImage(this)" />
                             </label>
 
                             {{-- Area Preview (Hidden by default) --}}
                             {{-- Area Preview (Hidden by default) --}}
-                            <div id="preview-container" class="relative hidden w-full group">
+                            <div id="edit-preview-container" class="relative hidden w-full group">
                                 {{-- PERUBAHAN DI SINI: Ganti 'object-cover' menjadi 'object-contain' --}}
-                                <img id="image-preview" src="#" alt="Preview"
+                                <img id="edit-image-preview" src="#" alt="Preview"
                                     class="object-contain w-full h-48 border-2 border-emerald-500 rounded-2xl bg-slate-50">
 
-                                <button type="button" onclick="resetImage()"
+                                <button type="button" onclick="resetEditImage()"
                                     class="absolute flex items-center justify-center w-8 h-8 text-white transition-all bg-red-500 rounded-full shadow-lg top-2 right-2 hover:bg-red-600">
                                     <i class="text-xs fa-solid fa-trash"></i>
                                 </button>
@@ -399,6 +399,37 @@
 
     {{-- TOAST CONTAINER for import notifications --}}
     <div id="import-toast-container" class="fixed z-[60] top-5 right-5 space-y-3"></div>
+    <script>
+        function previewEditImage(input) {
+            const previewContainer = document.getElementById('edit-preview-container');
+            const previewImage = document.getElementById('edit-image-preview');
+            const uploadLabel = document.getElementById('edit-upload-label');
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    previewContainer.classList.remove('hidden');
+                    uploadLabel.classList.add('hidden');
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function resetEditImage() {
+            const input = document.getElementById('edit-image-input');
+            const previewContainer = document.getElementById('edit-preview-container');
+            const uploadLabel = document.getElementById('edit-upload-label');
+            const previewImage = document.getElementById('edit-image-preview');
+
+            input.value = "";
+            previewImage.src = "#";
+            previewContainer.classList.add('hidden');
+            uploadLabel.classList.remove('hidden');
+        }
+    </script>
 
     <script>
         // ── Toast System ──
@@ -655,7 +686,7 @@
                     </div>
 
                     {{-- Image Upload --}}
-                    <div class="space-y-2">
+                    {{-- <div class="space-y-2">
                         <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Update Image
                             (Optional)</label>
                         <div class="flex items-center justify-center w-full">
@@ -668,6 +699,40 @@
                                 </div>
                                 <input type="file" name="image" class="hidden" accept="image/*" />
                             </label>
+                        </div>
+                    </div> --}}
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Sparepart
+                            Image</label>
+                        <div class="flex flex-col items-center justify-center w-full gap-4">
+                            {{-- Area Upload --}}
+                            <label id="upload-label"
+                                class="flex flex-col items-center justify-center w-full h-32 transition-colors border-2 border-dashed cursor-pointer rounded-2xl border-slate-200 bg-slate-50 hover:bg-slate-100">
+                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                    <i class="mb-2 text-2xl fa-solid fa-cloud-arrow-up text-slate-400"></i>
+                                    <p class="text-xs font-bold text-slate-500">Click to upload or drag and drop</p>
+                                    <p class="text-[10px] text-slate-400 uppercase mt-1">PNG, JPG, WEBP (Max 2MB)</p>
+                                </div>
+                                <input type="file" name="image" id="image-input" class="hidden" accept="image/*"
+                                    onchange="previewImage(this)" />
+                            </label>
+
+                            {{-- Area Preview (Hidden by default) --}}
+                            <div id="preview-container" class="relative hidden w-full group">
+                                {{-- PERUBAHAN DI SINI: Ganti 'object-cover' menjadi 'object-contain' --}}
+                                <img id="image-preview" src="#" alt="Preview"
+                                    class="object-contain w-full h-48 border-2 border-emerald-500 rounded-2xl bg-slate-50">
+
+                                <button type="button" onclick="resetImage()"
+                                    class="absolute flex items-center justify-center w-8 h-8 text-white transition-all bg-red-500 rounded-full shadow-lg top-2 right-2 hover:bg-red-600">
+                                    <i class="text-xs fa-solid fa-trash"></i>
+                                </button>
+                                <div class="absolute bottom-2 left-2">
+                                    <span
+                                        class="px-3 py-1 text-[10px] font-bold text-white uppercase bg-emerald-600 rounded-lg shadow-sm">Image
+                                        Selected</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -721,11 +786,10 @@
     </script>
 
     {{-- MODAL STOCK ADJUSTMENT --}}
-    <div id="modal-adjustment"
+    {{-- <div id="modal-adjustment"
         class="fixed inset-0 z-50 flex items-center justify-center hidden px-4 transition-all duration-300 bg-slate-900/60 backdrop-blur-sm">
         <div class="relative w-full max-w-2xl overflow-hidden transition-all transform bg-white shadow-2xl rounded-3xl">
 
-            {{-- Header --}}
             <div class="flex items-center justify-between px-8 py-6 border-b border-slate-100">
                 <div class="flex items-center gap-3">
                     <div class="flex items-center justify-center w-12 h-12 text-amber-600 bg-amber-50 rounded-2xl">
@@ -745,11 +809,9 @@
 
             <form id="form-adjustment" method="POST" class="p-8">
                 @csrf
-                {{-- Kita asumsikan menggunakan method POST karena ini membuat record history baru --}}
                 <div class="space-y-6">
 
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        {{-- Current Stock (Read Only) --}}
                         <div class="space-y-2">
                             <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Current
                                 Stock</label>
@@ -757,7 +819,6 @@
                                 class="w-full px-4 py-3 text-sm font-black border-none cursor-not-allowed bg-slate-100 rounded-xl text-slate-500">
                         </div>
 
-                        {{-- Condition (Read Only / Locked) --}}
                         <div class="space-y-2">
                             <label
                                 class="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Condition</label>
@@ -768,20 +829,27 @@
                     </div>
 
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        {{-- Adjustment Type --}}
                         <div class="space-y-2">
-                            <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Action
-                                Type</label>
-                            <select name="action" required
-                                class="w-full px-4 py-3 text-sm font-bold border outline-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-amber-500 text-slate-700">
-                                <option value="IN">Stock In (Add)</option>
-                                <option value="OUT">Stock Out (Reduce)</option>
-                                <option value="ADJUST">Correction (Set Value)</option>
-                            </select>
+                            <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                                Action Type
+                            </label>
+                            <div class="relative group">
+                                <select name="action" required
+                                    class="w-full px-4 py-3 pr-10 text-sm font-bold transition-all border outline-none appearance-none cursor-pointer border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white text-slate-700">
+                                    <option value="" disabled selected>Choose Action...</option>
+                                    <option value="IN">Stock In (Add)</option>
+                                    <option value="OUT">Stock Out (Reduce)</option>
+                                    <option value="ADJUST">Correction (Set Value)</option>
+                                </select>
+
+                                <div
+                                    class="absolute inset-y-0 right-0 flex items-center pr-4 transition-colors pointer-events-none text-slate-400 group-focus-within:text-amber-500">
+                                    <i class="text-xs fa-solid fa-chevron-down"></i>
+                                </div>
+                            </div>
                         </div>
 
-                        {{-- Qty Adjustment --}}
-                        <div class="space-y-2">
+                        <div class="space-y-2 ">
                             <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Adjustment
                                 Qty</label>
                             <input type="number" name="qty" required min="1" placeholder="Enter amount..."
@@ -789,7 +857,6 @@
                         </div>
                     </div>
 
-                    {{-- Reason / Note --}}
                     <div class="space-y-2">
                         <label class="text-[11px] font-black uppercase tracking-widest text-slate-500 ml-1">Reason for
                             Adjustment</label>
@@ -799,7 +866,6 @@
                     </div>
                 </div>
 
-                {{-- Footer --}}
                 <div class="flex items-center justify-end gap-3 pt-6 mt-8 border-t border-slate-100">
                     <button type="button" onclick="closeAdjustmentModal()"
                         class="px-6 py-3 text-xs font-black tracking-widest uppercase transition-all text-slate-500 rounded-xl hover:bg-slate-100">
@@ -808,6 +874,74 @@
                     <button type="submit"
                         class="px-8 py-3 text-xs font-black tracking-widest text-white uppercase transition-all shadow-lg bg-amber-600 rounded-xl hover:bg-amber-700 shadow-amber-100">
                         <i class="mr-2 fa-solid fa-check-double"></i> Process Adjustment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div> --}}
+    {{-- MODAL STOCK ADJUSTMENT (SPLIT) --}}
+    <div id="modal-adjust"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden px-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="relative w-full max-w-lg overflow-hidden bg-white shadow-2xl rounded-3xl">
+            <div class="px-8 py-6 border-b border-slate-100">
+                <h3 class="text-xl font-black text-slate-800">Stock Adjustment</h3>
+                <p id="adjust-item-name" class="text-sm font-bold text-blue-600 uppercase"></p>
+            </div>
+
+            <form id="form-adjust" method="POST">
+                @csrf
+                <input type="hidden" name="current_condition" id="input-current-condition">
+                <div class="p-8 space-y-5">
+                    {{-- Info Stok Saat Ini --}}
+                    <div class="p-4 border bg-slate-50 rounded-2xl border-slate-100">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Current Stock</p>
+                        <p id="current-stock-display" class="text-2xl font-black text-slate-700"></p>
+                    </div>
+
+                    {{-- Pilihan Mode --}}
+                    <div class="grid grid-cols-2 gap-3 p-1 bg-slate-100 rounded-2xl">
+                        <button type="button" onclick="setAdjustMode('update')" id="btn-mode-update"
+                            class="py-2 text-xs font-black transition-all bg-white shadow-sm rounded-xl text-slate-700">UPDATE
+                            TOTAL</button>
+                        <button type="button" onclick="setAdjustMode('split')" id="btn-mode-split"
+                            class="py-2 text-xs font-black transition-all rounded-xl text-slate-500 hover:text-slate-700">SPLIT
+                            CONDITION</button>
+                    </div>
+                    <input type="hidden" name="adjustment_type" id="input-adjust-type" value="update">
+
+                    <div class="grid grid-cols-2 gap-4">
+                        {{-- Input Qty --}}
+                        <div class="space-y-2">
+                            <label id="label-qty" class="text-[11px] font-black uppercase text-slate-500 ml-1">New Total
+                                Qty</label>
+                            <input type="number" name="qty_to_move" id="input-qty-adjust" required
+                                class="w-full px-4 py-3 text-sm font-bold border outline-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        {{-- Target Condition --}}
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase text-slate-500 ml-1">Condition</label>
+                            <select name="new_condition" id="select-condition-adjust"
+                                class="w-full px-4 py-3 text-sm font-bold border outline-none border-slate-200 bg-slate-50 rounded-xl focus:ring-2 focus:ring-blue-500">
+                                <option value="new">NEW</option>
+                                <option value="used-good">USED (Good)</option>
+                                <option value="damaged">DAMAGED</option>
+                                <option value="repair">REPAIRED</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <p id="split-hint" class="hidden text-[11px] italic text-orange-600 font-medium leading-tight">
+                        * This will subtract X from current stock and create a new row with the selected condition.
+                    </p>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 px-8 py-6 border-t bg-slate-50/50 border-slate-100">
+                    <button type="button" onclick="closeAdjustModal()"
+                        class="text-xs font-black uppercase text-slate-400 hover:text-slate-600">Cancel</button>
+                    <button type="submit"
+                        class="px-8 py-3 text-xs font-black text-white uppercase bg-blue-600 shadow-lg rounded-xl hover:bg-blue-700 shadow-blue-200">
+                        Process Adjustment
                     </button>
                 </div>
             </form>
@@ -892,6 +1026,76 @@
             if (event.target == modal) {
                 closeAdjustmentModal();
             }
+        }
+    </script>
+
+    <script>
+        // function openAdjustModal(id, name, qty, condition) {
+        //     const modal = document.getElementById('modal-adjust');
+        //     const form = document.getElementById('form-adjust');
+
+        //     // Set data awal
+        //     document.getElementById('adjust-item-name').innerText = name;
+        //     document.getElementById('current-stock-display').innerText = `${qty} Units`;
+        //     document.getElementById('input-qty-adjust').value = qty;
+        //     document.getElementById('select-condition-adjust').value = condition;
+
+        //     // Set route (sesuaikan dengan route Laravel anda)
+        //     form.action = `/spareparts/adjust/${id}`;
+
+        //     modal.classList.remove('hidden');
+        // }
+        function openAdjustModal(id, name, qty, condition) {
+            const modal = document.getElementById('modal-adjust');
+            const form = document.getElementById('form-adjust');
+            const slug = "{{ $slug }}";
+
+            // Pastikan URL diawali dengan slash / agar tidak relatif
+            form.action = `/inventory/${slug}/adjust/${id}`;
+
+            // Isi data ke UI
+            document.getElementById('adjust-item-name').innerText = name;
+            document.getElementById('current-stock-display').innerText = qty;
+
+            // Simpan kondisi saat ini ke input hidden agar terkirim ke Controller
+            document.getElementById('input-current-condition').value = condition;
+
+            // Default value untuk input qty
+            document.getElementById('input-qty-adjust').value = qty;
+
+            modal.classList.remove('hidden');
+        }
+
+        function setAdjustMode(mode) {
+            const inputType = document.getElementById('input-adjust-type');
+            const labelQty = document.getElementById('label-qty');
+            const hint = document.getElementById('split-hint');
+            const btnUpdate = document.getElementById('btn-mode-update');
+            const btnSplit = document.getElementById('btn-mode-split');
+
+            inputType.value = mode;
+
+            if (mode === 'split') {
+                labelQty.innerText = "Qty to Split";
+                hint.classList.remove('hidden');
+                // UI Toggle
+                btnSplit.classList.add('bg-white', 'shadow-sm', 'text-slate-700');
+                btnSplit.classList.remove('text-slate-500');
+                btnUpdate.classList.remove('bg-white', 'shadow-sm', 'text-slate-700');
+                btnUpdate.classList.add('text-slate-500');
+            } else {
+                labelQty.innerText = "New Total Qty";
+                hint.classList.add('hidden');
+                // UI Toggle
+                btnUpdate.classList.add('bg-white', 'shadow-sm', 'text-slate-700');
+                btnUpdate.classList.remove('text-slate-500');
+                btnSplit.classList.remove('bg-white', 'shadow-sm', 'text-slate-700');
+                btnSplit.classList.add('text-slate-500');
+            }
+        }
+
+        function closeAdjustModal() {
+            document.getElementById('modal-adjust').classList.add('hidden');
         }
     </script>
 @endsection
