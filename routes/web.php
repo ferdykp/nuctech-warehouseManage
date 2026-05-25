@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminReimbursementController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\DashboardController;
@@ -28,6 +29,8 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 */
 
 Route::middleware(['auth', 'nocache'])->group(function () {
+    Route::resource('users', UserController::class);
+
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -78,7 +81,24 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('/approve/{id}', [SparepartStockController::class, 'approveMove'])->name('approve');
         Route::post('/receive/{id}', [SparepartStockController::class, 'receiveMove'])->name('receive');
     });
+
+    // =================================================================
+    // 4. FITUR BARU: REIMBURSEMENT SYSTEM
+    // =================================================================
+    // Akses Bersama: Semua admin yang login bisa melihat daftar klaimnya & membuat klaim baru
+    Route::get('/reimbursements', [AdminReimbursementController::class, 'index'])->name('reimbursements.index');
+    Route::get('/reimbursements/create', [AdminReimbursementController::class, 'create'])->name('reimbursements.create');
+    Route::post('/reimbursements/store', [AdminReimbursementController::class, 'store'])->name('reimbursements.store');
+    Route::get('/reimbursements/{id}', [AdminReimbursementController::class, 'show'])->name('reimbursements.show');
+
+    // Khusus Superadmin & Manager: Tombol Approval / Reject klaim dana uang masuk
+    Route::middleware(['role:superadmin|manager'])->group(function () {
+        Route::put('/reimbursements/{id}/approve', [AdminReimbursementController::class, 'approve'])->name('reimbursements.approve');
+        Route::put('/reimbursements/{id}/reject', [AdminReimbursementController::class, 'reject'])->name('reimbursements.reject');
+    });
 });
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -86,6 +106,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'nocache', 'role:superadmin'])->group(function () {
-    Route::resource('users', UserController::class);
-});
+// Route::middleware(['auth', 'nocache', 'role:superadmin'])->group(function () {
+//     Route::resource('users', UserController::class);
+// });

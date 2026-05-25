@@ -26,18 +26,18 @@
         <div class="max-w-6xl mx-auto mt-6 bg-white shadow-lg rounded-2xl">
             {{-- HEADER --}}
             <div class="flex items-center justify-between px-6 py-4 border-b">
+                <p class="font-semibold text-gray-700">Edit Profile</p>
                 @if (Auth::user()->role == 'superadmin')
-                    <p class="font-semibold text-gray-700">Edit Profile</p>
-
                     <a href="{{ route('users.index') }}"
                         class="px-4 py-2 text-sm font-medium text-white transition bg-blue-600 rounded-lg hover:bg-blue-700">
                         Manage All Accounts
                     </a>
-                    {{-- <a href="{{ route('site.index') }}"
-                        class="px-4 py-2 text-sm font-medium text-white transition bg-blue-600 rounded-lg hover:bg-blue-700">
-                        Add Site
-                    </a> --}}
                 @endif
+
+                <a href="{{ route('users.edit', $user->id) }}"
+                    class="px-4 py-2 text-sm font-medium text-white transition bg-blue-600 rounded-lg hover:bg-blue-700">
+                    Edit Profile
+                </a>
             </div>
 
             {{-- BODY --}}

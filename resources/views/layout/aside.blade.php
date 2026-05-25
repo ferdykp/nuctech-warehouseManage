@@ -100,6 +100,28 @@
                 <span>Failure Reports</span>
             </a>
         </div>
+
+        <hr class="my-4 border-gray-800/50">
+        <p class="px-4 mb-2 text-[10px] font-bold tracking-widest text-gray-500 uppercase">Finance</p>
+
+        <a href="{{ route('reimbursements.index') }}"
+            class="flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 {{ request()->routeIs('reimbursements.*') ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30' : 'hover:bg-gray-800 hover:text-white group' }}">
+            <div class="flex items-center gap-3">
+                <i class="w-5 text-center transition-transform fas fa-hand-holding-dollar group-hover:scale-110"></i>
+                <span class="font-medium">Reimbursements</span>
+            </div>
+
+            {{-- Notifikasi counter khusus untuk Superadmin & Manager jika ada klaim pending yang butuh approval --}}
+            @if (in_array(auth()->user()->role, ['superadmin', 'manager']))
+                @php $pendingReimburse = \App\Models\Reimbursement::where('status', 'pending')->count(); @endphp
+                @if ($pendingReimburse > 0)
+                    <span
+                        class="bg-rose-500/20 text-rose-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-rose-500/30 animate-pulse">
+                        {{ $pendingReimburse }} New
+                    </span>
+                @endif
+            @endif
+        </a>
     </nav>
 </aside>
 {{-- MODAL ADD MACHINE --}}

@@ -82,7 +82,7 @@
                     </div>
 
                     {{-- Error alert --}}
-                    @if ($errors->any())
+                    {{-- @if ($errors->any())
                         <div
                             class="flex items-center gap-2 px-4 py-3 mb-6 text-xs font-bold text-red-600 border border-red-100 bg-red-50 rounded-xl">
                             <svg class="flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -93,7 +93,7 @@
                             </svg>
                             <span>{{ $errors->first() }}</span>
                         </div>
-                    @endif
+                    @endif --}}
 
                     <form action="{{ route('auth.login') }}" method="POST" class="space-y-5">
                         @csrf
