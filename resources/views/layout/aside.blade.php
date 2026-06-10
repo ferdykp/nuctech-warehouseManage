@@ -11,11 +11,14 @@
     class="fixed inset-y-0 left-0 z-50 w-72 px-4 py-6 m-3 space-y-6 transition-transform duration-300 ease-in-out bg-[#0F172A] shadow-2xl rounded-2xl md:translate-x-0 md:sticky md:top-3 md:left-0 flex-shrink-0 h-[calc(100vh-1.5rem)] overflow-y-auto border border-white/10">
 
     {{-- LOGO SECTION --}}
-    <div class="flex items-center justify-center p-3 bg-white border shadow-sm rounded-xl">
+    {{-- <div class="flex items-center justify-center p-3 bg-white border shadow-sm rounded-xl">
         <a href="/" class="flex items-center space-x-4 group">
             <img src="{{ asset('img/logo-txt-removebg.png') }}"
                 class="h-8 transition-transform duration-300 group-hover:scale-110">
         </a>
+    </div> --}}
+    <div class="flex items-center justify-center p-4 text-2xl font-bold text-center text-white">
+        <h2>Management System</h2>
     </div>
 
     {{-- NAV MENU --}}
