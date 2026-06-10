@@ -70,6 +70,10 @@
                             <option value="">-- Select Role --</option>
                             <option value="superadmin">Superadmin (Head Office)</option>
                             <option value="admin_site">Site Admin (Branch/Location)</option>
+                            <option value="team_leader">Team Leader</option>
+                            <option value="station_master">Sation Master</option>
+                            <option value="manager">Manager</option>
+
                         </select>
                     </div>
 

@@ -25,6 +25,7 @@ return new class extends Migration
             $table->decimal('amount', 12, 2); // Nominal Uang
             $table->text('comment')->nullable(); // Kolom Komen/Keterangan
             $table->string('receipt_attachment'); // Bukti Invoice/Nota
+            // $table->string('digital_signature')->nullable();
 
             // Sistem Approval
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');

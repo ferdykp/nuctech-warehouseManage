@@ -20,8 +20,18 @@
                                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
-                        <input type="text" id="search" placeholder="Search by name or code..."
-                            class="block w-full py-2.5 pl-10 pr-3 text-sm border-gray-200 rounded-xl bg-white focus:border-blue-500 focus:ring-blue-500 transition-all outline-none border shadow-sm">
+                        {{-- Ganti container search input Anda menjadi seperti ini --}}
+                        <div class="relative w-full md:w-80">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <input type="text" name="search" id="search" placeholder="Type to search branch..."
+                                value="{{ request('search') }}"
+                                class="block w-full py-2.5 pl-10 pr-3 text-sm border-gray-200 rounded-xl bg-white focus:border-blue-500 focus:ring-blue-500 transition-all outline-none border shadow-sm">
+                        </div>
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -152,6 +162,35 @@
         });
         document.addEventListener('keydown', (e) => {
             if (e.key === "Escape") closeModal();
+        });
+    </script>
+
+    <script>
+        // --- FITUR LIVE SEARCH AJAX ---
+        const searchInput = document.getElementById('search');
+        const tableContainer = document.getElementById('table-container');
+        let delayTimer;
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(delayTimer);
+
+            // Menunggu 300ms setelah ketikan terakhir agar tidak spam request
+            delayTimer = setTimeout(() => {
+                const query = searchInput.value;
+
+                // Kirim request AJAX ke route index yang sama
+                fetch(`{{ route('branches.index') }}?search=${encodeURIComponent(query)}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest' // Menandai bahwa ini adalah request AJAX
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        // Ganti isi container tabel dengan html parser baru
+                        tableContainer.innerHTML = html;
+                    })
+                    .catch(error => console.error('Error fetching search results:', error));
+            }, 300);
         });
     </script>
 @endsection

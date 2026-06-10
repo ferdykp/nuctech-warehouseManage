@@ -30,6 +30,7 @@ class Reimbursement extends Model
         'status',
         'approved_by',
         'rejected_reason',
+        'digital_signature', // Tambahkan ini
     ];
 
     /**
@@ -42,6 +43,7 @@ class Reimbursement extends Model
         'date' => 'date',
         'amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'signatures_json' => 'array',
     ];
 
     /**

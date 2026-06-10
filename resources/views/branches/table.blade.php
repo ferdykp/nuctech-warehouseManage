@@ -88,7 +88,10 @@
             </tr>
         @empty
             <tr>
-                <td colspan="8" class="p-4 text-center text-gray-500">Data kosong</td>
+                <td colspan="4" class="p-8 text-center text-gray-500">
+                    <p class="font-semibold">No branches found</p>
+                    <p class="text-xs text-gray-400">Try using different keywords</p>
+                </td>
             </tr>
         @endforelse
     </tbody>

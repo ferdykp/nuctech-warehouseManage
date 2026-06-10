@@ -6,16 +6,11 @@
     class="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm md:hidden">
 </div>
 
-{{-- SIDEBAR --}}
+{{-- SIDEBAR (PERBAIKAN KELAS RESPONSIVE) --}}
 <aside id="sidebar" :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-    class="fixed inset-y-0 left-0 z-50 w-72 px-4 py-6 m-3 space-y-6 transition-all duration-300 ease-in-out bg-[#0F172A] shadow-2xl rounded-2xl md:translate-x-0 md:relative md:block h-[calc(100vh-1.5rem)] overflow-y-auto border border-white/10">
+    class="fixed inset-y-0 left-0 z-50 w-72 px-4 py-6 m-3 space-y-6 transition-transform duration-300 ease-in-out bg-[#0F172A] shadow-2xl rounded-2xl md:translate-x-0 md:sticky md:top-3 md:left-0 flex-shrink-0 h-[calc(100vh-1.5rem)] overflow-y-auto border border-white/10">
 
     {{-- LOGO SECTION --}}
-    {{-- <div class="flex items-center justify-center py-4 mb-6 bg-white">
-        <a href="/" class="flex items-center transition-transform hover:scale-105">
-            <img src="{{ asset('img/logo-txt-removebg.png') }}" class="h-9 ">
-        </a>
-    </div> --}}
     <div class="flex items-center justify-center p-3 bg-white border shadow-sm rounded-xl">
         <a href="/" class="flex items-center space-x-4 group">
             <img src="{{ asset('img/logo-txt-removebg.png') }}"
@@ -27,7 +22,6 @@
     <nav class="space-y-1.5">
         <p class="px-4 pb-2 text-xs font-bold tracking-widest uppercase text-slate-500">Main Menu</p>
 
-        {{-- Helper Macro for Links (Conceptually) --}}
         @php
             $navItemClass =
                 'flex items-center gap-3 px-4 py-2.5 text-slate-300 rounded-xl transition-all duration-200 group hover:bg-white/10 hover:text-white';
@@ -36,7 +30,6 @@
 
         <a href="{{ route('dashboard') }}"
             class="{{ $navItemClass }} {{ request()->routeIs('dashboard') ? $activeClass : '' }}">
-            {{-- <i class="w-5 fa-solid fa-grid-2"></i> --}}
             <i class="w-5 text-center fa-solid fa-gauge-high"></i>
             <span>Dashboard</span>
         </a>
@@ -105,13 +98,12 @@
         <p class="px-4 mb-2 text-[10px] font-bold tracking-widest text-gray-500 uppercase">Finance</p>
 
         <a href="{{ route('reimbursements.index') }}"
-            class="flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 {{ request()->routeIs('reimbursements.*') ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30' : 'hover:bg-gray-800 hover:text-white group' }}">
+            class="text-white flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 {{ request()->routeIs('reimbursements.*') ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30' : 'hover:bg-gray-800 hover:text-white group' }}">
             <div class="flex items-center gap-3">
                 <i class="w-5 text-center transition-transform fas fa-hand-holding-dollar group-hover:scale-110"></i>
                 <span class="font-medium">Reimbursements</span>
             </div>
 
-            {{-- Notifikasi counter khusus untuk Superadmin & Manager jika ada klaim pending yang butuh approval --}}
             @if (in_array(auth()->user()->role, ['superadmin', 'manager']))
                 @php $pendingReimburse = \App\Models\Reimbursement::where('status', 'pending')->count(); @endphp
                 @if ($pendingReimburse > 0)
@@ -174,7 +166,7 @@
 
                 <div class="space-y-1">
                     <label class="text-sm font-bold text-slate-700">Detailed Address</label>
-                    <textarea name="location" rows="3"
+                    <textarea name="location" rows="3" required
                         class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none transition-all"
                         placeholder="Street name, Floor, or specific coordinates..."></textarea>
                 </div>

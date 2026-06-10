@@ -3,7 +3,7 @@
 @section('title', 'New Reimbursement Claim')
 
 @section('content')
-    <div class="w-full max-w-2xl pb-10 mx-auto space-y-6">
+    <div class="w-full max-w-2xl px-6 py-8 pb-10 mx-auto space-y-6">
         <div class="space-y-1">
             <h2 class="text-2xl font-black tracking-tighter text-slate-800">File Operational Claim</h2>
             <p class="text-xs font-medium text-slate-500">Submit your operational expenses with explicit categories and
@@ -19,7 +19,6 @@
                     <div>
                         <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2">Person
                             Name</label>
-                        {{-- <input type="text" name="person_name" required value="{{ auth()->user()->name }}" --}}
                         <input type="text" name="person_name" required placeholder="e.g., John Doe"
                             class="w-full px-4 py-3 text-xs font-medium border border-slate-100 bg-slate-50/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-700">
                     </div>
@@ -62,12 +61,21 @@
                     </div>
                 </div>
 
-                {{-- Amount --}}
+                {{-- Amount (Satu Elemen Bersih Tanpa Label Bawah) --}}
                 <div>
                     <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2">Amount
                         (IDR)</label>
-                    <input type="number" name="amount" required placeholder="e.g., 250000"
-                        class="w-full px-4 py-3 text-xs font-black border border-slate-100 bg-slate-50/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-700">
+                    <div class="relative">
+                        <span
+                            class="absolute inset-y-0 left-0 flex items-center pl-4 text-xs font-black pointer-events-none text-slate-400">Rp</span>
+
+                        {{-- 1. Input Mask Palsu (Tipe Text agar bisa pakai titik ribuan) --}}
+                        <input type="text" id="currencyMaskInput" required placeholder="e.g., 250.000"
+                            class="w-full py-3 pl-10 pr-4 text-xs font-black tracking-wide border border-slate-100 bg-slate-50/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-700">
+
+                        {{-- 2. Input Asli Tersembunyi (Dikirim ke Controller berupa angka bersih) --}}
+                        <input type="hidden" name="amount" id="actualAmountInput">
+                    </div>
                 </div>
 
                 {{-- Comment --}}
@@ -82,9 +90,9 @@
                 <div>
                     <label class="block text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2">Invoice /
                         Receipt Upload</label>
-                    <input type="file" name="receipt_attachment" required accept="image/*"
+                    <input type="file" name="receipt_attachment" required accept="image/*,application/pdf"
                         class="w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer transition-all">
-                    <p class="text-[9px] text-slate-400 mt-2">Format: JPG, JPEG, PNG. Max file size: 2MB.</p>
+                    <p class="text-[9px] text-slate-400 mt-2">Format: JPG, JPEG, PNG, PDF. Max file size: 4MB.</p>
                 </div>
 
                 <div class="flex flex-col gap-3 pt-4 border-t sm:flex-row border-slate-50">
@@ -122,7 +130,31 @@
                 toInput.value = '';
             }
         }
-        // Jalankan saat pertama kali halaman dimuat untuk memastikan sinkronisasi state
+
+        // 🛠️ FIX TOTAL: Logika Live Masking di Dalam Kotak Input
+        const maskInput = document.getElementById('currencyMaskInput');
+        const actualInput = document.getElementById('actualAmountInput');
+
+        maskInput?.addEventListener('input', function(e) {
+            // 1. Bersihkan semua karakter non-angka (seperti titik atau huruf yang tidak sengaja terketik)
+            let rawValue = e.target.value.replace(/\D/g, '');
+
+            if (rawValue === '') {
+                maskInput.value = '';
+                actualInput.value = '';
+                return;
+            }
+
+            // 2. Simpan nilai angka bersih ke input hidden untuk dikirim ke Backend Laravel
+            actualInput.value = rawValue;
+
+            // 3. Format angka murni tadi menjadi format titik ribuan lokal (id-ID)
+            let formattedValue = new Intl.NumberFormat('id-ID').format(rawValue);
+
+            // 4. Masukkan kembali teks yang sudah rapi ber-titik ke dalam layar ketikan user
+            e.target.value = formattedValue;
+        });
+
         document.addEventListener("DOMContentLoaded", handleCategoryChange);
     </script>
 @endpush

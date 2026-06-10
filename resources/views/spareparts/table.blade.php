@@ -59,51 +59,54 @@
                         </span>
                     </td>
 
-                    <td class="px-6 py-4 text-right">
-                        <div class="flex justify-end gap-2">
-                            {{-- ADJUST --}}
-                            <button
-                                onclick="openAdjustModal({{ $item->sparepart_id }}, '{{ addslashes($item->sparepart->item_name) }}', {{ $item->qty }}, '{{ $item->condition }}')"
-                                class="flex items-center justify-center w-8 h-8 transition-all rounded-lg text-amber-600 bg-amber-50 hover:bg-amber-600 hover:text-white">
-                                <i class="fa-solid fa-sliders"></i>
-                            </button>
+                    @if (Auth::user()->role === 'superadmin' ||
+                            (Auth::user()->role === 'admin_site' && Auth::user()->site_id === $siteData->id))
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex justify-end gap-2">
+                                {{-- ADJUST --}}
+                                <button
+                                    onclick="openAdjustModal({{ $item->sparepart_id }}, '{{ addslashes($item->sparepart->item_name) }}', {{ $item->qty }}, '{{ $item->condition }}')"
+                                    class="flex items-center justify-center w-8 h-8 transition-all rounded-lg text-amber-600 bg-amber-50 hover:bg-amber-600 hover:text-white">
+                                    <i class="fa-solid fa-sliders"></i>
+                                </button>
 
-                            {{-- EDIT --}}
-                            <button onclick="openEditModal(this)" data-item='@json($item->sparepart)'
-                                class="flex items-center justify-center w-8 h-8 text-blue-600 transition-all rounded-lg bg-blue-50 hover:bg-blue-600 hover:text-white">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </button>
+                                {{-- EDIT --}}
+                                <button onclick="openEditModal(this)" data-item='@json($item->sparepart)'
+                                    class="flex items-center justify-center w-8 h-8 text-blue-600 transition-all rounded-lg bg-blue-50 hover:bg-blue-600 hover:text-white">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
 
-                            {{-- DETAIL (VIEW) --}}
-                            <button
-                                onclick='openDetailModal(@json($item->sparepart), @json($all_sites))'
-                                class="flex items-center justify-center w-8 h-8 text-gray-500 transition-all bg-gray-100 rounded-lg hover:bg-gray-800 hover:text-white"
-                                title="View Details">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
+                                {{-- DETAIL (VIEW) --}}
+                                <button
+                                    onclick='openDetailModal(@json($item->sparepart), @json($all_sites))'
+                                    class="flex items-center justify-center w-8 h-8 text-gray-500 transition-all bg-gray-100 rounded-lg hover:bg-gray-800 hover:text-white"
+                                    title="View Details">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
 
-                            {{-- MOVE --}}
-                            <button
-                                onclick="openMoveModal({{ $item->id }}, '{{ addslashes($item->sparepart->item_name) }}', {{ $item->qty }}, '{{ $item->condition }}')"
-                                class="px-3 py-1 text-[11px] font-bold text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-all">
-                                MOVE
-                            </button>
+                                {{-- MOVE --}}
+                                <button
+                                    onclick="openMoveModal({{ $item->id }}, '{{ addslashes($item->sparepart->item_name) }}', {{ $item->qty }}, '{{ $item->condition }}')"
+                                    class="px-3 py-1 text-[11px] font-bold text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-all">
+                                    MOVE
+                                </button>
 
-                            {{-- DELETE --}}
-                            {{-- <button type="button"
+                                {{-- DELETE --}}
+                                {{-- <button type="button"
                                 onclick="openDeleteModal('{{ route('sparepart.destroy', [$slug, $item->sparepart_id]) }}', '{{ addslashes($item->sparepart->item_name) }}')"
                                 class="flex items-center justify-center w-8 h-8 transition-all rounded-lg text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white">
                                 <i class="fa-solid fa-trash-can"></i>
                             </button> --}}
-                            {{-- Tombol Delete yang sudah diperbaiki --}}
-                            <button type="button"
-                                onclick="openDeleteModal('{{ route('sparepart.stock.destroy', [$slug, $item->id]) }}', '{{ addslashes($item->sparepart->item_name) }} ({{ strtoupper($item->condition) }})')"
-                                class="flex items-center justify-center w-8 h-8 transition-all rounded-lg text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white"
-                                title="Delete This Condition Only">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
-                    </td>
+                                {{-- Tombol Delete yang sudah diperbaiki --}}
+                                <button type="button"
+                                    onclick="openDeleteModal('{{ route('sparepart.stock.destroy', [$slug, $item->id]) }}', '{{ addslashes($item->sparepart->item_name) }} ({{ strtoupper($item->condition) }})')"
+                                    class="flex items-center justify-center w-8 h-8 transition-all rounded-lg text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white"
+                                    title="Delete This Condition Only">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </td>
+                    @endif
                 </tr>
             @empty
                 {{-- Empty State --}}

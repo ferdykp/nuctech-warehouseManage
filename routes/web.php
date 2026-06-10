@@ -86,15 +86,43 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     // 4. FITUR BARU: REIMBURSEMENT SYSTEM
     // =================================================================
     // Akses Bersama: Semua admin yang login bisa melihat daftar klaimnya & membuat klaim baru
+    // Route::get('/reimbursements', [AdminReimbursementController::class, 'index'])->name('reimbursements.index');
+    // Route::get('/reimbursements/create', [AdminReimbursementController::class, 'create'])->name('reimbursements.create');
+    // Route::post('/reimbursements/store', [AdminReimbursementController::class, 'store'])->name('reimbursements.store');
+    // Route::get('/reimbursements/{id}', [AdminReimbursementController::class, 'show'])->name('reimbursements.show');
+    // Route::get('/reimbursements/{id}/approval', [AdminReimbursementController::class, 'approval'])
+    //     ->name('reimbursements.approval');
+
+
+    // // Khusus Superadmin & Manager: Tombol Approval / Reject klaim dana uang masuk
+    // Route::middleware(['role:superadmin|admin_site'])->group(function () {
+    //     Route::put('/reimbursements/{id}/approve', [AdminReimbursementController::class, 'approve'])->name('reimbursements.approve');
+    //     Route::put('/reimbursements/{id}/reject', [AdminReimbursementController::class, 'reject'])->name('reimbursements.reject');
+    // });
+    // =================================================================
+    // 4. FITUR BARU: REIMBURSEMENT SYSTEM
+    // =================================================================
+    Route::get('/reimbursements/export-pdf', [AdminReimbursementController::class, 'exportApprovedPdf'])
+        ->name('reimbursements.export_pdf');
+    Route::get('/reimbursements/export-excel', [AdminReimbursementController::class, 'exportExcel'])->name('reimbursements.export_excel');
+    Route::get('/reimbursements/{id}/export-single-pdf', [AdminReimbursementController::class, 'exportSinglePdf'])
+        ->name('reimbursements.export_single_pdf');
+
+    // Akses Bersama: Semua user yang login bisa memantau antrean/daftar klaimnya & mengawali pembuatan berkas klaim baru
     Route::get('/reimbursements', [AdminReimbursementController::class, 'index'])->name('reimbursements.index');
     Route::get('/reimbursements/create', [AdminReimbursementController::class, 'create'])->name('reimbursements.create');
     Route::post('/reimbursements/store', [AdminReimbursementController::class, 'store'])->name('reimbursements.store');
     Route::get('/reimbursements/{id}', [AdminReimbursementController::class, 'show'])->name('reimbursements.show');
 
-    // Khusus Superadmin & Manager: Tombol Approval / Reject klaim dana uang masuk
-    Route::middleware(['role:superadmin|manager'])->group(function () {
+    // Workspace Peninjauan Tanda Tangan: Diperbolehkan diakses oleh user-user pemeriksa maupun staff pembuat berkas
+    Route::get('/reimbursements/{id}/approval', [AdminReimbursementController::class, 'approval'])->name('reimbursements.approval');
+
+    // Filter Khusus Pemeriksa Berwenang: Mencegah staff biasa mengeksekusi API persetujuan (Approve) atau penolakan (Reject)
+    // Ditambahkan role baru: team_leader, station_master, manager
+    Route::middleware(['role:superadmin|admin_site|manager|station_master|team_leader'])->group(function () {
         Route::put('/reimbursements/{id}/approve', [AdminReimbursementController::class, 'approve'])->name('reimbursements.approve');
         Route::put('/reimbursements/{id}/reject', [AdminReimbursementController::class, 'reject'])->name('reimbursements.reject');
+        Route::delete('/reimbursements/{id}', [AdminReimbursementController::class, 'destroy'])->name('reimbursements.destroy');
     });
 });
 

@@ -7,10 +7,27 @@ use Illuminate\Http\Request;
 
 class BranchController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Mengambil branch beserta jumlah sitenya agar informatif
-        $branches = Branch::withCount('sites')->paginate(10);
+        $search = $request->input('search');
+        $query = Branch::withCount('sites');
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('branch_name', 'like', '%' . $search . '%')
+                    ->orWhere('branch_code', 'like', '%' . $search . '%');
+            });
+        }
+
+        $branches = $query->paginate(10)->withQueryString();
+
+        // JIKA REQUEST BERASAL DARI AJAX LIVE SEARCH:
+        // Hanya kembalikan file partial table agar tidak menumpuk template master
+        if ($request->ajax()) {
+            return view('branches.table', compact('branches'))->render();
+        }
+
+        // Request normal browser
         return view('branches.index', compact('branches'));
     }
 

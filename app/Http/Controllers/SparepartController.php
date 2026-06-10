@@ -98,7 +98,7 @@ class SparepartController extends Controller
         $search = $request->input('search');
         $condition = $request->input('condition');
 
-        // Tambahkan histories.fromSite dan histories.toSite untuk modal detail
+        // Setup Query Utama
         $query = SparepartStock::with([
             'sparepart.category',
             'sparepart.stocks.site',
@@ -107,10 +107,12 @@ class SparepartController extends Controller
             'site'
         ])->where('site_id', $siteData->id);
 
+        // Filter berdasarkan kondisi jika ada
         if ($condition) {
             $query->where('condition', $condition);
         }
 
+        // Filter berdasarkan search input (Live Search AJAX)
         if ($search) {
             $query->whereHas('sparepart', function ($q) use ($search) {
                 $q->where('item_name', 'like', "%{$search}%")
@@ -119,15 +121,28 @@ class SparepartController extends Controller
             });
         }
 
+        // PENTING: Eksekusi data/paginasi sebelum pengecekan AJAX agar data search terisi
         $data = $query->latest()->paginate(10)->withQueryString();
 
+        // JIKA REQUEST ADALAH AJAX (Pencarian Sedang Berjalan)
+        if ($request->ajax()) {
+            // Kirim hasil pencarian ke partial view 'table' dengan nama variable 'assets'
+            return view('spareparts.table', [
+                'assets' => $data,
+                'siteData' => $siteData,
+                'slug' => $slug, // <--- TAMBAHKAN INI AGAR TOMBOL DELETE TIDAK ERROR
+                'all_sites' => Site::with('branch')->where('id', '!=', $siteData->id)->get() // Diperlukan untuk modal detail di dalam table
+            ])->render();
+        }
+
+        // JIKA REQUEST BIASA (Load Halaman Pertama Kali)
         $all_sites = Site::with('branch')->where('id', '!=', $siteData->id)->get();
         $sites = Site::all();
         $categories = Category::all();
 
         return view('spareparts.index', [
             'data' => $data,
-            'assets' => $data,
+            'assets' => $data, // Sinkron dengan looping @forelse ($assets as $item)
             'slug' => $slug,
             'siteData' => $siteData,
             'all_sites' => $all_sites,
