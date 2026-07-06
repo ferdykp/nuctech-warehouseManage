@@ -23,13 +23,11 @@ class SparepartExport implements
 {
     protected $data;
     protected $siteId;
-    protected $machineName; // Menampung machine_name untuk judul
 
     public function __construct(string $siteCode)
     {
         $site = Site::where('slug', $siteCode)->firstOrFail();
         $this->siteId = $site->id;
-        $this->machineName = $site->machine_name; // Mengambil machine_name sesuai kode blade Anda
 
         $this->data = Sparepart::whereHas('stocks', function ($q) {
             $q->where('site_id', $this->siteId);
@@ -46,19 +44,15 @@ class SparepartExport implements
     public function headings(): array
     {
         return [
-            // Baris 1: Judul Site (Akan di-merge di AfterSheet)
-            [$this->machineName],
-            // Baris 2: Header Kolom
-            [
-                'No',
-                'Item Name',
-                'Serial Number',
-                'Type',
-                'Stock Quantity',
-                'Condition',
-                'Note',
-                'Image',
-            ]
+            // Langsung Header Kolom di Baris 1
+            'No',
+            'Item Name',
+            'Serial Number',
+            'Type',
+            'Stock Quantity',
+            'Condition',
+            'Note',
+            'Image',
         ];
     }
 
@@ -91,8 +85,8 @@ class SparepartExport implements
                 $drawing->setPath(storage_path('app/public/' . $item->image));
                 $drawing->setHeight(60);
 
-                // Koordinat dimulai dari Baris 3 (karena baris 1 judul, baris 2 header)
-                $drawing->setCoordinates('H' . ($index + 3));
+                // Koordinat dimulai dari Baris 2 (karena baris 1 adalah header)
+                $drawing->setCoordinates('H' . ($index + 2));
                 $drawing->setOffsetX(10);
                 $drawing->setOffsetY(10);
                 $drawings[] = $drawing;
@@ -107,14 +101,10 @@ class SparepartExport implements
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
-                // 1. Merge Baris Judul (A1 sampai H1)
-                $sheet->mergeCells('A1:H1');
-
-                // 2. Styling Judul (Machine Name)
-                $sheet->getStyle('A1')->applyFromArray([
+                // 1. Styling Header Kolom (Baris 1)
+                $sheet->getStyle('A1:H1')->applyFromArray([
                     'font' => [
                         'bold' => true,
-                        'size' => 14,
                         'color' => ['rgb' => 'FFFFFF'],
                     ],
                     'alignment' => [
@@ -123,18 +113,12 @@ class SparepartExport implements
                     ],
                     'fill' => [
                         'fillType' => Fill::FILL_SOLID,
-                        'startColor' => ['rgb' => '4F46E5'], // Warna Indigo
+                        'startColor' => ['rgb' => '4F46E5'], // Warna Indigo dialihkan ke header
                     ],
                 ]);
-                $sheet->getRowDimension(1)->setRowHeight(30);
+                $sheet->getRowDimension(1)->setRowHeight(25);
 
-                // 3. Styling Header Kolom (Baris 2)
-                $sheet->getStyle('A2:H2')->applyFromArray([
-                    'font' => ['bold' => true],
-                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-                ]);
-
-                // 4. Pengaturan Lebar Kolom
+                // 2. Pengaturan Lebar Kolom
                 $sheet->getColumnDimension('A')->setWidth(5);
                 $sheet->getColumnDimension('B')->setWidth(25);
                 $sheet->getColumnDimension('C')->setWidth(20);
@@ -144,9 +128,9 @@ class SparepartExport implements
                 $sheet->getColumnDimension('G')->setWidth(30);
                 $sheet->getColumnDimension('H')->setWidth(20);
 
-                // 5. Styling Baris Data (Mulai Baris 3)
+                // 3. Styling Baris Data (Mulai Baris 2)
                 foreach ($this->data as $index => $item) {
-                    $currentRow = $index + 3;
+                    $currentRow = $index + 2;
                     $sheet->getRowDimension($currentRow)->setRowHeight(70);
                     $sheet->getStyle('A' . $currentRow . ':G' . $currentRow)
                         ->getAlignment()
