@@ -169,6 +169,33 @@ class AdminReimbursementController extends Controller
     //     return view('reimbursements.approval', compact('reimbursement'));
     // }
 
+    // public function approval($id)
+    // {
+    //     $reimbursement = Reimbursement::findOrFail($id);
+    //     $currentRole = strtolower(auth()->user()->role ?? 'admin_site');
+    //     $myId = auth()->id();
+
+    //     if ($currentRole === 'admin_site' && $reimbursement->user_id !== $myId) {
+    //         abort(403, 'Unauthorized action.');
+    //     }
+
+    //     $pdfBase64 = null;
+
+    //     if ($reimbursement->receipt_attachment && pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf') {
+
+    //         // Periksa apakah file benar-benar ada di dalam disk public laravel
+    //         if (Storage::disk('public')->exists($reimbursement->receipt_attachment)) {
+    //             // Ambil data file biner langsung melalui facade Storage (Lebih aman untuk server production)
+    //             $fileData = Storage::disk('public')->get($reimbursement->receipt_attachment);
+    //             $pdfBase64 = base64_encode($fileData);
+    //         } else {
+    //             // LOGGING FALLBACK (Jika path masih tidak ditemukan di server, Anda bisa mengecek log storage/logs/laravel.log)
+    //             \Log::error("File tidak ditemukan di storage public: " . $reimbursement->receipt_attachment);
+    //         }
+    //     }
+
+    //     return view('reimbursements.approval', compact('reimbursement', 'pdfBase64'));
+    // }
     public function approval($id)
     {
         $reimbursement = Reimbursement::findOrFail($id);
@@ -180,17 +207,31 @@ class AdminReimbursementController extends Controller
         }
 
         $pdfBase64 = null;
-
         if ($reimbursement->receipt_attachment && pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf') {
 
-            // Periksa apakah file benar-benar ada di dalam disk public laravel
-            if (Storage::disk('public')->exists($reimbursement->receipt_attachment)) {
-                // Ambil data file biner langsung melalui facade Storage (Lebih aman untuk server production)
-                $fileData = Storage::disk('public')->get($reimbursement->receipt_attachment);
+            // Bersihkan prefix 'storage/' jika ada di DB
+            $cleanPath = str_replace('storage/', '', $reimbursement->receipt_attachment);
+
+            // Cek 3 variasi lokasi penyimpanan di Linux Server
+            $path1 = storage_path('app/public/' . $cleanPath);
+            $path2 = storage_path('app/' . $cleanPath);
+            $path3 = public_path('storage/' . $cleanPath);
+
+            $finalPath = null;
+            if (file_exists($path1)) {
+                $finalPath = $path1;
+            } elseif (file_exists($path2)) {
+                $finalPath = $path2;
+            } elseif (file_exists($path3)) {
+                $finalPath = $path3;
+            }
+
+            if ($finalPath && is_readable($finalPath)) {
+                $fileData = file_get_contents($finalPath);
                 $pdfBase64 = base64_encode($fileData);
             } else {
-                // LOGGING FALLBACK (Jika path masih tidak ditemukan di server, Anda bisa mengecek log storage/logs/laravel.log)
-                \Log::error("File tidak ditemukan di storage public: " . $reimbursement->receipt_attachment);
+                // Tulis log jika bermasalah di server
+                \Log::error("PDF Gagal dibaca. Path cek: 1=$path1 | 2=$path2 | 3=$path3");
             }
         }
 
