@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use App\Exports\ReimbursementExport;
 use Maatwebsite\Excel\Facades\Excel;
 
+
 class AdminReimbursementController extends Controller
 {
     /**
@@ -154,18 +155,46 @@ class AdminReimbursementController extends Controller
     /**
      * HALAMAN WORKSPACE DIGITAL SIGNATURE
      */
+    // public function approval($id)
+    // {
+    //     $reimbursement = Reimbursement::findOrFail($id);
+    //     $currentRole = strtolower(auth()->user()->role ?? 'admin_site');
+    //     $myId = auth()->id();
+
+    //     // Proteksi URL: admin_site tidak diizinkan membuka berkas milik admin_site lainnya
+    //     if ($currentRole === 'admin_site' && $reimbursement->user_id !== $myId) {
+    //         abort(403, 'Unauthorized action.');
+    //     }
+
+    //     return view('reimbursements.approval', compact('reimbursement'));
+    // }
+
     public function approval($id)
     {
         $reimbursement = Reimbursement::findOrFail($id);
         $currentRole = strtolower(auth()->user()->role ?? 'admin_site');
         $myId = auth()->id();
 
-        // Proteksi URL: admin_site tidak diizinkan membuka berkas milik admin_site lainnya
         if ($currentRole === 'admin_site' && $reimbursement->user_id !== $myId) {
             abort(403, 'Unauthorized action.');
         }
 
-        return view('reimbursements.approval', compact('reimbursement'));
+        $pdfBase64 = null;
+
+        if ($reimbursement->receipt_attachment && pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf') {
+
+            // Periksa apakah file benar-benar ada di dalam disk public laravel
+            if (Storage::disk('public')->exists($reimbursement->receipt_attachment)) {
+                // Ambil data file biner langsung melalui facade Storage (Lebih aman untuk server production)
+                $fileData = Storage::disk('public')->get($reimbursement->receipt_attachment);
+                $pdfBase64 = base64_encode($fileData);
+            } else {
+                // LOGGING FALLBACK (Jika path masih tidak ditemukan di server, Anda bisa mengecek log storage/logs/laravel.log)
+                \Log::error("File tidak ditemukan di storage public: " . $reimbursement->receipt_attachment);
+            }
+        }
+
+        return view('reimbursements.approval', compact('reimbursement', 'pdfBase64'));
     }
 
     /**

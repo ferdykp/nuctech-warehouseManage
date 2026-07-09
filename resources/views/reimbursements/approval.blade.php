@@ -371,10 +371,7 @@
         let activeStampsArray = [];
 
         // Ambil info file dari backend Laravel
-        // const pdfUrl = "{{ asset('storage/' . $reimbursement->receipt_attachment) }}";
-        // Menggunakan secure_asset agar menghasilkan https://
-        // const pdfUrl = "{{ secure_asset('storage/' . $reimbursement->receipt_attachment) }}";
-        const pdfUrl = "{{ str_replace('http://', 'https://', asset('storage/' . $reimbursement->receipt_attachment)) }}";
+        const pdfUrl = "{{ asset('storage/' . $reimbursement->receipt_attachment) }}";
         const isPdf = {{ pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf' ? 'true' : 'false' }};
 
         document.addEventListener("DOMContentLoaded", function() {
