@@ -30,7 +30,7 @@ class AdminReimbursementController extends Controller
 
         // Hak akses monitoring berkas diperluas untuk management & approval track
         if (in_array($role, ['superadmin', 'manager', 'station_master', 'team_leader'])) {
-            // Jika team_leader sedang login, dia harus melihat berkas miliknya 
+            // Jika team_leader sedang login, dia harus melihat berkas miliknya
             // DAN berkas milik admin_site yang statusnya sudah 'pending_leader'
             if ($role === 'team_leader') {
                 $query->where(function ($q) {
@@ -61,7 +61,9 @@ class AdminReimbursementController extends Controller
         }
 
         // Menghitung total dana disetujui (cloning query agar filter bulan juga ikut memotong total dana)
-        $totalApprovedAmount = (clone $query)->where('status', 'approved')->sum('amount');
+        // $totalApprovedAmount = (clone $query)->where('status', 'approved')->sum('amount');
+        $totalApprovedAmount = (clone $query)->sum('amount');
+
 
         // Ambil data terbaru dan tambahkan appends query string agar navigasi halaman pagination tidak mereset filter bulan
         $reimbursements = $query->latest()->paginate(10)->withQueryString();
@@ -84,30 +86,53 @@ class AdminReimbursementController extends Controller
             'person_name' => 'required|string|max:255',
             'date' => 'required|date',
             'category' => 'required|in:transportation,delivery,office',
-            'from_location' => 'required_if:category,transportation,delivery|nullable|string|max:255',
-            'to_location' => 'required_if:category,transportation,delivery|nullable|string|max:255',
             'amount' => 'required|numeric|min:0',
-            'comment' => 'nullable|string|max:1000',
-            // 🟩 PERBAIKAN: Tambahkan 'file' sebelum 'mimes' agar instance dibaca sebagai file upload utuh
             'receipt_attachment' => 'required|file|mimes:jpeg,png,jpg,pdf|max:4096',
         ]);
 
+        $file = $request->file('receipt_attachment');
+        $extension = strtolower($file->getClientOriginalExtension());
+        $excludedPages = json_decode($request->excluded_pages, true) ?? [];
         $path = null;
 
-        // Pastikan file valid saat diunggah
-        if ($request->hasFile('receipt_attachment') && $request->file('receipt_attachment')->isValid()) {
+        if ($extension === 'pdf' && !empty($excludedPages)) {
+            // PROSES PEMOTONGAN HALAMAN PDF
             try {
-                $path = $request->file('receipt_attachment')->store('receipts', 'public');
+                $pdf = new Fpdi();
+                // Simpan sementara file asli untuk dibaca FPDI
+                $tempPath = $file->getRealPath();
+                $pageCount = $pdf->setSourceFile($tempPath);
+
+                $pagesProcessed = 0;
+                for ($i = 1; $i <= $pageCount; $i++) {
+                    // Jika halaman i TIDAK ada dalam daftar excluded, masukkan ke PDF baru
+                    if (!in_array($i, $excludedPages)) {
+                        $templateId = $pdf->importPage($i);
+                        $size = $pdf->getTemplateSize($templateId);
+                        $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                        $pdf->useTemplate($templateId);
+                        $pagesProcessed++;
+                    }
+                }
+
+                if ($pagesProcessed === 0) {
+                    return redirect()->back()->with('error', 'Anda tidak boleh menghapus semua halaman PDF.');
+                }
+
+                // Simpan PDF yang sudah dipotong ke storage
+                $fileName = 'receipts/processed_' . time() . '_' . uniqid() . '.pdf';
+                Storage::disk('public')->put($fileName, $pdf->Output('S'));
+                $path = $fileName;
             } catch (\Exception $e) {
-                // Jika gagal tulis ke folder local (masalah permission folder storage)
-                return redirect()->back()->withInput()->with('error', 'Gagal menulis file ke storage. Periksa permission folder server Anda.');
+                Log::error("Gagal memproses PDF Slicing: " . $e->getMessage());
+                return redirect()->back()->with('error', 'Gagal memproses lampiran PDF.');
             }
         } else {
-            // Jika file corrupt atau melebihi php.ini post_max_size
-            return redirect()->back()->withInput()->with('error', 'File lampiran tidak valid atau ukurannya melebihi batas upload server php.ini Anda.');
+            // PROSES UPLOAD BIASA (Jika Gambar atau PDF tanpa penghapusan halaman)
+            $path = $file->store('receipts', 'public');
         }
 
-        // ── LOGIKA DETEKSI STATUS AWAL BERDASARKAN ROLE ──
+        // Simpan ke DB
         $userRole = strtolower(auth()->user()->role ?? 'admin_site');
         $initialStatus = ($userRole === 'team_leader') ? 'pending_leader' : 'pending';
 
@@ -116,17 +141,16 @@ class AdminReimbursementController extends Controller
             'person_name' => $request->person_name,
             'date' => $request->date,
             'category' => $request->category,
-            'from_location' => in_array($request->category, ['transportation', 'delivery']) ? $request->from_location : null,
-            'to_location' => in_array($request->category, ['transportation', 'delivery']) ? $request->to_location : null,
+            'from_location' => $request->from_location,
+            'to_location' => $request->to_location,
             'amount' => $request->amount,
             'comment' => $request->comment,
             'receipt_attachment' => $path,
             'status' => $initialStatus
         ]);
 
-        return redirect()->route('reimbursements.index')->with('success', 'Reimbursement claim filed successfully.');
+        return redirect()->route('reimbursements.index')->with('success', 'Claim filed successfully.');
     }
-
     /**
      * HALAMAN WORKSPACE DIGITAL SIGNATURE
      */
@@ -180,6 +204,7 @@ class AdminReimbursementController extends Controller
                 'scale_h'     => $request->scale_h,
                 'signer_name' => $user->name ?? '',
                 'signer_date' => now()->format('Y-m-d'),
+                'page'        => isset($sig['page']) ? (int) $sig['page'] : 1, // 🟩 TAMBAHKAN BARIS INI
             ]];
         }
 
@@ -252,6 +277,10 @@ class AdminReimbursementController extends Controller
                 // ── JIKA FORMAT NOTA ADALAH PDF ──
                 try {
                     $pdf       = new Fpdi();
+
+                    // 🟩 FIX 1: MATIKAN AUTO PAGE BREAK AGAR TIDAK MAJU KE HALAMAN BARU SECARA PAKSA
+                    $pdf->SetAutoPageBreak(false);
+
                     $pageCount = $pdf->setSourceFile($invoicePath);
 
                     for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
@@ -265,16 +294,17 @@ class AdminReimbursementController extends Controller
                         foreach ($sigPaths as $s) {
                             $absYpct    = $s['pos_y'] / 100;
                             $pageIndex  = (int) floor($absYpct * $pageCount);
-                            $targetPage = $pageIndex + 1;
+                            // $targetPage = $pageIndex + 1;
+                            $targetPage = (int) ($s['page'] ?? 1);
 
                             if ($targetPage !== $pageNo) continue;
 
                             $localYpct = ($absYpct * $pageCount) - $pageIndex;
 
                             $mmX = ($s['pos_x']   / 100) * $size['width'];
-                            $mmY = $localYpct * $pageHeight;
+                            $mmY = ($s['pos_y']   / 100) * $pageHeight;
                             $mmW = ($s['scale_w'] / 100) * $size['width'];
-                            $mmH = ($s['scale_h'] / 100) * $pageHeight;
+                            $mmH = ($s['scale_h'] / 100) * $pageHeight; // Tidak perlu dikali $pageCount lagi
 
                             if ($mmW < 5) $mmW = 30;
                             if ($mmH < 3) $mmH = 15;
@@ -396,175 +426,15 @@ class AdminReimbursementController extends Controller
     }
 
 
-    // 🟩 TAMBAHKAN: parameter Request $request di dalam kurung fungsi
-    // public function exportApprovedPdf(Request $request)
-    // {
-    //     // 1. Inisialisasi query awal untuk klaim yang disetujui (Approved)
-    //     $query = Reimbursement::where('status', 'approved')->with('user');
-
-    //     // 🟩 TAMBAHKAN FILTER BULAN: Jika ada parameter 'month' di URL, saring PDF-nya
-    //     if ($request->filled('month')) {
-    //         $query->whereMonth('date', $request->month);
-    //     }
-
-    //     // Ambil hasil data yang sudah disaring
-    //     $reimbursements = $query->latest()->get();
-
-    //     if ($reimbursements->isEmpty()) {
-    //         return redirect()->back()->with('error', 'Tidak ada data reimbursement APPROVED untuk bulan yang dipilih.');
-    //     }
-
-    //     // Inisialisasi FPDI (Landscape, milimeter, A4)
-    //     $pdf = new Fpdi('L', 'mm', 'A4');
-    //     $pdf->SetAutoPageBreak(false);
-
-    //     // Dimensi standar A4 Landscape
-    //     $canvasWidth  = 297;
-    //     $canvasHeight = 210;
-
-    //     // Aturan Layout Grid Berdampingan
-    //     $marginOuter  = 10;
-    //     $gapCenter    = 6;
-    //     $maxPageWidth = ($canvasWidth - ($marginOuter * 2) - $gapCenter) / 2;
-    //     $maxPageHeight = $canvasHeight - 20;
-
-    //     // Koleksi semua halaman/gambar yang siap dicetak ke dalam antrean tunggal
-    //     $documentQueue = [];
-
-    //     foreach ($reimbursements as $reimbursement) {
-    //         $invoicePath = storage_path('app/public/' . $reimbursement->receipt_attachment);
-
-    //         if (!$reimbursement->receipt_attachment || !file_exists($invoicePath)) {
-    //             continue;
-    //         }
-
-    //         $extension = strtolower(pathinfo($invoicePath, PATHINFO_EXTENSION));
-
-    //         if ($extension === 'pdf') {
-    //             try {
-    //                 $subPdf = new Fpdi();
-    //                 $pageCount = $subPdf->setSourceFile($invoicePath);
-
-    //                 for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-    //                     $documentQueue[] = [
-    //                         'type' => 'pdf',
-    //                         'file' => $invoicePath,
-    //                         'page_no' => $pageNo
-    //                     ];
-    //                 }
-    //             } catch (\Exception $e) {
-    //                 \Log::error("Gagal membaca file PDF " . $invoicePath . " : " . $e->getMessage());
-    //                 continue;
-    //             }
-    //         } elseif (in_array($extension, ['jpg', 'jpeg', 'png'])) {
-    //             $documentQueue[] = [
-    //                 'type' => 'image',
-    //                 'file' => $invoicePath
-    //             ];
-    //         }
-    //     }
-
-    //     // 2. Proses pengurasan antrean untuk dicetak berpasangan (Side-by-Side)
-    //     $totalItems = count($documentQueue);
-
-    //     for ($i = 0; $i < $totalItems; $i += 2) {
-    //         $pdf->AddPage('L', [$canvasWidth, $canvasHeight]);
-
-    //         // DOKUMEN SISI KIRI
-    //         $leftItem = $documentQueue[$i];
-    //         $x1 = $marginOuter;
-    //         $y1 = ($canvasHeight - $maxPageHeight) / 2;
-
-    //         if ($leftItem['type'] === 'pdf') {
-    //             $pdf->setSourceFile($leftItem['file']);
-    //             $tplId = $pdf->importPage($leftItem['page_no']);
-    //             $size  = $pdf->getTemplateSize($tplId);
-    //             $ratio = $size['width'] / $size['height'];
-
-    //             $w1 = $maxPageWidth;
-    //             $h1 = $w1 / $ratio;
-    //             if ($h1 > $maxPageHeight) {
-    //                 $h1 = $maxPageHeight;
-    //                 $w1 = $h1 * $ratio;
-    //             }
-    //             $x1_centered = $x1 + (($maxPageWidth - $w1) / 2);
-    //             $y1_centered = ($canvasHeight - $h1) / 2;
-
-    //             $pdf->useTemplate($tplId, $x1_centered, $y1_centered, $w1, $h1);
-    //         } else {
-    //             list($imgWidth, $imgHeight) = getimagesize($leftItem['file']);
-    //             $ratio = $imgWidth / $imgHeight;
-
-    //             $w1 = $maxPageWidth;
-    //             $h1 = $w1 / $ratio;
-    //             if ($h1 > $maxPageHeight) {
-    //                 $h1 = $maxPageHeight;
-    //                 $w1 = $h1 * $ratio;
-    //             }
-    //             $x1_centered = $x1 + (($maxPageWidth - $w1) / 2);
-    //             $y1_centered = ($canvasHeight - $h1) / 2;
-
-    //             $pdf->Image($leftItem['file'], $x1_centered, $y1_centered, $w1, $h1);
-    //         }
-
-    //         $pdf->SetDrawColor(40, 40, 40);
-    //         $pdf->SetLineWidth(0.3);
-    //         $pdf->Rect($x1, $y1, $maxPageWidth, $maxPageHeight);
-
-    //         // DOKUMEN SISI KANAN
-    //         if (isset($documentQueue[$i + 1])) {
-    //             $rightItem = $documentQueue[$i + 1];
-    //             $x2 = $marginOuter + $maxPageWidth + $gapCenter;
-    //             $y2 = ($canvasHeight - $maxPageHeight) / 2;
-
-    //             if ($rightItem['type'] === 'pdf') {
-    //                 $pdf->setSourceFile($rightItem['file']);
-    //                 $tplId = $pdf->importPage($rightItem['page_no']);
-    //                 $size  = $pdf->getTemplateSize($tplId);
-    //                 $ratio = $size['width'] / $size['height'];
-
-    //                 $w2 = $maxPageWidth;
-    //                 $h2 = $w2 / $ratio;
-    //                 if ($h2 > $maxPageHeight) {
-    //                     $h2 = $maxPageHeight;
-    //                     $w2 = $h2 * $ratio;
-    //                 }
-    //                 $x2_centered = $x2 + (($maxPageWidth - $w2) / 2);
-    //                 $y2_centered = ($canvasHeight - $h2) / 2;
-
-    //                 $pdf->useTemplate($tplId, $x2_centered, $y2_centered, $w2, $h2);
-    //             } else {
-    //                 list($imgWidth, $imgHeight) = getimagesize($rightItem['file']);
-    //                 $ratio = $imgWidth / $imgHeight;
-
-    //                 $w2 = $maxPageWidth;
-    //                 $h2 = $w2 / $ratio;
-    //                 if ($h2 > $maxPageHeight) {
-    //                     $h2 = $maxPageHeight;
-    //                     $w2 = $h2 * $ratio;
-    //                 }
-    //                 $x2_centered = $x2 + (($maxPageWidth - $w2) / 2);
-    //                 $y2_centered = ($canvasHeight - $h2) / 2;
-
-    //                 $pdf->Image($rightItem['file'], $x2_centered, $y2_centered, $w2, $h2);
-    //             }
-
-    //             $pdf->Rect($x2, $y2, $maxPageWidth, $maxPageHeight);
-    //         }
-    //     }
-
-    //     // Dinamis penamaan file berdasarkan parameter bulan
-    //     $monthName = $request->filled('month') ? date('F', mktime(0, 0, 0, $request->month, 10)) : 'All_Months';
-    //     $fileName = "reimbursements_approved_{$monthName}_" . now()->format('Y') . ".pdf";
-
-    //     return response($pdf->Output('S', $fileName))
-    //         ->header('Content-Type', 'application/pdf')
-    //         ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
-    // }
     public function exportApprovedPdf(Request $request)
     {
-        // 1. Inisialisasi query awal untuk klaim yang disetujui (Approved)
-        $query = Reimbursement::where('status', 'approved')->with('user');
+        // 1. Inisialisasi query dengan filter user yang login
+        // $query = Reimbursement::where('status', 'approved')
+        //     ->where('user_id', auth()->id())
+        //     ->with('user');
+
+        $query = Reimbursement::where('user_id', auth()->id())
+            ->with('user');
 
         if ($request->filled('month')) {
             $query->whereMonth('date', $request->month);
@@ -588,10 +458,8 @@ class AdminReimbursementController extends Controller
         $maxPageWidth = ($canvasWidth - ($marginOuter * 2) - $gapCenter) / 2;
         $maxPageHeight = $canvasHeight - 20;
 
-        // Koleksi semua halaman/gambar yang siap dicetak ke dalam antrean tunggal
+        // Koleksi antrean
         $documentQueue = [];
-
-        // 🟩 Tambah counter untuk melacak nomor urut file claim
         $claimCounter = 1;
 
         foreach ($reimbursements as $reimbursement) {
@@ -613,7 +481,7 @@ class AdminReimbursementController extends Controller
                             'type' => 'pdf',
                             'file' => $invoicePath,
                             'page_no' => $pageNo,
-                            'claim_no' => $claimCounter // 🟩 Pasang nomor urut klaim
+                            'claim_no' => $claimCounter
                         ];
                     }
                 } catch (\Exception $e) {
@@ -624,15 +492,24 @@ class AdminReimbursementController extends Controller
                 $documentQueue[] = [
                     'type' => 'image',
                     'file' => $invoicePath,
-                    'claim_no' => $claimCounter // 🟩 Pasang nomor urut klaim
+                    'claim_no' => $claimCounter
                 ];
             }
 
-            // 🟩 Naikkan nomor urut setelah satu file claim selesai diproses ke antrean
+            // 🟩 LOGIKA PENTING:
+            // Cek apakah antrean saat ini berjumlah ganjil setelah file ini dimasukkan.
+            // Jika ganjil (artinya berakhir di sisi KIRI), tambahkan item "blank"
+            // agar sisi KANAN kosong dan file berikutnya mulai di halaman baru.
+            if (count($documentQueue) % 2 !== 0) {
+                $documentQueue[] = [
+                    'type' => 'blank'
+                ];
+            }
+
             $claimCounter++;
         }
 
-        // 2. Proses pengurasan antrean untuk dicetak berpasangan (Side-by-Side)
+        // 2. Proses cetak berpasangan (Side-by-Side)
         $totalItems = count($documentQueue);
 
         for ($i = 0; $i < $totalItems; $i += 2) {
@@ -642,103 +519,107 @@ class AdminReimbursementController extends Controller
             // DOKUMEN SISI KIRI
             // -----------------------------------------------------------------
             $leftItem = $documentQueue[$i];
-            $x1 = $marginOuter;
-            $y1 = ($canvasHeight - $maxPageHeight) / 2;
 
-            if ($leftItem['type'] === 'pdf') {
-                $pdf->setSourceFile($leftItem['file']);
-                $tplId = $pdf->importPage($leftItem['page_no']);
-                $size  = $pdf->getTemplateSize($tplId);
-                $ratio = $size['width'] / $size['height'];
+            // Render kiri hanya jika bukan 'blank' (Kiri selalu terisi file karena logika padding di atas, tapi ini untuk safety)
+            if ($leftItem['type'] !== 'blank') {
+                $x1 = $marginOuter;
+                $y1 = ($canvasHeight - $maxPageHeight) / 2;
 
-                $w1 = $maxPageWidth;
-                $h1 = $w1 / $ratio;
-                if ($h1 > $maxPageHeight) {
-                    $h1 = $maxPageHeight;
-                    $w1 = $h1 * $ratio;
-                }
-                $x1_centered = $x1 + (($maxPageWidth - $w1) / 2);
-                $y1_centered = ($canvasHeight - $h1) / 2;
-
-                $pdf->useTemplate($tplId, $x1_centered, $y1_centered, $w1, $h1);
-            } else {
-                list($imgWidth, $imgHeight) = getimagesize($leftItem['file']);
-                $ratio = $imgWidth / $imgHeight;
-
-                $w1 = $maxPageWidth;
-                $h1 = $w1 / $ratio;
-                if ($h1 > $maxPageHeight) {
-                    $h1 = $maxPageHeight;
-                    $w1 = $h1 * $ratio;
-                }
-                $x1_centered = $x1 + (($maxPageWidth - $w1) / 2);
-                $y1_centered = ($canvasHeight - $h1) / 2;
-
-                $pdf->Image($leftItem['file'], $x1_centered, $y1_centered, $w1, $h1);
-            }
-
-            // CETAK BORDER UNTUK SISI KIRI
-            $pdf->SetDrawColor(40, 40, 40);
-            $pdf->SetLineWidth(0.3);
-            $pdf->Rect($x1, $y1, $maxPageWidth, $maxPageHeight);
-
-            // 🟩 CETAK NOMOR URUT DI POJOK KANAN BAWAH BINGKAI KIRI
-            $pdf->SetFont('Helvetica', 'B', 10);
-            $pdf->SetTextColor(40, 40, 40);
-            // Geser posisi X mendekati batas kanan bingkai kiri (x1 + lebar - margin teks)
-            $pdf->SetXY($x1 + $maxPageWidth - 20, $y1 + $maxPageHeight - 8);
-            $pdf->Cell(15, 5, 'No. ' . $leftItem['claim_no'], 0, 0, 'R');
-
-
-            // -----------------------------------------------------------------
-            // DOKUMEN SISI KANAN (Jika Tersedia)
-            // -----------------------------------------------------------------
-            if (isset($documentQueue[$i + 1])) {
-                $rightItem = $documentQueue[$i + 1];
-                $x2 = $marginOuter + $maxPageWidth + $gapCenter;
-                $y2 = ($canvasHeight - $maxPageHeight) / 2;
-
-                if ($rightItem['type'] === 'pdf') {
-                    $pdf->setSourceFile($rightItem['file']);
-                    $tplId = $pdf->importPage($rightItem['page_no']);
+                if ($leftItem['type'] === 'pdf') {
+                    $pdf->setSourceFile($leftItem['file']);
+                    $tplId = $pdf->importPage($leftItem['page_no']);
                     $size  = $pdf->getTemplateSize($tplId);
                     $ratio = $size['width'] / $size['height'];
 
-                    $w2 = $maxPageWidth;
-                    $h2 = $w2 / $ratio;
-                    if ($h2 > $maxPageHeight) {
-                        $h2 = $maxPageHeight;
-                        $w2 = $h2 * $ratio;
+                    $w1 = $maxPageWidth;
+                    $h1 = $w1 / $ratio;
+                    if ($h1 > $maxPageHeight) {
+                        $h1 = $maxPageHeight;
+                        $w1 = $h1 * $ratio;
                     }
-                    $x2_centered = $x2 + (($maxPageWidth - $w2) / 2);
-                    $y2_centered = ($canvasHeight - $h2) / 2;
+                    $x1_centered = $x1 + (($maxPageWidth - $w1) / 2);
+                    $y1_centered = ($canvasHeight - $h1) / 2;
 
-                    $pdf->useTemplate($tplId, $x2_centered, $y2_centered, $w2, $h2);
+                    $pdf->useTemplate($tplId, $x1_centered, $y1_centered, $w1, $h1);
                 } else {
-                    list($imgWidth, $imgHeight) = getimagesize($rightItem['file']);
+                    list($imgWidth, $imgHeight) = getimagesize($leftItem['file']);
                     $ratio = $imgWidth / $imgHeight;
 
-                    $w2 = $maxPageWidth;
-                    $h2 = $w2 / $ratio;
-                    if ($h2 > $maxPageHeight) {
-                        $h2 = $maxPageHeight;
-                        $w2 = $h2 * $ratio;
+                    $w1 = $maxPageWidth;
+                    $h1 = $w1 / $ratio;
+                    if ($h1 > $maxPageHeight) {
+                        $h1 = $maxPageHeight;
+                        $w1 = $h1 * $ratio;
                     }
-                    $x2_centered = $x2 + (($maxPageWidth - $w2) / 2);
-                    $y2_centered = ($canvasHeight - $h2) / 2;
+                    $x1_centered = $x1 + (($maxPageWidth - $w1) / 2);
+                    $y1_centered = ($canvasHeight - $h1) / 2;
 
-                    $pdf->Image($rightItem['file'], $x2_centered, $y2_centered, $w2, $h2);
+                    $pdf->Image($leftItem['file'], $x1_centered, $y1_centered, $w1, $h1);
                 }
 
-                // CETAK BORDER UNTUK SISI KANAN
-                $pdf->Rect($x2, $y2, $maxPageWidth, $maxPageHeight);
+                // CETAK BORDER & NOMOR (SISI KIRI)
+                $pdf->SetDrawColor(40, 40, 40);
+                $pdf->SetLineWidth(0.3);
+                $pdf->Rect($x1, $y1, $maxPageWidth, $maxPageHeight);
 
-                // 🟩 CETAK NOMOR URUT DI POJOK KANAN BAWAH BINGKAI KANAN
                 $pdf->SetFont('Helvetica', 'B', 10);
                 $pdf->SetTextColor(40, 40, 40);
-                // Geser posisi X mendekati batas kanan bingkai kanan (x2 + lebar - margin teks)
-                $pdf->SetXY($x2 + $maxPageWidth - 20, $y2 + $maxPageHeight - 8);
-                $pdf->Cell(15, 5, 'No. ' . $rightItem['claim_no'], 0, 0, 'R');
+                $pdf->SetXY($x1 + $maxPageWidth - 20, $y1 + $maxPageHeight - 8);
+                $pdf->Cell(15, 5, 'No. ' . $leftItem['claim_no'], 0, 0, 'R');
+            }
+
+
+            // -----------------------------------------------------------------
+            // DOKUMEN SISI KANAN
+            // -----------------------------------------------------------------
+            if (isset($documentQueue[$i + 1])) {
+                $rightItem = $documentQueue[$i + 1];
+
+                // Render sisi kanan HANYA JIKA BUKAN item 'blank'
+                if ($rightItem['type'] !== 'blank') {
+                    $x2 = $marginOuter + $maxPageWidth + $gapCenter;
+                    $y2 = ($canvasHeight - $maxPageHeight) / 2;
+
+                    if ($rightItem['type'] === 'pdf') {
+                        $pdf->setSourceFile($rightItem['file']);
+                        $tplId = $pdf->importPage($rightItem['page_no']);
+                        $size  = $pdf->getTemplateSize($tplId);
+                        $ratio = $size['width'] / $size['height'];
+
+                        $w2 = $maxPageWidth;
+                        $h2 = $w2 / $ratio;
+                        if ($h2 > $maxPageHeight) {
+                            $h2 = $maxPageHeight;
+                            $w2 = $h2 * $ratio;
+                        }
+                        $x2_centered = $x2 + (($maxPageWidth - $w2) / 2);
+                        $y2_centered = ($canvasHeight - $h2) / 2;
+
+                        $pdf->useTemplate($tplId, $x2_centered, $y2_centered, $w2, $h2);
+                    } else {
+                        list($imgWidth, $imgHeight) = getimagesize($rightItem['file']);
+                        $ratio = $imgWidth / $imgHeight;
+
+                        $w2 = $maxPageWidth;
+                        $h2 = $w2 / $ratio;
+                        if ($h2 > $maxPageHeight) {
+                            $h2 = $maxPageHeight;
+                            $w2 = $h2 * $ratio;
+                        }
+                        $x2_centered = $x2 + (($maxPageWidth - $w2) / 2);
+                        $y2_centered = ($canvasHeight - $h2) / 2;
+
+                        $pdf->Image($rightItem['file'], $x2_centered, $y2_centered, $w2, $h2);
+                    }
+
+                    // CETAK BORDER & NOMOR (SISI KANAN)
+                    $pdf->Rect($x2, $y2, $maxPageWidth, $maxPageHeight);
+
+                    $pdf->SetFont('Helvetica', 'B', 10);
+                    $pdf->SetTextColor(40, 40, 40);
+                    $pdf->SetXY($x2 + $maxPageWidth - 20, $y2 + $maxPageHeight - 8);
+                    $pdf->Cell(15, 5, 'No. ' . $rightItem['claim_no'], 0, 0, 'R');
+                }
             }
         }
 
@@ -749,10 +630,10 @@ class AdminReimbursementController extends Controller
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
     }
-
     public function exportExcel(Request $request)
     {
         $search = $request->get('search');
+        // $data = Reimbursement::where('user_id', auth()->id())->get();
 
         // Menamai berkas sesuai format nama user dan bulan berjalan seperti gambar contoh
         $fileName = 'Ferdy_Software_Expense_Record_' . now()->format('F_Y') . '.xlsx';

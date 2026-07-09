@@ -12,6 +12,7 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use Illuminate\Support\Facades\Auth;
 
 class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, WithEvents, WithTitle
 {
@@ -20,7 +21,11 @@ class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, 
      */
     public function collection()
     {
-        return Reimbursement::where('status', 'approved')
+        // return Reimbursement::where('status', 'approved') // Kondisi 1
+        //     ->where('user_id', Auth::id())                // Kondisi 2
+        //     ->latest()
+        //     ->get();
+        return Reimbursement::where('user_id', Auth::id())                // Kondisi 2
             ->latest()
             ->get();
     }
@@ -150,7 +155,7 @@ class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, 
 
                 $lastRow = $cnyRow;
 
-                // PROSES STYLING & FORMATTING 
+                // PROSES STYLING & FORMATTING
                 // Judul atas dimerge dari A1 sampai H1
                 $sheet->mergeCells('A1:H1');
                 $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(12);

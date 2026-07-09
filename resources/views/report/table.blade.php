@@ -1,110 +1,78 @@
 @forelse ($data as $index => $item)
-    <tr class="transition-colors border-b group border-slate-50 hover:bg-slate-50/50">
+    <tr class="transition-colors hover:bg-slate-50/50" id="row-{{ $item->id }}">
+        {{-- Checkbox untuk Delete Selected (Hanya untuk Superadmin) --}}
         @if (Auth::user()->role === 'superadmin')
             <td class="p-4 text-center">
-                <input type="checkbox"
-                    class="w-4 h-4 text-red-600 rounded border-slate-300 focus:ring-red-500 checkbox_id"
-                    value="{{ $item->id }}">
+                <input type="checkbox" name="ids[]" value="{{ $item->id }}"
+                    class="w-4 h-4 text-red-600 rounded sub_chk border-slate-300 focus:ring-red-500">
             </td>
         @endif
 
-        <td class="p-4 font-medium text-center text-slate-400">
-            {{ $index + 1 + ($data->currentPage() - 1) * $data->perPage() }}
+        {{-- Nomor Urut --}}
+        <td class="p-4 font-bold text-center text-slate-500">
+            {{ ($data->currentPage() - 1) * $data->perPage() + $loop->iteration }}
         </td>
 
-        @php
-            $siteLabels = [
-                'fsjkt' => ['label' => 'FS6000 Jakarta', 'color' => 'bg-blue-50 text-blue-700'],
-                'fssmg' => ['label' => 'FS6000 Semarang', 'color' => 'bg-indigo-50 text-indigo-700'],
-                'fssby' => ['label' => 'FS6000 Surabaya', 'color' => 'bg-purple-50 text-purple-700'],
-                'ebeam' => ['label' => 'E-Beam', 'color' => 'bg-amber-50 text-amber-700'],
-            ];
-            $site = $siteLabels[$item->site_machine] ?? [
-                'label' => $item->site_machine,
-                'color' => 'bg-slate-100 text-slate-700',
-            ];
-        @endphp
-
+        {{-- Nama Site / Machine --}}
         <td class="p-4">
-            <span class="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-tighter {{ $site['color'] }}">
-                {{ $site['label'] }}
-            </span>
+            <div class="font-bold text-slate-800">{{ $item->site_machine }}</div>
+            <div class="text-[11px] font-medium text-slate-400">Series: {{ $item->series_machine }}</div>
         </td>
 
+        {{-- Petugas / Reporter --}}
         <td class="p-4">
             <div class="flex items-center gap-2">
                 <div
-                    class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600 uppercase">
+                    class="flex items-center justify-center text-xs font-black text-red-600 uppercase rounded-full w-7 h-7 bg-red-50">
                     {{ substr($item->attendant, 0, 2) }}
                 </div>
-                <span class="font-bold text-slate-700">{{ $item->attendant }}</span>
+                <span class="font-semibold text-slate-700">{{ $item->attendant }}</span>
             </div>
         </td>
 
-        <td class="p-4 text-center">
-            <span class="text-sm font-medium text-slate-500">
-                <i class="mr-1 opacity-50 fa-regular fa-calendar-check"></i>
+        {{-- Tanggal Kegagalan / Kerusakan --}}
+        <td class="p-4 font-medium text-center text-slate-600">
+            <span
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 rounded-lg text-xs font-bold text-slate-600">
+                <i class="fa-regular fa-calendar text-[11px]"></i>
                 {{ \Carbon\Carbon::parse($item->failure_date)->format('d M Y') }}
             </span>
         </td>
 
-        <td class="p-4">
-            <div class="flex items-center justify-center gap-2">
-                {{-- DETAIL BUTTON --}}
-                <button onclick='openDetailModal(@json($item))'
-                    class="p-2 transition-all rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50"
-                    title="View Detail">
-                    <i class="text-lg fa-solid fa-eye"></i>
-                </button>
-
-                @if (Auth::user()->role === 'superadmin')
-                    <a href="{{ route('report.edit', $item->id) }}"
-                        class="p-2 transition-all rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50"
+        {{-- Kolom Action (Hanya untuk Superadmin) --}}
+        @if (Auth::user()->role === 'superadmin')
+            <td class="p-4 text-center">
+                <div class="flex items-center justify-center gap-2">
+                    {{-- Tombol Edit --}}
+                    <a href="{{ route($routePrefix . '.edit', $item->id) }}"
+                        class="p-2 text-blue-600 transition-all bg-blue-50 rounded-xl hover:bg-blue-600 hover:text-white"
                         title="Edit Report">
-                        <i class="text-lg fa-solid fa-pen-to-square"></i>
+                        <i class="text-xs fa-solid fa-pen-to-square"></i>
                     </a>
 
-                    <div x-data="{ open: false }" class="inline-block">
-                        <button @click="open = true"
-                            class="p-2 transition-all rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50"
-                            title="Delete Report">
-                            <i class="text-lg fa-solid fa-trash-can"></i>
+                    {{-- Tombol Delete (Menggunakan Form preventif) --}}
+                    <form action="{{ route($routePrefix . '.destroy', $item->id) }}" method="POST"
+                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus report ini?');" class="inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit"
+                            class="p-2 text-red-600 transition-all bg-red-50 rounded-xl hover:bg-red-600 hover:text-white"
+                            title="Hapus Report">
+                            <i class="text-xs fa-solid fa-trash-can"></i>
                         </button>
-
-                        {{-- DELETE MODAL --}}
-                        <div x-show="open" x-cloak x-transition.opacity
-                            class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-                            <div @click.outside="open = false" x-transition
-                                class="w-full max-w-sm p-8 text-center bg-white shadow-2xl rounded-3xl">
-                                <div
-                                    class="flex items-center justify-center w-20 h-20 mx-auto mb-6 text-3xl text-red-500 rounded-full bg-red-50">
-                                    <i class="fa-solid fa-triangle-exclamation"></i>
-                                </div>
-                                <h3 class="mb-2 text-xl font-black text-slate-800">Konfirmasi Hapus</h3>
-                                <p class="mb-8 text-sm font-medium text-slate-500">Data report ini akan dihapus permanen
-                                    dari sistem.</p>
-                                <div class="flex gap-3">
-                                    <button @click="open = false"
-                                        class="flex-1 py-3 text-xs font-black tracking-widest uppercase transition-colors text-slate-400 hover:text-slate-600">Batal</button>
-                                    <form action="{{ route('report.destroy', $item->id) }}" method="POST"
-                                        class="flex-1">
-                                        @csrf @method('DELETE')
-                                        <button type="submit"
-                                            class="w-full py-3 text-xs font-black tracking-widest text-white uppercase transition-all bg-red-600 shadow-lg rounded-xl hover:bg-red-700 shadow-red-200">Hapus</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @endif
-            </div>
-        </td>
+                    </form>
+                </div>
+            </td>
+        @endif
     </tr>
 @empty
     <tr>
-        <td colspan="10" class="p-20 text-center">
-            <i class="block mb-4 text-5xl fa-solid fa-folder-open text-slate-200"></i>
-            <p class="text-xs font-bold tracking-widest uppercase text-slate-400">Belum ada laporan kerusakan</p>
+        <td colspan="{{ Auth::user()->role === 'superadmin' ? 6 : 4 }}"
+            class="p-8 text-sm italic font-medium text-center text-slate-400">
+            <div class="flex flex-col items-center gap-2 py-4">
+                <i class="text-2xl fa-solid fa-folder-open text-slate-300"></i>
+                <span>Tidak ada data report yang ditemukan.</span>
+            </div>
         </td>
     </tr>
 @endforelse

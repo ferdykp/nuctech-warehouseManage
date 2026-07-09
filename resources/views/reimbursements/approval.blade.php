@@ -233,6 +233,7 @@
                             <input type="hidden" name="pos_y" id="pos-y-input">
                             <input type="hidden" name="scale_w" id="scale-w-input">
                             <input type="hidden" name="scale_h" id="scale-h-input">
+                            <input type="hidden" name="page" id="page-input">
 
                             <button type="submit"
                                 class="w-full py-3.5 text-xs font-black tracking-widest text-white uppercase transition-all shadow-lg bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/10 active:scale-[0.98]">
@@ -288,6 +289,7 @@
             </div>
 
             {{-- SISI KANAN: WORKSPACE LIVE CANVAS DOKUMEN PENUH (3/5) --}}
+            {{-- SISI KANAN: WORKSPACE LIVE CANVAS DOKUMEN PENUH (3/5) --}}
             <div class="w-full space-y-3 lg:col-span-3">
                 <div class="flex items-center justify-between px-1">
                     <span
@@ -296,37 +298,37 @@
                     </span>
                     <span
                         class="text-[10px] font-black text-amber-600 bg-amber-50 border border-amber-100/50 px-2.5 py-1 rounded-md uppercase tracking-wider">
-                        <i class="fa-solid fa-scroll mr-0.5"></i> Scrollable Invoice
+                        <i class="fa-solid fa-scroll mr-0.5"></i> Multi-Page PDF Canvas
                     </span>
                 </div>
 
                 {{-- LIVE AREA CANVAS UTUH --}}
+                {{-- Ubah items-start menjadi items-center agar rendering canvas PDF rapi di tengah --}}
                 <div id="workspace-area"
-                    class="relative flex items-start justify-center w-full p-4 overflow-y-auto border shadow-inner select-none border-slate-200 bg-slate-400 rounded-[2rem]"
+                    class="relative flex flex-col items-center w-full p-4 overflow-y-auto border shadow-inner select-none border-slate-200 bg-slate-400 rounded-[2rem]"
                     style="height: 900px;">
 
                     @if ($reimbursement->receipt_attachment)
-                        <div id="invoice-target-img"
-                            class="relative w-full max-w-full overflow-hidden transition-all duration-200 bg-white shadow-xl rounded-xl">
-                            @if (pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf')
-                                <div class="relative w-full pointer-events-none" style="height: 1650px;">
-                                    <object
-                                        data="{{ asset('storage/' . $reimbursement->receipt_attachment) }}?v={{ time() }}#toolbar=0&navpanes=0&scrollbar=0&view=FitH"
-                                        type="application/pdf" class="block w-full h-full">
-                                        <div class="p-6 text-xs text-center text-slate-500">
-                                            PDF Viewer native error. <a
-                                                href="{{ asset('storage/' . $reimbursement->receipt_attachment) }}"
-                                                target="_blank" class="font-bold text-blue-500 underline">Download
-                                                Attachment</a>
-                                        </div>
-                                    </object>
-                                </div>
-                            @else
+                        @if (pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf')
+                            {{-- Banner Loading Sementara --}}
+                            <div id="pdf-loading-indicator"
+                                class="py-4 text-xs font-black tracking-widest text-white uppercase animate-pulse">
+                                <i class="fa-solid fa-spinner animate-spin mr-1.5"></i> Loading PDF Pages via PDF.js...
+                            </div>
+
+                            {{-- Container tempat PDF.js menyuntikkan halaman canvas --}}
+                            <div id="invoice-target-img" class="flex flex-col items-center w-full gap-4">
+                                {{-- Halaman canvas PDF akan di-generate otomatis di sini --}}
+                            </div>
+                        @else
+                            {{-- Jika file berupa gambar biasa (Bukan PDF) --}}
+                            <div id="invoice-target-img"
+                                class="relative w-full max-w-full overflow-hidden transition-all duration-200 bg-white shadow-xl rounded-xl">
                                 <img src="{{ asset('storage/' . $reimbursement->receipt_attachment) }}"
                                     class="block object-contain w-full h-auto pointer-events-none"
                                     alt="Invoice Attachment" />
-                            @endif
-                        </div>
+                            </div>
+                        @endif
                     @else
                         <div
                             class="w-full py-40 text-xs italic font-semibold text-center bg-white border border-dashed text-slate-400 rounded-xl border-slate-200">
@@ -339,6 +341,7 @@
                     <div id="stamps-rendering-layer"
                         class="absolute top-0 left-0 z-40 w-full h-full pointer-events-none RegalLayer"></div>
                 </div>
+
 
                 @if ($canSign)
                     <div class="flex items-start gap-2 px-4 py-3 border bg-slate-50 rounded-2xl border-slate-100">
@@ -358,13 +361,21 @@
 @endsection
 
 @push('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
+        // Set Worker PDF.js agar proses rendering berjalan lancar di browser
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
         let signaturePad = null;
         let loadedSignatureBase64 = null;
         let activeStampsArray = [];
 
-        // ---------- INITIALIZE CANVAS & RENDERING TTD TERDAHULU ----------
+        // Ambil info file dari backend Laravel
+        const pdfUrl = "{{ asset('storage/' . $reimbursement->receipt_attachment) }}";
+        const isPdf = {{ pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf' ? 'true' : 'false' }};
+
         document.addEventListener("DOMContentLoaded", function() {
+            // 1. Inisialisasi Signature Pad untuk menggambar
             const canvas = document.getElementById('signature-canvas');
             if (canvas) {
                 const ratio = Math.max(window.devicePixelRatio || 1, 1);
@@ -379,47 +390,75 @@
                 });
             }
 
-            // Render TTD lama yang sudah terekam di database (Read-Only)
-            const rawHistory = {!! json_encode($reimbursement->signatures_json) !!};
-            if (rawHistory) {
-                const historySignatures = JSON.parse(rawHistory);
-                const renderLayer = document.getElementById('stamps-rendering-layer');
-                const targetInvoice = document.getElementById('invoice-target-img');
-
-                if (renderLayer && historySignatures.length > 0) {
-                    setTimeout(() => {
-                        let currentW = targetInvoice ? targetInvoice.clientWidth : renderLayer.clientWidth;
-                        let currentH = targetInvoice ? ((targetInvoice.tagName === 'IMG') ? targetInvoice
-                            .clientHeight : renderLayer.scrollHeight) : renderLayer.scrollHeight;
-
-                        // historySignatures.forEach(sig => {
-                        //     const staticStamp = document.createElement('div');
-                        //     staticStamp.className = 'absolute select-none pointer-events-none';
-
-                        //     // Mengonversi kembali persentase (%) database ke ukuran Pixel aktual monitor
-                        //     const pxX = (sig.pos_x / 100) * currentW;
-                        //     const pxY = (sig.pos_y / 100) * currentH;
-                        //     const pxW = (sig.scale_w / 100) * currentW;
-                        //     const pxH = (sig.scale_h / 100) * currentH;
-
-                        //     staticStamp.style.cssText =
-                        //         `left: ${pxX}px; top: ${pxY}px; width: ${pxW}px; height: ${pxH}px; z-index: 43;`;
-                        //     staticStamp.innerHTML = `
-                    //         <div class="relative w-full h-full border border-emerald-500/40 rounded-lg bg-emerald-50/20 p-0.5">
-                    //             <img src="${sig.image}" class="block object-contain w-full h-auto opacity-90" style="height: calc(100% - 14px);" />
-                    //             <div class="absolute bottom-0 left-0 right-0 text-center bg-white/95 text-[7px] font-black text-slate-700 truncate px-0.5 border-t border-slate-100">
-                    //                 ${sig.signer_name}
-                    //             </div>
-                    //         </div>
-                    //     `;
-                        //     renderLayer.appendChild(staticStamp);
-                        // });
-                    }, 600);
-                }
+            // 2. Render PDF menggunakan PDF.js jika ekstensinya PDF
+            if (isPdf) {
+                renderPdfWithPdfJs(pdfUrl);
+            } else {
+                setTimeout(syncLayerHeight, 800);
             }
-
-            setTimeout(syncLayerHeight, 800);
         });
+
+        // ---------- FUNGSI RENDERING DOKUMEN PDF PER HALAMAN ----------
+        function renderPdfWithPdfJs(url) {
+            const loadingTask = pdfjsLib.getDocument(url);
+            loadingTask.promise.then(function(pdf) {
+                // Hapus teks loading indicator
+                document.getElementById('pdf-loading-indicator')?.remove();
+                const container = document.getElementById('invoice-target-img');
+
+                // Render semua halaman secara sekuensial
+                let renderPromises = [];
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    renderPromises.push(renderSinglePage(pdf, pageNum, container));
+                }
+
+                // Setelah semua halaman selesai dirender, selaraskan tinggi workspace layer
+                Promise.all(renderPromises).then(() => {
+                    setTimeout(syncLayerHeight, 600);
+                    // Panggil fungsi renderHistorySignatures() di sini jika Anda mengaktifkan pembacaan data TTD lama dari DB
+                });
+            }).catch(err => {
+                console.error("PDF.js Error: ", err);
+                const indicator = document.getElementById('pdf-loading-indicator');
+                if (indicator) indicator.innerText = "❌ Gagal memuat dokumen PDF.";
+            });
+        }
+
+        function renderSinglePage(pdf, pageNum, container) {
+            return pdf.getPage(pageNum).then(function(page) {
+                // Buat wrapper div khusus untuk memisahkan batasan visual tiap halaman PDF
+                const pageWrapper = document.createElement('div');
+                pageWrapper.className =
+                    'pdf-page-wrapper relative bg-white shadow-lg rounded-xl overflow-hidden w-full max-w-full';
+                pageWrapper.dataset.pageNum = pageNum; // Simpan index halaman pada atribut HTML5
+
+                const canvas = document.createElement('canvas');
+                canvas.className = 'block w-full h-auto';
+                pageWrapper.appendChild(canvas);
+                container.appendChild(pageWrapper);
+
+                // Hitung skala berdasarkan lebar workspace container saat ini
+                const containerWidth = container.clientWidth || 650;
+                const unscaledViewport = page.getViewport({
+                    scale: 1
+                });
+                const scale = containerWidth / unscaledViewport.width;
+                const viewport = page.getViewport({
+                    scale: scale
+                });
+
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+
+                return page.render(renderContext).promise;
+            });
+        }
 
         // ---------- PENYELARASAN TINGGI LAYER CANVAS ----------
         function syncLayerHeight() {
@@ -427,6 +466,7 @@
             const layer = document.getElementById('stamps-rendering-layer');
             if (workspace && layer) {
                 layer.style.height = workspace.scrollHeight + 'px';
+                layer.style.width = workspace.scrollWidth + 'px';
             }
         }
 
@@ -440,7 +480,6 @@
             const btnUpload = document.getElementById('btn-tab-upload');
             const panelDraw = document.getElementById('panel-signature-draw');
             const panelUpload = document.getElementById('panel-signature-upload');
-
             if (!btnDraw || !btnUpload) return;
 
             if (type === 'draw') {
@@ -460,7 +499,6 @@
             }
         }
 
-        // ---------- MANAJEMEN FILE STAMP UPLOAD ----------
         function handleSignatureDrop(event) {
             event.preventDefault();
             if (event.dataTransfer.files.length > 0) processFile(event.dataTransfer.files[0]);
@@ -484,7 +522,6 @@
             reader.readAsDataURL(file);
         }
 
-        // ---------- MENEMPATKAN STAMP BARU KE WORKSPACE DOKUMEN ----------
         function applySignatureToPreview() {
             let base64Image = null;
             const drawPanel = document.getElementById('panel-signature-draw');
@@ -514,7 +551,6 @@
             generateStampMarkup(base64Image, name, dateVal);
         }
 
-        // ---------- DUPLIKASI DATA STAMP TERAKHIR ----------
         function duplicateLastStamp() {
             if (activeStampsArray.length === 0) {
                 alert("⚠️ Belum ada objek TTD terpasang untuk diduplikasi.");
@@ -531,7 +567,6 @@
             });
         }
 
-        // ---------- PEMBUATAN DOM ELEMENT STAMP AKTIF (DRAGGABLE & RESIZABLE) ----------
         function generateStampMarkup(imgData, signerName, signerDate, opts) {
             const layer = document.getElementById('stamps-rendering-layer');
             if (!layer) return;
@@ -591,14 +626,12 @@
         function removeTargetStamp(btn) {
             const stampWrapper = btn.closest('.absolute.cursor-move');
             if (!stampWrapper) return;
-
             activeStampsArray = activeStampsArray.filter(item => item.stampEl !== stampWrapper);
             const infoText = document.getElementById('stamp-count-info');
             if (infoText) infoText.textContent = `${activeStampsArray.length} signature(s) placed on document`;
             stampWrapper.remove();
         }
 
-        // ---------- LOGIKA EVENT DRAG INTERAKTIF ----------
         function bindDragEvents(el) {
             const workspace = document.getElementById('workspace-area');
             let dragging = false,
@@ -654,7 +687,6 @@
             }
         }
 
-        // ---------- LOGIKA EVENT RESIZE INTERAKTIF ----------
         function bindResizeEvents(el) {
             const handle = el.querySelector('.stamp-resize-handle');
             if (!handle) return;
@@ -701,7 +733,7 @@
             }
         }
 
-        // ---------- FORM PRE-SUBMIT PACKAGING ----------
+        // ---------- DETEKSI HALAMAN SECARA INTERAKTIF SAAT SIMPAN ----------
         function prepareFinalApproval(event) {
             event.preventDefault();
             if (activeStampsArray.length === 0) {
@@ -709,37 +741,85 @@
                 return false;
             }
 
-            const workspace = document.getElementById('workspace-area');
-            const imgTarget = document.getElementById('invoice-target-img');
-
-            let refW = imgTarget ? imgTarget.clientWidth : workspace.clientWidth;
-            let refH = imgTarget ? ((imgTarget.tagName === 'IMG') ? imgTarget.clientHeight : workspace.scrollHeight) :
-                workspace.scrollHeight;
-
             const signaturesMap = activeStampsArray.map(({
                 stampEl,
                 imgData,
                 signerName,
                 signerDate
             }) => {
+                const stampRect = stampEl.getBoundingClientRect();
+
+                let detectedPageNum = 1;
+                let finalRelLeft = 0;
+                let finalRelTop = 0;
+                let baseWidth = 100;
+                let baseHeight = 100;
+
+                if (isPdf) {
+                    const pageElements = document.querySelectorAll('.pdf-page-wrapper');
+                    let matched = false;
+
+                    // Menggunakan titik tengah vertical TTD untuk mendeteksi halaman
+                    const stampCenterY = stampRect.top + (stampRect.height / 2);
+
+                    for (let i = 0; i < pageElements.length; i++) {
+                        const pRect = pageElements[i].getBoundingClientRect();
+
+                        // Cek apakah koordinat tengah TTD masuk ke batas atas-bawah halaman ke-i
+                        if (stampCenterY >= pRect.top && stampCenterY <= pRect.bottom) {
+                            detectedPageNum = parseInt(pageElements[i].dataset.pageNum);
+                            finalRelLeft = stampRect.left - pRect.left;
+                            finalRelTop = stampRect.top - pRect.top;
+                            baseWidth = pRect.width;
+                            baseHeight = pRect.height;
+                            matched = true;
+                            break;
+                        }
+                    }
+
+                    // Fallback seandainya digeser terlalu mepet ke luar batas atas/bawah dokumen
+                    if (!matched && pageElements.length > 0) {
+                        const pRect = pageElements[0].getBoundingClientRect();
+                        finalRelLeft = stampRect.left - pRect.left;
+                        finalRelTop = stampRect.top - pRect.top;
+                        baseWidth = pRect.width;
+                        baseHeight = pRect.height;
+                    }
+                } else {
+                    // Jika file lampiran bawaan hanyalah file GAMBAR (JPG/PNG biasa)
+                    const imgTarget = document.querySelector('#invoice-target-img img');
+                    if (imgTarget) {
+                        const imgRect = imgTarget.getBoundingClientRect();
+                        finalRelLeft = stampRect.left - imgRect.left;
+                        finalRelTop = stampRect.top - imgRect.top;
+                        baseWidth = imgRect.width;
+                        baseHeight = imgRect.height;
+                    }
+                }
+
                 return {
                     image: imgData,
-                    pos_x: (stampEl.offsetLeft / refW) * 100,
-                    pos_y: (stampEl.offsetTop / refH) * 100,
-                    scale_w: (stampEl.offsetWidth / refW) * 100,
-                    scale_h: (stampEl.offsetHeight / refH) * 100,
+                    page: detectedPageNum, // SEKARANG MENGIRIM DATA BERUPA INDEX HALAMAN YANG AKURAT!
+                    pos_x: (finalRelLeft / baseWidth) * 100,
+                    pos_y: (finalRelTop / baseHeight) * 100,
+                    scale_w: (stampRect.width / baseWidth) * 100,
+                    scale_h: (stampRect.height / baseHeight) * 100,
                     signer_name: signerName,
                     signer_date: signerDate
                 };
             });
 
-            // Set data input hidden untuk dikirim ke API Controller
+            // Packing data ke input fields formulir Laravel
             document.getElementById('signatures-json-input').value = JSON.stringify(signaturesMap);
             document.getElementById('signature-input').value = signaturesMap[0].image;
             document.getElementById('pos-x-input').value = signaturesMap[0].pos_x;
             document.getElementById('pos-y-input').value = signaturesMap[0].pos_y;
             document.getElementById('scale-w-input').value = signaturesMap[0].scale_w;
             document.getElementById('scale-h-input').value = signaturesMap[0].scale_h;
+
+            if (document.getElementById('page-input')) {
+                document.getElementById('page-input').value = signaturesMap[0].page;
+            }
 
             document.getElementById('approve-form').submit();
         }

@@ -8,9 +8,13 @@
             <div class="px-8 py-6 border-b bg-gray-50">
                 <h4 class="text-2xl font-bold text-gray-800">
                     Add Report
+                    @if (isset($selectedStock))
+                        <span class="text-sm font-semibold px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full ml-2">Dari
+                            Antrean Damage</span>
+                    @endif
                 </h4>
                 <p class="mt-1 text-sm text-gray-500">
-                    Form input data report
+                    Form input data report kegagalan mesin lapangan.
                 </p>
                 <div class="w-24 mt-3 border-b-4 border-red-600 rounded"></div>
             </div>
@@ -20,13 +24,16 @@
                 <form action="{{ route('report.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                     @csrf
 
-                    {{-- ITEM NAME --}}
+                    {{-- Hidden Stock ID jika dipicu dari antrean --}}
+                    <input type="hidden" name="stock_id" value="{{ $selectedStock->id ?? '' }}">
+
+                    {{-- ATTENDANT --}}
                     <div>
                         <label class="block mb-1 text-sm font-semibold text-gray-700">
-                            Attendant
+                            Attendant / Reporter
                         </label>
-                        <input type="text" name="attendant" value="{{ old('attendant') }}"
-                            placeholder="Contoh: Power Supply FS6000"
+                        <input type="text" name="attendant" value="{{ old('attendant', Auth::user()->name) }}"
+                            placeholder="Nama petugas pelapor"
                             class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:outline-none
                         @error('attendant') border-red-500 @enderror"
                             required>
@@ -35,9 +42,9 @@
                         @enderror
                     </div>
 
-                    <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 
-                        {{-- TYPE --}}
+                        {{-- SITE MACHINE --}}
                         <div>
                             <label class="block mb-1 text-sm font-semibold text-gray-700">
                                 Site Machine
@@ -47,11 +54,17 @@
     @error('site_machine') border-red-500 @enderror"
                                 required>
 
-                                <option value="" disabled selected>-- Pilih Site --</option>
-                                <option value="fsjkt">FS6000 Jakarta</option>
-                                <option value="fssmg">FS6000 Semarang</option>
-                                <option value="fssby">FS6000 Surabaya</option>
-                                <option value="ebeam">E-Beam</option>
+                                @php
+                                    $currentSite = old('site_machine', $selectedStock->site->slug ?? '');
+                                @endphp
+
+                                <option value="" disabled {{ empty($currentSite) ? 'selected' : '' }}>-- Pilih Site --
+                                </option>
+                                @foreach ($sites as $site)
+                                    <option value="{{ $site->slug }}" {{ $currentSite == $site->slug ? 'selected' : '' }}>
+                                        {{ $site->machine_name }}
+                                    </option>
+                                @endforeach
                             </select>
 
                             @error('site_machine')
@@ -59,41 +72,13 @@
                             @enderror
                         </div>
 
-                        <div>
-                            <label class="block mb-1 text-sm font-semibold text-gray-700">
-                                Series Machine
-                            </label>
-                            <select name="series_machine" id="series_machine"
-                                class="w-full px-4 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-blue-200 focus:outline-none
-    @error('series_machine') border-red-500 @enderror"
-                                required>
-
-                                <option value="" disabled selected>-- Pilih Series --</option>
-
-                                <!-- FS6000 -->
-                                <option value="export" data-site="fssby fsjkt fssmg">
-                                    TFN DU-11892 (Export)
-                                </option>
-                                <option value="import" data-site="fssby fsjkt fssmg">
-                                    TFN DU-11891 (Import)
-                                </option>
-
-                                <!-- E-Beam -->
-                                <option value="ebeam_machine" data-site="ebeam">
-                                    IS1020
-                                </option>
-                            </select>
-
-                            @error('series_machine')
-                                <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
+                        {{-- FAILURE DATE --}}
                         <div>
                             <label class="block mb-1 text-sm font-semibold text-gray-700">
                                 Failure Date
                             </label>
-                            <input type="date" name="failure_date" value="{{ old('failure_date') }}"
+                            <input type="date" name="failure_date"
+                                value="{{ old('failure_date', now()->format('Y-m-d')) }}"
                                 class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:outline-none
             @error('failure_date') border-red-500 @enderror"
                                 required>
@@ -110,10 +95,13 @@
                             <label class="block mb-1 text-sm font-semibold text-gray-700">
                                 Failed Sub-System
                             </label>
+                            @php
+                                $defaultSubsystem = isset($selectedStock) ? $selectedStock->sparepart->type ?? '' : '';
+                            @endphp
                             <textarea name="failed_subsystem" rows="3"
                                 class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200
             @error('failed_subsystem') border-red-500 @enderror"
-                                placeholder="Example: CCR Subsystem">{{ old('failed_subsystem') }}</textarea>
+                                placeholder="Example: CCR Subsystem, Power Pack, etc.">{{ old('failed_subsystem', $defaultSubsystem) }}</textarea>
 
                             @error('failed_subsystem')
                                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -125,10 +113,19 @@
                             <label class="block mb-1 text-sm font-semibold text-gray-700">
                                 Failure Phenomenon
                             </label>
+                            @php
+                                $defaultPhenomenon = isset($selectedStock)
+                                    ? 'Kerusakan komponen pada: ' .
+                                        $selectedStock->sparepart->item_name .
+                                        ' (SN: ' .
+                                        ($selectedStock->sparepart->serial_number ?? '-') .
+                                        ')'
+                                    : '';
+                            @endphp
                             <textarea name="failure_phenomenon" rows="3"
                                 class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200
             @error('failure_phenomenon') border-red-500 @enderror"
-                                placeholder="Explain failure">{{ old('failure_phenomenon') }}</textarea>
+                                placeholder="Explain failure details">{{ old('failure_phenomenon', $defaultPhenomenon) }}</textarea>
 
                             @error('failure_phenomenon')
                                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -137,14 +134,17 @@
 
                     </div>
 
-
+                    {{-- TS PROCEDURE --}}
                     <div>
                         <label class="block mb-1 text-sm font-semibold text-gray-700">
                             Troubleshoot Procedure
                         </label>
-                        <textarea name="ts_procedure" rows="3" placeholder="Catatan tambahan..."
+                        @php
+                            $defaultTs = isset($selectedStock) ? $selectedStock->sparepart->note ?? '' : '';
+                        @endphp
+                        <textarea name="ts_procedure" rows="3" placeholder="Langkah perbaikan atau penggantian sparepart..."
                             class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200 focus:outline-none
-                        @error('ts_procedure') border-red-500 @enderror">{{ old('ts_procedure') }}</textarea>
+                        @error('ts_procedure') border-red-500 @enderror">{{ old('ts_procedure', $defaultTs) }}</textarea>
                         @error('ts_procedure')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
@@ -153,7 +153,7 @@
                     {{-- IMAGE --}}
                     <div>
                         <label class="block mb-1 text-sm font-semibold text-gray-700">
-                            Image
+                            Image Eviden
                         </label>
                         <input type="file" name="image" accept="image/png,image/jpeg,image/webp"
                             class="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700 ">
@@ -170,7 +170,7 @@
                         </a>
                         <button type="submit"
                             class="px-6 py-2 text-sm font-semibold text-white transition bg-green-600 rounded-lg hover:bg-green-700">
-                            Save
+                            Save Report
                         </button>
                     </div>
 
@@ -179,26 +179,3 @@
         </div>
     </div>
 @endsection
-
-@push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const siteSelect = document.getElementById('site_machine');
-            const seriesSelect = document.getElementById('series_machine');
-            const seriesOptions = Array.from(seriesSelect.options);
-
-            siteSelect.addEventListener('change', function() {
-                const selectedSite = this.value;
-
-                seriesSelect.value = '';
-
-                seriesOptions.forEach(option => {
-                    if (!option.dataset.site) return;
-
-                    const allowedSites = option.dataset.site.split(' ');
-                    option.hidden = !allowedSites.includes(selectedSite);
-                });
-            });
-        });
-    </script>
-@endpush

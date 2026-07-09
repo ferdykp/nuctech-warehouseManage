@@ -10,7 +10,7 @@
                     Edit Report
                 </h4>
                 <p class="mt-1 text-sm text-gray-500">
-                    Update data report
+                    Update data log report kerusakan alat/komponen.
                 </p>
                 <div class="w-24 mt-3 border-b-4 border-red-600 rounded"></div>
             </div>
@@ -33,7 +33,7 @@
                             required>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 
                         {{-- SITE MACHINE --}}
                         <div>
@@ -44,45 +44,13 @@
                                 class="w-full px-4 py-2 border rounded-lg bg-white
                             @error('site_machine') border-red-500 @enderror"
                                 required>
-
-                                <option value="fsjkt"
-                                    {{ old('site_machine', $report->site_machine) == 'fsjkt' ? 'selected' : '' }}>FS6000
-                                    Jakarta
-                                </option>
-                                <option value="fssmg"
-                                    {{ old('site_machine', $report->site_machine) == 'fssmg' ? 'selected' : '' }}>FS6000
-                                    Semarang
-                                </option>
-                                <option value="fssby"
-                                    {{ old('site_machine', $report->site_machine) == 'fssby' ? 'selected' : '' }}>FS6000
-                                    Surabaya
-                                </option>
-                                <option value="report"
-                                    {{ old('site_machine', $report->site_machine) == 'report' ? 'selected' : '' }}>E-Beam
-                                </option>
-                            </select>
-                        </div>
-
-                        {{-- SERIES MACHINE --}}
-                        <div>
-                            <label class="block mb-1 text-sm font-semibold text-gray-700">
-                                Series Machine
-                            </label>
-                            <select name="series_machine" id="series_machine"
-                                class="w-full px-4 py-2 bg-white border rounded-lg" required>
-
-                                <option value="export" data-site="fssby fsjkt fssmg"
-                                    {{ old('series_machine', $report->series_machine) == 'export' ? 'selected' : '' }}>
-                                    TFN DU-11892 (Export)
-                                </option>
-                                <option value="import" data-site="fssby fsjkt fssmg"
-                                    {{ old('series_machine', $report->series_machine) == 'import' ? 'selected' : '' }}>
-                                    TFN DU-11891
-                                </option>
-                                <option value="report_machine" data-site="report"
-                                    {{ old('series_machine', $report->series_machine) == 'report_machine' ? 'selected' : '' }}>
-                                    IS1020
-                                </option>
+                                <option value="" disabled>-- Pilih Site --</option>
+                                @foreach ($sites as $site)
+                                    <option value="{{ $site->slug }}"
+                                        {{ old('site_machine', $report->site_machine) == $site->slug ? 'selected' : '' }}>
+                                        {{ $site->machine_name }}
+                                    </option>
+                                @endforeach
                             </select>
                         </div>
 
@@ -92,10 +60,26 @@
                                 Failure Date
                             </label>
                             <input type="date" name="failure_date"
-                                value="{{ old('failure_date', $report->failure_date) }}"
+                                value="{{ old('failure_date', $report->failure_date ? \Carbon\Carbon::parse($report->failure_date)->format('Y-m-d') : '') }}"
                                 class="w-full px-4 py-2 border rounded-lg" required>
                         </div>
                     </div>
+
+                    {{-- Ekstraksi data note jika kolom input aslinya digabung pada DB --}}
+                    @php
+                        $subsystem = $report->failed_subsystem;
+                        $phenomenon = $report->failure_phenomenon;
+
+                        if (empty($subsystem) && !empty($report->failure_note)) {
+                            preg_match(
+                                '/Failed Sub-System:\n(.*?)\n\nFailure Phenomenon:\n(.*)/s',
+                                $report->failure_note,
+                                $matches,
+                            );
+                            $subsystem = $matches[1] ?? '';
+                            $phenomenon = $matches[2] ?? $report->failure_note;
+                        }
+                    @endphp
 
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 
@@ -104,7 +88,7 @@
                             <label class="block mb-1 text-sm font-semibold text-gray-700">
                                 Failed Sub-System
                             </label>
-                            <textarea name="failed_subsystem" rows="3" class="w-full px-4 py-2 border rounded-lg">{{ old('failed_subsystem', $report->failed_subsystem) }}</textarea>
+                            <textarea name="failed_subsystem" rows="3" class="w-full px-4 py-2 border rounded-lg">{{ old('failed_subsystem', $subsystem) }}</textarea>
                         </div>
 
                         {{-- FAILURE PHENOMENON --}}
@@ -112,7 +96,7 @@
                             <label class="block mb-1 text-sm font-semibold text-gray-700">
                                 Failure Phenomenon
                             </label>
-                            <textarea name="failure_phenomenon" rows="3" class="w-full px-4 py-2 border rounded-lg">{{ old('failure_phenomenon', $report->failure_phenomenon) }}</textarea>
+                            <textarea name="failure_phenomenon" rows="3" class="w-full px-4 py-2 border rounded-lg">{{ old('failure_phenomenon', $phenomenon) }}</textarea>
                         </div>
 
                     </div>
@@ -128,25 +112,27 @@
                     {{-- IMAGE --}}
                     <div>
                         <label class="block mb-1 text-sm font-semibold text-gray-700">
-                            Image
+                            Image Eviden
                         </label>
 
                         @if ($report->image)
                             <img src="{{ asset('storage/' . $report->image) }}"
-                                class="object-cover w-32 h-32 mb-3 border rounded-xl">
+                                class="object-cover w-32 h-32 mb-3 border shadow-sm rounded-xl">
                         @endif
 
-                        <input type="file" name="image" class="block w-full text-sm text-gray-600">
+                        <input type="file" name="image"
+                            class="block w-full text-sm text-gray-500 text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gray-100 hover:file:bg-gray-200">
                     </div>
 
                     {{-- ACTION --}}
                     <div class="flex justify-end gap-4 p-6 border-t">
                         <a href="{{ route('report.index') }}"
-                            class="px-5 py-2 text-sm font-semibold bg-gray-200 rounded-lg">
+                            class="px-5 py-2 text-sm font-semibold text-gray-700 transition bg-gray-200 rounded-lg hover:bg-gray-300">
                             Back
                         </a>
-                        <button type="submit" class="px-6 py-2 text-sm font-semibold text-white bg-green-600 rounded-lg">
-                            Update
+                        <button type="submit"
+                            class="px-6 py-2 text-sm font-semibold text-white transition bg-green-600 rounded-lg hover:bg-green-700">
+                            Update Report
                         </button>
                     </div>
 

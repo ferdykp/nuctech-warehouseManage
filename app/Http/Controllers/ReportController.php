@@ -3,24 +3,42 @@
 namespace App\Http\Controllers;
 
 use App\Models\Report;
+use App\Models\SparepartStock; // Tambahkan ini
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Exports\GlobalSparepartExport;
 use Maatwebsite\Excel\Facades\Excel;
-
+use App\Models\Site;
 
 class ReportController extends Controller
 {
+    // Mengambil data report beserta antrean kegagalan (Failure Queue)
     public function index()
     {
         $report = Report::paginate(10);
-        return view('report.index', compact('report'));
+
+        // Ambil sparepart berstatus 'damage' yang qty-nya > 0 untuk antrean
+        $failureQueue = SparepartStock::where('condition', 'damaged')
+            ->where('qty', '>', 0)
+            ->with(['sparepart', 'site']) // Pastikan relasi ini ada di model SparepartStock
+            ->get();
+
+        return view('report.index', compact('report', 'failureQueue'));
     }
 
-    public function create()
+    // Menerima parameter opsional stock_id jika diakses dari tombol "Proses Report"
+    public function create(Request $request)
     {
-        return view('report.create');
+        $selectedStock = null;
+        if ($request->has('stock_id')) {
+            $selectedStock = SparepartStock::with('sparepart', 'site')->find($request->stock_id);
+        }
+
+        // Ambil semua data site untuk dropdown
+        $sites = Site::all();
+
+        return view('report.create', compact('selectedStock', 'sites'));
     }
 
     public function store(Request $request)
@@ -29,20 +47,19 @@ class ReportController extends Controller
             return redirect()->route('ebeam.index')
                 ->with('error', 'Tidak memiliki akses');
         }
+
         $request->validate([
             'attendant' => 'string|required',
             'site_machine' => 'string|required',
-            'series_machine' => 'string|required',
+            // 'series_machine' => 'string|required',
             'failure_date' => 'required',
-            // 'failure_note' => 'required',
             'ts_procedure' => 'required',
             'image'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-
             'failed_subsystem'     => 'required|string',
             'failure_phenomenon'  => 'required|string',
+            'stock_id'            => 'nullable|exists:sparepart_stocks,id', // Validasi jika dari antrean
         ]);
 
-        // 🔗 Gabungkan failure note
         $failureNote =
             "Failed Sub-System:\n" . $request->failed_subsystem .
             "\n\nFailure Phenomenon:\n" . $request->failure_phenomenon;
@@ -51,19 +68,36 @@ class ReportController extends Controller
             ? $request->file('image')->store('report', 'public')
             : null;
 
-        Report::create([
-            'attendant' => $request->attendant,
-            'site_machine' => $request->site_machine,
-            'series_machine' => $request->series_machine,
-            'failure_date' => $request->failure_date,
-            // 'failure_note' => $request->failure_note,
-            'failure_note' => $failureNote,
-            'ts_procedure' => $request->ts_procedure,
-            'image'     => $imagePath,
-        ]);
+        // Gunakan DB Transaction agar proses potong stok aman jika terjadi error
+        return \DB::transaction(function () use ($request, $failureNote, $imagePath) {
 
-        return redirect()->route('report.index')->with('success', 'Added');
+            Report::create([
+                'attendant' => $request->attendant,
+                'site_machine' => $request->site_machine,
+                // 'series_machine' => $request->series_machine,
+                'failure_date' => $request->failure_date,
+                'failure_note' => $failureNote,
+                'ts_procedure' => $request->ts_procedure,
+                'image'     => $imagePath,
+            ]);
+
+            // TIPS KONSISTENSI DATA: Jika report ini dipicu dari antrean damage,
+            // kurangi atau hapus stok damage tersebut agar hilang dari antrean
+            if ($request->filled('stock_id')) {
+                $stock = SparepartStock::find($request->stock_id);
+                if ($stock && $stock->condition === 'damaged') {
+                    if ($stock->qty <= 1) {
+                        $stock->delete(); // Jika cuma 1, hapus row stok damage tersebut
+                    } else {
+                        $stock->decrement('qty', 1); // Jika lebih dari 1, kurangi 1 per report
+                    }
+                }
+            }
+
+            return redirect()->route('report.index')->with('success', 'Report Berhasil Dibuat & Antrean Diperbarui');
+        });
     }
+
 
     public function edit(string $id)
     {
@@ -73,7 +107,11 @@ class ReportController extends Controller
         }
 
         $report = Report::findOrFail($id);
-        return view('report.edit', compact('report'));
+
+        // Ambil semua data site untuk dropdown
+        $sites = Site::all();
+
+        return view('report.edit', compact('report', 'sites'));
     }
 
     public function update(Request $request, string $id)
@@ -86,7 +124,7 @@ class ReportController extends Controller
         $request->validate([
             'attendant' => 'string|required',
             'site_machine' => 'string|required',
-            'series_machine' => 'string|required',
+            // 'series_machine' => 'string|required',
             'failure_date' => 'required',
             // 'failure_note' => 'required',
             'ts_procedure' => 'required',
@@ -105,7 +143,7 @@ class ReportController extends Controller
         $data = [
             'attendant' => $request->attendant,
             'site_machine' => $request->site_machine,
-            'series_machine' => $request->series_machine,
+            // 'series_machine' => $request->series_machine,
             'failure_date' => $request->failure_date,
             // 'failure_note' => $request->failure_note,
             'failure_note' => $failureNote,
