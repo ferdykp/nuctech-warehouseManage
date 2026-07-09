@@ -410,487 +410,175 @@
 @endsection
 
 @push('scripts')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
-        // Set Worker PDF.js agar proses rendering berjalan lancar di browser
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-        let signaturePad = null;
-        let loadedSignatureBase64 = null;
-        let activeStampsArray = [];
-
-        // Ambil data Base64 aman dari PHP Controller (Bypass CORS Jaringan)
-        const pdfBase64Data = {!! json_encode($pdfBase64) !!};
-        const isPdf =
-            {{ isset($reimbursement->receipt_attachment) && pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf' ? 'true' : 'false' }};
-
-        document.addEventListener("DOMContentLoaded", function() {
-            // 1. Inisialisasi Signature Pad untuk menggambar
-            const canvas = document.getElementById('signature-canvas');
-            if (canvas) {
-                const ratio = Math.max(window.devicePixelRatio || 1, 1);
-                canvas.width = canvas.offsetWidth * ratio;
-                canvas.height = canvas.offsetHeight * ratio;
-                canvas.getContext("2d").scale(ratio, ratio);
-
-                signaturePad = new SignaturePad(canvas, {
-                    minWidth: 1.5,
-                    maxWidth: 3.5,
-                    penColor: "rgb(30, 41, 59)"
-                });
-            }
-
-            // 2. Render PDF menggunakan Data Base64 jika ekstensinya PDF
-            if (isPdf) {
-                renderPdfWithPdfJs(); // Dipanggil tanpa parameter URL karena menggunakan memori Base64
-            } else {
-                setTimeout(syncLayerHeight, 800);
-            }
-        });
-
-        // ---------- FUNGSI RENDERING DOKUMEN PDF VIA MEMORI BASE64 ----------
-        function renderPdfWithPdfJs() {
-            if (!pdfBase64Data) {
-                console.error("Data PDF Base64 tidak ditemukan atau kosong dari server.");
-                const indicator = document.getElementById('pdf-loading-indicator');
-                if (indicator) indicator.innerText = "❌ Berkas PDF tidak ditemukan atau gagal dibaca oleh server.";
-                return;
-            }
-
-            try {
-                // Mengonversi string Base64 kembali menjadi data biner Uint8Array yang dipahami oleh PDF.js
-                const pdfData = atob(pdfBase64Data);
-                const uint8Array = new Uint8Array(pdfData.length);
-                for (let i = 0; i < pdfData.length; i++) {
-                    uint8Array[i] = pdfData.charCodeAt(i);
-                }
-
-                // Membuka PDF langsung dari data memori (Bypass total koneksi HTTP/CORS!)
-                const loadingTask = pdfjsLib.getDocument({
-                    data: uint8Array
-                });
-
-                loadingTask.promise.then(function(pdf) {
-                    // Hapus teks loading indicator
-                    document.getElementById('pdf-loading-indicator')?.remove();
-                    const container = document.getElementById('invoice-target-img');
-
-                    // Render semua halaman secara sekuensial
-                    let renderPromises = [];
-                    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                        renderPromises.push(renderSinglePage(pdf, pageNum, container));
-                    }
-
-                    // Setelah semua halaman selesai dirender, selaraskan tinggi workspace layer
-                    Promise.all(renderPromises).then(() => {
-                        setTimeout(syncLayerHeight, 600);
-                    });
-                }).catch(err => {
-                    console.error("PDF.js Error saat render: ", err);
-                    const indicator = document.getElementById('pdf-loading-indicator');
-                    if (indicator) indicator.innerText = "❌ Gagal memproses struktur dokumen PDF.";
-                });
-            } catch (e) {
-                console.error("Gagal melakukan dekode Base64: ", e);
-                const indicator = document.getElementById('pdf-loading-indicator');
-                if (indicator) indicator.innerText = "❌ Format berkas PDF rusak atau tidak valid.";
-            }
-        }
-
-        function renderSinglePage(pdf, pageNum, container) {
-            return pdf.getPage(pageNum).then(function(page) {
-                // Buat wrapper div khusus untuk memisahkan batasan visual tiap halaman PDF
-                const pageWrapper = document.createElement('div');
-                pageWrapper.className =
-                    'pdf-page-wrapper relative bg-white shadow-lg rounded-xl overflow-hidden w-full max-w-full';
-                pageWrapper.dataset.pageNum = pageNum;
-
-                const canvas = document.createElement('canvas');
-                canvas.className = 'block w-full h-auto';
-                pageWrapper.appendChild(canvas);
-                container.appendChild(pageWrapper);
-
-                // Hitung skala berdasarkan lebar workspace container saat ini
-                const containerWidth = container.clientWidth || 650;
-                const unscaledViewport = page.getViewport({
-                    scale: 1
-                });
-                const scale = containerWidth / unscaledViewport.width;
-                const viewport = page.getViewport({
-                    scale: scale
-                });
-
-                const context = canvas.getContext('2d');
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-
-                const renderContext = {
-                    canvasContext: context,
-                    viewport: viewport
-                };
-
-                return page.render(renderContext).promise;
-            });
-        }
-
-        // ---------- PENYELARASAN TINGGI LAYER CANVAS ----------
-        function syncLayerHeight() {
-            const workspace = document.getElementById('workspace-area');
-            const layer = document.getElementById('stamps-rendering-layer');
-            if (workspace && layer) {
-                layer.style.height = workspace.scrollHeight + 'px';
-                layer.style.width = workspace.scrollWidth + 'px';
-            }
-        }
-
-        function clearSignature() {
-            if (signaturePad) signaturePad.clear();
-        }
-
-        // ---------- TAB SWITCH INTERFACE ----------
-        function switchSignatureTab(type) {
-            const btnDraw = document.getElementById('btn-tab-draw');
-            const btnUpload = document.getElementById('btn-tab-upload');
-            const panelDraw = document.getElementById('panel-signature-draw');
-            const panelUpload = document.getElementById('panel-signature-upload');
-            if (!btnDraw || !btnUpload) return;
-
-            if (type === 'draw') {
-                btnDraw.className =
-                    "flex-1 py-2 font-black text-[10px] uppercase rounded-lg transition-all bg-white text-slate-800 shadow-sm";
-                btnUpload.className =
-                    "flex-1 py-2 font-black text-[10px] uppercase rounded-lg transition-all text-slate-500 hover:text-slate-700";
-                panelDraw.classList.remove('hidden');
-                panelUpload.classList.add('hidden');
-            } else {
-                btnUpload.className =
-                    "flex-1 py-2 font-black text-[10px] uppercase rounded-lg transition-all bg-white text-slate-800 shadow-sm";
-                btnDraw.className =
-                    "flex-1 py-2 font-black text-[10px] uppercase rounded-lg transition-all text-slate-500 hover:text-slate-700";
-                panelUpload.classList.remove('hidden');
-                panelDraw.classList.add('hidden');
-            }
-        }
-
-        function handleSignatureDrop(event) {
-            event.preventDefault();
-            if (event.dataTransfer.files.length > 0) processFile(event.dataTransfer.files[0]);
-        }
-
-        // Trigger input file select
-        function handleSignatureFileSelect(event) {
-            if (event.target.files.length > 0) processFile(event.target.files[0]);
-        }
-
-        function processFile(file) {
-            if (!file.type.match('image.*')) {
-                alert("Format berkas harus berupa gambar valid (PNG/JPG)!");
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                loadedSignatureBase64 = e.target.result;
-                document.getElementById(`dropzone-text`).innerText = "✅ Berhasil Dimuat: " + file.name;
-                document.getElementById(`dropzone`).classList.add('border-emerald-500', 'bg-emerald-50/50');
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function applySignatureToPreview() {
-            let base64Image = null;
-            const drawPanel = document.getElementById('panel-signature-draw');
-            const isDrawPanel = drawPanel ? !drawPanel.classList.contains('hidden') : true;
-
-            if (isDrawPanel) {
-                if (signaturePad && !signaturePad.isEmpty()) {
-                    base64Image = signaturePad.toDataURL("image/png");
-                }
-            } else {
-                if (loadedSignatureBase64) base64Image = loadedSignatureBase64;
-            }
-
-            if (!base64Image) {
-                alert("⚠️ Silakan buat goresan TTD atau unggah file gambar terlebih dahulu!");
-                return;
-            }
-
-            const name = (document.getElementById('signer-name')?.value || '').trim();
-            const dateVal = document.getElementById('signer-date')?.value || '';
-
-            if (!name) {
-                alert("⚠️ Kolom nama penanda tangan wajib diisi!");
-                return;
-            }
-
-            generateStampMarkup(base64Image, name, dateVal);
-        }
-
-        function duplicateLastStamp() {
-            if (activeStampsArray.length === 0) {
-                alert("⚠️ Belum ada objek TTD terpasang untuk diduplikasi.");
-                return;
-            }
-            const lastStamp = activeStampsArray[activeStampsArray.length - 1];
-            const lastEl = lastStamp.stampEl;
-
-            generateStampMarkup(lastStamp.imgData, lastStamp.signerName, lastStamp.signerDate, {
-                left: lastEl.offsetLeft + 25,
-                top: lastEl.offsetTop + 25,
-                w: lastEl.offsetWidth,
-                h: lastEl.offsetHeight
-            });
-        }
-
-        function generateStampMarkup(imgData, signerName, signerDate, opts) {
-            const layer = document.getElementById('stamps-rendering-layer');
-            if (!layer) return;
-
-            const leftPos = opts?.left ?? 30;
-            const topPos = opts?.top ?? 30;
-            const widthSize = opts?.w ?? 140;
-            const heightSize = opts?.h ?? 85;
-
-            let formattedDate = signerDate;
-            if (signerDate) {
-                const d = new Date(signerDate);
-                formattedDate = d.toLocaleDateString('id-ID', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                });
-            }
-
-            const stampEl = document.createElement('div');
-            stampEl.className = 'absolute cursor-move select-none';
-            stampEl.style.cssText =
-                `left: ${leftPos}px; top: ${topPos}px; width: ${widthSize}px; height: ${heightSize}px; pointer-events: all; z-index: 50;`;
-
-            stampEl.innerHTML = `
-                <div class="relative w-full h-full border-2 border-dashed rounded-lg shadow-xl border-amber-500 bg-white/80 backdrop-blur-sm" style="padding: 3px;">
-                    <img src="${imgData}" class="block w-full pointer-events-none" style="height: calc(100% - 30px); object-fit: contain;" />
-                    <div class="absolute bottom-0 left-0 right-0 leading-tight text-center border-t bg-white/95 border-slate-100 rounded-b-md" style="padding: 2px 4px;">
-                        <div class="font-black text-slate-800" style="font-size: 9px;">${signerName}</div>
-                        <div class="font-bold text-slate-400" style="font-size: 8px;">${formattedDate}</div>
-                    </div>
-                    <span class="absolute -top-4 left-0 bg-amber-500 text-white font-black rounded px-1.5 uppercase text-[7px] tracking-wider pointer-events-none shadow-sm">
-                        Drag · ${signerName}
-                    </span>
-                    <button type="button" class="stamp-delete-btn flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white border-none rounded-full absolute -top-3.5 -right-1.5 transition-colors" style="width: 16px; height: 16px; font-size: 8px; font-weight: 900; line-height: 1;" onclick="removeTargetStamp(this)">✕</button>
-                    <div class="absolute bg-blue-500 border-2 border-white rounded shadow-sm stamp-resize-handle bottom-1 right-1 cursor-se-resize" style="width: 12px; height: 12px; z-index: 60;"></div>
-                </div>
-            `;
-
-            layer.appendChild(stampEl);
-            syncLayerHeight();
-
-            activeStampsArray.push({
-                stampEl,
-                imgData,
-                signerName,
-                signerDate
-            });
-
-            const infoText = document.getElementById('stamp-count-info');
-            if (infoText) infoText.textContent = `${activeStampsArray.length} signature(s) placed on document`;
-
-            bindDragEvents(stampEl);
-            bindResizeEvents(stampEl);
-        }
-
-        function removeTargetStamp(btn) {
-            const stampWrapper = btn.closest('.absolute.cursor-move');
-            if (!stampWrapper) return;
-            activeStampsArray = activeStampsArray.filter(item => item.stampEl !== stampWrapper);
-            const infoText = document.getElementById('stamp-count-info');
-            if (infoText) infoText.textContent = `${activeStampsArray.length} signature(s) placed on document`;
-            stampWrapper.remove();
-        }
-
-        function bindDragEvents(el) {
-            const workspace = document.getElementById('workspace-area');
-            let dragging = false,
-                sX, sY, iL, iT;
-
-            el.addEventListener('mousedown', startDrag);
-            el.addEventListener('touchstart', startDrag, {
-                passive: true
-            });
-
-            function startDrag(e) {
-                if (e.target.classList.contains('stamp-resize-handle') || e.target.classList.contains('stamp-delete-btn'))
-                    return;
-                dragging = true;
-                sX = e.clientX ?? e.touches[0].clientX;
-                sY = e.clientY ?? e.touches[0].clientY;
-                iL = el.offsetLeft;
-                iT = el.offsetTop;
-
-                document.addEventListener('mousemove', processDrag);
-                document.addEventListener('mouseup', stopDrag);
-                document.addEventListener('touchmove', processDrag, {
-                    passive: false
-                });
-                document.addEventListener('touchend', stopDrag);
-            }
-
-            function processDrag(e) {
-                if (!dragging) return;
-                if (e.cancelable) e.preventDefault();
-                const cX = e.clientX ?? e.touches[0].clientX;
-                const cY = e.clientY ?? e.touches[0].clientY;
-
-                let nL = iL + (cX - sX);
-                let nT = iT + (cY - sY);
-
-                const maxL = workspace.scrollWidth - el.offsetWidth;
-                const maxT = workspace.scrollHeight - el.offsetHeight;
-
-                nL = Math.max(0, Math.min(nL, maxL));
-                nT = Math.max(0, Math.min(nT, maxT));
-
-                el.style.left = nL + 'px';
-                el.style.top = nT + 'px';
-            }
-
-            function stopDrag() {
-                dragging = false;
-                document.removeEventListener('mousemove', processDrag);
-                document.removeEventListener('mouseup', stopDrag);
-                document.removeEventListener('touchmove', processDrag);
-                document.removeEventListener('touchend', stopDrag);
-            }
-        }
-
-        function bindResizeEvents(el) {
-            const handle = el.querySelector('.stamp-resize-handle');
-            if (!handle) return;
-            let resizing = false,
-                sX, sY, sW, sH;
-
-            handle.addEventListener('mousedown', startResize);
-            handle.addEventListener('touchstart', startResize, {
-                passive: true
-            });
-
-            function startResize(e) {
-                e.stopPropagation();
-                resizing = true;
-                sX = e.clientX ?? e.touches[0].clientX;
-                sY = e.clientY ?? e.touches[0].clientY;
-                sW = el.offsetWidth;
-                sH = el.offsetHeight;
-
-                document.addEventListener('mousemove', processResize);
-                document.addEventListener('mouseup', stopResize);
-                document.addEventListener('touchmove', processResize, {
-                    passive: false
-                });
-                document.addEventListener('touchend', stopResize);
-            }
-
-            function processResize(e) {
-                if (!resizing) return;
-                if (e.cancelable) e.preventDefault();
-                const cX = e.clientX ?? e.touches[0].clientX;
-                const cY = e.clientY ?? e.touches[0].clientY;
-
-                el.style.width = Math.max(80, sW + (cX - sX)) + 'px';
-                el.style.height = Math.max(60, sH + (cY - sY)) + 'px';
-            }
-
-            function stopResize() {
-                resizing = false;
-                document.removeEventListener('mousemove', processResize);
-                document.removeEventListener('mouseup', stopResize);
-                document.removeEventListener('touchmove', processResize);
-                document.removeEventListener('touchend', stopResize);
-            }
-        }
-
-        // ---------- DETEKSI HALAMAN INTERAKTIF SAAT SIMPAN ----------
-        function prepareFinalApproval(event) {
-            event.preventDefault();
-            if (activeStampsArray.length === 0) {
-                alert("⚠️ Pasang minimal satu cap tanda tangan di atas area invoice sebelum melakukan konfirmasi!");
-                return false;
-            }
-
-            const signaturesMap = activeStampsArray.map(({
-                stampEl,
-                imgData,
-                signerName,
-                signerDate
-            }) => {
-                const stampRect = stampEl.getBoundingClientRect();
-
-                let detectedPageNum = 1;
-                let finalRelLeft = 0;
-                let finalRelTop = 0;
-                let baseWidth = 100;
-                let baseHeight = 100;
-
-                if (isPdf) {
-                    const pageElements = document.querySelectorAll('.pdf-page-wrapper');
-                    let matched = false;
-                    const stampCenterY = stampRect.top + (stampRect.height / 2);
-
-                    for (let i = 0; i < pageElements.length; i++) {
-                        const pRect = pageElements[i].getBoundingClientRect();
-
-                        if (stampCenterY >= pRect.top && stampCenterY <= pRect.bottom) {
-                            detectedPageNum = parseInt(pageElements[i].dataset.pageNum);
-                            finalRelLeft = stampRect.left - pRect.left;
-                            finalRelTop = stampRect.top - pRect.top;
-                            baseWidth = pRect.width;
-                            baseHeight = pRect.height;
-                            matched = true;
-                            break;
-                        }
-                    }
-
-                    if (!matched && pageElements.length > 0) {
-                        const pRect = pageElements[0].getBoundingClientRect();
-                        finalRelLeft = stampRect.left - pRect.left;
-                        finalRelTop = stampRect.top - pRect.top;
-                        baseWidth = pRect.width;
-                        baseHeight = pRect.height;
-                    }
+        // ---------- FILTER LIVE PENCARIAN & DROP-DOWN BULAN KLIEN ----------
+        function filterReimburseList() {
+            const filterText = document.getElementById('reimburseSearchInput').value.toLowerCase();
+            const urlParams = new URLSearchParams(window.location.search);
+            const selectedMonth = urlParams.get('month');
+
+            // 1. Desktop Row Filter
+            const rows = document.querySelectorAll('.reimburse-row-item');
+            let hasDesktopResults = false;
+            rows.forEach(row => {
+                const staff = row.getAttribute('data-search-staff') || '';
+                const title = row.getAttribute('data-search-title') || '';
+                const rowMonth = row.getAttribute('data-month') || '';
+
+                const matchesText = staff.includes(filterText) || title.includes(filterText);
+                const matchesMonth = !selectedMonth || rowMonth === selectedMonth;
+
+                if (matchesText && matchesMonth) {
+                    row.style.display = "";
+                    hasDesktopResults = true;
                 } else {
-                    const imgTarget = document.querySelector('#invoice-target-img img');
-                    if (imgTarget) {
-                        const imgRect = imgTarget.getBoundingClientRect();
-                        finalRelLeft = stampRect.left - imgRect.left;
-                        finalRelTop = stampRect.top - imgRect.top;
-                        baseWidth = imgRect.width;
-                        baseHeight = imgRect.height;
-                    }
+                    row.style.display = "none";
                 }
-
-                return {
-                    image: imgData,
-                    page: detectedPageNum,
-                    pos_x: (finalRelLeft / baseWidth) * 100,
-                    pos_y: (finalRelTop / baseHeight) * 100,
-                    scale_w: (stampRect.width / baseWidth) * 100,
-                    scale_h: (stampRect.height / baseHeight) * 100,
-                    signer_name: signerName,
-                    signer_date: signerDate
-                };
             });
 
-            // Packing data ke input fields formulir Laravel
-            document.getElementById('signatures-json-input').value = JSON.stringify(signaturesMap);
-            document.getElementById('signature-input').value = signaturesMap[0].image;
-            document.getElementById('pos-x-input').value = signaturesMap[0].pos_x;
-            document.getElementById('pos-y-input').value = signaturesMap[0].pos_y;
-            document.getElementById('scale-w-input').value = signaturesMap[0].scale_w;
-            document.getElementById('scale-h-input').value = signaturesMap[0].scale_h;
+            // 2. Mobile Card Filter
+            const cards = document.querySelectorAll('.reimburse-card-item');
+            let hasMobileResults = false;
+            cards.forEach(card => {
+                const textContent = card.innerText.toLowerCase();
+                const cardMonth = card.getAttribute('data-month') || '';
 
-            if (document.getElementById('page-input')) {
-                document.getElementById('page-input').value = signaturesMap[0].page;
+                const matchesText = textContent.includes(filterText);
+                const matchesMonth = !selectedMonth || cardMonth === selectedMonth;
+
+                if (matchesText && matchesMonth) {
+                    card.style.display = "";
+                    hasMobileResults = true;
+                } else {
+                    card.style.display = "none";
+                }
+            });
+
+            const emptyState = document.getElementById('emptySearchState');
+            if (emptyState) {
+                const isMobile = window.innerWidth < 768;
+                const noResults = isMobile ? !hasMobileResults : !hasDesktopResults;
+                emptyState.classList.toggle('hidden', !noResults);
+                emptyState.classList.toggle('flex', noResults);
+            }
+        }
+
+        // ---------- LOGIKA EXPORT EXCEL ----------
+        function exportExcelReport() {
+            const url = new URL('{{ route('reimbursements.export_excel') }}');
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentMonth = urlParams.get('month');
+
+            if (currentMonth) {
+                url.searchParams.set('month', currentMonth);
             }
 
-            document.getElementById('approve-form').submit();
+            window.location.href = url.href;
+        }
+
+        // ---------- LOGIKA MODAL QUICK PREVIEW DATA ----------
+        function openDetailModal(buttonElement) {
+            const data = JSON.parse(buttonElement.getAttribute('data-reimbursement'));
+
+            document.getElementById('modal-name').innerText = data.person_name;
+            document.getElementById('modal-category').innerText = data.category;
+            document.getElementById('modal-comment').innerText = data.comment ? `"${data.comment}"` :
+                "No description provided.";
+
+            const dateObj = new Date(data.date);
+            document.getElementById('modal-date').innerText = dateObj.toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+
+            document.getElementById('modal-amount').innerText = new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(data.amount);
+
+            if (data.category === 'transportation' || data.category === 'delivery') {
+                document.getElementById('modal-route').innerHTML =
+                    `<i class="mr-1 fa-solid fa-map-pin text-rose-500"></i> ${data.from_location} <i class="mx-1 fa-solid fa-arrow-right text-slate-300"></i> ${data.to_location}`;
+            } else {
+                document.getElementById('modal-route').innerText = "Routing Exempted";
+            }
+
+            let signatures = [];
+            if (data.signatures_json) {
+                try {
+                    signatures = typeof data.signatures_json === 'string' ? JSON.parse(data.signatures_json) : data
+                        .signatures_json;
+                } catch (e) {
+                    signatures = [];
+                }
+            }
+
+            function renderSignBadge(elementId, isSigned, fallbackText = "Belum Ditandatangani") {
+                const el = document.getElementById(elementId);
+                if (isSigned) {
+                    el.innerText = "✓ Sudah Ditandatangani";
+                    el.className =
+                        "px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200";
+                } else {
+                    el.innerText = fallbackText;
+                    el.className =
+                        "px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-50 text-slate-400 border border-slate-200 italic";
+                }
+            }
+
+            const hasStaff = signatures.some(s => s.role === 'admin_site' || s.level === 'admin_site') || !!data
+                .person_name;
+            const hasLeader = signatures.some(s => s.role === 'leader' || s.level === 'leader') || (data.status !==
+                'pending' && data.status !== 'pending_leader');
+            const hasStation = signatures.some(s => s.role === 'station_master' || s.role === 'station') || (data.status ===
+                'approved' || data.status === 'pending_manager');
+            const hasManager = signatures.some(s => s.role === 'manager') || data.status === 'approved';
+
+            renderSignBadge('sign-status-staff', hasStaff, "Belum TTD");
+            renderSignBadge('sign-status-leader', hasLeader, "Belum Direview / TTD");
+            renderSignBadge('sign-status-station', hasStation, "Belum Disetujui");
+            renderSignBadge('sign-status-manager', hasManager, "Belum Dicairkan");
+
+            if (data.status === 'rejected') {
+                if (!hasLeader) renderSignBadge('sign-status-leader', false, "✖ Ditolak / Cancelled");
+                else if (!hasStation) renderSignBadge('sign-status-station', false, "✖ Ditolak di Station Master");
+                else if (!hasManager) renderSignBadge('sign-status-manager', false, "✖ Ditolak oleh Manager");
+            }
+
+            const frame = document.getElementById('modal-attachment-frame');
+            frame.innerHTML = '';
+
+            if (data.receipt_attachment) {
+                const fileExt = data.receipt_attachment.split('.').pop().toLowerCase();
+                const fullUrl = `/storage/${data.receipt_attachment}`;
+
+                if (fileExt === 'pdf') {
+                    frame.innerHTML =
+                        `<object data="${fullUrl}#toolbar=0" type="application/pdf" class="block w-full h-full"></object>`;
+                } else {
+                    frame.innerHTML =
+                        `<div class="flex items-center justify-center w-full h-full p-2 bg-slate-50"><img src="${fullUrl}" class="object-contain max-w-full max-h-full rounded-lg" /></div>`;
+                }
+            } else {
+                frame.innerHTML =
+                    `<div class="flex items-center justify-center w-full h-full text-xs italic text-slate-400">No receipt document proof attached.</div>`;
+            }
+
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        function confirmCancel(id) {
+            const modal = document.getElementById('cancelModal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            const form = modal.querySelector('form');
+            if (form) form.action = `/reimbursements/${id}`;
         }
     </script>
 @endpush
