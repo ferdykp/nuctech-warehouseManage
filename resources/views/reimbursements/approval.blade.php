@@ -372,7 +372,11 @@
 
         // Ambil info file dari backend Laravel
         const pdfUrl = "{{ asset('storage/' . $reimbursement->receipt_attachment) }}";
+        // const isPdf = {{ pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf' ? 'true' : 'false' }};
+
         const isPdf = {{ pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf' ? 'true' : 'false' }};
+
+        const pdfBase64 = @json($pdfBase64);
 
         document.addEventListener("DOMContentLoaded", function() {
             // 1. Inisialisasi Signature Pad untuk menggambar
