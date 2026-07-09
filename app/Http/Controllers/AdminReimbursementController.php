@@ -28,6 +28,7 @@ class AdminReimbursementController extends Controller
         $pageTitle = 'Reimbursement Claims';
 
         $query = Reimbursement::with('user');
+        $pdfBase64 = null;
 
         // Hak akses monitoring berkas diperluas untuk management & approval track
         if (in_array($role, ['superadmin', 'manager', 'station_master', 'team_leader'])) {
@@ -69,7 +70,7 @@ class AdminReimbursementController extends Controller
         // Ambil data terbaru dan tambahkan appends query string agar navigasi halaman pagination tidak mereset filter bulan
         $reimbursements = $query->latest()->paginate(10)->withQueryString();
 
-        return view('reimbursements.index', compact('reimbursements', 'pageTitle', 'totalApprovedAmount'));
+        return view('reimbursements.index', compact('reimbursements', 'pageTitle', 'totalApprovedAmount', 'pdfBase64'));
     }
 
     public function create()
