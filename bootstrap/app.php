@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'role'    => \App\Http\Middleware\RoleMiddleware::class,
             'nocache' => \App\Http\Middleware\NoCache::class,
         ]);
+        $middleware->trustProxies(
+            at: '*'
+        );
 
         $middleware->redirectGuestsTo(fn() => route('login'));
     })
