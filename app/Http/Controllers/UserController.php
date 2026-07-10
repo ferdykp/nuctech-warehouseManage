@@ -10,13 +10,21 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-
-
     public function index()
     {
         // Hanya superadmin yang boleh melihat daftar semua user
+        // if (auth()->user()->role !== 'superadmin') {
+        //     abort(403, 'Akses ditolak.');
+        // }
+
+        $users = User::with('site')->get();
+        return view('profile.profile', compact('users'));
+    }
+
+    public function profileList()
+    {
         if (auth()->user()->role !== 'superadmin') {
-            abort(403, 'Akses ditolak.');
+            abort(403, 'Youre not Admin');
         }
 
         $users = User::with('site')->get();
@@ -73,31 +81,43 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         if (auth()->user()->role !== 'superadmin' && auth()->id() !== $user->id) {
-            abort(403);
+            abort(403, 'Anda tidak memiliki akses untuk mengedit profil orang lain.');
         }
-
         $sites = Site::all();
         return view('profile.profileEdit', compact('user', 'sites'));
     }
 
-    public function update(Request $request, $id) // Gunakan ID agar lebih stabil
+    public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
 
-        $validatedData = $request->validate([
+        // Security check: hanya superadmin atau pemilik akun yang bisa update
+        if (auth()->user()->role !== 'superadmin' && auth()->id() !== $user->id) {
+            abort(403, 'Tindakan ilegal.');
+        }
+
+        // Aturan validasi dinamis berdasarkan role yang login
+        $rules = [
             'name'     => 'required|string|max:255',
             'username' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
             'email'    => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'role'     => 'required|in:superadmin,admin_site',
-            'site_id'  => 'required_if:role,admin_site|nullable|exists:sites,id',
             'password' => 'nullable|min:6|confirmed',
-        ]);
+        ];
 
+        // Hanya validasi input role & site jika diubah oleh Superadmin
+        if (auth()->user()->role === 'superadmin') {
+            $rules['role'] = 'required|in:superadmin,admin_site,team_leader,station_master,manager';
+            $rules['site_id'] = 'required_if:role,admin_site|nullable|exists:sites,id';
+        }
+
+        $validatedData = $request->validate($rules);
+
+        // Update data dasar
         $user->name = $validatedData['name'];
         $user->username = $validatedData['username'];
         $user->email = $validatedData['email'];
 
-        // Hanya superadmin yang bisa ubah role & site orang lain
+        // Hanya superadmin yang bisa merubah role & site
         if (auth()->user()->role === 'superadmin') {
             $user->role = $validatedData['role'];
             $user->site_id = ($validatedData['role'] === 'superadmin') ? null : $validatedData['site_id'];
@@ -109,9 +129,15 @@ class UserController extends Controller
 
         $user->save();
 
-        return redirect()->route('users.index')->with('success', 'User berhasil diperbarui');
-    }
+        // Redirect dinamis berdasarkan role
+        if (auth()->user()->role === 'superadmin') {
+            // Jika diubah oleh superadmin, arahkan kembali ke menu manajemen user terdekat
+            return redirect()->route('profile.profileList')->with('success', 'User berhasil diperbarui');
+        }
 
+        // Jika akun biasa mengedit profilnya sendiri, kembalikan ke detail profilnya sendiri
+        return redirect()->route('profile.profile', $user->id)->with('success', 'Profil Anda berhasil diperbarui');
+    }
     public function destroy($id)
     {
         if (auth()->user()->role !== 'superadmin') {

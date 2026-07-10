@@ -44,7 +44,7 @@ class ReportController extends Controller
     public function store(Request $request)
     {
         if (!Auth::check() || Auth::user()->role !== 'superadmin') {
-            return redirect()->route('ebeam.index')
+            return redirect()->route('report.index')
                 ->with('error', 'Tidak memiliki akses');
         }
 

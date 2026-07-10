@@ -51,16 +51,16 @@
                     {{-- 1. Link Profile (Bisa diakses semua role untuk melihat profil sendiri) --}}
                     <a href="{{ route('users.show', auth()->id()) }}"
                         class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                        <i class="w-4 text-blue-600 fa-solid fa-user"></i> Profile Saya
+                        <i class="w-4 text-blue-600 fa-solid fa-user"></i> My Profile
                     </a>
 
                     {{-- 2. Link Kelola User (Hanya muncul untuk Superadmin) --}}
-                    @if (auth()->user()->role === 'superadmin')
+                    {{-- @if (auth()->user()->role === 'superadmin')
                         <a href="{{ route('users.index') }}"
                             class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                             <i class="w-4 text-orange-500 fa-solid fa-users-gear"></i> Kelola Akun
                         </a>
-                    @endif
+                    @endif --}}
 
                     <div class="border-t border-gray-100"></div>
 

@@ -28,13 +28,13 @@
             <div class="flex items-center justify-between px-6 py-4 border-b">
                 <p class="font-semibold text-gray-700">Edit Profile</p>
                 @if (Auth::user()->role == 'superadmin')
-                    <a href="{{ route('users.index') }}"
+                    <a href="{{ route('profile.profileList') }}"
                         class="px-4 py-2 text-sm font-medium text-white transition bg-blue-600 rounded-lg hover:bg-blue-700">
                         Manage All Accounts
                     </a>
                 @endif
 
-                <a href="{{ route('users.edit', $user->id) }}"
+                <a href="{{ route('profile.profileEdit', ['id' => auth()->id()]) }}"
                     class="px-4 py-2 text-sm font-medium text-white transition bg-blue-600 rounded-lg hover:bg-blue-700">
                     Edit Profile
                 </a>

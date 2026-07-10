@@ -75,20 +75,26 @@
                     {{-- ROLE --}}
                     <div>
                         <label class="block mb-1 text-sm font-medium text-gray-700">User Role</label>
-                        <select name="role" x-model="role"
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none @error('role') border-red-500 @enderror">
-                            <option value="superadmin" {{ $user->role === 'superadmin' ? 'selected' : '' }}>Superadmin (Head
+                        <select name="role" x-model="role" {{ auth()->user()->role !== 'superadmin' ? 'disabled' : '' }}
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none @error('role') border-red-500 @enderror {{ auth()->user()->role !== 'superadmin' ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-dashed' : '' }}">
+                            <option value="superadmin" {{ $user->role === 'superadmin' ? 'selected' : '' }}>Superadmin
+                                (Head
                                 Office)</option>
                             <option value="admin_site" {{ $user->role === 'admin_site' ? 'selected' : '' }}>Site Admin
                                 (Branch/Location)</option>
                         </select>
+
+                        @if (auth()->user()->role !== 'superadmin')
+                            <input type="hidden" name="role" value="{{ $user->role }}">
+                        @endif
                     </div>
 
                     {{-- SITE ASSIGNMENT (Conditional) --}}
                     <div x-show="role === 'admin_site'" x-transition>
                         <label class="block mb-1 text-sm font-medium text-gray-700">Site Assignment</label>
-                        <select name="site_id"
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none @error('site_id') border-red-500 @enderror">
+                        <select name="site_id" {{-- Jika bukan superadmin, buat jadi disabled --}}
+                            {{ auth()->user()->role !== 'superadmin' ? 'disabled' : '' }}
+                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none @error('site_id') border-red-500 @enderror {{ auth()->user()->role !== 'superadmin' ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-dashed' : '' }}">
                             <option value="">-- Select Site Location --</option>
                             @foreach ($sites as $site)
                                 <option value="{{ $site->id }}" {{ $user->site_id == $site->id ? 'selected' : '' }}>
@@ -96,6 +102,11 @@
                                 </option>
                             @endforeach
                         </select>
+
+                        {{-- Trik Hidden Input untuk site_id --}}
+                        @if (auth()->user()->role !== 'superadmin')
+                            <input type="hidden" name="site_id" value="{{ $user->site_id }}">
+                        @endif
                     </div>
 
                     <div class="hidden md:block" x-show="role !== 'admin_site'"></div>
