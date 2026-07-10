@@ -242,6 +242,250 @@ class AdminReimbursementController extends Controller
     /**
      * PROSES SIMPAN TTD & TRANSISI ESTAFET STATUS BERJENJANG
      */
+    // public function approve(Request $request, $id)
+    // {
+    //     $request->validate([
+    //         'signature'       => 'required|string',
+    //         'pos_x'           => 'required|numeric',
+    //         'pos_y'           => 'required|numeric',
+    //         'scale_w'         => 'required|numeric',
+    //         'scale_h'         => 'required|numeric',
+    //         'signatures_json' => 'nullable|string',
+    //     ]);
+
+    //     $reimbursement = Reimbursement::findOrFail($id);
+    //     $user          = auth()->user();
+    //     $invoicePath   = storage_path('app/public/' . $reimbursement->receipt_attachment);
+    //     $extension     = strtolower(pathinfo($invoicePath, PATHINFO_EXTENSION));
+
+    //     // 1. Ambil input data TTD baru dari form canvas hantaran frontend
+    //     $newSignatures = [];
+    //     if ($request->filled('signatures_json')) {
+    //         $decoded = json_decode($request->signatures_json, true);
+    //         if (is_array($decoded) && count($decoded) > 0) {
+    //             $newSignatures = $decoded;
+    //         }
+    //     }
+    //     if (empty($newSignatures)) {
+    //         $newSignatures = [[
+    //             'image'       => $request->signature,
+    //             'pos_x'       => $request->pos_x,
+    //             'pos_y'       => $request->pos_y,
+    //             'scale_w'     => $request->scale_w,
+    //             'scale_h'     => $request->scale_h,
+    //             'signer_name' => $user->name ?? '',
+    //             'signer_date' => now()->format('Y-m-d'),
+    //             'page'        => isset($sig['page']) ? (int) $sig['page'] : 1, // 🟩 TAMBAHKAN BARIS INI
+    //         ]];
+    //     }
+
+    //     // 2. LOGIKA MERGE ARRAY: Gabungkan riwayat TTD lama di DB agar tidak hilang terhapus
+    //     $existingSignatures = json_decode($reimbursement->signatures_json, true) ?? [];
+    //     $combinedSignatures = array_merge($existingSignatures, $newSignatures);
+    //     $reimbursement->signatures_json = json_encode($combinedSignatures);
+
+    //     // 3. Simpan file gambar TTD baru ke storage public
+    //     // $sigPaths = [];
+    //     // foreach ($newSignatures as $idx => $sig) {
+    //     //     $sigData = $sig['image'];
+    //     //     $imgType = 'png';
+    //     //     if (preg_match('/^data:image\/(\w+);base64,/', $sigData, $m)) {
+    //     //         $imgType = strtolower($m[1]);
+    //     //         $sigData = substr($sigData, strpos($sigData, ',') + 1);
+    //     //     }
+    //     //     $sigBytes    = base64_decode($sigData);
+    //     //     $sigFileName = 'signatures/sig_' . $id . '_' . $user->id . '_' . time() . '_' . $idx . '.' . $imgType;
+    //     //     Storage::disk('public')->put($sigFileName, $sigBytes);
+
+    //     //     $sigPaths[] = [
+    //     //         'path'        => storage_path('app/public/' . $sigFileName),
+    //     //         'pos_x'       => (float) $sig['pos_x'],
+    //     //         'pos_y'       => (float) $sig['pos_y'],
+    //     //         'scale_w'     => (float) $sig['scale_w'],
+    //     //         'scale_h'     => (float) $sig['scale_h'],
+    //     //         'signer_name' => $sig['signer_name'] ?? $user->name,
+    //     //         'signer_date' => $sig['signer_date'] ?? now()->format('Y-m-d'),
+    //     //     ];
+    //     // }
+    //     // 3. Simpan file gambar TTD baru ke storage public
+    //     $sigPaths = [];
+    //     foreach ($newSignatures as $idx => $sig) {
+    //         $sigData = $sig['image'];
+
+    //         // 🟩 PAKSA FORMAT KE JPG: Demi keamanan parser gambar FPDF
+    //         $imgType = 'jpg';
+    //         if (preg_match('/^data:image\/(\w+);base64,/', $sigData, $m)) {
+    //             $sigData = substr($sigData, strpos($sigData, ',') + 1);
+    //         }
+    //         $sigBytes    = base64_decode($sigData);
+
+    //         // Nama file sekarang menggunakan ekstensi .jpg
+    //         $sigFileName = 'signatures/sig_' . $id . '_' . $user->id . '_' . time() . '_' . $idx . '.jpg';
+
+    //         // Inisialisasi Intervention Image Manager v3
+    //         $manager = new ImageManager(new Driver());
+
+    //         // a. Baca goresan tanda tangan transparan asli dari frontend
+    //         $signatureImg = $manager->read($sigBytes);
+
+    //         // b. Buat sebuah objek kanvas baru berwarna PUTIH POLOS dengan dimensi ukuran yang sama persis
+    //         $canvas = $manager->create($signatureImg->width(), $signatureImg->height())->fill('#ffffff');
+
+    //         // c. Tempatkan/tempelkan goresan tanda tangan transparan tadi tepat di atas kanvas putih polos
+    //         $canvas->place($signatureImg, 'top-left', 0, 0);
+
+    //         // d. Enkode kanvas baru tersebut menjadi format JPEG murni (Kualitas kompresi 90)
+    //         $jpegData = $canvas->toJpeg(90)->toString();
+
+    //         // Simpan gambar flat putih-hitam tersebut ke dalam storage publik
+    //         Storage::disk('public')->put($sigFileName, $jpegData);
+
+    //         $sigPaths[] = [
+    //             'path'        => storage_path('app/public/' . $sigFileName),
+    //             'pos_x'       => (float) $sig['pos_x'],
+    //             'pos_y'       => (float) $sig['pos_y'],
+    //             'scale_w'     => (float) $sig['scale_w'],
+    //             'scale_h'     => (float) $sig['scale_h'],
+    //             'signer_name' => $sig['signer_name'] ?? $user->name,
+    //             'signer_date' => $sig['signer_date'] ?? now()->format('Y-m-d'),
+    //             'page'        => isset($sig['page']) ? (int) $sig['page'] : 1,
+    //         ];
+    //     }
+
+    //     // 4. Proses penyuntikan/stamp tanda tangan fisik ke dokumen berkas asli
+    //     if ($reimbursement->receipt_attachment && file_exists($invoicePath)) {
+
+    //         if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
+    //             // ── JIKA FORMAT NOTA ADALAH GAMBAR ──
+    //             $manager = new ImageManager(new Driver());
+    //             $image   = $manager->read($invoicePath);
+
+    //             foreach ($sigPaths as $s) {
+    //                 $pixelX = (int) round(($s['pos_x'] / 100) * $image->width());
+    //                 $pixelY = (int) round(($s['pos_y'] / 100) * $image->height());
+    //                 $pixelW = (int) round(($s['scale_w'] / 100) * $image->width());
+    //                 $pixelH = (int) round(($s['scale_h'] / 100) * $image->height());
+    //                 if ($pixelW < 20) $pixelW = 100;
+    //                 if ($pixelH < 10) $pixelH = 50;
+
+    //                 $sigImg = $manager->read($s['path'])->resize($pixelW, $pixelH);
+    //                 $image->place($sigImg, 'top-left', $pixelX, $pixelY);
+
+    //                 if (!empty($s['signer_name'])) {
+    //                     $textY = $pixelY + $pixelH + 4;
+    //                     $image->text($s['signer_name'], $pixelX + ($pixelW / 2), $textY, function ($font) {
+    //                         $font->size(11);
+    //                         $font->color([30, 41, 59]);
+    //                         $font->align('center');
+    //                     });
+    //                     if (!empty($s['signer_date'])) {
+    //                         $image->text($s['signer_date'], $pixelX + ($pixelW / 2), $textY + 14, function ($font) {
+    //                             $font->size(9);
+    //                             $font->color([100, 116, 139]);
+    //                             $font->align('center');
+    //                         });
+    //                     }
+    //                 }
+    //             }
+    //             $image->save($invoicePath);
+    //         } elseif ($extension === 'pdf') {
+    //             // ── JIKA FORMAT NOTA ADALAH PDF ──
+    //             try {
+    //                 $pdf       = new Fpdi();
+
+    //                 // 🟩 FIX 1: MATIKAN AUTO PAGE BREAK AGAR TIDAK MAJU KE HALAMAN BARU SECARA PAKSA
+    //                 $pdf->SetAutoPageBreak(false);
+
+    //                 $pageCount = $pdf->setSourceFile($invoicePath);
+
+    //                 for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+    //                     $templateId = $pdf->importPage($pageNo);
+    //                     $size       = $pdf->getTemplateSize($templateId);
+    //                     $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+    //                     $pdf->useTemplate($templateId);
+
+    //                     $pageHeight = $size['height'];
+
+    //                     foreach ($sigPaths as $s) {
+    //                         $absYpct    = $s['pos_y'] / 100;
+    //                         $pageIndex  = (int) floor($absYpct * $pageCount);
+    //                         // $targetPage = $pageIndex + 1;
+    //                         $targetPage = (int) ($s['page'] ?? 1);
+
+    //                         if ($targetPage !== $pageNo) continue;
+
+    //                         $localYpct = ($absYpct * $pageCount) - $pageIndex;
+
+    //                         $mmX = ($s['pos_x']   / 100) * $size['width'];
+    //                         $mmY = ($s['pos_y']   / 100) * $pageHeight;
+    //                         $mmW = ($s['scale_w'] / 100) * $size['width'];
+    //                         $mmH = ($s['scale_h'] / 100) * $pageHeight; // Tidak perlu dikali $pageCount lagi
+
+    //                         if ($mmW < 5) $mmW = 30;
+    //                         if ($mmH < 3) $mmH = 15;
+
+    //                         $pdf->Image($s['path'], $mmX, $mmY, $mmW, $mmH);
+
+    //                         if (!empty($s['signer_name'])) {
+    //                             $pdf->SetFont('Helvetica', 'B', 7);
+    //                             $pdf->SetTextColor(30, 41, 59);
+    //                             $pdf->SetXY($mmX, $mmY + $mmH + 1);
+    //                             $pdf->Cell($mmW, 3, $s['signer_name'], 0, 1, 'C');
+    //                             if (!empty($s['signer_date'])) {
+    //                                 $pdf->SetFont('Helvetica', '', 6);
+    //                                 $pdf->SetTextColor(100, 116, 139);
+    //                                 $pdf->SetXY($mmX, $mmY + $mmH + 3.5);
+    //                                 $pdf->Cell($mmW, 3, $s['signer_date'], 0, 1, 'C');
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //                 $pdf->Output($invoicePath, 'F');
+    //             } catch (\Exception $e) {
+    //                 Log::error("Gagal menyuntikkan TTD ke PDF: " . $e->getMessage());
+    //             }
+    //         }
+    //     }
+
+    //     // 5. ── LOGIKA TRANSISI STATUS ESTAFET WORKFLOW BERJENJANG ──
+    //     $currentRole = strtolower($user->role ?? 'admin_site');
+    //     $nextStatus  = 'pending';
+
+    //     switch ($currentRole) {
+    //         case 'admin_site':
+    //             // admin_site TTD klaimnya sendiri -> Berkas naik ke meja Team Leader
+    //             $nextStatus = 'pending_leader';
+    //             break;
+
+    //         case 'team_leader':
+    //             // BAIK Leader TTD berkas miliknya sendiri ATAU memvalidasi milik admin_site,
+    //             // Berkas seketika dilempar naik jenjang ke Station Master
+    //             $nextStatus = 'pending_station';
+    //             break;
+
+    //         case 'station_master':
+    //             // Station Master TTD -> Berkas naik ke meja Manager
+    //             $nextStatus = 'pending_manager';
+    //             break;
+
+    //         case 'manager':
+    //         case 'superadmin':
+    //             // Manager/Superadmin memberikan TTD Final -> Berkas rampung sah (Approved)
+    //             $nextStatus = 'approved';
+    //             break;
+    //     }
+
+    //     // Simpan semua akumulasi perubahan ke dalam database
+    //     // $reimbursement->status = $nextStatus;
+    //     $reimbursement->status = (string) trim($nextStatus);
+    //     if ($nextStatus === 'approved') {
+    //         $reimbursement->approved_by = $user->id;
+    //         $reimbursement->digital_signature = $sigPaths[0]['path'] ?? null;
+    //     }
+    //     $reimbursement->save();
+
+    //     return redirect()->route('reimbursements.index')->with('success', 'Dokumen berhasil ditandatangani. Status saat ini: ' . strtoupper($nextStatus));
+    // }
     public function approve(Request $request, $id)
     {
         $request->validate([
@@ -251,6 +495,7 @@ class AdminReimbursementController extends Controller
             'scale_w'         => 'required|numeric',
             'scale_h'         => 'required|numeric',
             'signatures_json' => 'nullable|string',
+            'page'            => 'nullable|integer',
         ]);
 
         $reimbursement = Reimbursement::findOrFail($id);
@@ -266,6 +511,8 @@ class AdminReimbursementController extends Controller
                 $newSignatures = $decoded;
             }
         }
+
+        // 🟩 FIX: Mengganti $sig['page'] yang salah menjadi request input page langsung
         if (empty($newSignatures)) {
             $newSignatures = [[
                 'image'       => $request->signature,
@@ -275,7 +522,7 @@ class AdminReimbursementController extends Controller
                 'scale_h'     => $request->scale_h,
                 'signer_name' => $user->name ?? '',
                 'signer_date' => now()->format('Y-m-d'),
-                'page'        => isset($sig['page']) ? (int) $sig['page'] : 1, // 🟩 TAMBAHKAN BARIS INI
+                'page'        => (int) $request->input('page', 1),
             ]];
         }
 
@@ -285,41 +532,17 @@ class AdminReimbursementController extends Controller
         $reimbursement->signatures_json = json_encode($combinedSignatures);
 
         // 3. Simpan file gambar TTD baru ke storage public
-        // $sigPaths = [];
-        // foreach ($newSignatures as $idx => $sig) {
-        //     $sigData = $sig['image'];
-        //     $imgType = 'png';
-        //     if (preg_match('/^data:image\/(\w+);base64,/', $sigData, $m)) {
-        //         $imgType = strtolower($m[1]);
-        //         $sigData = substr($sigData, strpos($sigData, ',') + 1);
-        //     }
-        //     $sigBytes    = base64_decode($sigData);
-        //     $sigFileName = 'signatures/sig_' . $id . '_' . $user->id . '_' . time() . '_' . $idx . '.' . $imgType;
-        //     Storage::disk('public')->put($sigFileName, $sigBytes);
-
-        //     $sigPaths[] = [
-        //         'path'        => storage_path('app/public/' . $sigFileName),
-        //         'pos_x'       => (float) $sig['pos_x'],
-        //         'pos_y'       => (float) $sig['pos_y'],
-        //         'scale_w'     => (float) $sig['scale_w'],
-        //         'scale_h'     => (float) $sig['scale_h'],
-        //         'signer_name' => $sig['signer_name'] ?? $user->name,
-        //         'signer_date' => $sig['signer_date'] ?? now()->format('Y-m-d'),
-        //     ];
-        // }
-        // 3. Simpan file gambar TTD baru ke storage public
         $sigPaths = [];
         foreach ($newSignatures as $idx => $sig) {
             $sigData = $sig['image'];
 
-            // 🟩 PAKSA FORMAT KE JPG: Demi keamanan parser gambar FPDF
+            // PAKSA FORMAT KE JPG: Demi keamanan parser gambar FPDF di hosting & lokal
             $imgType = 'jpg';
             if (preg_match('/^data:image\/(\w+);base64,/', $sigData, $m)) {
                 $sigData = substr($sigData, strpos($sigData, ',') + 1);
             }
-            $sigBytes    = base64_decode($sigData);
+            $sigBytes = base64_decode($sigData);
 
-            // Nama file sekarang menggunakan ekstensi .jpg
             $sigFileName = 'signatures/sig_' . $id . '_' . $user->id . '_' . time() . '_' . $idx . '.jpg';
 
             // Inisialisasi Intervention Image Manager v3
@@ -391,10 +614,8 @@ class AdminReimbursementController extends Controller
             } elseif ($extension === 'pdf') {
                 // ── JIKA FORMAT NOTA ADALAH PDF ──
                 try {
-                    $pdf       = new Fpdi();
-
-                    // 🟩 FIX 1: MATIKAN AUTO PAGE BREAK AGAR TIDAK MAJU KE HALAMAN BARU SECARA PAKSA
-                    $pdf->SetAutoPageBreak(false);
+                    $pdf = new Fpdi();
+                    $pdf->SetAutoPageBreak(false); // Matikan auto page break agar tidak melompat halaman otomatis
 
                     $pageCount = $pdf->setSourceFile($invoicePath);
 
@@ -407,19 +628,15 @@ class AdminReimbursementController extends Controller
                         $pageHeight = $size['height'];
 
                         foreach ($sigPaths as $s) {
-                            $absYpct    = $s['pos_y'] / 100;
-                            $pageIndex  = (int) floor($absYpct * $pageCount);
-                            // $targetPage = $pageIndex + 1;
+                            // 🟩 CLEAN CODE: Langsung gunakan halaman target tanpa variabel sisa hitungan lama
                             $targetPage = (int) ($s['page'] ?? 1);
 
                             if ($targetPage !== $pageNo) continue;
 
-                            $localYpct = ($absYpct * $pageCount) - $pageIndex;
-
                             $mmX = ($s['pos_x']   / 100) * $size['width'];
                             $mmY = ($s['pos_y']   / 100) * $pageHeight;
                             $mmW = ($s['scale_w'] / 100) * $size['width'];
-                            $mmH = ($s['scale_h'] / 100) * $pageHeight; // Tidak perlu dikali $pageCount lagi
+                            $mmH = ($s['scale_h'] / 100) * $pageHeight;
 
                             if ($mmW < 5) $mmW = 30;
                             if ($mmH < 3) $mmH = 15;
@@ -453,30 +670,20 @@ class AdminReimbursementController extends Controller
 
         switch ($currentRole) {
             case 'admin_site':
-                // admin_site TTD klaimnya sendiri -> Berkas naik ke meja Team Leader
                 $nextStatus = 'pending_leader';
                 break;
-
             case 'team_leader':
-                // BAIK Leader TTD berkas miliknya sendiri ATAU memvalidasi milik admin_site,
-                // Berkas seketika dilempar naik jenjang ke Station Master
                 $nextStatus = 'pending_station';
                 break;
-
             case 'station_master':
-                // Station Master TTD -> Berkas naik ke meja Manager
                 $nextStatus = 'pending_manager';
                 break;
-
             case 'manager':
             case 'superadmin':
-                // Manager/Superadmin memberikan TTD Final -> Berkas rampung sah (Approved)
                 $nextStatus = 'approved';
                 break;
         }
 
-        // Simpan semua akumulasi perubahan ke dalam database
-        // $reimbursement->status = $nextStatus;
         $reimbursement->status = (string) trim($nextStatus);
         if ($nextStatus === 'approved') {
             $reimbursement->approved_by = $user->id;
