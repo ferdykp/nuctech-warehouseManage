@@ -561,10 +561,32 @@ class AdminReimbursementController extends Controller
             $jpegData = $canvas->toJpeg(90)->toString();
 
             // Simpan gambar flat putih-hitam tersebut ke dalam storage publik
+            // Storage::disk('public')->put($sigFileName, $jpegData);
+
+            // $sigPaths[] = [
+            //     'path'        => storage_path('app/public/' . $sigFileName),
+            //     'pos_x'       => (float) $sig['pos_x'],
+            //     'pos_y'       => (float) $sig['pos_y'],
+            //     'scale_w'     => (float) $sig['scale_w'],
+            //     'scale_h'     => (float) $sig['scale_h'],
+            //     'signer_name' => $sig['signer_name'] ?? $user->name,
+            //     'signer_date' => $sig['signer_date'] ?? now()->format('Y-m-d'),
+            //     'page'        => isset($sig['page']) ? (int) $sig['page'] : 1,
+            // ];
+
             Storage::disk('public')->put($sigFileName, $jpegData);
 
+            $absolutePath = storage_path('app/public/' . $sigFileName);
+
+            Log::info('=== SIGNATURE CREATED ===', [
+                'path'      => $absolutePath,
+                'exists'    => file_exists($absolutePath),
+                'readable'  => is_readable($absolutePath),
+                'filesize'  => file_exists($absolutePath) ? filesize($absolutePath) : 0,
+            ]);
+
             $sigPaths[] = [
-                'path'        => storage_path('app/public/' . $sigFileName),
+                'path'        => $absolutePath,
                 'pos_x'       => (float) $sig['pos_x'],
                 'pos_y'       => (float) $sig['pos_y'],
                 'scale_w'     => (float) $sig['scale_w'],
@@ -641,7 +663,20 @@ class AdminReimbursementController extends Controller
                             if ($mmW < 5) $mmW = 30;
                             if ($mmH < 3) $mmH = 15;
 
+                            Log::info('=== INSERT IMAGE TO PDF ===', [
+                                'page'      => $pageNo,
+                                'path'      => $s['path'],
+                                'exists'    => file_exists($s['path']),
+                                'readable'  => is_readable($s['path']),
+                                'filesize'  => file_exists($s['path']) ? filesize($s['path']) : 0,
+                                'x'         => $mmX,
+                                'y'         => $mmY,
+                                'w'         => $mmW,
+                                'h'         => $mmH,
+                            ]);
+
                             $pdf->Image($s['path'], $mmX, $mmY, $mmW, $mmH);
+                            // $pdf->Image($s['path'], $mmX, $mmY, $mmW, $mmH);
 
                             if (!empty($s['signer_name'])) {
                                 $pdf->SetFont('Helvetica', 'B', 7);
@@ -657,9 +692,28 @@ class AdminReimbursementController extends Controller
                             }
                         }
                     }
+                    // $pdf->Output($invoicePath, 'F');
                     $pdf->Output($invoicePath, 'F');
-                } catch (\Exception $e) {
-                    Log::error("Gagal menyuntikkan TTD ke PDF: " . $e->getMessage());
+
+                    Log::info('=== PDF SAVED ===', [
+                        'pdf'       => $invoicePath,
+                        'exists'    => file_exists($invoicePath),
+                        'filesize'  => file_exists($invoicePath) ? filesize($invoicePath) : 0,
+                    ]);
+                }
+                // catch (\Exception $e) {
+                //     Log::error("Gagal menyuntikkan TTD ke PDF: " . $e->getMessage());
+                // }
+                catch (\Throwable $e) {
+
+                    Log::error('=== PDF ERROR ===', [
+                        'message' => $e->getMessage(),
+                        'file'    => $e->getFile(),
+                        'line'    => $e->getLine(),
+                        'trace'   => $e->getTraceAsString(),
+                    ]);
+
+                    throw $e;
                 }
             }
         }
