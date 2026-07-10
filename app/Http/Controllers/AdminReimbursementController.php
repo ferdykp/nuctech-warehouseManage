@@ -285,17 +285,60 @@ class AdminReimbursementController extends Controller
         $reimbursement->signatures_json = json_encode($combinedSignatures);
 
         // 3. Simpan file gambar TTD baru ke storage public
+        // $sigPaths = [];
+        // foreach ($newSignatures as $idx => $sig) {
+        //     $sigData = $sig['image'];
+        //     $imgType = 'png';
+        //     if (preg_match('/^data:image\/(\w+);base64,/', $sigData, $m)) {
+        //         $imgType = strtolower($m[1]);
+        //         $sigData = substr($sigData, strpos($sigData, ',') + 1);
+        //     }
+        //     $sigBytes    = base64_decode($sigData);
+        //     $sigFileName = 'signatures/sig_' . $id . '_' . $user->id . '_' . time() . '_' . $idx . '.' . $imgType;
+        //     Storage::disk('public')->put($sigFileName, $sigBytes);
+
+        //     $sigPaths[] = [
+        //         'path'        => storage_path('app/public/' . $sigFileName),
+        //         'pos_x'       => (float) $sig['pos_x'],
+        //         'pos_y'       => (float) $sig['pos_y'],
+        //         'scale_w'     => (float) $sig['scale_w'],
+        //         'scale_h'     => (float) $sig['scale_h'],
+        //         'signer_name' => $sig['signer_name'] ?? $user->name,
+        //         'signer_date' => $sig['signer_date'] ?? now()->format('Y-m-d'),
+        //     ];
+        // }
+        // 3. Simpan file gambar TTD baru ke storage public
         $sigPaths = [];
         foreach ($newSignatures as $idx => $sig) {
             $sigData = $sig['image'];
-            $imgType = 'png';
+
+            // 🟩 PAKSA FORMAT KE JPG: Demi keamanan parser gambar FPDF
+            $imgType = 'jpg';
             if (preg_match('/^data:image\/(\w+);base64,/', $sigData, $m)) {
-                $imgType = strtolower($m[1]);
                 $sigData = substr($sigData, strpos($sigData, ',') + 1);
             }
             $sigBytes    = base64_decode($sigData);
-            $sigFileName = 'signatures/sig_' . $id . '_' . $user->id . '_' . time() . '_' . $idx . '.' . $imgType;
-            Storage::disk('public')->put($sigFileName, $sigBytes);
+
+            // Nama file sekarang menggunakan ekstensi .jpg
+            $sigFileName = 'signatures/sig_' . $id . '_' . $user->id . '_' . time() . '_' . $idx . '.jpg';
+
+            // Inisialisasi Intervention Image Manager v3
+            $manager = new ImageManager(new Driver());
+
+            // a. Baca goresan tanda tangan transparan asli dari frontend
+            $signatureImg = $manager->read($sigBytes);
+
+            // b. Buat sebuah objek kanvas baru berwarna PUTIH POLOS dengan dimensi ukuran yang sama persis
+            $canvas = $manager->create($signatureImg->width(), $signatureImg->height())->fill('#ffffff');
+
+            // c. Tempatkan/tempelkan goresan tanda tangan transparan tadi tepat di atas kanvas putih polos
+            $canvas->place($signatureImg, 'top-left', 0, 0);
+
+            // d. Enkode kanvas baru tersebut menjadi format JPEG murni (Kualitas kompresi 90)
+            $jpegData = $canvas->toJpeg(90)->toString();
+
+            // Simpan gambar flat putih-hitam tersebut ke dalam storage publik
+            Storage::disk('public')->put($sigFileName, $jpegData);
 
             $sigPaths[] = [
                 'path'        => storage_path('app/public/' . $sigFileName),
@@ -305,6 +348,7 @@ class AdminReimbursementController extends Controller
                 'scale_h'     => (float) $sig['scale_h'],
                 'signer_name' => $sig['signer_name'] ?? $user->name,
                 'signer_date' => $sig['signer_date'] ?? now()->format('Y-m-d'),
+                'page'        => isset($sig['page']) ? (int) $sig['page'] : 1,
             ];
         }
 
