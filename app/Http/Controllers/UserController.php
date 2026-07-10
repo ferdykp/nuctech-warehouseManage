@@ -61,7 +61,7 @@ class UserController extends Controller
             'site_id'  => $request->role === 'superadmin' ? null : $request->site_id,
         ]);
 
-        return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan.');
+        return redirect()->route('profile.profile')->with('success', 'User berhasil ditambahkan.');
     }
 
     public function show($id)
@@ -153,6 +153,6 @@ class UserController extends Controller
 
         $user->delete();
 
-        return redirect()->route('users.index')->with('success', 'User berhasil dihapus.');
+        return redirect()->route('profile.profile')->with('success', 'User berhasil dihapus.');
     }
 }

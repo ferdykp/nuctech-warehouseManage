@@ -135,7 +135,7 @@
 
                 {{-- ACTION BUTTONS --}}
                 <div class="flex justify-end gap-3 pt-6 border-t">
-                    <a href="{{ route('users.index') }}"
+                    <a href="{{ route('profile.profile') }}"
                         class="px-5 py-2 text-sm font-medium text-gray-700 transition bg-gray-100 rounded-lg hover:bg-gray-200">
                         Cancel
                     </a>

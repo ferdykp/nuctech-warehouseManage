@@ -10,6 +10,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\SparepartController;
 use App\Http\Controllers\SparepartStockController;
 use App\Http\Controllers\CategoryController;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,7 +30,7 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 */
 
 Route::middleware(['auth', 'nocache'])->group(function () {
-    Route::resource('users', UserController::class);
+    // Route::resource('users', UserController::class);
 
 
     // Dashboard
@@ -109,8 +110,8 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     });
 });
 
-
-Route::get('/profile', [UserController::class, 'index'])->name('profile.profile');
+Route::get('/profile/profile/{id}', [UserController::class, 'show'])->name('users.show');
+Route::get('/profile/profile', [UserController::class, 'index'])->name('profile.profile');
 // Route::get('profile/profileEdit', [UserController::class, 'edit'])->name('profile.profileEdit');
 Route::get('/profile/profileEdit/{id}', [UserController::class, 'edit'])->name('profile.profileEdit');
 Route::put('profile/profileEdit/{id}', [UserController::class, 'update'])->name('users.update');
