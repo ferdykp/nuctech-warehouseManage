@@ -371,7 +371,10 @@
         let activeStampsArray = [];
 
         // Ambil info file dari backend Laravel
-        const pdfUrl = "{{ asset('storage/' . $reimbursement->receipt_attachment) }}";
+        // const pdfUrl = "{{ asset('storage/' . $reimbursement->receipt_attachment) }}";
+        const pdfUrl =
+            "{{ asset('storage/' . $reimbursement->receipt_attachment) }}" +
+            "?v={{ filemtime(storage_path('app/public/' . $reimbursement->receipt_attachment)) }}";
         // const isPdf = {{ pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf' ? 'true' : 'false' }};
 
         const isPdf = {{ pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf' ? 'true' : 'false' }};
