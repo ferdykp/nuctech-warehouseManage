@@ -39,13 +39,75 @@ class EmployeeController extends Controller
             $employeesQuery->where('status', $request->status);
         }
 
-        $employees = $employeesQuery->latest()->paginate(10);
+        $employees = $employeesQuery->latest()->paginate(10)->appends($request->all());
 
-        if ($request->ajax()) {
+        // Pastikan hanya membalas tabel jika request AJAX meminta 'html' atau dari input search
+        if ($request->ajax() && !$request->wantsJson()) {
             return view('employee.table', compact('employees'))->render();
         }
 
         return view('employee.index', compact('sites', 'employees'));
+    }
+
+    /**
+     * Detail Karyawan untuk Modal Pop-up (JSON)
+     */
+    public function show($id)
+    {
+        try {
+            $user = Auth::user();
+
+            $employeeId = is_object($id) ? $id->id : $id;
+            $employee = Employee::with(['site.branch'])->findOrFail($employeeId);
+
+            if ($user && $user->role === 'admin_site' && (int)$employee->site_id !== (int)$user->site_id) {
+                return response()->json(['message' => 'Anda tidak memiliki akses ke data karyawan ini.'], 403);
+            }
+
+            // Hitung masa kerja (tenure) secara dinamis
+            $joinDate = Carbon::parse($employee->join_date);
+            $diff = $joinDate->diff(Carbon::now());
+
+            $tenureParts = [];
+            if ($diff->y > 0) $tenureParts[] = $diff->y . ' Tahun';
+            if ($diff->m > 0) $tenureParts[] = $diff->m . ' Bulan';
+            $tenureParts[] = $diff->d . ' Hari';
+
+            $employee->tenure_formatted = implode(' ', $tenureParts);
+            $employee->join_date_formatted = $joinDate->translatedFormat('d F Y');
+            $employee->contract_start_formatted = $employee->contract_start_date
+                ? Carbon::parse($employee->contract_start_date)->translatedFormat('d F Y')
+                : '-';
+
+            return response()->json($employee);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Gagal mengambil data karyawan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Halaman Edit Karyawan
+     */
+    public function edit($id)
+    {
+        $user = Auth::user();
+
+        $employeeId = is_object($id) ? $id->id : $id;
+        $employee = Employee::findOrFail($employeeId);
+
+        if ($user->role === 'admin_site' && (int)$employee->site_id !== (int)$user->site_id) {
+            abort(403, 'Anda tidak memiliki akses mengubah karyawan di site ini.');
+        }
+
+        if ($user->role === 'admin_site') {
+            $sites = Site::where('id', $user->site_id)->with('branch')->get();
+        } else {
+            $sites = Site::with('branch')->get();
+        }
+
+        return view('employee.edit', compact('employee', 'sites'));
     }
 
     /**
@@ -56,12 +118,10 @@ class EmployeeController extends Controller
         try {
             $user = Auth::user();
 
-            // Proteksi Admin Site
             if ($user && $user->role === 'admin_site' && (int)$user->site_id !== (int)$site_id) {
                 return response()->json(['message' => 'Anda tidak memiliki akses ke site ini.'], 403);
             }
 
-            // Dapatkan filter bulan (Default bulan berjalan YYYY-MM)
             $monthInput = $request->input('month');
             if (empty($monthInput) || $monthInput === '-') {
                 $month = date('Y-m');
@@ -115,20 +175,19 @@ class EmployeeController extends Controller
         $validatedData = $request->validate([
             'site_id'             => 'required|exists:sites,id',
             'name'                => 'required|string|max:255',
+            'phone_number'        => 'required|string|max:15',
             'position'            => 'nullable|string|max:100',
             'status'              => 'required|in:Permanent,Contract,Probation,Daily',
             'join_date'           => 'required|date',
             'contract_start_date' => 'nullable|date',
         ]);
 
-        // JIKA ADMIN SITE: Paksa site_id ke site milik user
         if ($user->role === 'admin_site') {
             $siteId = $user->site_id;
         } else {
             $siteId = $validatedData['site_id'];
         }
 
-        // AMBIL BRANCH_ID OTOMATIS DARI MAPPING SITE
         $site = Site::findOrFail($siteId);
 
         $validatedData['site_id']   = $site->id;
@@ -143,7 +202,9 @@ class EmployeeController extends Controller
     public function update(Request $request, $id)
     {
         $user = Auth::user();
-        $employee = Employee::findOrFail($id);
+
+        $employeeId = is_object($id) ? $id->id : $id;
+        $employee = Employee::findOrFail($employeeId);
 
         if ($user->role === 'admin_site' && (int)$employee->site_id !== (int)$user->site_id) {
             abort(403, 'Anda tidak memiliki akses mengubah karyawan di site ini.');
@@ -152,6 +213,7 @@ class EmployeeController extends Controller
         $validatedData = $request->validate([
             'site_id'             => 'required|exists:sites,id',
             'name'                => 'required|string|max:255',
+            'phone_number'        => 'required|string|max:15',
             'position'            => 'nullable|string|max:100',
             'status'              => 'required|in:Permanent,Contract,Probation,Daily',
             'join_date'           => 'required|date',
@@ -178,7 +240,9 @@ class EmployeeController extends Controller
     public function destroy($id)
     {
         $user = Auth::user();
-        $employee = Employee::findOrFail($id);
+
+        $employeeId = is_object($id) ? $id->id : $id;
+        $employee = Employee::findOrFail($employeeId);
 
         if ($user->role === 'admin_site' && (int)$employee->site_id !== (int)$user->site_id) {
             abort(403, 'Anda tidak memiliki akses menghapus karyawan di site ini.');

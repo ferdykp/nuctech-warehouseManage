@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('branch_id')->constrained()->onDelete('cascade');
             // $table->string('nik')->unique()->nullable(); // Nomor Induk Karyawan (Unik)
             $table->string('name');
+            $table->string('phone_number');
 
             // --- 2. Informasi Kepegawaian (Core HR) ---
             $table->string('position')->nullable(); // Jabatan (e.g., Staf Admin, Supervisor)

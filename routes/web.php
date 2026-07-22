@@ -121,14 +121,15 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::put('profile/profileEdit/{id}', [UserController::class, 'update'])->name('users.update');
 
     // Manajemen Employee
+    // Manajemen Employee
     Route::prefix('employee')->name('employee.')->group(function () {
         Route::get('/', [EmployeeController::class, 'index'])->name('index');
-        Route::post('/store', [EmployeeController::class, 'store'])->name('store');
         Route::get('/create', [EmployeeController::class, 'create'])->name('create');
-        Route::get('/edit', [EmployeeController::class, 'edit'])->name('edit');
-        Route::put('/{id}/update', [EmployeeController::class, 'update'])->name('update');
-        Route::delete('/{id}/delete', [EmployeeController::class, 'destroy'])->name('destroy');
-        Route::get('/show/{id}', [EmployeeController::class, 'show'])->name('show');
+        Route::post('/store', [EmployeeController::class, 'store'])->name('store');
+        Route::get('/{id}', [EmployeeController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [EmployeeController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [EmployeeController::class, 'update'])->name('update');
+        Route::delete('/{id}', [EmployeeController::class, 'destroy'])->name('destroy');
     });
 
     // API Internal (Fetch JS)

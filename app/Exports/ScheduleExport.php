@@ -62,14 +62,28 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
         $endDate = Carbon::createFromDate($this->year, $this->month, 1)->endOfMonth();
         $totalDays = $startDate->daysInMonth;
 
-        $siteName = 'Surabaya FS6000';
+        // -------------------------------------------------------------
+        // DINAMIS: SET SITE NAME DAN SUBTITLE
+        // -------------------------------------------------------------
+        $siteName = 'ALL SITES';
+        $subTitle = 'ALL SITES - ALL LOCATIONS';
+
         if ($this->siteId !== 'all' && !empty($this->siteId)) {
             $site = Site::find($this->siteId);
             if ($site) {
                 $siteName = $site->machine_name;
+
+                // Trim nilai location untuk membuang spasi yang tidak disengaja
+                $locVal = trim((string) $site->location);
+
+                // Cek apakah lokasi benar-benar ada nilainya dan bukan tanda strip "--"
+                if (!empty($locVal) && $locVal !== '--' && $locVal !== '-') {
+                    $subTitle = strtoupper($site->machine_name . ' - ' . $locVal);
+                } else {
+                    $subTitle = strtoupper($site->machine_name);
+                }
             }
         }
-
         $employeesQuery = Employee::with(['schedules' => function ($q) use ($startDate, $endDate) {
             $q->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
                 ->with('shift');
@@ -86,7 +100,7 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
         // BARIS 1-5: HEADER TITLE & WORKING SITE
         // -------------------------------------------------------------
         $rows->push(['', '', 'WORK SCHEDULE ENGINEERS - NUCTECH COMPANY LIMITED INDONESIA']); // Baris 1
-        $rows->push(['', '', 'SURABAYA FS6000 - PT. TERMINAL PETIKEMAS SURABAYA']); // Baris 2
+        $rows->push(['', '', $subTitle]); // Baris 2 (Sudah Dinamis)
         $rows->push(['', '']); // Baris 3
         $rows->push(['', '']); // Baris 4
         $rows->push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'Working Site: ' . $siteName]); // Baris 5

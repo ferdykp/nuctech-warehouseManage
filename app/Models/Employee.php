@@ -16,6 +16,7 @@ class Employee extends Model
         'branch_id',
         // 'nik',
         'name',
+        'phone_number',
         'position',
         // 'department',
         'status',

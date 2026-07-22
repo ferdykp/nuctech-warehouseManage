@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             SparepartsSeeder::class,
             ReportSeeder::class,
+            ShiftSeeder::class,
+            EmployeeSeeder::class
         ]);
     }
 }
