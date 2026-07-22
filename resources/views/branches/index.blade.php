@@ -1,5 +1,8 @@
 @extends('layout.master')
 
+@section('title', 'Daftar Branch')
+
+
 @section('content')
     <div class="w-full px-6 py-8">
 

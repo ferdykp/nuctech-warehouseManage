@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminReimbursementController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\DashboardController;
@@ -10,7 +11,10 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\SparepartController;
 use App\Http\Controllers\SparepartStockController;
 use App\Http\Controllers\CategoryController;
-use App\Models\User;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\ShiftController;
+// use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -25,13 +29,10 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
 /*
 |--------------------------------------------------------------------------
-| Authenticated Routes
+| Authenticated Routes (Semua halaman yang butuh login)
 |--------------------------------------------------------------------------
 */
-
 Route::middleware(['auth', 'nocache'])->group(function () {
-    // Route::resource('users', UserController::class);
-
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -41,6 +42,18 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::resource('categories', CategoryController::class);
     Route::resource('sites', SiteController::class);
     Route::resource('site', SiteController::class);
+
+    Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedule.index');
+    Route::post('/schedules/generate', [ScheduleController::class, 'generate'])->name('schedule.generate');
+    Route::post('/schedules/site-pattern/{site}', [ScheduleController::class, 'updateSitePattern'])->name('schedule.site.update');
+    Route::post('/schedule/update-single', [ScheduleController::class, 'updateSingle'])->name('schedule.updateSingle');
+    Route::delete('/schedule/clear', [ScheduleController::class, 'clearSchedule'])->name('schedule.clear');
+    Route::get('/schedule/export', [ScheduleController::class, 'exportExcel'])->name('schedule.export');
+
+    Route::get('/shift', [ShiftController::class, 'index'])->name('shift.index');
+    Route::post('/shift', [ShiftController::class, 'store'])->name('shift.store');
+    Route::put('/shift/{shift}', [ShiftController::class, 'update'])->name('shift.update'); // ROUTE UPDATE BARU
+    Route::delete('/shift/{shift}', [ShiftController::class, 'destroy'])->name('shift.destroy');
 
     // Report
     Route::prefix('report')->name('report.')->group(function () {
@@ -83,49 +96,63 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('/receive/{id}', [SparepartStockController::class, 'receiveMove'])->name('receive');
     });
 
-    // =================================================================
-    // 4. FITUR BARU: REIMBURSEMENT SYSTEM
-    // =================================================================
-    Route::get('/reimbursements/export-pdf', [AdminReimbursementController::class, 'exportApprovedPdf'])
-        ->name('reimbursements.export_pdf');
+    // Fitur Reimbursement System
+    Route::get('/reimbursements/export-pdf', [AdminReimbursementController::class, 'exportApprovedPdf'])->name('reimbursements.export_pdf');
     Route::get('/reimbursements/export-excel', [AdminReimbursementController::class, 'exportExcel'])->name('reimbursements.export_excel');
-    Route::get('/reimbursements/{id}/export-single-pdf', [AdminReimbursementController::class, 'exportSinglePdf'])
-        ->name('reimbursements.export_single_pdf');
-
-    // Akses Bersama: Semua user yang login bisa memantau antrean/daftar klaimnya & mengawali pembuatan berkas klaim baru
+    Route::get('/reimbursements/{id}/export-single-pdf', [AdminReimbursementController::class, 'exportSinglePdf'])->name('reimbursements.export_single_pdf');
     Route::get('/reimbursements', [AdminReimbursementController::class, 'index'])->name('reimbursements.index');
     Route::get('/reimbursements/create', [AdminReimbursementController::class, 'create'])->name('reimbursements.create');
     Route::post('/reimbursements/store', [AdminReimbursementController::class, 'store'])->name('reimbursements.store');
     Route::get('/reimbursements/{id}', [AdminReimbursementController::class, 'show'])->name('reimbursements.show');
-
-    // Workspace Peninjauan Tanda Tangan: Diperbolehkan diakses oleh user-user pemeriksa maupun staff pembuat berkas
     Route::get('/reimbursements/{id}/approval', [AdminReimbursementController::class, 'approval'])->name('reimbursements.approval');
 
-    // Filter Khusus Pemeriksa Berwenang: Mencegah staff biasa mengeksekusi API persetujuan (Approve) atau penolakan (Reject)
-    // Ditambahkan role baru: team_leader, station_master, manager
+    // Filter Khusus Pemeriksa Berwenang
     Route::middleware(['role:superadmin|admin_site|manager|station_master|team_leader'])->group(function () {
         Route::put('/reimbursements/{id}/approve', [AdminReimbursementController::class, 'approve'])->name('reimbursements.approve');
         Route::put('/reimbursements/{id}/reject', [AdminReimbursementController::class, 'reject'])->name('reimbursements.reject');
         Route::delete('/reimbursements/{id}', [AdminReimbursementController::class, 'destroy'])->name('reimbursements.destroy');
     });
-});
 
-Route::get('/profile/profile/{id}', [UserController::class, 'show'])->name('users.show');
-Route::get('/profile/profile', [UserController::class, 'index'])->name('profile.profile');
-// Route::get('profile/profileEdit', [UserController::class, 'edit'])->name('profile.profileEdit');
-Route::get('/profile/profileEdit/{id}', [UserController::class, 'edit'])->name('profile.profileEdit');
-Route::put('profile/profileEdit/{id}', [UserController::class, 'update'])->name('users.update');
+    // PANDUAN PERBAIKAN: Rute-rute ini dimasukkan ke dalam auth grup agar aman
+    // Manajemen Profil
+    Route::get('/profile/profile/{id}', [UserController::class, 'show'])->name('users.show');
+    Route::get('/profile/profile', [UserController::class, 'index'])->name('profile.profile');
+    Route::get('/profile/profileEdit/{id}', [UserController::class, 'edit'])->name('profile.profileEdit');
+    Route::put('profile/profileEdit/{id}', [UserController::class, 'update'])->name('users.update');
 
+    // Manajemen Employee
+    Route::prefix('employee')->name('employee.')->group(function () {
+        Route::get('/', [EmployeeController::class, 'index'])->name('index');
+        Route::post('/store', [EmployeeController::class, 'store'])->name('store');
+        Route::get('/create', [EmployeeController::class, 'create'])->name('create');
+        Route::get('/edit', [EmployeeController::class, 'edit'])->name('edit');
+        Route::put('/{id}/update', [EmployeeController::class, 'update'])->name('update');
+        Route::delete('/{id}/delete', [EmployeeController::class, 'destroy'])->name('destroy');
+        Route::get('/show/{id}', [EmployeeController::class, 'show'])->name('show');
+    });
 
+    // API Internal (Fetch JS)
+    Route::prefix('api')->name('api.')->group(function () {
+        Route::get('/branches/{site_id}/employees', [EmployeeController::class, 'getEmployeesByBranch'])->name('employees.by-branch');
+    });
 
-/*
-|--------------------------------------------------------------------------
-| Superadmin Routes
-|--------------------------------------------------------------------------
-*/
+    // Absensi
+    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::post('/attendance/store', [AttendanceController::class, 'storeAttendance'])->name('attendance.store');
+    Route::get('/attendance/export', [AttendanceController::class, 'exportExcel'])->name('attendance.export');
+    Route::delete('/attendance/{attendance}', [AttendanceController::class, 'destroy'])->name('attendance.destroy');
 
-Route::middleware(['auth', 'nocache', 'role:superadmin'])->group(function () {
-    Route::get('profile/profileList', [UserController::class, 'profileList'])->name('profile.profileList');
-    // Route::resource('users', UserController::class);
-    // Route::get('/profile/profileEdit', [UserController::class, 'edit'])->name('profile.profileEdit');
+    /*
+    |--------------------------------------------------------------------------
+    | Superadmin Only Routes (Khusus Khusus Superadmin)
+    |--------------------------------------------------------------------------
+    |*/
+    Route::middleware(['role:superadmin'])->group(function () {
+        Route::get('profile/profileList', [UserController::class, 'profileList'])->name('profile.profileList');
+        Route::resource('users', UserController::class);
+        // Route::get('/profile/store', [UserController::class, 'store'])->name('users.store');
+        // Route::get('/profile/create', [UserController::class, 'create'])->name('users.create');
+        // Route::get('/profile/edit', [UserController::class, 'edit'])->name('users.edit');
+        // Route::delete('/profile/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+    });
 });

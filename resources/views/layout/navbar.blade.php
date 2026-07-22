@@ -19,10 +19,8 @@
                     <span class="opacity-50">/</span>
                     <span class="{{ $loop->last ? 'font-semibold' : 'opacity-70' }}">
                         @if ($loop->last && isset($siteData))
-                            {{-- Jika ini adalah bagian terakhir URL dan kita punya data site, tampilkan Nama Mesinnya --}}
                             {{ $siteData->machine_name }}
                         @else
-                            {{-- Jika bukan, tampilkan teks segment biasa (seperti 'Inventory') --}}
                             {{ ucfirst(str_replace('-', ' ', $segment)) }}
                         @endif
                     </span>
@@ -36,8 +34,10 @@
                 <button @click="open = !open" @click.outside="open = false"
                     class="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-white transition-colors border rounded-lg bg-blue-950/50 border-white/10 hover:bg-white/10">
                     <i class="text-base fa-solid fa-circle-user"></i>
-                    {{-- Ganti xs:block ke sm:block atau block saja --}}
-                    <span class="hidden sm:block">Halo, {{ auth()->user()->username }}</span>
+
+                    {{-- DI AMANKAN: Menggunakan ?? 'Guest' jika user bernilai null --}}
+                    <span class="hidden sm:block">Halo, {{ auth()->user()?->username ?? 'Guest' }}</span>
+
                     <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"
                         :class="open ? 'rotate-180' : ''"></i>
                 </button>
@@ -48,14 +48,14 @@
                     x-transition:enter-end="transform opacity-100 scale-100"
                     class="absolute right-0 z-50 w-48 mt-2 overflow-hidden bg-white border border-gray-100 shadow-xl rounded-xl">
 
-                    {{-- 1. Link Profile (Bisa diakses semua role untuk melihat profil sendiri) --}}
-                    <a href="{{ route('users.show', auth()->id()) }}"
+                    {{-- DI AMANKAN: Cek status auth sebelum me-render parameter id profil --}}
+                    <a href="{{ auth()->check() ? route('users.show', auth()->id()) : '#' }}"
                         class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                         <i class="w-4 text-blue-600 fa-solid fa-user"></i> My Profile
                     </a>
 
-                    {{-- 2. Link Kelola User (Hanya muncul untuk Superadmin) --}}
-                    {{-- @if (auth()->user()->role === 'superadmin')
+                    {{-- DI AMANKAN (JIKA AKTIF): Menggunakan auth()->user()?->role --}}
+                    {{-- @if (auth()->user()?->role === 'superadmin')
                         <a href="{{ route('users.index') }}"
                             class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
                             <i class="w-4 text-orange-500 fa-solid fa-users-gear"></i> Kelola Akun

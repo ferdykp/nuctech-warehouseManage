@@ -13,4 +13,8 @@ class Branch extends Model
     {
         return $this->hasMany(Site::class);
     }
+    public function employees()
+    {
+        return $this->hasMany(Employee::class);
+    }
 }

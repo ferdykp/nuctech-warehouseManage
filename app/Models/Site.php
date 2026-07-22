@@ -15,6 +15,11 @@ class Site extends Model
         return $this->belongsTo(Branch::class, 'branch_id');
     }
 
+    public function attendance(): BelongsTo
+    {
+        return $this->belongsTo(Attendance::class, 'attendance_id');
+    }
+
     public function stocks()
     {
         return $this->hasMany(SparepartStock::class);
@@ -23,5 +28,9 @@ class Site extends Model
     public function histories()
     {
         return $this->hasMany(SparepartHistory::class);
+    }
+    public function schedulePattern()
+    {
+        return $this->hasOne(SiteSchedule::class, 'site_id');
     }
 }
