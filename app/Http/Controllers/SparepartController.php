@@ -364,27 +364,116 @@ class SparepartController extends Controller
         return view('spareparts.all', compact('allStocks'));
     }
 
+    // public function adjust(Request $request, $slug, $id)
+    // {
+    //     try {
+    //         $siteData = Site::where('slug', $slug)->firstOrFail();
+
+    //         // Validasi disederhanakan: Satukan input tanpa adjustment_type yang membingungkan
+    //         $request->validate([
+    //             'qty_to_move'       => 'required|integer|min:1',
+    //             'new_condition'     => 'required|in:new,used-good,damaged,repair',
+    //             'current_condition' => 'required|in:new,used-good,damaged,repair'
+    //         ]);
+
+    //         // PENTING: Cari berdasarkan ID stock_id ($id di sini dikirim dari baris stock)
+    //         // agar presisi jika satu sparepart memiliki banyak kondisi.
+    //         $currentStock = SparepartStock::where('id', $id)
+    //             ->where('site_id', $siteData->id)
+    //             ->where('condition', $request->current_condition)
+    //             ->first();
+
+    //         if (!$currentStock) {
+    //             return back()->with('error', "Stok asal tidak ditemukan untuk kondisi: {$request->current_condition}");
+    //         }
+
+    //         $qtyToMove = (int)$request->qty_to_move;
+
+    //         if ($qtyToMove > $currentStock->qty) {
+    //             return back()->with('error', "Gagal! Jumlah input ($qtyToMove) melebihi stok tersedia ({$currentStock->qty}).");
+    //         }
+
+    //         return DB::transaction(function () use ($request, $currentStock, $siteData, $qtyToMove) {
+
+    //             // SKENARIO 1: Hanya koreksi nominal kuantitas stok biasa (Kondisi Target SAMA dengan Kondisi Asal)
+    //             if ($request->current_condition === $request->new_condition) {
+    //                 $oldQty = $currentStock->qty;
+    //                 $currentStock->update(['qty' => $qtyToMove]);
+
+    //                 SparepartHistory::create([
+    //                     'sparepart_id' => $currentStock->sparepart_id,
+    //                     'to_site_id'   => $siteData->id,
+    //                     'action'       => 'ADJUSTMENT',
+    //                     'qty'          => $qtyToMove,
+    //                     'condition'    => $currentStock->condition,
+    //                     'note'         => "Koreksi nominal kuantitas stok dari $oldQty menjadi $qtyToMove",
+    //                 ]);
+
+    //                 return back()->with('success', 'Kuantitas stok berhasil diperbarui.');
+    //             }
+
+    //             // SKENARIO 2: Perubahan Status Kondisi (Kondisi Target BERBEDA dengan Kondisi Asal)
+    //             // Cari tahu apakah kondisi target sudah pernah terdaftar di site ini untuk sparepart yang sama
+    //             $targetStock = SparepartStock::where('sparepart_id', $currentStock->sparepart_id)
+    //                 ->where('site_id', $siteData->id)
+    //                 ->where('condition', $request->new_condition)
+    //                 ->first();
+
+    //             // Langkah A: Kurangi stok asal, atau hapus jika dipindahkan SEMUANYA (Mencegah bug row bernilai 0)
+    //             if ($qtyToMove === $currentStock->qty) {
+    //                 $currentStock->delete();
+    //             } else {
+    //                 $currentStock->decrement('qty', $qtyToMove);
+    //             }
+
+    //             // Langkah B: Gabungkan ke baris kondisi target jika sudah ada, jika belum buat baru
+    //             if ($targetStock) {
+    //                 $targetStock->increment('qty', $qtyToMove);
+    //             } else {
+    //                 SparepartStock::create([
+    //                     'sparepart_id' => $currentStock->sparepart_id,
+    //                     'site_id'      => $siteData->id,
+    //                     'condition'    => $request->new_condition,
+    //                     'qty'          => $qtyToMove,
+    //                 ]);
+    //             }
+
+    //             // Langkah C: Catat Riwayat Log Perubahan
+    //             SparepartHistory::create([
+    //                 'sparepart_id' => $currentStock->sparepart_id,
+    //                 'from_site_id' => $siteData->id,
+    //                 'to_site_id'   => $siteData->id,
+    //                 'action'       => 'CONDITION_CHANGE',
+    //                 'qty'          => $qtyToMove,
+    //                 'condition'    => $request->new_condition,
+    //                 'note'         => "Mengubah status " . $qtyToMove . " unit dari " . strtoupper($request->current_condition) . " ke " . strtoupper($request->new_condition),
+    //             ]);
+
+    //             return back()->with('success', 'Status kondisi dan distribusi stok berhasil diperbarui.');
+    //         });
+    //     } catch (\Exception $e) {
+    //         return back()->with('error', 'System Error: ' . $e->getMessage());
+    //     }
+    // }
     public function adjust(Request $request, $slug, $id)
     {
         try {
             $siteData = Site::where('slug', $slug)->firstOrFail();
 
-            // Validasi disederhanakan: Satukan input tanpa adjustment_type yang membingungkan
             $request->validate([
                 'qty_to_move'       => 'required|integer|min:1',
                 'new_condition'     => 'required|in:new,used-good,damaged,repair',
                 'current_condition' => 'required|in:new,used-good,damaged,repair'
             ]);
 
-            // PENTING: Cari berdasarkan ID stock_id ($id di sini dikirim dari baris stock)
-            // agar presisi jika satu sparepart memiliki banyak kondisi.
+            // PERBAIKAN: Cari langsung berdasarkan ID Primary Key dari SparepartStock
+            // Tidak perlu menumpuk filter condition di WHERE karena ID stok sudah spesifik/unik
             $currentStock = SparepartStock::where('id', $id)
                 ->where('site_id', $siteData->id)
-                ->where('condition', $request->current_condition)
                 ->first();
 
             if (!$currentStock) {
-                return back()->with('error', "Stok asal tidak ditemukan untuk kondisi: {$request->current_condition}");
+                return back()->with('error', "Stok asal tidak ditemukan di site ini.");
             }
 
             $qtyToMove = (int)$request->qty_to_move;
@@ -395,8 +484,10 @@ class SparepartController extends Controller
 
             return DB::transaction(function () use ($request, $currentStock, $siteData, $qtyToMove) {
 
+                $sourceCondition = $currentStock->condition; // Ambil kondisi asli langsung dari DB
+
                 // SKENARIO 1: Hanya koreksi nominal kuantitas stok biasa (Kondisi Target SAMA dengan Kondisi Asal)
-                if ($request->current_condition === $request->new_condition) {
+                if ($sourceCondition === $request->new_condition) {
                     $oldQty = $currentStock->qty;
                     $currentStock->update(['qty' => $qtyToMove]);
 
@@ -412,14 +503,14 @@ class SparepartController extends Controller
                     return back()->with('success', 'Kuantitas stok berhasil diperbarui.');
                 }
 
-                // SKENARIO 2: Perubahan Status Kondisi (Kondisi Target BERBEDA dengan Kondisi Asal)
-                // Cari tahu apakah kondisi target sudah pernah terdaftar di site ini untuk sparepart yang sama
+                // SKENARIO 2: Perubahan Status Kondisi (Misal: dari NEW ke DAMAGED)
+                // Cari tahu apakah kondisi target sudah ada di site ini untuk sparepart yang sama
                 $targetStock = SparepartStock::where('sparepart_id', $currentStock->sparepart_id)
                     ->where('site_id', $siteData->id)
                     ->where('condition', $request->new_condition)
                     ->first();
 
-                // Langkah A: Kurangi stok asal, atau hapus jika dipindahkan SEMUANYA (Mencegah bug row bernilai 0)
+                // Langkah A: Kurangi stok asal, atau hapus jika dipindahkan SEMUANYA
                 if ($qtyToMove === $currentStock->qty) {
                     $currentStock->delete();
                 } else {
@@ -446,7 +537,7 @@ class SparepartController extends Controller
                     'action'       => 'CONDITION_CHANGE',
                     'qty'          => $qtyToMove,
                     'condition'    => $request->new_condition,
-                    'note'         => "Mengubah status " . $qtyToMove . " unit dari " . strtoupper($request->current_condition) . " ke " . strtoupper($request->new_condition),
+                    'note'         => "Mengubah status " . $qtyToMove . " unit dari " . strtoupper($sourceCondition) . " ke " . strtoupper($request->new_condition),
                 ]);
 
                 return back()->with('success', 'Status kondisi dan distribusi stok berhasil diperbarui.');

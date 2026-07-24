@@ -23,7 +23,7 @@ class EmployeeController extends Controller
             $sites = Site::where('id', $user->site_id)->get();
         } else {
             $sites = Site::all();
-            if ($request->filled('site_id')) {
+            if ($request->filled('site_id') && $request->site_id !== 'all') {
                 $employeesQuery->where('site_id', $request->site_id);
             }
         }
@@ -41,7 +41,6 @@ class EmployeeController extends Controller
 
         $employees = $employeesQuery->latest()->paginate(10)->appends($request->all());
 
-        // Pastikan hanya membalas tabel jika request AJAX meminta 'html' atau dari input search
         if ($request->ajax() && !$request->wantsJson()) {
             return view('employee.table', compact('employees'))->render();
         }
@@ -49,9 +48,6 @@ class EmployeeController extends Controller
         return view('employee.index', compact('sites', 'employees'));
     }
 
-    /**
-     * Detail Karyawan untuk Modal Pop-up (JSON)
-     */
     public function show($id)
     {
         try {
@@ -64,7 +60,6 @@ class EmployeeController extends Controller
                 return response()->json(['message' => 'Anda tidak memiliki akses ke data karyawan ini.'], 403);
             }
 
-            // Hitung masa kerja (tenure) secara dinamis
             $joinDate = Carbon::parse($employee->join_date);
             $diff = $joinDate->diff(Carbon::now());
 
@@ -87,9 +82,6 @@ class EmployeeController extends Controller
         }
     }
 
-    /**
-     * Halaman Edit Karyawan
-     */
     public function edit($id)
     {
         $user = Auth::user();
@@ -111,7 +103,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * API Internal: Ambil daftar karyawan per site/branch beserta absensi & jadwalnya
+     * API Internal: Ambil daftar karyawan per site/branch (atau semua site) beserta absensi & jadwalnya
      */
     public function getEmployeesByBranch(Request $request, $site_id)
     {
@@ -136,16 +128,22 @@ class EmployeeController extends Controller
             $startDate = Carbon::parse($month . '-01')->startOfMonth()->format('Y-m-d');
             $endDate = Carbon::parse($month . '-01')->endOfMonth()->format('Y-m-d');
 
-            $employees = Employee::where('site_id', $site_id)
-                ->with([
-                    'attendances' => function ($q) use ($month) {
-                        $q->where('month', $month);
-                    },
-                    'schedules' => function ($q) use ($startDate, $endDate) {
-                        $q->whereBetween('date', [$startDate, $endDate])->with('shift');
-                    }
-                ])
-                ->get();
+            $employeesQuery = Employee::with([
+                'site',
+                'attendances' => function ($q) use ($month) {
+                    $q->where('month', $month);
+                },
+                'schedules' => function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween('date', [$startDate, $endDate])->with('shift');
+                }
+            ]);
+
+            // Jika site_id bukan 'all', lakukan filter per site
+            if ($site_id !== 'all') {
+                $employeesQuery->where('site_id', $site_id);
+            }
+
+            $employees = $employeesQuery->get();
 
             return response()->json($employees);
         } catch (\Throwable $e) {

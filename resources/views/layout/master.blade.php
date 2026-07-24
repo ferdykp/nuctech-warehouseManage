@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id" class="h-full bg-slate-50">
 
 <head>
     @include('layout.head')
@@ -11,18 +11,22 @@
     }
 </style>
 
-<body class="flex w-screen h-screen overflow-hidden bg-slate-50" x-data="{ sidebarOpen: false }">
+<body class="flex w-screen h-full min-h-screen overflow-hidden font-sans antialiased bg-slate-50 text-slate-800"
+    x-data="{ sidebarOpen: false }">
+
     @if (!request()->routeIs(['login']))
         @include('layout.aside')
     @endif
 
-    {{-- PERBAIKAN: Ditambahkan min-w-0 dan w-full agar content flexbox menjadi super responsive --}}
-    <div class="flex flex-col flex-1 w-full h-screen min-w-0 transition-all duration-300">
+    {{-- CONTAINER UTAMA --}}
+    <div class="flex flex-col flex-1 w-full h-full min-w-0 overflow-hidden transition-all duration-300">
         @if (!request()->routeIs(['login', 'register', 'password.request']))
             @include('layout.navbar')
         @endif
 
-        <main class="flex-1 h-full overflow-y-auto">
+        {{-- AREA KONTEN UTAMA --}}
+        <main
+            class="flex-1 w-full h-full min-w-0 {{ request()->routeIs(['login']) ? 'overflow-hidden p-0' : 'overflow-x-hidden overflow-y-auto p-4 sm:p-6 lg:p-8' }}">
             @include('layout.notif')
             @yield('content')
         </main>

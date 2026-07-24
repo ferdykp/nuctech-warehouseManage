@@ -1,8 +1,9 @@
 @extends('layout.master')
 
+@section('title', 'Add New User')
+
 @section('content')
-    {{-- Tambahkan variabel 'showPassword' dan 'showConfirmPassword' ke x-data --}}
-    <div class="min-h-screen px-6 py-6" x-data="{
+    <div class="w-full max-w-4xl mx-auto space-y-6" x-data="{
         role: '{{ old('role') }}',
         password: '',
         password_confirm: '',
@@ -11,77 +12,91 @@
     }">
 
         {{-- PAGE HEADER --}}
-        <div class="p-6 mb-6 bg-white shadow-lg rounded-2xl">
-            <div class="flex items-center gap-4">
-                <div class="p-3 bg-blue-100 rounded-lg">
-                    <i class="text-xl text-blue-600 fa-solid fa-user-plus"></i>
-                </div>
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-800">Add New User</h1>
-                    <p class="text-sm text-gray-500">Register a new user account into the Nuctech Warehouse system.</p>
-                </div>
+        <div class="flex items-center justify-between gap-3">
+            <div>
+                <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">Add New User</h1>
+                <p class="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">Register a new system user account and assign
+                    site permissions.</p>
             </div>
+            <a href="{{ route('profile.profileList') }}"
+                class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold transition-all bg-white border text-slate-600 border-slate-200 rounded-xl hover:bg-slate-50 active:scale-95 shrink-0">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Back</span>
+            </a>
         </div>
 
-        {{-- FORM WRAPPER --}}
-        <div class="max-w-4xl bg-white shadow-md rounded-2xl">
-
-            <div class="px-6 py-4 border-b">
-                <h2 class="text-lg font-semibold text-gray-700">Account Information</h2>
+        {{-- FORM CARD --}}
+        <div class="overflow-hidden bg-white border shadow-sm border-slate-200/80 rounded-2xl sm:rounded-3xl">
+            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Account Information</h2>
             </div>
 
-            <form action="{{ route('users.store') }}" method="POST" class="p-6 space-y-6">
+            <form action="{{ route('users.store') }}" method="POST" class="p-6 space-y-6 sm:p-8">
                 @csrf
 
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
 
-                    {{-- NAME, USERNAME, EMAIL, ROLE (Tetap sama seperti sebelumnya) --}}
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Full Name</label>
-                        <input type="text" name="name" value="{{ old('name') }}" placeholder="e.g., John Doe"
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none @error('name') border-red-500 @enderror">
+                    {{-- FULL NAME --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Full Name <span
+                                class="text-rose-500">*</span></label>
+                        <input type="text" name="name" value="{{ old('name') }}" placeholder="e.g. John Doe"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400 @error('name') border-rose-500 @enderror"
+                            required>
                         @error('name')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-xs font-bold text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Username</label>
-                        <input type="text" name="username" value="{{ old('username') }}" placeholder="username123"
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none @error('username') border-red-500 @enderror">
+                    {{-- USERNAME --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Username <span
+                                class="text-rose-500">*</span></label>
+                        <input type="text" name="username" value="{{ old('username') }}" placeholder="e.g. johndoe123"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400 @error('username') border-rose-500 @enderror"
+                            required>
                         @error('username')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-xs font-bold text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Email Address</label>
+                    {{-- EMAIL --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Email Address <span
+                                class="text-rose-500">*</span></label>
                         <input type="email" name="email" value="{{ old('email') }}" placeholder="user@nuctech.com"
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none @error('email') border-red-500 @enderror">
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400 @error('email') border-rose-500 @enderror"
+                            required>
                         @error('email')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-xs font-bold text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">User Role</label>
+                    {{-- ROLE --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">User Role <span
+                                class="text-rose-500">*</span></label>
                         <select name="role" x-model="role"
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none @error('role') border-red-500 @enderror">
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 @error('role') border-rose-500 @enderror"
+                            required>
                             <option value="">-- Select Role --</option>
                             <option value="superadmin">Superadmin (Head Office)</option>
-                            <option value="admin_site">Site Admin (Branch/Location)</option>
+                            <option value="admin_site">Site Admin (Branch Location)</option>
                             <option value="team_leader">Team Leader</option>
-                            <option value="station_master">Sation Master</option>
+                            <option value="station_master">Station Master</option>
                             <option value="manager">Manager</option>
-
                         </select>
+                        @error('role')
+                            <p class="mt-1 text-xs font-bold text-rose-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     {{-- SITE ASSIGNMENT --}}
-                    <div x-show="role === 'admin_site'" x-transition>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Site Assignment</label>
+                    <div x-show="role === 'admin_site'" x-transition class="space-y-1.5 md:col-span-2">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Site Assignment <span
+                                class="text-rose-500">*</span></label>
                         <select name="site_id"
-                            class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none @error('site_id') border-red-500 @enderror">
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 @error('site_id') border-rose-500 @enderror">
                             <option value="">-- Select Site Location --</option>
                             @foreach ($sites as $site)
                                 <option value="{{ $site->id }}">{{ $site->machine_name }}</option>
@@ -89,43 +104,45 @@
                         </select>
                     </div>
 
-                    <div class="hidden md:block" x-show="role !== 'admin_site'"></div>
-
-                    {{-- PASSWORD WITH SHOW FEATURE --}}
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Password</label>
+                    {{-- PASSWORD --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Password <span
+                                class="text-rose-500">*</span></label>
                         <div class="relative">
                             <input :type="showPassword ? 'text' : 'password'" name="password" x-model="password"
                                 placeholder="Minimum 6 characters"
-                                class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 focus:outline-none @error('password') border-red-500 @enderror">
+                                class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 @error('password') border-rose-500 @enderror"
+                                required>
                             <button type="button" @click="showPassword = !showPassword"
-                                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+                                class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600">
                                 <i class="fa-solid" :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                             </button>
                         </div>
                         @error('password')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-xs font-bold text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    {{-- CONFIRM PASSWORD WITH MATCH FEATURE --}}
-                    <div>
-                        <label class="block mb-1 text-sm font-medium text-gray-700">Confirm Password</label>
+                    {{-- CONFIRM PASSWORD --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Confirm Password
+                            <span class="text-rose-500">*</span></label>
                         <div class="relative">
                             <input :type="showConfirmPassword ? 'text' : 'password'" name="password_confirmation"
                                 x-model="password_confirm" placeholder="Repeat password"
-                                class="w-full px-4 py-2 transition-colors border rounded-lg focus:ring-2 focus:outline-none"
-                                :class="password_confirm === '' ? 'border-gray-300' : (password === password_confirm ?
-                                    'border-green-500 focus:ring-green-200' : 'border-red-500 focus:ring-red-200')">
+                                class="w-full px-3.5 py-2.5 text-xs sm:text-sm border rounded-xl focus:ring-4 focus:outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"
+                                :class="password_confirm === '' ? 'border-slate-200' : (password === password_confirm ?
+                                    'border-emerald-500 focus:ring-emerald-200/50' :
+                                    'border-rose-500 focus:ring-rose-200/50')"
+                                required>
                             <button type="button" @click="showConfirmPassword = !showConfirmPassword"
-                                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+                                class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600">
                                 <i class="fa-solid" :class="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                             </button>
                         </div>
-                        {{-- Real-time validation message --}}
                         <template x-if="password_confirm !== ''">
-                            <p class="mt-1 text-xs"
-                                :class="password === password_confirm ? 'text-green-600' : 'text-red-600'">
+                            <p class="mt-1 text-xs font-bold"
+                                :class="password === password_confirm ? 'text-emerald-600' : 'text-rose-600'">
                                 <span
                                     x-text="password === password_confirm ? '✓ Passwords match' : '✗ Passwords do not match'"></span>
                             </p>
@@ -134,17 +151,20 @@
                 </div>
 
                 {{-- ACTION BUTTONS --}}
-                <div class="flex justify-end gap-3 pt-6 border-t">
-                    <a href="{{ route('profile.profile') }}"
-                        class="px-5 py-2 text-sm font-medium text-gray-700 transition bg-gray-100 rounded-lg hover:bg-gray-200">
-                        Cancel
-                    </a>
-
-                    <button type="submit" {{-- Disable button if passwords don't match --}}
-                        :disabled="password !== password_confirm || password === ''"
-                        class="px-6 py-2 text-sm font-bold text-white transition bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i class="mr-1 fa-solid fa-save"></i> Save User
-                    </button>
+                <div class="flex items-center justify-between pt-6 border-t border-slate-100">
+                    <div class="text-xs font-medium text-slate-400">
+                        Asterisk (<span class="text-rose-500">*</span>) fields are required.
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                        <a href="{{ route('profile.profileList') }}"
+                            class="px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors">
+                            Cancel
+                        </a>
+                        <button type="submit" :disabled="password !== password_confirm || password === ''"
+                            class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 rounded-xl shadow-md shadow-blue-600/20 hover:bg-blue-700 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="mr-1 fa-solid fa-save"></i> Save User
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>

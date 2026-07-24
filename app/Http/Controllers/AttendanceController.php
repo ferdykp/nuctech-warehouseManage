@@ -30,12 +30,13 @@ class AttendanceController extends Controller
             $siteId = $user->site_id; // Paksa siteId ke site milik admin_site
         } else {
             $sites = Site::all();
-            $siteId = $request->input('site_id');
+            $siteId = $request->input('site_id'); // Bisa berupa ID site atau string 'all'
         }
 
         $query = Attendance::with(['employee.site']);
 
-        if ($siteId) {
+        // Jika siteId diisi dan bukan 'all', filter berdasarkan site_id
+        if (!empty($siteId) && $siteId !== 'all') {
             $query->whereHas('employee', function ($q) use ($siteId) {
                 $q->where('site_id', $siteId);
             });
@@ -55,16 +56,21 @@ class AttendanceController extends Controller
                 $endDate = Carbon::parse($month . '-01')->endOfMonth()->format('Y-m-d');
             }
 
-            $employees = Employee::where('site_id', $siteId)
-                ->with([
-                    'attendances' => function ($q) use ($month) {
-                        $q->where('month', $month);
-                    },
-                    'schedules' => function ($q) use ($startDate, $endDate) {
-                        $q->whereBetween('date', [$startDate, $endDate])->with('shift');
-                    }
-                ])
-                ->get();
+            $employeesQuery = Employee::with([
+                'site',
+                'attendances' => function ($q) use ($month) {
+                    $q->where('month', $month);
+                },
+                'schedules' => function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween('date', [$startDate, $endDate])->with('shift');
+                }
+            ]);
+
+            if ($siteId !== 'all') {
+                $employeesQuery->where('site_id', $siteId);
+            }
+
+            $employees = $employeesQuery->get();
         }
 
         $holidays = $this->holidayService->getHolidaysForMonth($month);
@@ -90,16 +96,22 @@ class AttendanceController extends Controller
             $startDate = Carbon::parse($month . '-01')->startOfMonth()->format('Y-m-d');
             $endDate = Carbon::parse($month . '-01')->endOfMonth()->format('Y-m-d');
 
-            $employees = Employee::where('site_id', $siteId)
-                ->with([
-                    'attendances' => function ($q) use ($month) {
-                        $q->where('month', $month);
-                    },
-                    'schedules' => function ($q) use ($startDate, $endDate) {
-                        $q->whereBetween('date', [$startDate, $endDate])->with('shift');
-                    }
-                ])
-                ->get();
+            $employeesQuery = Employee::with([
+                'site',
+                'attendances' => function ($q) use ($month) {
+                    $q->where('month', $month);
+                },
+                'schedules' => function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween('date', [$startDate, $endDate])->with('shift');
+                }
+            ]);
+
+            // Filter site hanya jika siteId bukan 'all'
+            if ($siteId !== 'all') {
+                $employeesQuery->where('site_id', $siteId);
+            }
+
+            $employees = $employeesQuery->get();
 
             return response()->json($employees);
         } catch (\Exception $e) {
@@ -121,12 +133,16 @@ class AttendanceController extends Controller
         $siteId = $request->site_id;
 
         // Security check admin_site
-        if ($user->role === 'admin_site' && (int)$user->site_id !== (int)$siteId) {
-            abort(403, 'Anda tidak memiliki akses untuk mengeksport data site ini.');
+        if ($user->role === 'admin_site') {
+            $siteId = $user->site_id; // Paksa admin site hanya bisa ekspor site milik sendiri
         }
 
-        $site = Site::findOrFail($siteId);
-        $filename = 'Rekap_Absensi_' . str_replace(' ', '_', $site->machine_name) . '_' . $request->month . '.xlsx';
+        if ($siteId === 'all') {
+            $filename = 'Rekap_Absensi_Semua_Site_' . $request->month . '.xlsx';
+        } else {
+            $site = Site::findOrFail($siteId);
+            $filename = 'Rekap_Absensi_' . str_replace(' ', '_', $site->machine_name) . '_' . $request->month . '.xlsx';
+        }
 
         return Excel::download(new AttendanceExport($siteId, $request->month), $filename);
     }
@@ -216,9 +232,6 @@ class AttendanceController extends Controller
         return $workingDaysCount;
     }
 
-    /**
-     * Helper privat untuk memastikan string month selalu berformat YYYY-MM
-     */
     private function sanitizeMonth(?string $monthInput): string
     {
         if (empty($monthInput) || $monthInput === '-') {

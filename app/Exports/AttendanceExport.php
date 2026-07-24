@@ -6,22 +6,28 @@ use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 class AttendanceExport implements WithMultipleSheets
 {
-    protected $branchId;
+    protected $siteId;
     protected $month;
 
-    public function __construct($branchId, $month)
+    public function __construct($siteId, $month)
     {
-        $this->branchId = $branchId;
+        $this->siteId = $siteId;
         $this->month = $month;
     }
 
     public function sheets(): array
     {
-        return [
-            new Sheets\AttendanceFix($this->branchId, $this->month),  // Sheet 2: Ringkasan Total
-            new Sheets\AttendanceDetailSheet($this->branchId, $this->month),   // Sheet 1: Detail Harian (1-1, 1-2, 1-3, dst)
-            new Sheets\AttendanceSummarySheet($this->branchId, $this->month),  // Sheet 2: Ringkasan Total
+        // Jika site_id = 'all' atau kosong, tampilkan sheet gabungan/semua site
+        if ($this->siteId === 'all' || empty($this->siteId)) {
+            return [
+                new Sheets\AttendanceFix($this->siteId, $this->month),          // Sheet 1: Per site tanpa kolom site
+                new Sheets\AttendanceDetailSheet(null, $this->month), // Semua Site
+            ];
+        }
 
+        return [
+            new Sheets\AttendanceFix($this->siteId, $this->month),          // Sheet 1: Per site tanpa kolom site
+            new Sheets\AttendanceDetailSheet($this->siteId, $this->month),   // Sheet 2: Per site dengan kolom site
         ];
     }
 }

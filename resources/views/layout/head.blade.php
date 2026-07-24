@@ -9,6 +9,11 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <link rel="icon" href="{{ asset('img/logo.png') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
 
     <title>Nuctech Warehouse Management</title>
 @endpush

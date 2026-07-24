@@ -1,41 +1,43 @@
 @extends('layout.master')
 
-@section('title', 'Kelola Master Shift')
+@section('title', 'Master Shift Management')
 
 @section('content')
-    <div class="w-full px-6 py-8">
+    <div class="w-full space-y-6">
         {{-- ============ HEADER ============ --}}
-        <div class="flex flex-col justify-between gap-3 mb-6 md:flex-row md:items-center">
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div>
-                <h1 class="text-3xl font-extrabold tracking-tighter text-black">Master Shift Management</h1>
-                <p class="text-sm text-gray-500">
-                    Atur master jam kerja dan shift opsional yang dipakai di seluruh site.
+                <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">Master Shift Management</h1>
+                <p class="mt-0.5 text-xs sm:text-sm font-medium text-slate-500">
+                    Configure work hours, shift templates, and off-day rules used across all sites.
                 </p>
                 @if (Auth::user()->role === 'admin_site')
-                    <p class="mt-1 text-xs font-semibold text-amber-600">
-                        <i class="mr-1 fa-solid fa-lock"></i> Mode Akses: Read-only (Site Admin)
+                    <p class="mt-1 text-xs font-semibold text-amber-600 flex items-center gap-1.5">
+                        <i class="fa-solid fa-lock"></i> Access Mode: Read-only (Site Admin)
                     </p>
                 @endif
             </div>
             <a href="{{ route('schedule.index') }}"
-                class="flex items-center gap-1 px-4 py-2 text-xs font-bold text-gray-700 transition-colors bg-gray-100 hover:bg-gray-200 rounded-xl w-fit">
-                <i class="mr-1 fa-solid fa-calendar-days"></i> Ke Halaman Jadwal
+                class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-700 transition-all bg-white border border-slate-200 rounded-xl hover:bg-slate-50 shadow-2xs active:scale-95 shrink-0">
+                <i class="fa-solid fa-calendar-days text-slate-400"></i> Go to Schedules
             </a>
         </div>
 
         {{-- ============ ALERTS ============ --}}
         @if (session('success'))
             <div
-                class="flex items-center gap-2 p-4 mb-6 text-sm text-green-800 border border-green-200 bg-green-50 rounded-xl">
-                <i class="text-base fa-solid fa-circle-check"></i>
+                class="flex items-center gap-2.5 p-4 text-xs sm:text-sm font-semibold text-emerald-800 border border-emerald-200 bg-emerald-50 rounded-2xl">
+                <i class="text-base fa-solid fa-circle-check text-emerald-600"></i>
                 <span>{{ session('success') }}</span>
             </div>
         @endif
 
         @if ($errors->any())
-            <div class="p-4 mb-6 text-sm text-red-800 border border-red-200 bg-red-50 rounded-xl">
-                <div class="mb-1 font-bold">Gagal menyimpan data:</div>
-                <ul class="list-disc pl-4 space-y-0.5">
+            <div class="p-4 space-y-1 text-xs border sm:text-sm text-rose-800 border-rose-200 bg-rose-50 rounded-2xl">
+                <div class="font-bold flex items-center gap-1.5">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> Failed to save shift data:
+                </div>
+                <ul class="list-disc pl-5 space-y-0.5 font-medium">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
@@ -43,80 +45,85 @@
             </div>
         @endif
 
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {{-- ============ FORM TAMBAH SHIFT BARU (HANYA UNTUK SUPERADMIN) ============ --}}
+        <div class="grid items-start grid-cols-1 gap-6 lg:grid-cols-3">
+            {{-- ============ CREATE SHIFT FORM (SUPERADMIN ONLY) ============ --}}
             @if (Auth::user()->role === 'superadmin')
-                <div class="p-6 bg-white shadow-sm rounded-2xl ring-1 ring-gray-200 lg:col-span-1 h-fit">
-                    <h5 class="mb-4 text-xs font-bold tracking-wider text-gray-400 uppercase">Tambah Shift Baru</h5>
+                <div
+                    class="p-5 bg-white border shadow-sm sm:p-6 border-slate-200/80 rounded-2xl sm:rounded-3xl lg:col-span-1">
+                    <h2 class="mb-4 text-xs font-extrabold tracking-wider uppercase text-slate-700">Add New Shift</h2>
 
                     <form action="{{ route('shift.store') }}" method="POST" class="space-y-4">
                         @csrf
-                        <div>
-                            <label class="block mb-1 text-xs font-medium text-gray-600">Nama Shift <span
-                                    class="text-red-500">*</span></label>
-                            <input type="text" name="shift_name" placeholder="Contoh: Shift 1, Office Hour, OFF"
-                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Shift Name <span
+                                    class="text-rose-500">*</span></label>
+                            <input type="text" name="shift_name" placeholder="e.g. Shift 1, Office Hours, OFF"
+                                class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
                                 required>
                         </div>
 
-                        <div class="flex items-center gap-2 py-2">
+                        <div class="flex items-center gap-2 py-1">
                             <input type="checkbox" name="is_off" id="is_off" value="1"
-                                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
                                 onchange="toggleTimeInputs(this, 'time-inputs', 'start_time', 'end_time')">
-                            <label for="is_off" class="text-xs font-semibold text-red-600 cursor-pointer">
-                                Tandai sebagai Hari Libur (OFF)
+                            <label for="is_off" class="text-xs font-bold cursor-pointer select-none text-rose-600">
+                                Mark as Off Day (OFF)
                             </label>
                         </div>
 
-                        <div id="time-inputs" class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block mb-1 text-xs font-medium text-gray-600">Jam Mulai</label>
+                        <div id="time-inputs" class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Start
+                                    Time</label>
                                 <input type="time" name="start_time" id="start_time"
-                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                    class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"
                                     required>
                             </div>
-                            <div>
-                                <label class="block mb-1 text-xs font-medium text-gray-600">Jam Selesai</label>
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">End
+                                    Time</label>
                                 <input type="time" name="end_time" id="end_time"
-                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                    class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"
                                     required>
                             </div>
                         </div>
 
                         <button type="submit"
-                            class="w-full py-2.5 mt-2 text-sm font-bold text-white transition-all bg-blue-600 shadow-md hover:bg-blue-700 rounded-xl active:scale-95">
-                            <i class="mr-1 fa-solid fa-plus"></i> Simpan Shift Baru
+                            class="w-full py-2.5 mt-2 text-xs font-bold text-white transition-all bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95">
+                            <i class="mr-1 fa-solid fa-plus"></i> Save New Shift
                         </button>
                     </form>
                 </div>
             @endif
 
-            {{-- ============ DAFTAR SHIFT ============ --}}
+            {{-- ============ SHIFT LIST TABLE ============ --}}
             <div
-                class="overflow-hidden bg-white shadow-sm rounded-2xl ring-1 ring-gray-200 {{ Auth::user()->role === 'superadmin' ? 'lg:col-span-2' : 'lg:col-span-3' }}">
-                <div class="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
-                    <h5 class="text-xs font-bold tracking-wider text-gray-400 uppercase">Daftar Shift Saat Ini</h5>
-                    <span class="text-xs font-semibold text-gray-400">{{ count($shifts) }} Shift Terdaftar</span>
+                class="overflow-hidden bg-white border border-slate-200/80 shadow-sm rounded-2xl sm:rounded-3xl {{ Auth::user()->role === 'superadmin' ? 'lg:col-span-2' : 'lg:col-span-3' }}">
+                <div class="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
+                    <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Registered Master Shifts</h2>
+                    <span class="text-xs font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">{{ count($shifts) }}
+                        Shift(s)</span>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full border-collapse">
-                        <thead class="text-xs font-semibold text-gray-700 bg-gray-100 border-b">
-                            <tr>
-                                <th class="px-6 py-3 text-left">Nama Shift</th>
-                                <th class="px-6 py-3 text-center">Jam Kerja</th>
-                                <th class="px-6 py-3 text-center">Status</th>
+                    <table class="w-full border-collapse min-w-[600px]">
+                        <thead>
+                            <tr
+                                class="border-b bg-slate-100/70 border-slate-200/80 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                                <th class="px-6 py-3.5 text-left">Shift Name</th>
+                                <th class="px-6 py-3.5 text-center">Working Hours</th>
+                                <th class="px-6 py-3.5 text-center">Status</th>
                                 @if (Auth::user()->role === 'superadmin')
-                                    <th class="px-6 py-3 text-center">Aksi</th>
+                                    <th class="px-6 py-3.5 text-center w-28">Actions</th>
                                 @endif
                             </tr>
                         </thead>
-                        <tbody class="text-sm divide-y divide-gray-100">
+                        <tbody class="text-xs font-medium divide-y divide-slate-100 sm:text-sm text-slate-700">
                             @forelse($shifts as $sf)
-                                <tr class="transition-colors hover:bg-gray-50/50">
-                                    <td class="px-6 py-4 font-bold text-gray-900">{{ $sf->shift_name }}</td>
-                                    <td class="px-6 py-4 font-medium text-center text-gray-600">
+                                <tr class="transition-colors hover:bg-slate-50/80">
+                                    <td class="px-6 py-4 font-bold text-slate-800">{{ $sf->shift_name }}</td>
+                                    <td class="px-6 py-4 font-semibold text-center text-slate-600">
                                         @if ($sf->is_off)
-                                            <span class="font-normal text-gray-400">&mdash;</span>
+                                            <span class="font-normal text-slate-400">&mdash;</span>
                                         @else
                                             {{ \Carbon\Carbon::parse($sf->start_time)->format('H:i') }} -
                                             {{ \Carbon\Carbon::parse($sf->end_time)->format('H:i') }}
@@ -125,36 +132,36 @@
                                     <td class="px-6 py-4 text-center">
                                         @if ($sf->is_off)
                                             <span
-                                                class="px-2.5 py-1 text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-full">
-                                                Libur (OFF)
+                                                class="px-2.5 py-1 text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200/60 rounded-full uppercase">
+                                                Off Day (OFF)
                                             </span>
                                         @else
                                             <span
-                                                class="px-2.5 py-1 text-xs font-bold text-green-700 bg-green-50 border border-green-200 rounded-full">
-                                                Masuk Kerja
+                                                class="px-2.5 py-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 rounded-full uppercase">
+                                                Working Shift
                                             </span>
                                         @endif
                                     </td>
                                     @if (Auth::user()->role === 'superadmin')
                                         <td class="px-6 py-4 text-center">
-                                            <div class="flex items-center justify-center gap-1">
+                                            <div class="flex items-center justify-center gap-1.5">
                                                 <!-- Edit Button -->
                                                 <button type="button"
                                                     onclick="openEditShiftModal({{ $sf->id }}, '{{ addslashes($sf->shift_name) }}', {{ $sf->is_off ? 'true' : 'false' }}, '{{ \Carbon\Carbon::parse($sf->start_time)->format('H:i') }}', '{{ \Carbon\Carbon::parse($sf->end_time)->format('H:i') }}')"
-                                                    class="p-1.5 text-xs text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    class="p-1.5 text-amber-600 transition-colors bg-amber-50 rounded-lg hover:bg-amber-600 hover:text-white"
                                                     title="Edit Shift">
-                                                    <i class="fa-solid fa-pen-to-square"></i>
+                                                    <i class="text-xs fa-solid fa-pen-to-square"></i>
                                                 </button>
 
                                                 <!-- Delete Button -->
                                                 <form action="{{ route('shift.destroy', $sf->id) }}" method="POST"
-                                                    onsubmit="return confirm('Apakah Anda yakin ingin menghapus shift \'{{ $sf->shift_name }}\'?')">
+                                                    onsubmit="return confirm('Are you sure you want to delete shift \'{{ addslashes($sf->shift_name) }}\'?')">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
-                                                        class="p-1.5 text-xs text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="Hapus Shift">
-                                                        <i class="fa-solid fa-trash"></i>
+                                                        class="p-1.5 text-rose-600 transition-colors bg-rose-50 rounded-lg hover:bg-rose-600 hover:text-white"
+                                                        title="Delete Shift">
+                                                        <i class="text-xs fa-solid fa-trash-can"></i>
                                                     </button>
                                                 </form>
                                             </div>
@@ -164,8 +171,11 @@
                             @empty
                                 <tr>
                                     <td colspan="{{ Auth::user()->role === 'superadmin' ? '4' : '3' }}"
-                                        class="px-6 py-12 text-xs text-center text-gray-400">
-                                        Belum ada master shift terdaftar.
+                                        class="px-6 py-12 text-center text-slate-400">
+                                        <div class="flex flex-col items-center justify-center gap-2">
+                                            <i class="text-3xl opacity-50 text-slate-300 fa-solid fa-folder-open"></i>
+                                            <p class="text-sm font-bold text-slate-700">No master shifts registered yet.</p>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforelse
@@ -176,58 +186,61 @@
         </div>
     </div>
 
-    {{-- ============ MODAL EDIT SHIFT (HANYA SUPERADMIN) ============ --}}
+    {{-- ============ EDIT SHIFT MODAL (SUPERADMIN ONLY) ============ --}}
     @if (Auth::user()->role === 'superadmin')
-        <div id="editShiftModal" class="fixed inset-0 z-50 items-center justify-center hidden p-4 bg-black/50 modal-overlay"
+        <div id="editShiftModal"
+            class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs modal-overlay"
             onclick="if(event.target===this) closeModal('editShiftModal')">
-            <div class="w-full max-w-md p-6 bg-white shadow-xl rounded-2xl">
-                <div class="flex items-start justify-between pb-3 mb-4 border-b">
-                    <h3 class="text-base font-bold text-gray-900">Edit Master Shift</h3>
-                    <button type="button" onclick="closeModal('editShiftModal')" class="text-gray-400 hover:text-gray-600">
-                        <i class="fa-solid fa-xmark"></i>
+            <div class="w-full max-w-md overflow-hidden bg-white shadow-2xl rounded-2xl">
+                <div class="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
+                    <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Edit Master Shift</h3>
+                    <button type="button" onclick="closeModal('editShiftModal')"
+                        class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
+                        <i class="text-xs fa-solid fa-xmark"></i>
                     </button>
                 </div>
 
-                <form id="formEditShift" action="" method="POST" class="space-y-4">
+                <form id="formEditShift" action="" method="POST" class="p-6 space-y-4">
                     @csrf
                     @method('PUT')
-                    <div>
-                        <label class="block mb-1 text-xs font-medium text-gray-600">Nama Shift <span
-                                class="text-red-500">*</span></label>
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Shift Name <span
+                                class="text-rose-500">*</span></label>
                         <input type="text" name="shift_name" id="edit_shift_name" required
-                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
                     </div>
 
-                    <div class="flex items-center gap-2 py-2">
+                    <div class="flex items-center gap-2 py-1">
                         <input type="checkbox" name="is_off" id="edit_is_off" value="1"
-                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
                             onchange="toggleTimeInputs(this, 'edit-time-inputs', 'edit_start_time', 'edit_end_time')">
-                        <label for="edit_is_off" class="text-xs font-semibold text-red-600 cursor-pointer">
-                            Tandai sebagai Hari Libur (OFF)
+                        <label for="edit_is_off" class="text-xs font-bold cursor-pointer select-none text-rose-600">
+                            Mark as Off Day (OFF)
                         </label>
                     </div>
 
-                    <div id="edit-time-inputs" class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block mb-1 text-xs font-medium text-gray-600">Jam Mulai</label>
+                    <div id="edit-time-inputs" class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Start
+                                Time</label>
                             <input type="time" name="start_time" id="edit_start_time"
-                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
                         </div>
-                        <div>
-                            <label class="block mb-1 text-xs font-medium text-gray-600">Jam Selesai</label>
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">End Time</label>
                             <input type="time" name="end_time" id="edit_end_time"
-                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-end gap-2 pt-3 border-t">
+                    <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
                         <button type="button" onclick="closeModal('editShiftModal')"
-                            class="px-4 py-2 text-xs font-semibold text-gray-600 rounded-lg hover:bg-gray-100">
-                            Batal
+                            class="px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors">
+                            Cancel
                         </button>
                         <button type="submit"
-                            class="px-4 py-2 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700">
-                            Simpan Perubahan
+                            class="px-5 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95 transition-all">
+                            Save Changes
                         </button>
                     </div>
                 </form>

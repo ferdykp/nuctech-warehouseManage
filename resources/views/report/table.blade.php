@@ -1,37 +1,37 @@
 @forelse ($data as $index => $item)
-    <tr class="transition-colors hover:bg-slate-50/50" id="row-{{ $item->id }}">
-        {{-- Checkbox untuk Delete Selected (Hanya untuk Superadmin) --}}
+    <tr class="transition-colors hover:bg-slate-50/80" id="row-{{ $item->id }}">
+        {{-- Checkbox --}}
         @if (Auth::user()->role === 'superadmin')
-            <td class="p-4 text-center">
+            <td class="px-4 sm:px-6 py-3.5 text-center">
                 <input type="checkbox" name="ids[]" value="{{ $item->id }}"
-                    class="w-4 h-4 text-red-600 rounded sub_chk border-slate-300 focus:ring-red-500">
+                    class="w-4 h-4 rounded text-rose-600 sub_chk border-slate-300 focus:ring-rose-500">
             </td>
         @endif
 
-        {{-- Nomor Urut --}}
-        <td class="p-4 font-bold text-center text-slate-500">
+        {{-- Serial Number --}}
+        <td class="px-4 sm:px-6 py-3.5 font-bold text-center text-slate-400">
             {{ ($data->currentPage() - 1) * $data->perPage() + $loop->iteration }}
         </td>
 
-        {{-- Nama Site / Machine --}}
-        <td class="p-4">
+        {{-- Site Machine --}}
+        <td class="px-4 sm:px-6 py-3.5">
             <div class="font-bold text-slate-800">{{ $item->site_machine }}</div>
-            <div class="text-[11px] font-medium text-slate-400">Series: {{ $item->series_machine }}</div>
+            <div class="text-[11px] font-normal text-slate-400">Series: {{ $item->series_machine ?? 'N/A' }}</div>
         </td>
 
-        {{-- Petugas / Reporter --}}
-        <td class="p-4">
-            <div class="flex items-center gap-2">
+        {{-- Attendant --}}
+        <td class="px-4 sm:px-6 py-3.5">
+            <div class="flex items-center gap-2.5">
                 <div
-                    class="flex items-center justify-center text-xs font-black text-red-600 uppercase rounded-full w-7 h-7 bg-red-50">
+                    class="flex items-center justify-center text-xs font-black uppercase rounded-full text-rose-600 w-7 h-7 bg-rose-50 shrink-0">
                     {{ substr($item->attendant, 0, 2) }}
                 </div>
                 <span class="font-semibold text-slate-700">{{ $item->attendant }}</span>
             </div>
         </td>
 
-        {{-- Tanggal Kegagalan / Kerusakan --}}
-        <td class="p-4 font-medium text-center text-slate-600">
+        {{-- Failure Date --}}
+        <td class="px-4 sm:px-6 py-3.5 font-medium text-center text-slate-600">
             <span
                 class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 rounded-lg text-xs font-bold text-slate-600">
                 <i class="fa-regular fa-calendar text-[11px]"></i>
@@ -39,25 +39,26 @@
             </span>
         </td>
 
-        {{-- Kolom Action (Hanya untuk Superadmin) --}}
+        {{-- Action Column --}}
         @if (Auth::user()->role === 'superadmin')
-            <td class="p-4 text-center">
-                <div class="flex items-center justify-center gap-2">
-                    {{-- Tombol Edit --}}
+            <td class="px-4 sm:px-6 py-3.5 text-center">
+                <div class="flex items-center justify-center gap-1.5">
+                    {{-- Edit --}}
                     <a href="{{ route($routePrefix . '.edit', $item->id) }}"
-                        class="p-2 text-blue-600 transition-all bg-blue-50 rounded-xl hover:bg-blue-600 hover:text-white"
+                        class="p-1.5 text-blue-600 transition-colors bg-blue-50 rounded-lg hover:bg-blue-600 hover:text-white"
                         title="Edit Report">
                         <i class="text-xs fa-solid fa-pen-to-square"></i>
                     </a>
 
-                    {{-- Tombol Delete (Menggunakan Form preventif) --}}
+                    {{-- Delete --}}
                     <form action="{{ route($routePrefix . '.destroy', $item->id) }}" method="POST"
-                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus report ini?');" class="inline">
+                        onsubmit="return confirm('Are you sure you want to delete this failure report?');"
+                        class="inline">
                         @csrf
                         @method('DELETE')
                         <button type="submit"
-                            class="p-2 text-red-600 transition-all bg-red-50 rounded-xl hover:bg-red-600 hover:text-white"
-                            title="Hapus Report">
+                            class="p-1.5 text-rose-600 transition-colors bg-rose-50 rounded-lg hover:bg-rose-600 hover:text-white"
+                            title="Delete Report">
                             <i class="text-xs fa-solid fa-trash-can"></i>
                         </button>
                     </form>
@@ -67,12 +68,9 @@
     </tr>
 @empty
     <tr>
-        <td colspan="{{ Auth::user()->role === 'superadmin' ? 6 : 4 }}"
-            class="p-8 text-sm italic font-medium text-center text-slate-400">
-            <div class="flex flex-col items-center gap-2 py-4">
-                <i class="text-2xl fa-solid fa-folder-open text-slate-300"></i>
-                <span>Tidak ada data report yang ditemukan.</span>
-            </div>
+        <td colspan="{{ Auth::user()->role === 'superadmin' ? 6 : 4 }}" class="p-10 text-center text-slate-400">
+            <i class="block mb-2 text-3xl opacity-50 fa-solid fa-folder-open"></i>
+            <p class="text-sm font-bold text-slate-700">No failure reports found</p>
         </td>
     </tr>
 @endforelse

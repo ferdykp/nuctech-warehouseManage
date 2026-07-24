@@ -1,62 +1,66 @@
 @extends('layout.master')
 
-@section('title', 'Dashboard Rekap Absensi')
+@section('title', 'Attendance Recap Dashboard')
 
 @section('content')
-    <div class="w-full px-6 py-8 mx-auto space-y-6">
+    <div class="w-full space-y-6">
 
         {{-- ============ FLASH MESSAGES ============ --}}
         @if (session('success'))
             <div
-                class="flex items-center gap-2 px-4 py-3 text-sm font-medium text-green-800 border border-green-200 rounded-lg bg-green-50">
-                <i class="text-lg bi bi-check-circle-fill"></i> {{ session('success') }}
+                class="flex items-center gap-3 p-4 text-xs font-semibold border sm:text-sm text-emerald-800 border-emerald-200/80 bg-emerald-50 rounded-2xl">
+                <i class="text-base fa-solid fa-circle-check text-emerald-600"></i>
+                <span>{{ session('success') }}</span>
             </div>
         @endif
         @if (session('error'))
             <div
-                class="flex items-center gap-2 px-4 py-3 text-sm font-medium text-red-800 border border-red-200 rounded-lg bg-red-50">
-                <i class="text-lg bi bi-exclamation-triangle-fill"></i> {{ session('error') }}
+                class="flex items-center gap-3 p-4 text-xs font-semibold border sm:text-sm text-rose-800 border-rose-200/80 bg-rose-50 rounded-2xl">
+                <i class="text-base fa-solid fa-triangle-exclamation text-rose-600"></i>
+                <span>{{ session('error') }}</span>
             </div>
         @endif
 
         {{-- ============ PAGE HEADER ============ --}}
-        <div class="flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-                <div class="flex items-center justify-center text-white bg-blue-600 rounded-lg w-11 h-11 shrink-0">
-                    <i class="text-xl bi bi-calendar-check"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold text-gray-900">Rekap Absensi</h1>
-                    <p class="text-sm text-gray-500">Kelola dan pantau kehadiran karyawan per cabang & periode.</p>
-                </div>
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div>
+                <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
+                    Attendance Recap
+                </h1>
+                <p class="mt-0.5 text-xs sm:text-sm font-medium text-slate-500">
+                    Manage and monitor employee attendance sessions per site location and period.
+                </p>
+                @if (Auth::user()->role === 'admin_site')
+                    <p class="mt-1 text-xs font-semibold text-blue-600 flex items-center gap-1.5">
+                        <i class="fa-solid fa-building-user"></i> Site Admin: {{ Auth::user()->site->machine_name ?? '-' }}
+                    </p>
+                @endif
             </div>
-            @if (Auth::user()->role === 'admin_site')
-                <span class="px-3 py-1 text-xs font-bold text-blue-700 border border-blue-200 rounded-full bg-blue-50">
-                    <i class="mr-1 fa-solid fa-building-user"></i> Site Admin: {{ Auth::user()->site->machine_name ?? '-' }}
-                </span>
-            @endif
         </div>
 
         {{-- ============ STEP 1: FILTER / WORKSPACE ============ --}}
-        <div class="p-6 bg-white rounded-lg shadow-md">
-            <h5 class="flex items-center gap-2 mb-4 text-base font-bold text-gray-800 sm:text-lg">
+        <div class="p-5 bg-white border shadow-sm sm:p-6 border-slate-200/80 rounded-2xl sm:rounded-3xl">
+            <h5 class="flex items-center gap-2.5 mb-4 text-sm sm:text-base font-extrabold text-slate-800">
                 <span
-                    class="flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-blue-600 rounded-full shrink-0">1</span>
-                Pilih Cabang &amp; Periode
+                    class="flex items-center justify-center w-6 h-6 text-xs font-black text-white bg-blue-600 rounded-full shrink-0">1</span>
+                Select Site &amp; Period
             </h5>
             <form action="{{ route('attendance.index') }}" method="GET" id="mainWorkspaceFilterForm"
                 class="grid items-end grid-cols-1 gap-4 md:grid-cols-12">
 
-                <div class="md:col-span-5">
-                    <label for="main_branch_select" class="block mb-1.5 text-xs font-medium text-gray-500">
-                        Target Kantor Cabang (Branch)
+                <div class="md:col-span-5 space-y-1.5">
+                    <label for="main_branch_select" class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                        Target Site Location / Branch
                     </label>
 
                     @if (Auth::user()->role === 'superadmin')
                         <select name="site_id" id="main_branch_select"
-                            class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full p-2.5 text-xs sm:text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-slate-800 outline-none transition-all"
                             required onchange="handleFilterChange()">
-                            <option value="">-- Pilih Kantor Branch --</option>
+                            <option value="">-- Select Branch Site --</option>
+                            <option value="all" {{ request('site_id', $siteId) === 'all' ? 'selected' : '' }}>
+                                🌐 -- Display All Sites / Branches --
+                            </option>
                             @foreach ($sites as $site)
                                 <option value="{{ $site->id }}"
                                     {{ request('site_id', $siteId) == $site->id ? 'selected' : '' }}>
@@ -66,44 +70,44 @@
                         </select>
                     @else
                         <input type="hidden" name="site_id" id="main_branch_select" value="{{ Auth::user()->site_id }}">
-                        <input type="text" value="{{ Auth::user()->site->machine_name ?? 'Site Terdaftar' }}"
-                            class="w-full px-3 py-2 text-sm font-bold text-gray-700 bg-gray-100 border border-gray-300 rounded-lg cursor-not-allowed"
+                        <input type="text" value="{{ Auth::user()->site->machine_name ?? 'Registered Site' }}"
+                            class="w-full p-2.5 text-xs sm:text-sm font-bold text-slate-700 bg-slate-100 border border-slate-200 rounded-xl cursor-not-allowed"
                             readonly>
                     @endif
                 </div>
 
-                <div class="md:col-span-4">
-                    <label class="block mb-1.5 text-xs font-medium text-gray-500">Periode Rekap</label>
+                <div class="md:col-span-4 space-y-1.5">
+                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Recap Period</label>
                     <div class="flex gap-2">
                         @php
                             $requestMonthRaw = request('month', date('Y-m'));
                             $selectedMonth = date('m', strtotime($requestMonthRaw . '-01'));
                             $selectedYear = date('Y', strtotime($requestMonthRaw . '-01'));
                             $daftarBulan = [
-                                '01' => 'Januari',
-                                '02' => 'Februari',
-                                '03' => 'Maret',
+                                '01' => 'January',
+                                '02' => 'February',
+                                '03' => 'March',
                                 '04' => 'April',
-                                '05' => 'Mei',
-                                '06' => 'Juni',
-                                '07' => 'Juli',
-                                '08' => 'Agustus',
+                                '05' => 'May',
+                                '06' => 'June',
+                                '07' => 'July',
+                                '08' => 'August',
                                 '09' => 'September',
-                                '10' => 'Oktober',
+                                '10' => 'October',
                                 '11' => 'November',
-                                '12' => 'Desember',
+                                '12' => 'December',
                             ];
                         @endphp
-                        <select id="filter_bulan" aria-label="Bulan"
-                            class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        <select id="filter_bulan" aria-label="Month"
+                            class="w-full p-2.5 text-xs sm:text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-slate-800 outline-none transition-all"
                             onchange="handleFilterChange()" required>
                             @foreach ($daftarBulan as $angka => $nama)
                                 <option value="{{ $angka }}" {{ $selectedMonth == $angka ? 'selected' : '' }}>
                                     {{ $nama }}</option>
                             @endforeach
                         </select>
-                        <select id="filter_tahun" aria-label="Tahun"
-                            class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        <select id="filter_tahun" aria-label="Year"
+                            class="w-full p-2.5 text-xs sm:text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-slate-800 outline-none transition-all"
                             onchange="handleFilterChange()" required>
                             @for ($year = date('Y') - 2; $year <= date('Y') + 2; $year++)
                                 <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>
@@ -116,32 +120,32 @@
 
                 <div class="flex gap-2 md:col-span-3">
                     <button type="submit"
-                        class="flex items-center justify-center flex-grow gap-1 px-4 py-2 text-sm font-medium text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">
-                        <i class="bi bi-search"></i> Buka Data
+                        class="flex-grow flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95">
+                        <i class="fa-solid fa-folder-open"></i> Load Data
                     </button>
                     @php $activeSiteId = request('site_id', $siteId); @endphp
                     <a id="exportBtn"
                         href="{{ route('attendance.export', ['site_id' => $activeSiteId, 'month' => request('month', date('Y-m'))]) }}"
-                        title="Export ke Excel"
-                        class="px-4 py-2 rounded-lg border font-medium text-sm flex items-center justify-center transition-colors {{ !$activeSiteId ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed pointer-events-none' : 'bg-green-600 hover:bg-green-700 text-white border-green-600' }}">
-                        <i class="fa-solid fa-file-excel"></i>
+                        title="Export to Excel"
+                        class="px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center transition-all active:scale-95 {{ empty($activeSiteId) ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed pointer-events-none' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20' }}">
+                        <i class="mr-1 fa-solid fa-file-excel"></i> Export
                     </a>
                 </div>
             </form>
         </div>
 
-        {{-- ============ KETERANGAN TANGGAL MERAH BULAN INI ============ --}}
+        {{-- ============ NATIONAL HOLIDAYS BANNER ============ --}}
         @if (!empty($holidays))
-            <div class="p-4 border border-red-100 rounded-lg bg-red-50/60">
-                <h6 class="flex items-center gap-2 mb-2 text-xs font-bold tracking-wide text-red-600 uppercase">
-                    <i class="fa-solid fa-circle-exclamation"></i> Hari Libur Nasional / Tanggal Merah Bulan Ini
+            <div class="p-4 border border-rose-200/80 rounded-2xl bg-rose-50/60">
+                <h6 class="flex items-center gap-2 mb-2 text-xs font-extrabold tracking-wider uppercase text-rose-600">
+                    <i class="fa-solid fa-circle-exclamation"></i> National Holidays & Red Dates This Month
                 </h6>
                 <ul class="grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($holidays as $date => $name)
-                        <li class="flex items-baseline gap-2 text-sm">
+                        <li class="flex items-baseline gap-2 text-xs">
                             <span
-                                class="w-6 font-bold text-right text-red-700 shrink-0">{{ \Carbon\Carbon::parse($date)->format('d') }}</span>
-                            <span class="text-gray-700">{{ $name }}</span>
+                                class="w-6 font-bold text-right text-rose-700 shrink-0">{{ \Carbon\Carbon::parse($date)->format('d') }}</span>
+                            <span class="font-medium text-slate-700">{{ $name }}</span>
                         </li>
                     @endforeach
                 </ul>
@@ -151,45 +155,46 @@
         {{-- ============ STEP 2: MASS ATTENDANCE INPUT ============ --}}
         @php $currentSiteId = request('site_id', $siteId); @endphp
         @if ($currentSiteId)
-            <div class="p-6 bg-white border border-gray-100 rounded-lg shadow-sm">
+            <div class="p-5 space-y-4 bg-white border shadow-sm sm:p-6 border-slate-200/80 rounded-2xl sm:rounded-3xl">
                 <div
-                    class="flex flex-col gap-3 pb-3 mb-4 border-b border-gray-100 sm:flex-row sm:justify-between sm:items-center">
+                    class="flex flex-col gap-3 pb-3 border-b border-slate-100 sm:flex-row sm:justify-between sm:items-center">
                     <div>
-                        <h5 class="flex items-center gap-2 text-base font-bold text-gray-800 sm:text-lg">
+                        <h5 class="flex items-center gap-2.5 text-sm sm:text-base font-extrabold text-slate-800">
                             <span
-                                class="flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-blue-600 rounded-full shrink-0">2</span>
-                            Isi Kehadiran Karyawan
+                                class="flex items-center justify-center w-6 h-6 text-xs font-black text-white bg-blue-600 rounded-full shrink-0">2</span>
+                            Record Employee Attendance {{ $currentSiteId === 'all' ? '(All Sites)' : '' }}
                         </h5>
-                        <small class="text-xs text-gray-500 ms-8">Centang sesi kerja tiap karyawan per tanggal, atau pakai
-                            kehadiran otomatis di bawah</small>
+                        <small class="text-xs font-medium text-slate-500 ms-8">Check working sessions per date, or toggle
+                            automatic schedule alignment below.</small>
                     </div>
-                    <div class="flex items-center gap-3 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50">
+                    <div
+                        class="flex items-center gap-3 px-3.5 py-2 border border-slate-200 rounded-xl bg-slate-50 shrink-0">
                         <label for="autoFullAttendance" class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="autoFullAttendance"
                                 {{ request('auto_full', 'true') === 'true' ? 'checked' : '' }}
                                 onchange="toggleManualInput(this.checked)" class="sr-only peer">
                             <div
-                                class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600">
+                                class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600">
                             </div>
-                            <span class="text-xs font-semibold text-gray-500 select-none ms-2">
-                                Set Kehadiran Penuh Otomatis
+                            <span class="text-xs font-bold select-none text-slate-600 ms-2">
+                                Auto-Fill From Schedule
                             </span>
                         </label>
                     </div>
                 </div>
 
-                <p class="mb-4 text-xs text-gray-400 ms-8">
+                <p class="text-xs font-medium text-slate-400 ms-1">
                     <i class="fa-solid fa-circle-info"></i>
-                    Saat aktif: semua karyawan otomatis dianggap hadir berdasarkan jadwal shift yang dibuat di modul
-                    Schedule.
+                    When enabled: employees are automatically marked present according to the shift rotas set in the
+                    Schedule module.
                 </p>
 
-                <div class="flex flex-wrap items-center gap-3 mb-4 text-[11px] font-semibold text-gray-500 ms-8">
+                <div class="flex flex-wrap items-center gap-3 text-[11px] font-bold text-slate-500 ms-1">
                     <span class="flex items-center gap-1"><span class="text-blue-600">S1</span> = Shift 1</span>
-                    <span class="flex items-center gap-1"><span class="text-yellow-600">S2</span> = Shift 2</span>
-                    <span class="flex items-center gap-1"><span class="text-red-600">S3</span> = Shift 3</span>
-                    <span class="flex items-center gap-1 text-red-500">
-                        <i class="fa-solid fa-circle-exclamation"></i> Tanggal merah / Libur
+                    <span class="flex items-center gap-1"><span class="text-amber-600">S2</span> = Shift 2</span>
+                    <span class="flex items-center gap-1"><span class="text-rose-600">S3</span> = Shift 3</span>
+                    <span class="flex items-center gap-1 text-rose-500">
+                        <i class="fa-solid fa-circle-exclamation"></i> National Holiday / Off
                     </span>
                 </div>
 
@@ -202,186 +207,121 @@
                         value="{{ request('auto_full', 'true') }}">
 
                     <div id="employee_loading"
-                        class="flex items-center justify-center gap-2 py-8 text-sm font-medium text-gray-400">
-                        <i class="text-lg animate-spin bi bi-arrow-repeat"></i> Memuat data karyawan...
+                        class="flex items-center justify-center gap-2 py-8 text-xs font-bold sm:text-sm text-slate-400">
+                        <i class="text-base animate-spin fa-solid fa-spinner"></i> Loading employee data...
                     </div>
 
                     <div id="employee_fields" class="space-y-3"></div>
 
-                    <div class="flex items-center justify-between pt-4 mt-6 border-t border-gray-100">
-                        <span class="text-xs text-gray-400" id="employeeCountLabel"></span>
+                    <div class="flex items-center justify-between pt-4 mt-6 border-t border-slate-100">
+                        <span class="text-xs font-bold text-slate-400" id="employeeCountLabel"></span>
                         <button type="submit"
-                            class="flex items-center gap-2 px-5 py-2.5 ml-auto text-sm font-semibold text-white transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700">
-                            <i class="bi bi-cloud-arrow-up"></i> Simpan &amp; Perbarui Absensi
+                            class="flex items-center gap-2 px-5 py-2.5 ml-auto text-xs font-bold text-white transition-all bg-blue-600 rounded-xl shadow-md shadow-blue-600/20 hover:bg-blue-700 active:scale-95">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Save &amp; Update Attendance
                         </button>
                     </div>
                 </form>
             </div>
         @endif
 
-        {{-- ============ MODAL PLOT KALENDER ============ --}}
-        <div id="plotCalendarModal" class="fixed inset-0 z-50 items-center justify-center hidden p-4 app-modal-overlay">
-            <div class="w-full max-w-md mx-auto app-modal-panel">
-                <div class="overflow-hidden bg-white border border-gray-100 shadow-xl rounded-xl">
-                    <div class="flex items-center justify-between px-4 py-3 bg-gray-900">
-                        <h5 class="flex items-center gap-2 text-sm font-bold text-white">
-                            <i class="text-blue-400 bi bi-calendar3"></i> Plot Sesi Absen:
+        {{-- ============ CALENDAR PLOT MODAL ============ --}}
+        <div id="plotCalendarModal"
+            class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs">
+            <div class="w-full max-w-md mx-auto">
+                <div class="overflow-hidden bg-white border shadow-2xl border-slate-200 rounded-2xl">
+                    <div class="flex items-center justify-between px-5 py-4 text-white bg-slate-900">
+                        <h5 class="flex items-center gap-2 text-xs font-extrabold tracking-wide uppercase sm:text-sm">
+                            <i class="text-blue-400 fa-solid fa-calendar-days"></i> Plot Sessions:
                             <span id="modalEmployeeName" class="text-blue-200"></span>
                         </h5>
                         <button type="button"
-                            class="text-xl leading-none text-gray-400 transition-colors hover:text-white focus:outline-none"
+                            class="text-xl leading-none transition-colors text-slate-400 hover:text-white focus:outline-none"
                             onclick="closeModal('plotCalendarModal')" aria-label="Close">&times;</button>
                     </div>
-                    <div class="p-4 bg-gray-50">
-                        <div class="bg-white border border-gray-200 rounded-lg overflow-y-auto max-h-[380px] shadow-sm">
-                            <table class="w-full text-sm text-center border-collapse">
-                                <thead class="sticky top-0 font-bold text-gray-600 bg-gray-100 border-b border-gray-200">
+                    <div class="p-4 bg-slate-50">
+                        <div
+                            class="bg-white border border-slate-200/80 rounded-xl overflow-y-auto max-h-[380px] shadow-2xs">
+                            <table class="w-full text-xs text-center border-collapse">
+                                <thead
+                                    class="sticky top-0 font-extrabold tracking-wider uppercase border-b text-slate-600 bg-slate-100/90 border-slate-200">
                                     <tr>
-                                        <th class="px-3 py-2 text-left">Tanggal</th>
-                                        <th class="px-3 py-2 text-blue-600">S1</th>
-                                        <th class="px-3 py-2 text-yellow-600">S2</th>
-                                        <th class="px-3 py-2 text-red-600">S3</th>
+                                        <th class="px-3 py-2.5 text-left">Date</th>
+                                        <th class="px-3 py-2.5 text-blue-600">S1</th>
+                                        <th class="px-3 py-2.5 text-amber-600">S2</th>
+                                        <th class="px-3 py-2.5 text-rose-600">S3</th>
                                     </tr>
                                 </thead>
-                                <tbody id="calendarGridBody" class="text-gray-700 divide-y divide-gray-100"></tbody>
+                                <tbody id="calendarGridBody" class="divide-y text-slate-700 divide-slate-100"></tbody>
                             </table>
                         </div>
                     </div>
-                    <div class="px-4 py-3 border-t border-gray-100 bg-gray-50">
+                    <div class="px-5 py-3.5 border-t border-slate-100 bg-slate-50/50">
                         <button type="button"
-                            class="flex items-center justify-center w-full gap-2 py-2 text-sm font-semibold text-white transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700"
+                            class="flex items-center justify-center w-full gap-2 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 rounded-xl hover:bg-blue-700 active:scale-95"
                             onclick="closeModal('plotCalendarModal')">
-                            <i class="bi bi-check2-circle"></i> Selesai Plot
+                            <i class="fa-solid fa-check"></i> Done Plotting
                         </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- ============ MODAL EDIT KARYAWAN ============ --}}
-        <div id="editEmployeeModal" class="fixed inset-0 z-50 items-center justify-center hidden p-4 app-modal-overlay"
-            onclick="if(event.target===this) closeModal('editEmployeeModal')">
-            <div class="w-full max-w-md mx-auto app-modal-panel">
-                <div class="overflow-hidden bg-white border border-gray-100 shadow-xl rounded-xl">
-                    <form id="formEditEmployee" action="" method="POST">
-                        @csrf
-                        @method('PUT')
-                        <div class="flex items-center justify-between px-4 py-3 bg-gray-900">
-                            <h5 class="flex items-center gap-2 text-sm font-bold text-white">
-                                <i class="text-blue-400 bi bi-pencil-square"></i> Edit Data Karyawan
-                            </h5>
-                            <button type="button"
-                                class="text-xl leading-none text-gray-400 transition-colors hover:text-white focus:outline-none"
-                                onclick="closeModal('editEmployeeModal')" aria-label="Close">&times;</button>
-                        </div>
-                        <div class="p-5 space-y-4">
-                            <div>
-                                <label class="block mb-1.5 text-xs font-medium text-gray-500">Nama Karyawan</label>
-                                <input type="text" name="name" id="edit_employee_name" required
-                                    class="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-                            <input type="hidden" name="site_id" id="edit_employee_site_id">
-                        </div>
-                        <div class="flex justify-end gap-2 px-4 py-3 border-t border-gray-100 bg-gray-50">
-                            <button type="button"
-                                class="px-4 py-2 text-sm font-medium text-gray-600 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-100"
-                                onclick="closeModal('editEmployeeModal')">Batal</button>
-                            <button type="submit"
-                                class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white transition-colors bg-blue-600 rounded-lg hover:bg-blue-700">
-                                <i class="bi bi-save"></i> Simpan Perubahan
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        {{-- ============ MODAL RIWAYAT PLOT ============ --}}
-        <div id="detailPlotModal" class="fixed inset-0 z-50 items-center justify-center hidden p-4 app-modal-overlay"
-            onclick="if(event.target===this) closeModal('detailPlotModal')">
-            <div class="w-full max-w-md mx-auto app-modal-panel">
-                <div class="overflow-hidden bg-white border border-gray-100 shadow-xl rounded-xl">
-                    <div class="flex items-center justify-between px-4 py-3 bg-gray-900">
-                        <h5 class="flex items-center gap-2 text-sm font-bold text-white">
-                            <i class="text-cyan-400 bi bi-clock-history"></i> Riwayat Plot:
-                            <span id="detailEmployeeName" class="text-cyan-200"></span>
-                        </h5>
-                        <button type="button"
-                            class="text-xl leading-none text-gray-400 transition-colors hover:text-white focus:outline-none"
-                            onclick="closeModal('detailPlotModal')" aria-label="Close">&times;</button>
-                    </div>
-                    <div class="p-0 bg-gray-50">
-                        <ul id="detailActiveDatesList"
-                            class="max-h-[400px] overflow-y-auto divide-y divide-gray-100 bg-white"></ul>
-                    </div>
-                    <div class="px-4 py-3 border-t border-gray-100 bg-gray-50">
-                        <button type="button"
-                            class="w-full py-2 text-sm font-semibold text-gray-600 transition-colors bg-white border border-gray-300 rounded-lg hover:bg-gray-100"
-                            onclick="closeModal('detailPlotModal')">Tutup</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <form id="formDeleteEmployee" action="" method="POST" class="hidden">
-            @csrf
-            @method('DELETE')
-        </form>
-
         {{-- ============ STEP 3: REPORT TABLE ============ --}}
-        <div class="overflow-hidden bg-white border border-gray-100 shadow-sm rounded-2xl">
+        <div class="overflow-hidden bg-white border shadow-sm border-slate-200/80 rounded-2xl sm:rounded-3xl">
             <div
-                class="flex flex-col gap-4 p-6 border-b border-gray-100 bg-gray-50/50 md:flex-row md:items-center md:justify-between">
+                class="flex flex-col gap-4 p-5 border-b sm:p-6 border-slate-100 bg-slate-50/50 md:flex-row md:items-center md:justify-between">
                 <div class="flex items-center gap-3">
                     <span
-                        class="flex items-center justify-center text-xs font-bold text-white bg-blue-600 rounded-full shadow-sm w-7 h-7 shrink-0">
+                        class="flex items-center justify-center w-6 h-6 text-xs font-black text-white bg-blue-600 rounded-full shadow-2xs shrink-0">
                         3
                     </span>
                     <div>
-                        <h5 class="text-base font-bold text-gray-900">Tinjau Rekap Kehadiran</h5>
-                        <p class="text-xs text-gray-500">Ringkasan rasio hari kerja dan total kehadiran sesi karyawan.</p>
+                        <h5 class="text-base font-extrabold text-slate-800">Review Attendance Summary</h5>
+                        <p class="text-xs font-medium text-slate-500">Overview of effective working days and total attended
+                            sessions.</p>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-3">
                     <div class="relative min-w-[200px]">
                         <select id="recapMonthFilter" onchange="filterRecapTable()"
-                            class="block w-full py-2 pr-8 text-xs font-semibold text-gray-700 transition-all bg-white border border-gray-200 cursor-pointer pl-9 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs">
-                            <option value="all">-- Semua Bulan --</option>
+                            class="block w-full py-2 pl-3 pr-8 text-xs font-bold transition-all bg-white border cursor-pointer text-slate-700 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs">
+                            <option value="all">-- All Months --</option>
                             @php
                                 $availableMonths = $attendances->pluck('month')->unique()->sortDesc();
                             @endphp
                             @foreach ($availableMonths as $m)
                                 <option value="{{ $m }}"
                                     {{ request('month', date('Y-m')) == $m ? 'selected' : '' }}>
-                                    {{ \Carbon\Carbon::parse($m)->translatedFormat('F Y') }}
+                                    {{ \Carbon\Carbon::parse($m)->format('F Y') }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
 
                     <span id="recapCountBadge"
-                        class="hidden md:inline-flex items-center px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-100 rounded-xl">
-                        0 Data
+                        class="hidden md:inline-flex items-center px-3 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100 rounded-xl">
+                        0 Records
                     </span>
                 </div>
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead
-                        class="text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-100/70 border-b border-gray-200/80">
-                        <tr>
-                            <th scope="col" class="px-6 py-3.5">Kantor Branch / Site</th>
-                            <th scope="col" class="px-6 py-3.5">Nama Karyawan</th>
-                            <th scope="col" class="px-6 py-3.5 text-center">Periode Bulan</th>
-                            <th scope="col" class="px-6 py-3.5 text-center">Hari Kerja Efektif</th>
-                            <th scope="col" class="px-6 py-3.5 text-center">Total Sesi Hadir</th>
-                            <th scope="col" class="px-6 py-3.5 text-right">Rasio Kehadiran</th>
-                            <th scope="col" class="px-6 py-3.5 text-center">Aksi</th>
+                <table class="w-full text-left border-collapse min-w-[850px]">
+                    <thead>
+                        <tr
+                            class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider bg-slate-100/70 border-b border-slate-200/80">
+                            <th scope="col" class="px-6 py-3.5">Branch / Site Location</th>
+                            <th scope="col" class="px-6 py-3.5">Employee Name</th>
+                            <th scope="col" class="px-6 py-3.5 text-center">Month Period</th>
+                            <th scope="col" class="px-6 py-3.5 text-center">Effective Work Days</th>
+                            <th scope="col" class="px-6 py-3.5 text-center">Total Attended Sessions</th>
+                            <th scope="col" class="px-6 py-3.5 text-right">Attendance Ratio</th>
+                            <th scope="col" class="px-6 py-3.5 text-center w-24">Action</th>
                         </tr>
                     </thead>
-                    <tbody id="recapTableBody" class="text-xs divide-y divide-gray-100">
+                    <tbody id="recapTableBody"
+                        class="text-xs font-medium divide-y sm:text-sm divide-slate-100 text-slate-700">
                         @forelse($attendances as $row)
                             @if (Auth::user()->role === 'superadmin' ||
                                     (Auth::user()->role === 'admin_site' && Auth::user()->site_id === $row->employee->site_id))
@@ -391,51 +331,53 @@
                                             ? round(($row->attendance_count / $row->working_days) * 100)
                                             : 0;
 
-                                    $progressBg = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                    $progressBg = 'bg-emerald-50 text-emerald-700 border-emerald-200/60';
                                     if ($percentage < 50) {
-                                        $progressBg = 'bg-red-50 text-red-700 border-red-200';
+                                        $progressBg = 'bg-rose-50 text-rose-700 border-rose-200/60';
                                     } elseif ($percentage < 80) {
-                                        $progressBg = 'bg-amber-50 text-amber-700 border-amber-200';
+                                        $progressBg = 'bg-amber-50 text-amber-700 border-amber-200/60';
                                     }
                                 @endphp
-                                <tr class="transition-colors recap-row hover:bg-gray-50/80"
+                                <tr class="transition-colors recap-row hover:bg-slate-50/80"
                                     data-month="{{ $row->month }}">
-                                    <td class="px-6 py-4 font-medium text-gray-900">
+                                    <td class="px-6 py-4 font-bold text-slate-800">
                                         <span
-                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold bg-gray-100 text-gray-700 border border-gray-200 rounded-md">
-                                            <i class="fa-solid fa-location-dot text-gray-400 text-[10px]"></i>
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200 rounded-lg">
+                                            <i class="fa-solid fa-location-dot text-slate-400 text-[10px]"></i>
                                             {{ $row->employee->site->machine_name ?? '-' }}
                                         </span>
                                     </td>
 
                                     <td class="px-6 py-4">
-                                        <div class="text-sm font-bold text-gray-900">
-                                            {{ $row->employee->name ?? 'Karyawan Terhapus' }}</div>
-                                        <div class="text-[10px] text-gray-400">{{ $row->employee->position ?? 'Staff' }}
+                                        <div class="text-xs font-bold sm:text-sm text-slate-900">
+                                            {{ $row->employee->name ?? 'Deleted Employee' }}</div>
+                                        <div class="text-[10px] text-slate-400 font-semibold">
+                                            {{ $row->employee->position ?? 'Staff' }}
                                         </div>
                                     </td>
 
-                                    <td class="px-6 py-4 font-semibold text-center text-gray-600">
-                                        {{ \Carbon\Carbon::parse($row->month)->translatedFormat('F Y') }}
+                                    <td class="px-6 py-4 font-bold text-center text-slate-600">
+                                        {{ \Carbon\Carbon::parse($row->month)->format('F Y') }}
                                     </td>
 
-                                    <td class="px-6 py-4 font-medium text-center text-gray-600">
-                                        {{ $row->working_days }} Hari
+                                    <td class="px-6 py-4 font-semibold text-center text-slate-600">
+                                        {{ $row->working_days }} Days
                                     </td>
 
                                     <td class="px-6 py-4 text-center">
-                                        <span class="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-xs">
-                                            {{ $row->attendance_count }} Sesi
+                                        <span
+                                            class="font-bold text-blue-700 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-lg text-xs">
+                                            {{ $row->attendance_count }} Sessions
                                         </span>
                                     </td>
 
                                     <td class="px-6 py-4 text-right">
                                         <div class="inline-flex items-center gap-2">
-                                            <span class="font-extrabold text-gray-800">
+                                            <span class="font-extrabold text-slate-800">
                                                 {{ $row->attendance_count }}/{{ $row->working_days }}
                                             </span>
                                             <span
-                                                class="px-2 py-0.5 text-[10px] font-bold border rounded-full {{ $progressBg }}">
+                                                class="px-2 py-0.5 text-[10px] font-bold border rounded-full uppercase {{ $progressBg }}">
                                                 {{ $percentage }}%
                                             </span>
                                         </div>
@@ -443,13 +385,13 @@
 
                                     <td class="px-6 py-4 text-center">
                                         <form action="{{ route('attendance.destroy', $row->id) }}" method="POST"
-                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus data rekap absensi bulan ini untuk karyawan ini?')">
+                                            onsubmit="return confirm('Are you sure you want to delete this attendance recap log?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
-                                                class="p-1.5 text-xs text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                title="Hapus Rekap Absensi">
-                                                <i class="fa-solid fa-trash"></i>
+                                                class="p-1.5 text-rose-600 transition-colors bg-rose-50 rounded-lg hover:bg-rose-600 hover:text-white"
+                                                title="Delete Attendance Record">
+                                                <i class="text-xs fa-solid fa-trash-can"></i>
                                             </button>
                                         </form>
                                     </td>
@@ -457,21 +399,21 @@
                             @endif
                         @empty
                             <tr id="emptyRecapRow">
-                                <td colspan="7" class="px-6 py-12 text-center text-gray-400">
+                                <td colspan="7" class="px-6 py-12 text-center text-slate-400">
                                     <div class="flex flex-col items-center justify-center gap-2">
-                                        <i class="text-3xl text-gray-300 bi bi-inbox"></i>
-                                        <p class="text-sm font-medium">Tidak ditemukan data absensi untuk site ini.</p>
+                                        <i class="text-3xl opacity-50 text-slate-300 fa-solid fa-inbox"></i>
+                                        <p class="text-sm font-bold text-slate-700">No attendance logs recorded yet.</p>
                                     </div>
                                 </td>
                             </tr>
                         @endforelse
 
                         <tr id="noFilteredRecapRow" class="hidden">
-                            <td colspan="7" class="px-6 py-12 text-center text-gray-400">
+                            <td colspan="7" class="px-6 py-12 text-center text-slate-400">
                                 <div class="flex flex-col items-center justify-center gap-2">
-                                    <i class="text-3xl text-gray-300 fa-solid fa-filter-circle-xmark"></i>
-                                    <p class="text-sm font-medium">Tidak ada data rekap untuk periode bulan yang dipilih.
-                                    </p>
+                                    <i class="text-3xl opacity-50 text-slate-300 fa-solid fa-filter-circle-xmark"></i>
+                                    <p class="text-sm font-bold text-slate-700">No attendance data found for the selected
+                                        month filter.</p>
                                 </div>
                             </td>
                         </tr>
@@ -481,41 +423,6 @@
         </div>
     </div>
 @endsection
-
-@push('styles')
-    <style>
-        .app-modal-overlay {
-            background: rgba(15, 23, 42, 0.55);
-            animation: appModalFadeIn .15s ease-out;
-        }
-
-        .app-modal-panel {
-            animation: appModalPopIn .18s cubic-bezier(.34, 1.56, .64, 1);
-        }
-
-        @keyframes appModalFadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes appModalPopIn {
-            from {
-                opacity: 0;
-                transform: translateY(12px) scale(.97);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-    </style>
-@endpush
 
 @push('scripts')
     <script>
@@ -537,6 +444,13 @@
             let formHiddenInput = document.getElementById('form_month_hidden');
             if (hiddenInput) hiddenInput.value = monthVal;
             if (formHiddenInput) formHiddenInput.value = monthVal;
+
+            let activeSiteSelect = document.getElementById('main_branch_select');
+            let activeSiteId = activeSiteSelect ? activeSiteSelect.value : null;
+            let exportBtn = document.getElementById('exportBtn');
+            if (exportBtn && activeSiteId) {
+                exportBtn.href = `/attendance/export?site_id=${activeSiteId}&month=${monthVal}`;
+            }
         }
 
         function handleFilterChange() {
@@ -558,14 +472,6 @@
             el.classList.remove('flex');
             document.body.style.overflow = '';
         }
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key !== 'Escape') return;
-            ['plotCalendarModal', 'editEmployeeModal', 'detailPlotModal'].forEach(id => {
-                let el = document.getElementById(id);
-                if (el && !el.classList.contains('hidden')) closeModal(id);
-            });
-        });
 
         function parseMonthRaw() {
             let monthRaw = getFormattedMonth();
@@ -708,7 +614,7 @@
             fetch('/api/branches/' + siteId + '/employees?month=' + monthVal)
                 .then(async response => {
                     if (!response.ok) {
-                        let errText = 'Gagal memuat data karyawan (' + response.status + ')';
+                        let errText = 'Failed to load employee data (' + response.status + ')';
                         try {
                             let errJson = await response.json();
                             if (errJson.message) errText = errJson.message;
@@ -724,9 +630,9 @@
 
                     if (!data || data.length === 0) {
                         fieldContainer.innerHTML = `
-                        <div class="py-10 text-center text-gray-400">
-                            <i class="block mb-2 text-4xl bi bi-person-x-fill"></i>
-                            <span class="text-sm font-bold">Belum ada karyawan terdaftar di cabang ini.</span>
+                        <div class="py-10 text-center text-slate-400">
+                            <i class="block mb-2 text-3xl opacity-50 fa-solid fa-user-xmark"></i>
+                            <span class="text-xs font-bold sm:text-sm text-slate-700">No employees registered yet.</span>
                         </div>`;
                         if (countLabel) countLabel.innerText = '';
                         return;
@@ -815,44 +721,32 @@
                             }
                         }
 
-                        let safeName = String(emp.name).replace(/'/g, "\\'");
+                        let siteBadge = emp.site ?
+                            `<span class="px-2 py-0.5 text-[10px] font-bold bg-slate-100 text-slate-600 rounded-md border border-slate-200 me-1.5">${emp.site.machine_name}</span>` :
+                            '';
 
                         fieldContainer.insertAdjacentHTML('beforeend', `
-                        <div class="grid items-center grid-cols-1 gap-3 p-3 transition-colors border border-gray-100 rounded-lg md:grid-cols-12 hover:border-gray-200">
+                        <div class="grid items-center grid-cols-1 gap-3 p-3.5 transition-colors border border-slate-200/80 rounded-2xl md:grid-cols-12 hover:border-slate-300 bg-slate-50/50">
                             <div class="md:col-span-4">
-                                <span class="flex items-center gap-1.5 font-semibold text-gray-800 truncate" title="${emp.name}">
-                                    <i class="text-gray-400 bi bi-person-circle"></i>${emp.name}
+                                <span class="flex items-center gap-2 text-xs font-bold truncate text-slate-800 sm:text-sm" title="${emp.name}">
+                                    <i class="text-sm text-slate-400 fa-solid fa-circle-user"></i>${siteBadge}${emp.name}
                                 </span>
-                                <div class="flex gap-3 mt-1.5 text-xs">
-                                    <button type="button" class="text-gray-500 transition-colors hover:text-blue-600"
-                                        onclick="openEditModal(${emp.id}, '${safeName}', ${emp.site_id})">
-                                        <i class="bi bi-pencil"></i> Edit
-                                    </button>
-                                    <button type="button" class="text-red-500 transition-colors hover:text-red-700"
-                                        onclick="confirmDeleteEmployee(${emp.id}, '${safeName}')">
-                                        <i class="bi bi-trash"></i> Hapus
-                                    </button>
-                                    <button type="button" class="transition-colors text-cyan-600 hover:text-cyan-800"
-                                        onclick="openDetailPlotModal(${emp.id})">
-                                        <i class="bi bi-eye"></i> Riwayat Plot
-                                    </button>
-                                </div>
                             </div>
                             <div class="grid items-center grid-cols-4 gap-2 md:col-span-8">
-                                <div class="flex rounded-md shadow-sm">
-                                    <span class="flex items-center px-2 text-xs font-bold text-gray-500 bg-gray-100 border border-gray-300 rounded-l-md">S1</span>
-                                    <input type="text" id="counter_s1_${emp.id}" class="w-full py-1 text-sm font-bold text-center text-blue-600 bg-white border-t border-b border-r border-gray-300 rounded-r-md focus:outline-none" readonly>
+                                <div class="flex overflow-hidden border rounded-xl shadow-2xs border-slate-200">
+                                    <span class="flex items-center px-2 text-xs font-black border-r text-slate-500 bg-slate-100 border-slate-200">S1</span>
+                                    <input type="text" id="counter_s1_${emp.id}" class="w-full py-1 text-xs font-bold text-center text-blue-600 bg-white focus:outline-none" readonly>
                                 </div>
-                                <div class="flex rounded-md shadow-sm">
-                                    <span class="flex items-center px-2 text-xs font-bold text-gray-500 bg-gray-100 border border-gray-300 rounded-l-md">S2</span>
-                                    <input type="text" id="counter_s2_${emp.id}" class="w-full py-1 text-sm font-bold text-center text-yellow-600 bg-white border-t border-b border-r border-gray-300 rounded-r-md focus:outline-none" readonly>
+                                <div class="flex overflow-hidden border rounded-xl shadow-2xs border-slate-200">
+                                    <span class="flex items-center px-2 text-xs font-black border-r text-slate-500 bg-slate-100 border-slate-200">S2</span>
+                                    <input type="text" id="counter_s2_${emp.id}" class="w-full py-1 text-xs font-bold text-center bg-white text-amber-600 focus:outline-none" readonly>
                                 </div>
-                                <div class="flex rounded-md shadow-sm">
-                                    <span class="flex items-center px-2 text-xs font-bold text-gray-500 bg-gray-100 border border-gray-300 rounded-l-md">S3</span>
-                                    <input type="text" id="counter_s3_${emp.id}" class="w-full py-1 text-sm font-bold text-center text-red-600 bg-white border-t border-b border-r border-gray-300 rounded-r-md focus:outline-none" readonly>
+                                <div class="flex overflow-hidden border rounded-xl shadow-2xs border-slate-200">
+                                    <span class="flex items-center px-2 text-xs font-black border-r text-slate-500 bg-slate-100 border-slate-200">S3</span>
+                                    <input type="text" id="counter_s3_${emp.id}" class="w-full py-1 text-xs font-bold text-center bg-white text-rose-600 focus:outline-none" readonly>
                                 </div>
-                                <button type="button" class="w-full px-2 py-1 text-xs font-semibold text-blue-600 transition-colors border border-blue-600 rounded-md hover:bg-blue-50" onclick="openPlotCalendar(${emp.id})">
-                                    <i class="bi bi-calendar-event"></i> Plot / Edit
+                                <button type="button" class="w-full px-2 py-1.5 text-xs font-bold text-blue-600 transition-colors bg-blue-50/80 border border-blue-200/80 rounded-xl hover:bg-blue-600 hover:text-white" onclick="openPlotCalendar(${emp.id})">
+                                    <i class="fa-solid fa-pen-to-square"></i> Plot / Edit
                                 </button>
                             </div>
                             <input type="hidden" name="calendar_raw_data[${emp.id}]" id="raw_data_${emp.id}">
@@ -861,12 +755,12 @@
                         updateLiveCounters(emp.id);
                     });
 
-                    if (countLabel) countLabel.innerText = data.length + ' karyawan dimuat';
+                    if (countLabel) countLabel.innerText = data.length + ' employee(s) loaded';
                 })
                 .catch(err => {
                     fieldContainer.innerHTML = `
-                    <div class="flex items-center gap-2 px-4 py-3 text-sm font-medium text-red-700 border border-red-200 rounded-lg bg-red-50">
-                        <i class="bi bi-exclamation-triangle-fill"></i> ${err.message || 'Gagal memuat data karyawan.'}
+                    <div class="flex items-center gap-2.5 p-4 text-xs sm:text-sm font-semibold text-rose-800 border border-rose-200 bg-rose-50 rounded-2xl">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> ${err.message || 'Failed to load employee records.'}
                     </div>`;
                 })
                 .finally(() => setLoading(false));
@@ -921,73 +815,18 @@
                 let holidayName = getHolidayName(d);
                 let isOff = isWeekendDay(d) || holidayName;
                 let weekendBadge = isOff ?
-                    `<span class="ml-1 text-[10px] text-red-500 font-bold">(Libur${holidayName ? ' - ' + holidayName : ''})</span>` :
+                    `<span class="ml-1 text-[10px] text-rose-500 font-bold">(Off${holidayName ? ' - ' + holidayName : ''})</span>` :
                     '';
                 rows += `
-                <tr class="border-b border-gray-100 hover:bg-gray-50">
-                    <td class="px-3 py-2 text-sm font-medium text-left text-gray-700">Tgl ${d}${weekendBadge}</td>
+                <tr class="border-b border-slate-100 hover:bg-slate-50">
+                    <td class="px-3 py-2 text-xs font-bold text-left text-slate-700">Date ${d}${weekendBadge}</td>
                     <td class="px-3 py-2"><input type="checkbox" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" onchange="toggleDateShift(${d}, 's1', this.checked)" ${dayData.s1 ? 'checked' : ''}></td>
-                    <td class="px-3 py-2"><input type="checkbox" class="w-4 h-4 text-yellow-600 rounded focus:ring-yellow-500" onchange="toggleDateShift(${d}, 's2', this.checked)" ${dayData.s2 ? 'checked' : ''}></td>
-                    <td class="px-3 py-2"><input type="checkbox" class="w-4 h-4 text-red-600 rounded focus:ring-red-500" onchange="toggleDateShift(${d}, 's3', this.checked)" ${dayData.s3 ? 'checked' : ''}></td>
+                    <td class="px-3 py-2"><input type="checkbox" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500" onchange="toggleDateShift(${d}, 's2', this.checked)" ${dayData.s2 ? 'checked' : ''}></td>
+                    <td class="px-3 py-2"><input type="checkbox" class="w-4 h-4 rounded text-rose-600 focus:ring-rose-500" onchange="toggleDateShift(${d}, 's3', this.checked)" ${dayData.s3 ? 'checked' : ''}></td>
                 </tr>`;
             }
             gridBody.innerHTML = rows;
             openModal('plotCalendarModal');
-        }
-
-        function openEditModal(id, name, siteId) {
-            document.getElementById('formEditEmployee').action = '/employee/' + id;
-            document.getElementById('edit_employee_name').value = name;
-            document.getElementById('edit_employee_site_id').value = siteId;
-            openModal('editEmployeeModal');
-        }
-
-        function openDetailPlotModal(employeeId) {
-            let empData = attendanceState[employeeId];
-            if (!empData) return;
-            document.getElementById('detailEmployeeName').innerText = empData.name;
-            let listContainer = document.getElementById('detailActiveDatesList');
-            listContainer.innerHTML = '';
-
-            let totalDays = getDaysInMonth();
-            let rows = '';
-            let count = 0;
-
-            for (let d = 1; d <= totalDays; d++) {
-                let dayData = empData.shifts[d];
-                if (dayData.s1 === 1 || dayData.s2 === 1 || dayData.s3 === 1) {
-                    count++;
-                    let activeShifts = [];
-                    if (dayData.s1 === 1) activeShifts.push(
-                        '<span class="px-2 py-0.5 text-xs font-semibold bg-blue-100 text-blue-800 rounded">S1</span>');
-                    if (dayData.s2 === 1) activeShifts.push(
-                        '<span class="px-2 py-0.5 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded">S2</span>'
-                    );
-                    if (dayData.s3 === 1) activeShifts.push(
-                        '<span class="px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-800 rounded">S3</span>');
-
-                    rows += `
-                        <li class="flex items-center justify-between px-4 py-2.5">
-                            <strong class="text-sm text-gray-700">Tanggal ${d}</strong>
-                            <div class="flex gap-1.5">${activeShifts.join(' ')}</div>
-                        </li>`;
-                }
-            }
-
-            listContainer.innerHTML = count === 0 ?
-                '<li class="py-6 text-sm font-medium text-center text-gray-400">Tidak ada tanggal yang dicentang (Karyawan Libur)</li>' :
-                rows;
-
-            openModal('detailPlotModal');
-        }
-
-        function confirmDeleteEmployee(id, name) {
-            if (confirm("Hapus karyawan '" + name +
-                    "' beserta seluruh riwayat absensinya? Tindakan ini tidak dapat dibatalkan.")) {
-                let form = document.getElementById('formDeleteEmployee');
-                form.action = '/employee/' + id;
-                form.submit();
-            }
         }
 
         function filterRecapTable() {
@@ -1019,7 +858,7 @@
             }
 
             if (countBadge) {
-                countBadge.textContent = `${visibleCount} Data Ditampilkan`;
+                countBadge.textContent = `${visibleCount} Records Displayed`;
             }
         }
     </script>

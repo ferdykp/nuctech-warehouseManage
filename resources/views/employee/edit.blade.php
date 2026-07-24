@@ -1,110 +1,159 @@
 @extends('layout.master')
 
-@section('title', 'Edit Data Karyawan')
+@section('title', 'Edit Employee Data')
 
 @section('content')
-    <div class="w-full px-6 py-8">
-        <div class="flex items-center justify-between pb-4 mb-6 border-b border-gray-200">
+    <div class="w-full max-w-3xl mx-auto space-y-6">
+
+        {{-- HEADER --}}
+        <div class="flex items-center justify-between gap-3">
             <div>
-                <h4 class="flex items-center gap-2 text-xl font-bold text-gray-800">
-                    <i class="text-blue-600 bi bi-pencil-square"></i> Edit Data Karyawan
-                </h4>
+                <nav class="flex mb-1 text-xs font-bold tracking-widest uppercase text-slate-400">
+                    <a href="{{ route('employee.index') }}" class="transition-colors hover:text-blue-600">Employee
+                        Directory</a>
+                    <span class="mx-2">/</span>
+                    <span class="text-blue-600">Edit Record</span>
+                </nav>
+                <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
+                    Edit Employee Record
+                </h1>
+                <p class="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
+                    Update employment parameters and placement information.
+                </p>
             </div>
             <a href="{{ route('employee.index') }}"
-                class="px-3 py-1.5 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors rounded-lg flex items-center gap-1">
-                <i class="bi bi-arrow-left"></i> Kembali ke Daftar
+                class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold transition-all bg-white border text-slate-600 border-slate-200 rounded-xl hover:bg-slate-50 active:scale-95 shrink-0">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Back</span>
             </a>
         </div>
 
+        {{-- FORM CARD --}}
         <form action="{{ route('employee.update', $employee->id) }}" method="POST"
-            class="overflow-hidden bg-white border border-gray-100 shadow-sm rounded-xl">
+            class="overflow-hidden bg-white border shadow-sm border-slate-200/80 rounded-2xl sm:rounded-3xl">
             @csrf
             @method('PUT')
 
-            <div class="p-6">
-                <div class="space-y-4">
-                    <h5 class="mb-2 text-xs font-bold tracking-wider text-gray-400 uppercase">
-                        Informasi Pekerjaan Perusahaan
-                    </h5>
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <div>
-                            <label class="block mb-1 text-xs font-medium text-gray-600">Nama Lengkap <span
-                                    class="text-red-500">*</span></label>
-                            <input type="text" name="name" value="{{ old('name', $employee->name) }}"
-                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Employment Details</h2>
+            </div>
+
+            <div class="p-6 space-y-5 sm:p-8">
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    {{-- FULL NAME --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Full Name <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" name="name" value="{{ old('name', $employee->name) }}"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
+                            placeholder="Full name as per ID..." required>
+                    </div>
+
+                    {{-- PHONE NUMBER --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Phone Number <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" name="phone_number" value="{{ old('phone_number', $employee->phone_number) }}"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
+                            placeholder="Phone number..." required>
+                    </div>
+
+                    {{-- SITE LOCATION --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Site Placement <span class="text-rose-500">*</span>
+                        </label>
+
+                        @if (Auth::user()->role === 'superadmin')
+                            <select name="site_id"
+                                class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"
                                 required>
-                        </div>
-
-                        <div>
-                            <label class="block mb-1 text-xs font-medium text-gray-600">Penempatan Site Location <span
-                                    class="text-red-500">*</span></label>
-
-                            @if (Auth::user()->role === 'superadmin')
-                                <select name="site_id"
-                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    required>
-                                    @foreach ($sites as $site)
-                                        <option value="{{ $site->id }}"
-                                            {{ $employee->site_id == $site->id ? 'selected' : '' }}>
-                                            {{ $site->machine_name }} (Branch: {{ $site->branch->branch_name ?? '-' }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                            @else
-                                <input type="hidden" name="site_id" value="{{ Auth::user()->site_id }}">
-                                <input type="text" value="{{ Auth::user()->site->machine_name ?? 'Site Terdaftar' }}"
-                                    class="w-full px-3 py-2 text-sm font-bold text-gray-700 bg-gray-100 border border-gray-300 rounded-lg cursor-not-allowed"
-                                    readonly>
-                            @endif
-                        </div>
-
-                        <div>
-                            <label class="block mb-1 text-xs font-medium text-gray-600">Status Kepegawaian</label>
-                            <select name="status"
-                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <option value="Probation" {{ $employee->status == 'Probation' ? 'selected' : '' }}>Probation
-                                    (Percobaan)</option>
-                                <option value="Contract" {{ $employee->status == 'Contract' ? 'selected' : '' }}>Contract
-                                    (PKWT)</option>
-                                <option value="Permanent" {{ $employee->status == 'Permanent' ? 'selected' : '' }}>
-                                    Permanent (Tetap)</option>
-                                <option value="Daily" {{ $employee->status == 'Daily' ? 'selected' : '' }}>Daily (Harian
-                                    Lepas)</option>
+                                <option value="">-- Select Site Location --</option>
+                                @foreach ($sites as $site)
+                                    <option value="{{ $site->id }}"
+                                        {{ old('site_id', $employee->site_id) == $site->id ? 'selected' : '' }}>
+                                        {{ $site->machine_name }} (Branch: {{ $site->branch->branch_name ?? '-' }})
+                                    </option>
+                                @endforeach
                             </select>
-                        </div>
+                        @else
+                            <input type="hidden" name="site_id" value="{{ Auth::user()->site_id }}">
+                            <input type="text"
+                                value="{{ Auth::user()->site->machine_name ?? 'Registered Site' }} (Branch: {{ Auth::user()->site->branch->branch_name ?? '-' }})"
+                                class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-700 bg-slate-100 border border-slate-200 rounded-xl cursor-not-allowed"
+                                readonly>
+                        @endif
+                        <p class="text-[11px] text-slate-400 mt-1">Branch will automatically sync based on the selected
+                            Site.</p>
+                    </div>
 
-                        <div>
-                            <label class="block mb-1 text-xs font-medium text-gray-600">Jabatan / Posisi</label>
-                            <input type="text" name="position" value="{{ old('position', $employee->position) }}"
-                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        </div>
+                    {{-- STATUS --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Employment Status
+                        </label>
+                        <select name="status"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                            <option value="Probation"
+                                {{ old('status', $employee->status) == 'Probation' ? 'selected' : '' }}>Probation</option>
+                            <option value="Contract"
+                                {{ old('status', $employee->status) == 'Contract' ? 'selected' : '' }}>Contract</option>
+                            <option value="Permanent"
+                                {{ old('status', $employee->status) == 'Permanent' ? 'selected' : '' }}>Permanent</option>
+                            <option value="Daily" {{ old('status', $employee->status) == 'Daily' ? 'selected' : '' }}>
+                                Daily</option>
+                        </select>
+                    </div>
 
-                        <div>
-                            <label class="block mb-1 text-xs font-medium text-gray-600">Tanggal Mulai Masuk Kerja (Join
-                                Date) <span class="text-red-500">*</span></label>
-                            <input type="date" name="join_date" value="{{ old('join_date', $employee->join_date) }}"
-                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                required>
-                        </div>
+                    {{-- POSITION --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Position / Job Title
+                        </label>
+                        <input type="text" name="position" value="{{ old('position', $employee->position) }}"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
+                            placeholder="e.g. Supervisor, Operator, Admin">
+                    </div>
 
-                        <div>
-                            <label class="block mb-1 text-xs font-medium text-gray-600">Mulai Kontrak</label>
-                            <input type="date" name="contract_start_date"
-                                value="{{ old('contract_start_date', $employee->contract_start_date) }}"
-                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        </div>
+                    {{-- JOIN DATE --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Join Date <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="date" name="join_date"
+                            value="{{ old('join_date', isset($employee->join_date) ? \Carbon\Carbon::parse($employee->join_date)->format('Y-m-d') : '') }}"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"
+                            required>
+                    </div>
+
+                    {{-- CONTRACT START DATE --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Contract Start Date
+                        </label>
+                        <input type="date" name="contract_start_date"
+                            value="{{ old('contract_start_date', isset($employee->contract_start_date) ? \Carbon\Carbon::parse($employee->contract_start_date)->format('Y-m-d') : '') }}"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
                     </div>
                 </div>
             </div>
 
-            <div class="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50">
-                <div class="text-xs text-gray-400">
-                    Tanda bintang (<span class="text-red-500">*</span>) wajib diisi.
+            <div class="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+                <div class="text-xs font-medium text-slate-400">
+                    Asterisk (<span class="text-rose-500">*</span>) fields are required.
                 </div>
-                <button type="submit"
-                    class="px-5 py-2 text-sm font-semibold text-white transition-colors bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700">
-                    <i class="bi bi-save"></i> Perbarui Data Karyawan
-                </button>
+                <div class="flex items-center gap-2.5">
+                    <a href="{{ route('employee.index') }}"
+                        class="px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors">
+                        Discard
+                    </a>
+                    <button type="submit"
+                        class="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95 transition-all">
+                        Update Employee
+                    </button>
+                </div>
             </div>
         </form>
     </div>

@@ -1,108 +1,103 @@
 @extends('layout.master')
 
 @section('content')
-    <div class="min-h-screen px-6 py-8 bg-gray-50/50">
+    <div class="w-full max-w-3xl mx-auto space-y-6">
 
         {{-- BREADCRUMB & HEADER --}}
-        <div class="max-w-4xl mx-auto mb-8">
-            <nav class="flex mb-3 text-xs font-bold tracking-widest text-gray-400 uppercase">
-                <a href="{{ route('site.index') }}" class="transition-colors hover:text-blue-600">Machine Sites</a>
-                <span class="mx-2">/</span>
-                <span class="text-blue-600">Update Data</span>
-            </nav>
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">Edit Site Profile</h1>
-                    <p class="mt-1 text-sm text-gray-500">Modify site identification and machine specifications.</p>
-                </div>
+        <div class="flex items-center justify-between gap-3">
+            <div>
+                <nav class="flex mb-1 text-xs font-bold tracking-widest uppercase text-slate-400">
+                    <a href="{{ route('site.index') }}" class="transition-colors hover:text-blue-600">Machine Sites</a>
+                    <span class="mx-2">/</span>
+                    <span class="text-blue-600">Update Profile</span>
+                </nav>
+                <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">Edit Site Profile</h1>
+                <p class="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">Modify site identification and machine
+                    specifications.</p>
             </div>
+            <a href="{{ route('site.index') }}"
+                class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold transition-all bg-white border text-slate-600 border-slate-200 rounded-xl hover:bg-slate-50 active:scale-95 shrink-0">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Back</span>
+            </a>
         </div>
 
         {{-- FORM CARD --}}
-        <div class="max-w-4xl mx-auto">
-            <div class="overflow-hidden bg-white shadow-sm ring-1 ring-gray-200 rounded-3xl">
+        <div class="overflow-hidden bg-white border shadow-sm border-slate-200/80 rounded-2xl">
 
-                {{-- FORM HEADER --}}
-                <div class="flex items-center justify-between px-8 py-5 border-b border-gray-100 bg-gray-50/50">
-                    <h2 class="text-sm font-bold tracking-wider text-gray-700 uppercase">Site Information</h2>
-                    <span class="px-3 py-1 text-[10px] font-black bg-blue-100 text-blue-600 rounded-full uppercase">
-                        ID: {{ $user->id }}
-                    </span>
+            {{-- FORM HEADER --}}
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Site Information</h2>
+                <span
+                    class="px-2.5 py-1 text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-200/60 rounded-lg uppercase">
+                    ID: #{{ str_pad($user->id, 4, '0', STR_PAD_LEFT) }}
+                </span>
+            </div>
+
+            {{-- FORM BODY --}}
+            <form action="{{ route('site.update', $user->id) }}" method="POST" class="p-6 space-y-5 sm:p-8">
+                @csrf
+                @method('PUT')
+
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+
+                    {{-- SITE CODE --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Site Code
+                        </label>
+                        <input type="text" name="code" value="{{ old('code', $user->code) }}" required
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-mono uppercase border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white @error('code') border-rose-500 @enderror"
+                            placeholder="e.g. IDN_FS6000">
+
+                        @error('code')
+                            <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- MACHINE NAME --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Machine Name
+                        </label>
+                        <input type="text" name="name" value="{{ old('name', $user->name) }}" required
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white @error('name') border-rose-500 @enderror"
+                            placeholder="e.g. FS6000 Jakarta HQ">
+
+                        @error('name')
+                            <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- MACHINE TYPE --}}
+                    <div class="sm:col-span-2 space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Machine Type
+                        </label>
+                        <input type="text" name="machine_type" value="{{ old('machine_type', $user->machine_type) }}"
+                            required
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white @error('machine_type') border-rose-500 @enderror"
+                            placeholder="e.g. Industrial Scanner">
+
+                        @error('machine_type')
+                            <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
-                {{-- FORM BODY --}}
-                <form action="{{ route('site.update', $user->id) }}" method="POST" class="p-8">
-                    @csrf
-                    @method('PUT')
+                {{-- ACTION BUTTONS --}}
+                <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
+                    <a href="{{ route('site.index') }}"
+                        class="px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors">
+                        Discard
+                    </a>
 
-                    <div class="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2">
-
-                        {{-- CODE SITE --}}
-                        <div>
-                            <label class="flex items-center block gap-2 mb-2 text-sm font-bold text-gray-700">
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                </svg>
-                                Code Site
-                            </label>
-                            <input type="text" name="code" value="{{ old('code', $user->code) }}" required
-                                class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 focus:outline-none transition-all font-mono text-sm uppercase tracking-wider @error('code') border-red-500 @enderror"
-                                placeholder="e.g. IDN_FS6000">
-
-                            @error('code')
-                                <p class="mt-2 text-xs font-medium text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        {{-- MACHINE NAME --}}
-                        <div>
-                            <label class="block mb-2 text-sm font-bold text-gray-700">
-                                Machine Name
-                            </label>
-                            <input type="text" name="name" value="{{ old('name', $user->name) }}" required
-                                class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 focus:outline-none transition-all font-semibold @error('name') border-red-500 @enderror"
-                                placeholder="e.g. FS6000 Jakarta HQ">
-
-                            @error('name')
-                                <p class="mt-2 text-xs font-medium text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        {{-- MACHINE TYPE --}}
-                        <div class="md:col-span-2">
-                            <label class="flex items-center block gap-2 mb-2 text-sm font-bold text-gray-700">
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                                </svg>
-                                Machine Type
-                            </label>
-                            <input type="text" name="machine_type" value="{{ old('machine_type', $user->machine_type) }}"
-                                required
-                                class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 focus:outline-none transition-all @error('machine_type') border-red-500 @enderror"
-                                placeholder="e.g. Industrial Printer">
-
-                            @error('machine_type')
-                                <p class="mt-2 text-xs font-medium text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-
-                    {{-- ACTION BUTTONS --}}
-                    <div class="flex items-center justify-end gap-4 pt-8 mt-10 border-t border-gray-100">
-                        <a href="{{ route('site.index') }}"
-                            class="px-6 py-3 text-sm font-bold text-gray-500 transition-colors hover:text-gray-700">
-                            Discard Changes
-                        </a>
-
-                        <button type="submit"
-                            class="px-8 py-3 text-sm font-bold text-white transition-all bg-blue-600 shadow-xl rounded-2xl hover:bg-blue-700 shadow-blue-100 active:scale-95">
-                            Save Updates
-                        </button>
-                    </div>
-                </form>
-            </div>
+                    <button type="submit"
+                        class="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95 transition-all">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 @endsection
