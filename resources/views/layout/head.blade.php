@@ -15,5 +15,5 @@
         }
     </style>
 
-    <title>Nuctech Warehouse Management</title>
+    <title>Nuctech Management System</title>
 @endpush

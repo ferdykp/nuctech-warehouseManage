@@ -17,11 +17,6 @@
             </div>
 
             <div class="flex items-center gap-2 sm:w-auto shrink-0">
-                <button onclick="location.reload()"
-                    class="p-2.5 text-slate-400 transition-all bg-white border border-slate-200 shadow-2xs rounded-xl hover:text-blue-600 hover:bg-blue-50"
-                    title="Refresh Data">
-                    <i class="fa-solid fa-rotate"></i>
-                </button>
                 <a href="javascript:void(0)" onclick="exportGlobalReport()"
                     class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-bold text-white transition-all bg-slate-900 shadow-md shadow-slate-900/20 rounded-xl hover:bg-black active:scale-95">
                     <i class="fa-solid fa-file-export"></i>
@@ -36,7 +31,7 @@
                 $uniqueParts = \App\Models\Sparepart::count();
                 $totalUnits = \App\Models\SparepartStock::sum('qty');
                 $lowStock = \App\Models\SparepartStock::where('qty', '>', 0)->where('qty', '<=', 5)->count();
-                $outOfStock = \App\Models\SparepartStock::where('qty', '<=', 0)->count();
+                $damagedStock = \App\Models\SparepartStock::where('condition', 'damaged')->sum('qty');
 
                 $quickStats = [
                     [
@@ -58,9 +53,9 @@
                         'color' => 'amber',
                     ],
                     [
-                        'label' => 'Out of Stock',
-                        'value' => number_format($outOfStock),
-                        'icon' => 'fa-circle-xmark',
+                        'label' => 'Damaged Stock',
+                        'value' => number_format($damagedStock),
+                        'icon' => 'fa-heart-crack',
                         'color' => 'rose',
                     ],
                 ];
