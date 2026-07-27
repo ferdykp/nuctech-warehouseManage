@@ -173,7 +173,7 @@ class EmployeeController extends Controller
         $validatedData = $request->validate([
             'site_id'             => 'required|exists:sites,id',
             'name'                => 'required|string|max:255',
-            'phone_number'        => 'required|string|max:15',
+            'phone_number'        => 'required|string|max:20',
             'position'            => 'nullable|string|max:100',
             'status'              => 'required|in:Permanent,Contract,Probation,Daily',
             'join_date'           => 'required|date',
@@ -211,7 +211,7 @@ class EmployeeController extends Controller
         $validatedData = $request->validate([
             'site_id'             => 'required|exists:sites,id',
             'name'                => 'required|string|max:255',
-            'phone_number'        => 'required|string|max:15',
+            'phone_number'        => 'required|string|max:20',
             'position'            => 'nullable|string|max:100',
             'status'              => 'required|in:Permanent,Contract,Probation,Daily',
             'join_date'           => 'required|date',
