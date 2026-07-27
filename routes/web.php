@@ -115,10 +115,16 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
     // PANDUAN PERBAIKAN: Rute-rute ini dimasukkan ke dalam auth grup agar aman
     // Manajemen Profil
-    Route::get('/profile/profile/{id}', [UserController::class, 'show'])->name('users.show');
+    // Route::get('/profile/profile/{id}', [UserController::class, 'show'])->name('users.show');
+    Route::get('/profile/profile/{id}', [UserController::class, 'show'])->name('profile.profileShow');
+
+
     Route::get('/profile/profile', [UserController::class, 'index'])->name('profile.profile');
     Route::get('/profile/profileEdit/{id}', [UserController::class, 'edit'])->name('profile.profileEdit');
-    Route::put('profile/profileEdit/{id}', [UserController::class, 'update'])->name('users.update');
+    // Route::put('profile/profileEdit/{id}', [UserController::class, 'update'])->name('users.update');
+    Route::put('profile/profileEdit/{id}', [UserController::class, 'update'])->name('profile.profileUpdate');
+
+
 
     // Manajemen Employee
     // Manajemen Employee
