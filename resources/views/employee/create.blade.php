@@ -44,22 +44,13 @@
                     </div>
 
                     {{-- PHONE NUMBER --}}
-                    {{-- <div class="space-y-1.5">
+                    <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Phone Number <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" name="phone_number"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
                             placeholder="Phone number..." required>
-                    </div> --}}
-                    {{-- PHONE NUMBER --}}
-                    <div class="space-y-1.5">
-                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Phone Number <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="text" name="phone_number" id="phone_number"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
-                            placeholder="+62 896-0851-4923" required autocomplete="off">
                     </div>
 
                     {{-- SITE LOCATION --}}
@@ -152,62 +143,4 @@
             </div>
         </form>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const phoneInput = document.getElementById('phone_number');
-
-            if (phoneInput) {
-                phoneInput.addEventListener('input', function(e) {
-                    let value = e.target.value;
-
-                    // Ambil hanya digit angka
-                    let digits = value.replace(/\D/g, '');
-
-                    // Jika pengguna memasukkan "0" di awal (contoh: 0896...), ubah menjadi prefix "62896..."
-                    if (digits.startsWith('0')) {
-                        digits = '62' + digits.substring(1);
-                    }
-
-                    // Jika belum diawali 62, tambahkan 62 secara otomatis
-                    if (!digits.startsWith('62') && digits.length > 0) {
-                        digits = '62' + digits;
-                    }
-
-                    // Batasi panjang maksimal angka (misal max 13 digit angka untuk standar Indonesia)
-                    digits = digits.substring(0, 14);
-
-                    // Buat Format: +62 XXX-XXXX-XXXX
-                    let formatted = '';
-                    if (digits.length > 0) {
-                        formatted = '+' + digits.substring(0, 2); // +62
-                    }
-                    if (digits.length > 2) {
-                        formatted += ' ' + digits.substring(2, 5); // +62 896
-                    }
-                    if (digits.length > 5) {
-                        formatted += '-' + digits.substring(5, 9); // +62 896-0851
-                    }
-                    if (digits.length > 9) {
-                        formatted += '-' + digits.substring(9, 13); // +62 896-0851-4923
-                    }
-
-                    e.target.value = formatted;
-                });
-
-                // Set default +62 saat diklik jika masih kosong
-                phoneInput.addEventListener('focus', function(e) {
-                    if (!e.target.value) {
-                        e.target.value = '+62 ';
-                    }
-                });
-
-                // Bersihkan jika hanya tersisa prefix saat blur
-                phoneInput.addEventListener('blur', function(e) {
-                    if (e.target.value === '+62 ' || e.target.value === '+62') {
-                        e.target.value = '';
-                    }
-                });
-            }
-        });
-    </script>
 @endsection
