@@ -5,13 +5,13 @@
 @section('content')
     <div class="w-full space-y-6">
 
-        @if (session('success'))
+        {{-- @if (session('success'))
             <div
                 class="flex items-center gap-3 p-4 text-xs font-semibold border sm:text-sm text-emerald-800 border-emerald-200 bg-emerald-50 rounded-2xl">
                 <i class="text-base fa-solid fa-circle-check text-emerald-600"></i>
                 <span>{{ session('success') }}</span>
             </div>
-        @endif
+        @endif --}}
 
         {{-- HEADER SECTION --}}
         <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
