@@ -67,7 +67,7 @@
                                 {{ auth()->user()?->role ?? 'User' }}</p>
                         </div>
 
-                        <a href="{{ auth()->check() ? route('users.show', auth()->id()) : '#' }}"
+                        <a href="{{ auth()->check() ? route('profile.profileShow', auth()->id()) : '#' }}"
                             class="flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm text-gray-700 hover:bg-slate-50 transition-colors">
                             <i class="w-4 text-blue-600 fa-solid fa-user"></i> Profil Saya
                         </a>

@@ -111,18 +111,19 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::put('/reimbursements/{id}/approve', [AdminReimbursementController::class, 'approve'])->name('reimbursements.approve');
         Route::put('/reimbursements/{id}/reject', [AdminReimbursementController::class, 'reject'])->name('reimbursements.reject');
         Route::delete('/reimbursements/{id}', [AdminReimbursementController::class, 'destroy'])->name('reimbursements.destroy');
+
+        // PANDUAN PERBAIKAN: Rute-rute ini dimasukkan ke dalam auth grup agar aman
+        // Manajemen Profil
+        // Route::get('/profile/profile/{id}', [UserController::class, 'show'])->name('users.show');
+
+        // Route::put('profile/profileEdit/{id}', [UserController::class, 'update'])->name('users.update');
     });
 
-    // PANDUAN PERBAIKAN: Rute-rute ini dimasukkan ke dalam auth grup agar aman
-    // Manajemen Profil
-    // Route::get('/profile/profile/{id}', [UserController::class, 'show'])->name('users.show');
     Route::get('/profile/profile/{id}', [UserController::class, 'show'])->name('profile.profileShow');
-
-
     Route::get('/profile/profile', [UserController::class, 'index'])->name('profile.profile');
     Route::get('/profile/profileEdit/{id}', [UserController::class, 'edit'])->name('profile.profileEdit');
-    // Route::put('profile/profileEdit/{id}', [UserController::class, 'update'])->name('users.update');
     Route::put('profile/profileEdit/{id}', [UserController::class, 'update'])->name('profile.profileUpdate');
+
 
 
 
@@ -156,7 +157,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     |*/
     Route::middleware(['role:superadmin'])->group(function () {
         Route::get('profile/profileList', [UserController::class, 'profileList'])->name('profile.profileList');
-        Route::resource('users', UserController::class);
+        // Route::resource('users', UserController::class);
         // Route::get('/profile/store', [UserController::class, 'store'])->name('users.store');
         // Route::get('/profile/create', [UserController::class, 'create'])->name('users.create');
         // Route::get('/profile/edit', [UserController::class, 'edit'])->name('users.edit');
