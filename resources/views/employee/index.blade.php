@@ -5,14 +5,6 @@
 @section('content')
     <div class="w-full space-y-6">
 
-        {{-- @if (session('success'))
-            <div
-                class="flex items-center gap-3 p-4 text-xs font-semibold border sm:text-sm text-emerald-800 border-emerald-200 bg-emerald-50 rounded-2xl">
-                <i class="text-base fa-solid fa-circle-check text-emerald-600"></i>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif --}}
-
         {{-- HEADER SECTION --}}
         <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div>
@@ -40,14 +32,80 @@
         {{-- MAIN CARD CONTAINER --}}
         <div class="overflow-hidden bg-white border shadow-sm border-slate-200/80 rounded-2xl sm:rounded-3xl">
             <div class="p-5 border-b sm:p-6 border-slate-100 bg-slate-50/50">
-                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div class="relative w-full md:w-80">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
-                            <i class="text-xs fa-solid fa-magnifying-glass"></i>
+                <div class="flex flex-col gap-4">
+                    {{-- Row Search Bar & Clear Filter --}}
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="relative w-full md:w-96">
+                            <div
+                                class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                                <i class="text-xs fa-solid fa-magnifying-glass"></i>
+                            </div>
+                            <input type="text" name="search" id="search"
+                                placeholder="Search employee name or position..." value="{{ request('search') }}"
+                                class="filter-trigger block w-full py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-700 placeholder-slate-400">
                         </div>
-                        <input type="text" name="search" id="search"
-                            placeholder="Search employee name or position..." value="{{ request('search') }}"
-                            class="block w-full py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-700 placeholder-slate-400">
+
+                        <button type="button" id="btn-reset-filter"
+                            class="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-500 transition-colors bg-white border border-slate-200 rounded-xl hover:bg-slate-100 hover:text-slate-700 shrink-0">
+                            <i class="fa-solid fa-rotate-left"></i> Reset Filter
+                        </button>
+                    </div>
+
+                    {{-- Row Filter Options --}}
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+                        {{-- Status Filter --}}
+                        <div>
+                            <label for="filter_status"
+                                class="block mb-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status</label>
+                            <select id="filter_status"
+                                class="filter-trigger block w-full py-2.5 px-3 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-700">
+                                <option value="">All Statuses</option>
+                                <option value="Permanent" {{ request('status') == 'Permanent' ? 'selected' : '' }}>Permanent
+                                </option>
+                                <option value="Contract" {{ request('status') == 'Contract' ? 'selected' : '' }}>Contract
+                                </option>
+                                <option value="Probation" {{ request('status') == 'Probation' ? 'selected' : '' }}>Probation
+                                </option>
+                                <option value="Daily" {{ request('status') == 'Daily' ? 'selected' : '' }}>Daily</option>
+                            </select>
+                        </div>
+
+                        {{-- Site Filter --}}
+                        <div>
+                            <label for="filter_site"
+                                class="block mb-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Site
+                                Location</label>
+                            <select id="filter_site"
+                                class="filter-trigger block w-full py-2.5 px-3 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-700">
+                                <option value="">All Sites</option>
+                                @if (isset($sites))
+                                    @foreach ($sites as $site)
+                                        <option value="{{ $site->id }}"
+                                            {{ request('site_id') == $site->id ? 'selected' : '' }}>
+                                            {{ $site->machine_name }}
+                                        </option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+
+                        {{-- Branch Filter --}}
+                        <div>
+                            <label for="filter_branch"
+                                class="block mb-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Branch</label>
+                            <select id="filter_branch"
+                                class="filter-trigger block w-full py-2.5 px-3 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-700">
+                                <option value="">All Branches</option>
+                                @if (isset($branches))
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}"
+                                            {{ request('branch_id') == $branch->id ? 'selected' : '' }}>
+                                            {{ $branch->branch_name }}
+                                        </option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -124,31 +182,80 @@
     </div>
 
     <script>
-        const searchInput = document.getElementById('search');
+        const filterTriggers = document.querySelectorAll('.filter-trigger');
         const tableContainer = document.getElementById('table-container');
+        const btnResetFilter = document.getElementById('btn-reset-filter');
         let delayTimer;
 
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                clearTimeout(delayTimer);
+        // Fetch data berdasarkan seluruh input filter
+        function fetchFilteredData() {
+            clearTimeout(delayTimer);
 
-                delayTimer = setTimeout(() => {
-                    const query = searchInput.value;
+            delayTimer = setTimeout(() => {
+                const search = document.getElementById('search').value;
+                const status = document.getElementById('filter_status').value;
+                const site = document.getElementById('filter_site').value;
+                const branch = document.getElementById('filter_branch').value;
 
-                    fetch(`{{ route('employee.index') }}?search=${encodeURIComponent(query)}`, {
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        })
-                        .then(response => response.text())
-                        .then(html => {
-                            tableContainer.innerHTML = html;
-                        })
-                        .catch(error => console.error('Error fetching search results:', error));
-                }, 300);
+                const params = new URLSearchParams({
+                    search: search,
+                    status: status,
+                    site_id: site,
+                    branch_id: branch
+                });
+
+                fetch(`{{ route('employee.index') }}?${params.toString()}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        tableContainer.innerHTML = html;
+                    })
+                    .catch(error => console.error('Error fetching filtered results:', error));
+            }, 300);
+        }
+
+        // Jalankan fetchFilteredData ketika filter berubah
+        filterTriggers.forEach(element => {
+            if (element.tagName === 'INPUT') {
+                element.addEventListener('input', fetchFilteredData);
+            } else {
+                element.addEventListener('change', fetchFilteredData);
+            }
+        });
+
+        // Event Listener Tombol Reset Filter
+        if (btnResetFilter) {
+            btnResetFilter.addEventListener('click', function() {
+                document.getElementById('search').value = '';
+                document.getElementById('filter_status').value = '';
+                document.getElementById('filter_site').value = '';
+                document.getElementById('filter_branch').value = '';
+                fetchFilteredData();
             });
         }
 
+        // Paginasi via AJAX
+        document.addEventListener('click', function(e) {
+            const paginationLink = e.target.closest('#table-container nav a');
+            if (paginationLink) {
+                e.preventDefault();
+                fetch(paginationLink.href, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        tableContainer.innerHTML = html;
+                    })
+                    .catch(error => console.error('Error fetching pagination:', error));
+            }
+        });
+
+        // Detail Modal Function
         function showEmployeeDetail(id) {
             fetch(`/employee/${id}`, {
                     headers: {

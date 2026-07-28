@@ -134,5 +134,6 @@
 </div>
 
 <div class="p-4 border-t border-slate-100">
-    {{ $employees->links() }}
+    {{-- Menjaga agar query string filter tetap terikut di link paginasi --}}
+    {{ $employees->appends(request()->query())->links() }}
 </div>
