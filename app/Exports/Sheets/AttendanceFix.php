@@ -245,9 +245,9 @@ class AttendanceFix implements FromCollection, WithTitle, WithHeadings, WithColu
                     }
                 }
 
-                $row[] = ($v1 === 1) ? 's1' : '';
-                $row[] = ($v2 === 1) ? 's2' : '';
-                $row[] = ($v3 === 1) ? 's3' : '';
+                $row[] = ($v1 === 1) ? '.' : '';
+                $row[] = ($v2 === 1) ? '.' : '';
+                $row[] = ($v3 === 1) ? '.' : '';
             }
 
             $collection->push($row);
