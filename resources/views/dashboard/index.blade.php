@@ -107,8 +107,8 @@
                     <div class="flex flex-col justify-between gap-3 mb-5 sm:flex-row sm:items-center">
                         <div>
                             <h3 class="text-base font-extrabold text-slate-800">Today's Active Workforce</h3>
-                            <p class="text-xs font-medium text-slate-500 mt-0.5">Employees scheduled for duty across
-                                locations today.</p>
+                            <p class="text-xs font-medium text-slate-500 mt-0.5">{{ $todaysSchedules->count() }} employees
+                                scheduled today.</p>
                         </div>
                         <a href="{{ route('schedule.index') }}"
                             class="inline-flex items-center justify-center px-4 py-2 text-xs font-bold text-indigo-700 transition-all border border-indigo-100 bg-indigo-50 rounded-xl hover:bg-indigo-600 hover:text-white active:scale-95 shrink-0">
@@ -116,63 +116,68 @@
                         </a>
                     </div>
 
-                    <div class="overflow-x-auto border rounded-xl border-slate-100">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr
-                                    class="bg-slate-50 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider border-b border-slate-100">
-                                    <th class="px-4 py-3">Employee</th>
-                                    <th class="px-4 py-3">Site Location</th>
-                                    <th class="px-4 py-3 text-center">Shift Schedule</th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-xs font-medium divide-y sm:text-sm divide-slate-100 text-slate-700">
-                                @forelse($todaysSchedules ?? [] as $sched)
-                                    <tr class="hover:bg-slate-50/50">
-                                        <td class="px-4 py-3 font-bold text-slate-800">
-                                            <div class="flex items-center gap-2">
-                                                <div
-                                                    class="flex items-center justify-center text-xs font-bold text-blue-700 bg-blue-100 rounded-full w-7 h-7 shrink-0">
-                                                    {{ strtoupper(substr($sched->employee->name, 0, 1)) }}
+                    <div class="overflow-hidden border rounded-xl border-slate-100">
+                        <div class="overflow-y-auto max-h-[360px]">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="sticky top-0 z-10 bg-slate-50">
+                                    <tr
+                                        class="bg-slate-50 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                                        <th class="px-4 py-3">Employee</th>
+                                        <th class="px-4 py-3">Site Location</th>
+                                        <th class="px-4 py-3 text-center">Shift Schedule</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-xs font-medium divide-y sm:text-sm divide-slate-100 text-slate-700">
+                                    @forelse($todaysSchedules ?? [] as $sched)
+                                        <tr class="hover:bg-slate-50/50">
+                                            <td class="px-4 py-3 font-bold text-slate-800">
+                                                <div class="flex items-center gap-2">
+                                                    <div
+                                                        class="flex items-center justify-center text-xs font-bold text-blue-700 bg-blue-100 rounded-full w-7 h-7 shrink-0">
+                                                        {{ strtoupper(substr($sched->employee->name, 0, 1)) }}
+                                                    </div>
+                                                    {{ $sched->employee->name }}
                                                 </div>
-                                                {{ $sched->employee->name }}
-                                            </div>
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            <span
-                                                class="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 rounded-md">
-                                                <i class="fa-solid fa-location-dot text-slate-400"></i>
-                                                {{ $sched->employee->site->machine_name ?? '-' }}
-                                            </span>
-                                        </td>
-                                        <td class="px-4 py-3 text-center">
-                                            @php
-                                                $shiftName = strtolower($sched->shift->shift_name);
-                                                $badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-                                                if (str_contains($shiftName, '1') || str_contains($shiftName, 'hour')) {
-                                                    $badgeClass = 'bg-blue-50 text-blue-700 border-blue-200';
-                                                } elseif (str_contains($shiftName, '2')) {
-                                                    $badgeClass = 'bg-amber-50 text-amber-700 border-amber-200';
-                                                } elseif (str_contains($shiftName, '3')) {
-                                                    $badgeClass = 'bg-purple-50 text-purple-700 border-purple-200';
-                                                }
-                                            @endphp
-                                            <span
-                                                class="px-2.5 py-1 text-[10px] font-bold border rounded-lg {{ $badgeClass }}">
-                                                <i class="mr-1 fa-regular fa-clock"></i>{{ $sched->shift->shift_name }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="3" class="px-4 py-10 text-center text-slate-400">
-                                            <i class="mb-2 text-3xl opacity-50 fa-solid fa-bed"></i>
-                                            <p class="text-sm font-bold">No shifts scheduled for today.</p>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                <span
+                                                    class="inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 rounded-md">
+                                                    <i class="fa-solid fa-location-dot text-slate-400"></i>
+                                                    {{ $sched->employee->site->machine_name ?? '-' }}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                @php
+                                                    $shiftName = strtolower($sched->shift->shift_name);
+                                                    $badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                                    if (
+                                                        str_contains($shiftName, '1') ||
+                                                        str_contains($shiftName, 'hour')
+                                                    ) {
+                                                        $badgeClass = 'bg-blue-50 text-blue-700 border-blue-200';
+                                                    } elseif (str_contains($shiftName, '2')) {
+                                                        $badgeClass = 'bg-amber-50 text-amber-700 border-amber-200';
+                                                    } elseif (str_contains($shiftName, '3')) {
+                                                        $badgeClass = 'bg-purple-50 text-purple-700 border-purple-200';
+                                                    }
+                                                @endphp
+                                                <span
+                                                    class="px-2.5 py-1 text-[10px] font-bold border rounded-lg {{ $badgeClass }}">
+                                                    <i class="mr-1 fa-regular fa-clock"></i>{{ $sched->shift->shift_name }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="3" class="px-4 py-10 text-center text-slate-400">
+                                                <i class="mb-2 text-3xl opacity-50 fa-solid fa-bed"></i>
+                                                <p class="text-sm font-bold">No shifts scheduled for today.</p>
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -181,7 +186,8 @@
                     <div class="flex flex-col justify-between gap-3 mb-5 sm:flex-row sm:items-center">
                         <div>
                             <h3 class="text-base font-extrabold text-slate-800">Operational Sites & Inventory</h3>
-                            <p class="text-xs font-medium text-slate-500 mt-0.5">Select a site branch to manage warehouse
+                            <p class="text-xs font-medium text-slate-500 mt-0.5">Select a site branch to manage
+                                warehouse
                                 stocks.</p>
                         </div>
                         <a href="{{ route('sparepart.all') }}"
@@ -190,7 +196,7 @@
                         </a>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-3 pr-2 overflow-y-auto lg:grid-cols-2 max-h-[360px]">
                         @foreach (\App\Models\Site::with('branch')->get() as $site)
                             <a href="{{ route('sparepart.index', $site->slug) }}"
                                 class="flex items-center gap-3.5 p-3.5 border border-slate-200/70 rounded-2xl hover:border-blue-300 hover:bg-blue-50/50 transition-all group shadow-2xs">
@@ -269,7 +275,8 @@
                                 <div>
                                     <p class="text-xs font-extrabold text-rose-700">Inventory Alert</p>
                                     <p class="text-[10px] text-rose-600/80 font-medium mt-0.5 leading-tight">
-                                        {{ $criticalStock }} item(s) have fallen below the minimum safety threshold.</p>
+                                        {{ $criticalStock }} item(s) have fallen below the minimum safety threshold.
+                                    </p>
                                 </div>
                             </div>
                         @else
@@ -280,7 +287,8 @@
                                 </div>
                                 <div>
                                     <p class="text-xs font-extrabold text-slate-700">Inventory Optimal</p>
-                                    <p class="text-[10px] text-slate-500 font-medium mt-0.5">All stock items are well above
+                                    <p class="text-[10px] text-slate-500 font-medium mt-0.5">All stock items are well
+                                        above
                                         minimum limits.</p>
                                 </div>
                             </div>
