@@ -91,13 +91,13 @@
 
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex items-center justify-center gap-1.5">
-                                        <a href="{{ route('users.edit', $user->id) }}"
+                                        <a href="{{ route('profile.profileUpdate', $user->id) }}"
                                             class="p-1.5 text-amber-600 transition-colors bg-amber-50 rounded-lg hover:bg-amber-600 hover:text-white"
                                             title="Edit User">
                                             <i class="text-xs fa-solid fa-pen-to-square"></i>
                                         </a>
 
-                                        <form action="{{ route('users.destroy', $user->id) }}" method="POST"
+                                        <form action="{{ route('profile.destroy', $user->id) }}" method="POST"
                                             onsubmit="return confirm('Are you sure you want to delete this user account?');">
                                             @csrf
                                             @method('DELETE')

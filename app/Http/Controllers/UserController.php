@@ -80,9 +80,9 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
-        if (auth()->user()->role !== 'superadmin' && auth()->id() !== $user->id) {
-            abort(403, 'Anda tidak memiliki akses untuk mengedit profil orang lain.');
-        }
+        // if (auth()->user()->role !== 'superadmin' && auth()->id() !== $user->id) {
+        //     abort(403, 'Anda tidak memiliki akses untuk mengedit profil orang lain.');
+        // }
         $sites = Site::all();
         return view('profile.profileEdit', compact('user', 'sites'));
     }
@@ -92,9 +92,9 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         // Security check: hanya superadmin atau pemilik akun yang bisa update
-        if (auth()->user()->role !== 'superadmin' && auth()->id() !== $user->id) {
-            abort(403, 'Tindakan ilegal.');
-        }
+        // if (auth()->user()->role !== 'superadmin' && auth()->id() !== $user->id) {
+        //     abort(403, 'Tindakan ilegal.');
+        // }
 
         // Aturan validasi dinamis berdasarkan role yang login
         $rules = [
@@ -140,9 +140,9 @@ class UserController extends Controller
     }
     public function destroy($id)
     {
-        if (auth()->user()->role !== 'superadmin') {
-            abort(403);
-        }
+        // if (auth()->user()->role !== 'superadmin') {
+        //     abort(403);
+        // }
 
         $user = User::findOrFail($id);
 

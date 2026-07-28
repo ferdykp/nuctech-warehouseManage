@@ -35,7 +35,7 @@
                 <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Account Information</h2>
             </div>
 
-            <form action="{{ route('users.update', $user->id) }}" method="POST" class="p-6 space-y-6 sm:p-8">
+            <form action="{{ route('profile.profileUpdate', $user->id) }}" method="POST" class="p-6 space-y-6 sm:p-8">
                 @csrf
                 @method('PUT')
 

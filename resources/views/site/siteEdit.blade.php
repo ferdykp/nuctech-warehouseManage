@@ -35,7 +35,7 @@
             </div>
 
             {{-- FORM BODY --}}
-            <form action="{{ route('site.update', $user->id) }}" method="POST" class="p-6 space-y-5 sm:p-8">
+            <form action="{{ route('profile.profileUpdate', $user->id) }}" method="POST" class="p-6 space-y-5 sm:p-8">
                 @csrf
                 @method('PUT')
 
