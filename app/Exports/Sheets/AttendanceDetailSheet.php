@@ -178,13 +178,35 @@ class AttendanceDetailSheet implements FromCollection, WithTitle, WithHeadings, 
             $employeesQuery->where('site_id', $this->siteId);
         }
 
-        // URUTKAN BERDASARKAN ID SITE, KEMUDIAN BERDASARKAN NAMA KARYAWAN (ALFABET)
-        $employees = $employeesQuery->get()->sort(function ($a, $b) {
-            $siteCompare = ($a->site_id ?? 0) <=> ($b->site_id ?? 0);
-            if ($siteCompare === 0) {
-                return strcasecmp($a->name, $b->name);
+        // 1. Tentukan urutan id_site sesuai keinginan Anda di sini [site_id => urutan_tampilan]
+        // Contoh: ID 5 (ebeam) kita beri bobot urutan 3
+        $customSiteOrder = [
+            // id_site => urutan
+            1 => 7,
+            2 => 6,
+            3 => 8,
+            4 => 9,
+            5 => 1, // Site ebeam (ID 5 di DB) dipaksa urutan ke-3
+            7 => 4,
+            8 => 4,
+            9 => 4,
+            13 => 3,
+            14 => 5,
+            // site_id lainnya akan otomatis ditempatkan di akhir (default 999)
+        ];
+
+        // 2. URUTKAN KARYAWAN BERDASARKAN CUSTOM ORDER & NAMA
+        $employees = $employeesQuery->get()->sort(function ($a, $b) use ($customSiteOrder) {
+            $orderA = $customSiteOrder[$a->site_id] ?? 999;
+            $orderB = $customSiteOrder[$b->site_id] ?? 999;
+
+            // Bandingkan berdasarkan Custom Order
+            if ($orderA !== $orderB) {
+                return $orderA <=> $orderB;
             }
-            return $siteCompare;
+
+            // Jika urutan site sama, urutkan berdasarkan Nama Karyawan (Alfabet)
+            return strcasecmp($a->name, $b->name);
         });
 
         $collection = collect();
@@ -195,7 +217,10 @@ class AttendanceDetailSheet implements FromCollection, WithTitle, WithHeadings, 
 
         foreach ($employees as $employee) {
             $attendance = $employee->attendances->first();
-            $siteName = $employee->site ? ($employee->site->id . '_' . $employee->site->machine_name) : '-';
+
+            // 3. Tampilkan label Site sesuai urutan kustomnya di Excel (Misal: 3_Office)
+            $customOrderNumber = $customSiteOrder[$employee->site_id] ?? ($employee->site->id ?? 0);
+            $siteName = $employee->site ? ($customOrderNumber . '_' . $employee->site->machine_name) : '-';
 
             $row = [
                 $sn++,
