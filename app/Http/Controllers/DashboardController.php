@@ -33,7 +33,7 @@ class DashboardController extends Controller
             $criticalStock = SparepartStock::where('qty', '<=', 5)->count(); //[cite: 1]
 
             // Ambil jadwal karyawan yang bekerja HARI INI (Menggunakan model Schedule)
-            $todaysSchedules = Schedule::with(['employee.site', 'shift'])
+            $todaysSchedules = EmployeeSchedule::with(['employee.site', 'shift'])
                 ->where('date', $today)
                 ->whereHas('shift', function ($q) {
                     $q->where('is_off', false);
