@@ -31,7 +31,7 @@
                 <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Account Information</h2>
             </div>
 
-            <form action="{{ route('users.store') }}" method="POST" class="p-6 space-y-6 sm:p-8">
+            <form action="{{ route('profile.store') }}" method="POST" class="p-6 space-y-6 sm:p-8">
                 @csrf
 
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -124,10 +124,35 @@
                     </div>
 
                     {{-- CONFIRM PASSWORD --}}
+                    {{-- <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Confirm Password
+                            <span class="text-rose-500">*</span></label>
+                        <div class="relative">
+                            <input :type="showConfirmPassword ? 'text' : 'password'" name="password_confirmation"
+                                x-model="password_confirm" placeholder="Repeat password"
+                                class="w-full px-3.5 py-2.5 text-xs sm:text-sm border rounded-xl focus:ring-4 focus:outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"
+                                :class="password_confirm === '' ? 'border-slate-200' : (password === password_confirm ?
+                                    'border-emerald-500 focus:ring-emerald-200/50' :
+                                    'border-rose-500 focus:ring-rose-200/50')"
+                                required>
+                            <button type="button" @click="showConfirmPassword = !showConfirmPassword"
+                                class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600">
+                                <i class="fa-solid" :class="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                            </button>
+                        </div>
+                        <template x-if="password_confirm !== ''">
+                            <p class="mt-1 text-xs font-bold"
+                                :class="password === password_confirm ? 'text-emerald-600' : 'text-rose-600'">
+                                <span
+                                    x-text="password === password_confirm ? '✓ Passwords match' : '✗ Passwords do not match'"></span>
+                            </p>
+                        </template>
+                    </div> --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Confirm Password
                             <span class="text-rose-500">*</span></label>
                         <div class="relative">
+                            <!-- Tambahkan name="password_confirmation" di bawah ini -->
                             <input :type="showConfirmPassword ? 'text' : 'password'" name="password_confirmation"
                                 x-model="password_confirm" placeholder="Repeat password"
                                 class="w-full px-3.5 py-2.5 text-xs sm:text-sm border rounded-xl focus:ring-4 focus:outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"

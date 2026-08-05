@@ -130,11 +130,14 @@ class UserController extends Controller
         $user->save();
 
         // Redirect dinamis berdasarkan role
+        // if (auth()->user()->role === 'superadmin') {
+        //     // Jika diubah oleh superadmin, arahkan kembali ke menu manajemen user terdekat
+        //     return redirect()->route('profile.profileList')->with('success', 'User berhasil diperbarui');
+        // }
+        // Di dalam method update(), ubah baris 140 menjadi:
         if (auth()->user()->role === 'superadmin') {
-            // Jika diubah oleh superadmin, arahkan kembali ke menu manajemen user terdekat
-            return redirect()->route('profile.profileList')->with('success', 'User berhasil diperbarui');
+            return redirect()->route('profile.profile')->with('success', 'User berhasil diperbarui');
         }
-
         // Jika akun biasa mengedit profilnya sendiri, kembalikan ke detail profilnya sendiri
         return redirect()->route('profile.profile', $user->id)->with('success', 'Profil Anda berhasil diperbarui');
     }

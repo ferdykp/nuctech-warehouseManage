@@ -13,7 +13,7 @@
                     permissions.</p>
             </div>
 
-            <a href="{{ route('users.create') }}"
+            <a href="{{ route('profile.create') }}"
                 class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95 shrink-0">
                 <i class="fa-solid fa-user-plus"></i>
                 <span>Add New User</span>

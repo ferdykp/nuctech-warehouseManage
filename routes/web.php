@@ -117,11 +117,15 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         // Route::get('/profile/profile/{id}', [UserController::class, 'show'])->name('users.show');
 
         // Route::put('profile/profileEdit/{id}', [UserController::class, 'update'])->name('users.update');
-        Route::get('/profile/profile/{id}', [UserController::class, 'show'])->name('profile.profileShow');
         Route::get('/profile/profile', [UserController::class, 'index'])->name('profile.profile');
+        Route::get('/profile/create', [UserController::class, 'create'])->name('profile.create');
+        Route::post('/profile/store', [UserController::class, 'store'])->name('profile.store');
+
+        // 2. Rute Dinamis dengan Parameter {id} (Taruh di BAWAH)
+        Route::get('/profile/profile/{id}', [UserController::class, 'show'])->name('profile.profileShow');
         Route::get('/profile/profileEdit/{id}', [UserController::class, 'edit'])->name('profile.profileEdit');
-        Route::put('profile/profileEdit/{id}', [UserController::class, 'update'])->name('profile.profileUpdate');
-        Route::delete('profile/{id}', [UserController::class, 'delete'])->name('profile.destroy');
+        Route::put('/profile/profileEdit/{id}', [UserController::class, 'update'])->name('profile.profileUpdate');
+        Route::delete('/profile/{id}', [UserController::class, 'delete'])->name('profile.destroy');
     });
 
 
