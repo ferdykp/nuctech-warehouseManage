@@ -35,27 +35,34 @@
         <div class="overflow-hidden bg-white border shadow-sm border-slate-200/80 rounded-2xl sm:rounded-3xl">
             <div
                 class="flex flex-col justify-between gap-4 p-5 border-b lg:flex-row lg:items-center sm:p-6 border-slate-100 bg-slate-50/50">
+
+                {{-- COMBINED FILTER FORM --}}
                 <div class="flex flex-col flex-1 gap-3 sm:flex-row sm:items-center">
                     <h3 class="text-base font-extrabold text-slate-800 shrink-0">Claim Logs</h3>
 
-                    {{-- SEARCH BAR --}}
+                    {{-- SEARCH BAR WITH SPINNER --}}
                     <div class="relative w-full sm:w-64">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
-                            <i class="text-xs fa-solid fa-magnifying-glass"></i>
+                            <i class="text-xs fa-solid fa-magnifying-glass" id="searchIcon"></i>
+                            {{-- <i class="hidden text-xs fa-solid fa-circle-notch animate-spin text-amber-500"
+                                id="searchSpinner"></i> --}}
                         </span>
-                        <input type="text" id="reimburseSearchInput" onkeyup="filterReimburseList()"
-                            placeholder="Search staff or comment..."
-                            class="w-full py-2.5 pl-10 pr-3.5 text-xs font-medium bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-700 transition-all">
+                        <input type="text" id="reimburseSearchInput" value="{{ request('search') }}"
+                            placeholder="Search staff, route, invoice..."
+                            class="w-full py-2.5 pl-10 pr-8 text-xs font-medium bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-700 transition-all">
+
+                        <button type="button" id="clearSearchBtn" onclick="clearSearch()"
+                            class="{{ request('search') ? '' : 'hidden' }} absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600">
+                            <i class="text-xs fa-solid fa-xmark"></i>
+                        </button>
                     </div>
 
-                    {{-- MONTH FILTER FORM --}}
-                    <form method="GET" action="{{ route('reimbursements.index') }}" id="monthFilterForm"
-                        class="w-full sm:w-auto">
-                        <div class="relative">
-                            <select name="month" onchange="document.getElementById('monthFilterForm').submit()"
-                                class="w-full sm:w-44 py-2.5 pl-3.5 pr-10 text-xs font-bold bg-amber-50/60 border border-amber-200/80 rounded-xl text-amber-900 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 appearance-none cursor-pointer transition-all">
-                                <option value="">📅 All Months</option>
-                                @foreach ([
+                    {{-- MONTH FILTER --}}
+                    <div class="relative w-full sm:w-auto">
+                        <select id="reimburseMonthSelect"
+                            class="w-full sm:w-44 py-2.5 pl-3.5 pr-10 text-xs font-bold bg-amber-50/60 border border-amber-200/80 rounded-xl text-amber-900 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 appearance-none cursor-pointer transition-all">
+                            <option value="">📅 All Months</option>
+                            @foreach ([
             '01' => 'January',
             '02' => 'February',
             '03' => 'March',
@@ -69,17 +76,16 @@
             '11' => 'November',
             '12' => 'December',
         ] as $value => $name)
-                                    <option value="{{ $value }}" {{ request('month') == $value ? 'selected' : '' }}>
-                                        {{ $name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <span
-                                class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-amber-600">
-                                <i class="text-[10px] fa-solid fa-chevron-down"></i>
-                            </span>
-                        </div>
-                    </form>
+                                <option value="{{ $value }}" {{ request('month') == $value ? 'selected' : '' }}>
+                                    {{ $name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <span
+                            class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-amber-600">
+                            <i class="text-[10px] fa-solid fa-chevron-down"></i>
+                        </span>
+                    </div>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
@@ -88,7 +94,7 @@
                         <i class="fa-solid fa-plus"></i>
                         <span>File New Claim</span>
                     </a>
-                    <a href="{{ route('reimbursements.export_pdf', ['month' => request('month')]) }}"
+                    <a href="{{ route('reimbursements.export_pdf', ['month' => request('month')]) }}" id="pdfExportLink"
                         class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95">
                         <i class="fas fa-file-pdf"></i> PDF Summary
                     </a>
@@ -99,199 +105,269 @@
                 </div>
             </div>
 
-            {{-- EMPTY SEARCH STATE --}}
-            <div id="emptySearchState" class="flex-col items-center justify-center hidden p-12 text-center bg-white">
-                <div class="flex items-center justify-center w-12 h-12 mb-3 rounded-xl bg-slate-100 text-slate-400">
-                    <i class="text-lg fa-solid fa-receipt"></i>
-                </div>
-                <h4 class="text-sm font-bold text-slate-700">No Claims Found</h4>
-                <p class="max-w-xs mt-1 text-xs text-slate-400">We couldn't find any results matching your search query.</p>
-            </div>
+            {{-- 🟢 DYNAMIC DATA CONTAINER (AKAN DI-UPDATE VIA AJAX) --}}
+            <div id="reimbursementDataWrapper" class="transition-opacity duration-200">
 
-            {{-- DESKTOP VIEW --}}
-            <div id="desktopTableContainer" class="hidden overflow-x-auto md:block">
-                <table class="w-full text-left border-collapse min-w-[750px]">
-                    <thead>
-                        <tr
-                            class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-100/70 border-b border-slate-200/80">
-                            <th class="py-3.5 px-6 text-center w-14">No</th>
-                            <th class="px-6 py-3.5">Requester / Date</th>
-                            <th class="px-6 py-3.5">Category</th>
-                            <th class="px-6 py-3.5">Details / Route</th>
-                            <th class="px-6 py-3.5 text-center">Amount</th>
-                            <th class="px-6 py-3.5 text-center">Status</th>
-                            <th class="px-6 py-3.5 text-right w-48">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-xs font-medium divide-y divide-slate-100 sm:text-sm text-slate-700">
-                        @forelse ($reimbursements as $r)
-                            @php
-                                $reimburseMonth = \Carbon\Carbon::parse($r->date)->format('m');
-                            @endphp
-                            <tr class="transition-colors hover:bg-slate-50/80 reimburse-row-item"
-                                data-search-staff="{{ strtolower($r->person_name) }}"
-                                data-search-title="{{ strtolower($r->comment ?? '') }}" data-month="{{ $reimburseMonth }}">
-                                <td class="py-3.5 px-6 text-center text-slate-400 font-bold">
-                                    {{ $loop->iteration }}
-                                </td>
-
-                                <td class="px-6 py-3.5">
-                                    <div class="flex items-center gap-3">
-                                        <div
-                                            class="flex items-center justify-center w-8 h-8 text-xs font-black text-amber-700 bg-amber-50 rounded-xl shrink-0">
-                                            {{ strtoupper(substr($r->person_name ?? '?', 0, 1)) }}
+                {{-- DESKTOP VIEW --}}
+                <div id="desktopTableContainer" class="hidden overflow-x-auto md:block">
+                    <table class="w-full text-left border-collapse min-w-[750px]">
+                        <thead>
+                            <tr
+                                class="text-[11px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-100/70 border-b border-slate-200/80">
+                                <th class="py-3.5 px-6 text-center w-14">No</th>
+                                <th class="px-6 py-3.5">Requester / Date</th>
+                                <th class="px-6 py-3.5">Category</th>
+                                <th class="px-6 py-3.5">Details / Route</th>
+                                <th class="px-6 py-3.5 text-center">Amount</th>
+                                <th class="px-6 py-3.5 text-center">No. Invoice</th>
+                                <th class="px-6 py-3.5 text-center">Status</th>
+                                <th class="px-6 py-3.5 text-right w-48">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs font-medium divide-y divide-slate-100 sm:text-sm text-slate-700">
+                            @forelse ($reimbursements as $r)
+                                <tr class="transition-colors hover:bg-slate-50/80">
+                                    <td class="py-3.5 px-6 text-center text-slate-400 font-bold">
+                                        {{ ($reimbursements->currentPage() - 1) * $reimbursements->perPage() + $loop->iteration }}
+                                    </td>
+                                    <td class="px-6 py-3.5">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="flex items-center justify-center w-8 h-8 text-xs font-black text-amber-700 bg-amber-50 rounded-xl shrink-0">
+                                                {{ strtoupper(substr($r->person_name ?? '?', 0, 1)) }}
+                                            </div>
+                                            <div>
+                                                <p class="font-bold text-slate-800">{{ $r->person_name }}</p>
+                                                <p class="text-[11px] font-normal text-slate-400">
+                                                    {{ \Carbon\Carbon::parse($r->date)->format('d M Y') }}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p class="font-bold text-slate-800">{{ $r->person_name }}</p>
-                                            <p class="text-[11px] font-normal text-slate-400">
-                                                {{ \Carbon\Carbon::parse($r->date)->format('d M Y') }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-3.5">
-                                    <span
-                                        class="px-2.5 py-1 text-[10px] font-bold rounded-lg uppercase tracking-wider
-                                        {{ $r->category == 'transportation' ? 'bg-blue-50 text-blue-700 border border-blue-200/60' : ($r->category == 'delivery' ? 'bg-purple-50 text-purple-700 border border-purple-200/60' : 'bg-slate-100 text-slate-700 border border-slate-200') }}">
-                                        {{ $r->category }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-3.5">
-                                    @if (in_array($r->category, ['transportation', 'delivery']))
-                                        <p class="text-xs font-semibold text-slate-600">
-                                            <i class="mr-1 fa-solid fa-location-dot text-rose-500"></i>
-                                            {{ $r->from_location }}
-                                            <i class="mx-1 fa-solid fa-arrow-right text-slate-400"></i>
-                                            {{ $r->to_location }}
-                                        </p>
-                                    @else
-                                        <p class="text-xs italic text-slate-400">No routing required</p>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-3.5 text-center">
-                                    <span class="text-xs font-black text-slate-800">Rp
-                                        {{ number_format($r->amount, 0, ',', '.') }}</span>
-                                </td>
-                                <td class="px-6 py-3.5 text-center">
-                                    @if ($r->status == 'approved')
+                                    </td>
+                                    <td class="px-6 py-3.5">
                                         <span
-                                            class="px-2.5 py-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 rounded-lg uppercase">Approved</span>
-                                    @elseif($r->status == 'rejected')
-                                        <span
-                                            class="px-2.5 py-1 text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200/60 rounded-lg uppercase">Rejected</span>
-                                    @else
-                                        <span
-                                            class="px-2.5 py-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200/60 rounded-lg uppercase animate-pulse">
-                                            {{ strtoupper(str_replace('_', ' ', $r->status)) }}
+                                            class="px-2.5 py-1 text-[10px] font-bold rounded-lg uppercase tracking-wider
+                                            {{ $r->category == 'transportation' ? 'bg-blue-50 text-blue-700 border border-blue-200/60' : ($r->category == 'delivery' ? 'bg-purple-50 text-purple-700 border border-purple-200/60' : 'bg-slate-100 text-slate-700 border border-slate-200') }}">
+                                            {{ $r->category }}
                                         </span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-3.5 text-right">
-                                    <div class="flex items-center justify-end gap-1.5">
-                                        <a href="{{ route('reimbursements.export_single_pdf', $r->id) }}"
-                                            class="p-1.5 text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white rounded-lg transition-colors"
-                                            title="Download Invoice PDF">
-                                            <i class="text-xs fas fa-file-pdf"></i>
-                                        </a>
+                                    </td>
+                                    <td class="px-6 py-3.5">
+                                        @if (in_array($r->category, ['transportation', 'delivery']))
+                                            <p class="text-xs font-semibold text-slate-600">
+                                                <i class="mr-1 fa-solid fa-location-dot text-rose-500"></i>
+                                                {{ $r->from_location }}
+                                                <i class="mx-1 fa-solid fa-arrow-right text-slate-400"></i>
+                                                {{ $r->to_location }}
+                                            </p>
+                                        @else
+                                            <p class="text-xs italic text-slate-400">No routing required</p>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-3.5 text-center">
+                                        <span class="text-xs font-black text-slate-800">Rp
+                                            {{ number_format($r->amount, 0, ',', '.') }}</span>
+                                    </td>
+                                    <td class="px-6 py-3.5 text-center">
+                                        <span class="text-xs font-black text-slate-800">
+                                            {{ $r->comment }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-3.5 text-center">
+                                        @if ($r->status == 'approved')
+                                            <span
+                                                class="px-2.5 py-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 rounded-lg uppercase">Approved</span>
+                                        @elseif($r->status == 'rejected')
+                                            <span
+                                                class="px-2.5 py-1 text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200/60 rounded-lg uppercase">Rejected</span>
+                                        @else
+                                            <span
+                                                class="px-2.5 py-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200/60 rounded-lg uppercase animate-pulse">
+                                                {{ strtoupper(str_replace('_', ' ', $r->status)) }}
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-3.5 text-right">
+                                        <div class="flex items-center justify-end gap-1.5">
+                                            {{-- TOMBOL EDIT BARU --}}
+                                            <a href="{{ route('reimbursements.edit', $r->id) }}"
+                                                class="p-1.5 text-amber-600 bg-amber-50 hover:bg-amber-600 hover:text-white rounded-lg transition-colors"
+                                                title="Edit Claim">
+                                                <i class="text-xs fa-solid fa-pen-to-square"></i>
+                                            </a>
 
-                                        <button onclick="openDetailModal(this)" data-reimbursement="{{ json_encode($r) }}"
-                                            class="p-1.5 text-slate-600 bg-slate-100 hover:bg-slate-800 hover:text-white rounded-lg transition-colors"
-                                            title="Quick View Details">
-                                            <i class="text-xs fa-solid fa-receipt"></i>
-                                        </button>
+                                            <a href="{{ route('reimbursements.export_single_pdf', $r->id) }}"
+                                                class="p-1.5 text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white rounded-lg transition-colors"
+                                                title="Download Invoice PDF">
+                                                <i class="text-xs fas fa-file-pdf"></i>
+                                            </a>
 
-                                        <a href="{{ route('reimbursements.approval', $r->id) }}"
-                                            class="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white rounded-lg transition-colors"
-                                            title="Digital Signature Page">
-                                            <i class="text-xs fa-solid fa-pen-nib"></i>
-                                        </a>
+                                            <button onclick="openDetailModal(this)"
+                                                data-reimbursement="{{ json_encode($r) }}"
+                                                class="p-1.5 text-slate-600 bg-slate-100 hover:bg-slate-800 hover:text-white rounded-lg transition-colors"
+                                                title="Quick View Details">
+                                                <i class="text-xs fa-solid fa-receipt"></i>
+                                            </button>
 
-                                        <button onclick="confirmCancel('{{ $r->id }}')"
-                                            class="p-1.5 text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white rounded-lg transition-colors"
-                                            title="Cancel Claim">
-                                            <i class="text-xs fa-solid fa-ban"></i>
-                                        </button>
+                                            <a href="{{ route('reimbursements.approval', $r->id) }}"
+                                                class="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white rounded-lg transition-colors"
+                                                title="Digital Signature Page">
+                                                <i class="text-xs fa-solid fa-pen-nib"></i>
+                                            </a>
+
+                                            <button onclick="confirmCancel('{{ $r->id }}')"
+                                                class="p-1.5 text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white rounded-lg transition-colors"
+                                                title="Cancel Claim">
+                                                <i class="text-xs fa-solid fa-ban"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="8" class="p-12 text-center bg-white">
+                                        <div class="flex flex-col items-center justify-center">
+                                            <div
+                                                class="flex items-center justify-center w-12 h-12 mb-3 rounded-xl bg-slate-100 text-slate-400">
+                                                <i class="text-lg fa-solid fa-receipt"></i>
+                                            </div>
+                                            <h4 class="text-sm font-bold text-slate-700">No Claims Found</h4>
+                                            <p class="max-w-xs mt-1 text-xs text-slate-400">We couldn't find any
+                                                reimbursement claims matching your filter criteria.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- MOBILE VIEW --}}
+                <div id="mobileCardContainer" class="p-4 space-y-3.5 md:hidden bg-slate-50/50">
+                    @forelse ($reimbursements as $r)
+                        <div class="p-4 space-y-3 bg-white border border-slate-200/80 shadow-2xs rounded-xl">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex items-center gap-2.5">
+                                    <div
+                                        class="flex items-center justify-center w-8 h-8 text-xs font-black rounded-lg text-amber-700 bg-amber-50 shrink-0">
+                                        {{ strtoupper(substr($r->person_name ?? '?', 0, 1)) }}
                                     </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="p-10 text-center text-slate-400">
-                                    <i class="block mb-2 text-3xl opacity-50 fa-solid fa-receipt"></i>
-                                    <p class="text-sm font-bold text-slate-700">No reimbursement claims filed for this
-                                        month</p>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            {{-- MOBILE VIEW --}}
-            <div id="mobileCardContainer" class="p-4 space-y-3.5 md:hidden bg-slate-50/50">
-                @forelse ($reimbursements as $r)
-                    @php
-                        $reimburseMonth = \Carbon\Carbon::parse($r->date)->format('m');
-                    @endphp
-                    <div class="p-4 space-y-3 bg-white border border-slate-200/80 shadow-2xs rounded-xl reimburse-card-item"
-                        data-month="{{ $reimburseMonth }}">
-                        <div class="flex items-start justify-between gap-2">
-                            <div class="flex items-center gap-2.5">
-                                <div
-                                    class="flex items-center justify-center w-8 h-8 text-xs font-black rounded-lg text-amber-700 bg-amber-50 shrink-0">
-                                    {{ strtoupper(substr($r->person_name ?? '?', 0, 1)) }}
+                                    <div>
+                                        <p class="text-xs font-bold text-slate-800">{{ $r->person_name }}</p>
+                                        <p class="text-[10px] text-slate-400">
+                                            {{ \Carbon\Carbon::parse($r->date)->format('d M Y') }}</p>
+                                    </div>
                                 </div>
                                 <div>
-                                    <p class="text-xs font-bold text-slate-800">{{ $r->person_name }}</p>
-                                    <p class="text-[10px] text-slate-400">
-                                        {{ \Carbon\Carbon::parse($r->date)->format('d M Y') }}</p>
+                                    @if ($r->status == 'approved')
+                                        <span
+                                            class="px-2 py-0.5 text-[9px] font-bold text-emerald-700 bg-emerald-50 rounded-md uppercase border border-emerald-200/60">Approved</span>
+                                    @elseif($r->status == 'rejected')
+                                        <span
+                                            class="px-2 py-0.5 text-[9px] font-bold text-rose-700 bg-rose-50 rounded-md uppercase border border-rose-200/60">Rejected</span>
+                                    @else
+                                        <span
+                                            class="px-2 py-0.5 text-[9px] font-bold text-amber-700 bg-amber-50 rounded-md uppercase border border-amber-200/60 animate-pulse">Pending</span>
+                                    @endif
                                 </div>
                             </div>
-                            <div>
-                                @if ($r->status == 'approved')
+
+                            <div
+                                class="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                                <div>
+                                    <span class="block text-[10px] font-bold text-slate-400 uppercase">Category</span>
                                     <span
-                                        class="px-2 py-0.5 text-[9px] font-bold text-emerald-700 bg-emerald-50 rounded-md uppercase border border-emerald-200/60">Approved</span>
-                                @elseif($r->status == 'rejected')
-                                    <span
-                                        class="px-2 py-0.5 text-[9px] font-bold text-rose-700 bg-rose-50 rounded-md uppercase border border-rose-200/60">Rejected</span>
-                                @else
-                                    <span
-                                        class="px-2 py-0.5 text-[9px] font-bold text-amber-700 bg-amber-50 rounded-md uppercase border border-amber-200/60 animate-pulse">Pending</span>
-                                @endif
+                                        class="font-bold text-slate-700 uppercase text-[11px]">{{ $r->category }}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] font-bold text-slate-400 uppercase">Amount</span>
+                                    <span class="font-bold text-slate-800 text-[11px]">Rp
+                                        {{ number_format($r->amount, 0, ',', '.') }}</span>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2 pt-1">
+                                <a href="{{ route('reimbursements.edit', $r->id) }}"
+                                    class="p-2 text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg font-bold text-xs flex-1 text-center flex justify-center items-center gap-1.5 transition-colors">
+                                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                                </a>
+
+                                <button onclick="openDetailModal(this)" data-reimbursement="{{ json_encode($r) }}"
+                                    class="p-2 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg font-bold text-xs flex-1 text-center flex justify-center items-center gap-1.5 transition-colors">
+                                    <i class="fa-solid fa-receipt"></i> Details
+                                </button>
+
+                                <a href="{{ route('reimbursements.approval', $r->id) }}"
+                                    class="p-2 text-white bg-amber-600 hover:bg-amber-700 rounded-lg font-bold text-xs flex-1 text-center flex justify-center items-center gap-1.5 shadow-md shadow-amber-600/20 active:scale-95 transition-all">
+                                    <i class="fa-solid fa-pen-nib"></i> Sign Claim
+                                </a>
                             </div>
                         </div>
-
-                        <div class="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                            <div>
-                                <span class="block text-[10px] font-bold text-slate-400 uppercase">Category</span>
-                                <span class="font-bold text-slate-700 uppercase text-[11px]">{{ $r->category }}</span>
-                            </div>
-                            <div>
-                                <span class="block text-[10px] font-bold text-slate-400 uppercase">Amount</span>
-                                <span class="font-bold text-slate-800 text-[11px]">Rp
-                                    {{ number_format($r->amount, 0, ',', '.') }}</span>
-                            </div>
+                    @empty
+                        <div
+                            class="p-8 text-xs font-medium text-center bg-white border border-slate-200 text-slate-400 rounded-xl">
+                            No reimbursement claims filed for this criteria.
                         </div>
+                    @endforelse
+                </div>
 
-                        <div class="flex gap-2 pt-1">
-                            <button onclick="openDetailModal(this)" data-reimbursement="{{ json_encode($r) }}"
-                                class="p-2 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg font-bold text-xs flex-1 text-center flex justify-center items-center gap-1.5 transition-colors">
-                                <i class="fa-solid fa-receipt"></i> Details
-                            </button>
-
-                            <a href="{{ route('reimbursements.approval', $r->id) }}"
-                                class="p-2 text-white bg-amber-600 hover:bg-amber-700 rounded-lg font-bold text-xs flex-1 text-center flex justify-center items-center gap-1.5 shadow-md shadow-amber-600/20 active:scale-95 transition-all">
-                                <i class="fa-solid fa-pen-nib"></i> Sign Claim
-                            </a>
-                        </div>
-                    </div>
-                @empty
+                {{-- PAGINATION LINKS --}}
+                @if ($reimbursements->hasPages())
                     <div
-                        class="p-8 text-xs font-medium text-center bg-white border border-slate-200 text-slate-400 rounded-xl">
-                        No reimbursement claims filed for this month.
+                        class="flex flex-col items-center justify-between gap-3 p-4 px-6 bg-white border-t sm:flex-row border-slate-100 ajax-pagination">
+                        {{-- Ringkasan Jumlah Data --}}
+                        <p class="text-xs font-medium text-slate-500">
+                            Showing <span class="font-bold text-slate-800">{{ $reimbursements->firstItem() }}</span>
+                            to <span class="font-bold text-slate-800">{{ $reimbursements->lastItem() }}</span>
+                            of <span class="font-bold text-slate-800">{{ $reimbursements->total() }}</span> results
+                        </p>
+
+                        {{-- Navigasi Tombol Halaman --}}
+                        <div class="flex items-center gap-1">
+                            {{-- Previous Page Link --}}
+                            @if ($reimbursements->onFirstPage())
+                                <span
+                                    class="px-3 py-1.5 text-xs font-bold text-slate-300 bg-slate-100 rounded-lg cursor-not-allowed">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </span>
+                            @else
+                                <a href="{{ $reimbursements->previousPageUrl() }}"
+                                    class="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-amber-600 hover:text-white rounded-lg transition-colors">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </a>
+                            @endif
+
+                            {{-- Number Links --}}
+                            @foreach ($reimbursements->getUrlRange(1, $reimbursements->lastPage()) as $page => $url)
+                                @if ($page == $reimbursements->currentPage())
+                                    <span
+                                        class="px-3 py-1.5 text-xs font-black text-white bg-amber-600 rounded-lg shadow-xs border border-amber-600">
+                                        {{ $page }}
+                                    </span>
+                                @else
+                                    <a href="{{ $url }}"
+                                        class="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-amber-600 hover:text-white rounded-lg transition-colors">
+                                        {{ $page }}
+                                    </a>
+                                @endif
+                            @endforeach
+
+                            {{-- Next Page Link --}}
+                            @if ($reimbursements->hasMorePages())
+                                <a href="{{ $reimbursements->nextPageUrl() }}"
+                                    class="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-amber-600 hover:text-white rounded-lg transition-colors">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </a>
+                            @else
+                                <span
+                                    class="px-3 py-1.5 text-xs font-bold text-slate-300 bg-slate-100 rounded-lg cursor-not-allowed">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </span>
+                            @endif
+                        </div>
                     </div>
-                @endforelse
+                @endif
             </div>
+
         </div>
     </div>
 
@@ -421,63 +497,132 @@
 
 @push('scripts')
     <script>
-        function filterReimburseList() {
-            const filterText = document.getElementById('reimburseSearchInput').value.toLowerCase();
-            const urlParams = new URLSearchParams(window.location.search);
-            const selectedMonth = urlParams.get('month');
+        // 🟢 IMPLEMENTASI AJAX + DEBOUNCE (NO PAGE RELOAD)
+        let debounceTimer;
 
-            const rows = document.querySelectorAll('.reimburse-row-item');
-            let hasDesktopResults = false;
-            rows.forEach(row => {
-                const staff = row.getAttribute('data-search-staff') || '';
-                const title = row.getAttribute('data-search-title') || '';
-                const rowMonth = row.getAttribute('data-month') || '';
+        // 1. Core Function untuk Fetch Data via AJAX
+        function fetchReimbursementData(targetUrl = null) {
+            const searchIcon = document.getElementById('searchIcon');
+            const searchSpinner = document.getElementById('searchSpinner');
+            const wrapper = document.getElementById('reimbursementDataWrapper');
+            const searchValue = document.getElementById('reimburseSearchInput').value.trim();
+            const monthValue = document.getElementById('reimburseMonthSelect').value;
 
-                const matchesText = staff.includes(filterText) || title.includes(filterText);
-                const matchesMonth = !selectedMonth || rowMonth === selectedMonth;
+            // Efek Opacity & Spinner
+            if (searchIcon && searchSpinner) {
+                searchIcon.classList.add('hidden');
+                searchSpinner.classList.remove('hidden');
+            }
+            if (wrapper) wrapper.style.opacity = '0.5';
 
-                if (matchesText && matchesMonth) {
-                    row.style.display = "";
-                    hasDesktopResults = true;
-                } else {
-                    row.style.display = "none";
-                }
-            });
+            // Konstruksi URL
+            let url = targetUrl ? new URL(targetUrl) : new URL("{{ route('reimbursements.index') }}");
+            if (searchValue) url.searchParams.set('search', searchValue);
+            else url.searchParams.delete('search');
 
-            const cards = document.querySelectorAll('.reimburse-card-item');
-            let hasMobileResults = false;
-            cards.forEach(card => {
-                const textContent = card.innerText.toLowerCase();
-                const cardMonth = card.getAttribute('data-month') || '';
+            if (monthValue) url.searchParams.set('month', monthValue);
+            else url.searchParams.delete('month');
 
-                const matchesText = textContent.includes(filterText);
-                const matchesMonth = !selectedMonth || cardMonth === selectedMonth;
+            // Toggle Tombol Clear Search
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if (clearBtn) {
+                clearBtn.classList.toggle('hidden', !searchValue);
+            }
 
-                if (matchesText && matchesMonth) {
-                    card.style.display = "";
-                    hasMobileResults = true;
-                } else {
-                    card.style.display = "none";
-                }
-            });
+            // Sync Link Export PDF
+            const pdfLink = document.getElementById('pdfExportLink');
+            if (pdfLink) {
+                const pdfUrl = new URL("{{ route('reimbursements.export_pdf') }}");
+                if (monthValue) pdfUrl.searchParams.set('month', monthValue);
+                pdfLink.href = pdfUrl.href;
+            }
 
-            const emptyState = document.getElementById('emptySearchState');
-            if (emptyState) {
-                const isMobile = window.innerWidth < 768;
-                const noResults = isMobile ? !hasMobileResults : !hasDesktopResults;
-                emptyState.classList.toggle('hidden', !noResults);
-                emptyState.classList.toggle('flex', noResults);
+            // Eksekusi Fetch (AJAX)
+            fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    const newContent = doc.getElementById('reimbursementDataWrapper');
+                    if (newContent && wrapper) {
+                        wrapper.innerHTML = newContent.innerHTML;
+                    }
+
+                    // Sembunyikan Spinner & Restore Opacity
+                    if (searchIcon && searchSpinner) {
+                        searchIcon.classList.remove('hidden');
+                        searchSpinner.classList.add('hidden');
+                    }
+                    if (wrapper) wrapper.style.opacity = '1';
+
+                    // Perbarui URL Browser tanpa reload
+                    window.history.pushState({}, '', url);
+
+                    // Attach ulang Event Listener pada tombol Pagination AJAX baru
+                    bindPaginationEvents();
+                })
+                .catch(error => {
+                    console.error('AJAX Error:', error);
+                    if (wrapper) wrapper.style.opacity = '1';
+                    if (searchIcon && searchSpinner) {
+                        searchIcon.classList.remove('hidden');
+                        searchSpinner.classList.add('hidden');
+                    }
+                });
+        }
+
+        // 2. Event Listener Input Search dengan Debounce (400ms)
+        document.getElementById('reimburseSearchInput').addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                fetchReimbursementData();
+            }, 400);
+        });
+
+        // 3. Event Listener Select Month
+        document.getElementById('reimburseMonthSelect').addEventListener('change', function() {
+            fetchReimbursementData();
+        });
+
+        // 4. Clear Search Function
+        function clearSearch() {
+            const input = document.getElementById('reimburseSearchInput');
+            if (input) {
+                input.value = '';
+                fetchReimbursementData();
             }
         }
 
+        // 5. Intercept Click pada Link Pagination agar berjalan via AJAX
+        function bindPaginationEvents() {
+            const paginationLinks = document.querySelectorAll('.ajax-pagination a');
+            paginationLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    fetchReimbursementData(this.href);
+                });
+            });
+        }
+
+        // Initial Bind Pagination saat halaman pertama kali dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            bindPaginationEvents();
+        });
+
+        // Export Excel Report
         function exportExcelReport() {
             const url = new URL('{{ route('reimbursements.export_excel') }}');
             const urlParams = new URLSearchParams(window.location.search);
             const currentMonth = urlParams.get('month');
+            const currentSearch = urlParams.get('search');
 
-            if (currentMonth) {
-                url.searchParams.set('month', currentMonth);
-            }
+            if (currentMonth) url.searchParams.set('month', currentMonth);
+            if (currentSearch) url.searchParams.set('search', currentSearch);
 
             @if (Auth::user()->role === 'superadmin')
                 url.searchParams.set('all_site', '1');
@@ -486,6 +631,7 @@
             window.location.href = url.href;
         }
 
+        // Quick Detail Modal Handler
         function openDetailModal(buttonElement) {
             const data = JSON.parse(buttonElement.getAttribute('data-reimbursement'));
 

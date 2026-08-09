@@ -44,7 +44,7 @@
                             </h3>
                         </div>
                         <div class="space-y-3.5">
-                            <div class="space-y-1.5">
+                            {{-- <div class="space-y-1.5">
                                 <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Person
                                     Name</label>
                                 <div class="relative">
@@ -54,6 +54,31 @@
                                     </span>
                                     <input type="text" name="person_name" required placeholder="Employee full name..."
                                         class="w-full py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                                </div>
+                            </div> --}}
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Person
+                                    Name</label>
+                                <div class="relative">
+                                    <span
+                                        class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none">
+                                        <i class="text-xs fa-solid fa-user-tie"></i>
+                                    </span>
+                                    <select name="person_name" required
+                                        class="w-full py-2.5 pl-10 pr-10 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none appearance-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                                        <option value="" disabled selected>Select Employee...</option>
+                                        @foreach ($employees as $employee)
+                                            <option value="{{ $employee->name }}"
+                                                {{ old('person_name') == $employee->name ? 'selected' : '' }}>
+                                                {{ $employee->name }}
+                                                {{ $employee->position ? '(' . $employee->position . ')' : '' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <span
+                                        class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 pointer-events-none">
+                                        <i class="fa-solid fa-chevron-down text-[9px]"></i>
+                                    </span>
                                 </div>
                             </div>
                             <div class="space-y-1.5">

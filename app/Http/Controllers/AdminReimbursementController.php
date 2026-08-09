@@ -4,21 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\Reimbursement;
 use App\Models\User;
+use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use setasign\Fpdi\Fpdi;
-use Illuminate\Support\Facades\Log;
 use App\Exports\ReimbursementExport;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Str;
-// use Illuminate\Support\Facades\Auth;
 
 class AdminReimbursementController extends Controller
 {
     /**
-     * MENAMPILKAN LOG KLAIM (DENGAN HAK AKSES ROLE BARU DAN FILTER BULAN)
+     * MENAMPILKAN LOG KLAIM (AJAX + DEBOUNCE READY)
      */
     public function index(Request $request)
     {
@@ -28,6 +28,7 @@ class AdminReimbursementController extends Controller
         $query = Reimbursement::with('user');
         $pdfBase64 = null;
 
+        // 1. Filter Role
         if (in_array($role, ['superadmin', 'manager', 'station_master', 'team_leader'])) {
             if ($role === 'team_leader') {
                 $query->where(function ($q) {
@@ -49,19 +50,49 @@ class AdminReimbursementController extends Controller
             $query->where('user_id', auth()->id());
         }
 
+        // 2. Filter Bulan
         if ($request->filled('month')) {
             $query->whereMonth('date', $request->month);
         }
 
+        // 3. Filter Search (Server-side)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('person_name', 'like', "%{$search}%")
+                    ->orWhere('comment', 'like', "%{$search}%")
+                    ->orWhere('category', 'like', "%{$search}%")
+                    ->orWhere('from_location', 'like', "%{$search}%")
+                    ->orWhere('to_location', 'like', "%{$search}%");
+            });
+        }
+
         $totalApprovedAmount = (clone $query)->sum('amount');
-        $reimbursements = $query->latest()->paginate(10)->withQueryString();
+
+        // 4. Pagination
+        $reimbursements = $query
+            ->orderByRaw("FIELD(category, 'transportation', 'delivery', 'office')")
+            ->orderBy('person_name', 'asc')
+            ->orderBy('date', 'asc')
+            ->orderBy('id', 'asc')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('reimbursements.index', compact('reimbursements', 'pageTitle', 'totalApprovedAmount', 'pdfBase64'));
     }
 
     public function create()
     {
-        return view('reimbursements.create');
+        $user = auth()->user();
+        $employeesQuery = Employee::query();
+
+        if ($user && $user->role === 'admin_site') {
+            $employeesQuery->where('site_id', $user->site_id);
+        }
+
+        $employees = $employeesQuery->orderBy('name', 'asc')->get();
+
+        return view('reimbursements.create', compact('employees'));
     }
 
     /**
@@ -84,9 +115,12 @@ class AdminReimbursementController extends Controller
 
         if ($extension === 'pdf' && !empty($excludedPages)) {
             try {
-                $pdf = new Fpdi();
                 $tempPath = $file->getRealPath();
-                $pageCount = $pdf->setSourceFile($tempPath);
+                $pdfData = $this->convertPdfToVersion14($tempPath);
+                $targetPdf = $pdfData['path'];
+
+                $pdf = new Fpdi();
+                $pageCount = $pdf->setSourceFile($targetPdf);
 
                 $pagesProcessed = 0;
                 for ($i = 1; $i <= $pageCount; $i++) {
@@ -97,6 +131,10 @@ class AdminReimbursementController extends Controller
                         $pdf->useTemplate($templateId);
                         $pagesProcessed++;
                     }
+                }
+
+                if ($pdfData['is_temp'] && file_exists($targetPdf)) {
+                    @unlink($targetPdf);
                 }
 
                 if ($pagesProcessed === 0) {
@@ -164,7 +202,7 @@ class AdminReimbursementController extends Controller
                 $fileData = file_get_contents($finalPath);
                 $pdfBase64 = base64_encode($fileData);
             } else {
-                \Log::error("PDF Gagal dibaca. Path cek: 1=$path1 | 2=$path2 | 3=$path3");
+                Log::error("PDF Gagal dibaca. Path cek: 1=$path1 | 2=$path2 | 3=$path3");
             }
         }
 
@@ -185,10 +223,9 @@ class AdminReimbursementController extends Controller
 
         $reimbursement = Reimbursement::findOrFail($id);
         $user          = auth()->user();
-        $invoicePath   = storage_path('app/public/' . $reimbursement->receipt_attachment);
+        $invoicePath   = storage_path('app/public/' . str_replace(['storage/', 'public/'], '', $reimbursement->receipt_attachment));
         $extension     = strtolower(pathinfo($invoicePath, PATHINFO_EXTENSION));
 
-        // 1. Ambil input data TTD baru
         $newSignatures = [];
         if ($request->filled('signatures_json')) {
             $decoded = json_decode($request->signatures_json, true);
@@ -210,12 +247,10 @@ class AdminReimbursementController extends Controller
             ]];
         }
 
-        // 2. MERGE ARRAY TTD
         $existingSignatures = json_decode($reimbursement->signatures_json, true) ?? [];
         $combinedSignatures = array_merge($existingSignatures, $newSignatures);
         $reimbursement->signatures_json = json_encode($combinedSignatures);
 
-        // 3. Simpan file gambar TTD baru
         $sigPaths = [];
         foreach ($newSignatures as $idx => $sig) {
             $sigData = $sig['image'];
@@ -225,24 +260,11 @@ class AdminReimbursementController extends Controller
             }
             $sigBytes = base64_decode($sigData);
 
-            // $sigFileName = 'signatures/sig_' . $id . '_' . $user->id . '_' . time() . '_' . $idx . '.jpg';
-
-            // $manager = new ImageManager(new Driver());
-            // $signatureImg = $manager->read($sigBytes);
-
-            // $canvas = $manager->create($signatureImg->width(), $signatureImg->height())->fill('#ffffff');
-            // $canvas->place($signatureImg, 'top-left', 0, 0);
-
-            // $jpegData = $canvas->toJpeg(90)->toString();
-            // Storage::disk('public')->put($sigFileName, $jpegData);
-
-            // 🟩 KODE BARU (PNG TRANSPARAN):
             $sigFileName = 'signatures/sig_' . $id . '_' . $user->id . '_' . time() . '_' . $idx . '.png';
 
             $manager = new ImageManager(new Driver());
             $signatureImg = $manager->read($sigBytes);
 
-            // Simpan langsung ke PNG tanpa kanvas putih
             $pngData = $signatureImg->toPng()->toString();
             Storage::disk('public')->put($sigFileName, $pngData);
 
@@ -260,11 +282,9 @@ class AdminReimbursementController extends Controller
             ];
         }
 
-        // 4. Proses penyuntikan/stamp tanda tangan fisik ke dokumen
         if ($reimbursement->receipt_attachment && file_exists($invoicePath)) {
 
             if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
-                // ── JIKA FORMAT NOTA ADALAH GAMBAR ──
                 $manager = new ImageManager(new Driver());
                 $imageContent = file_get_contents($invoicePath);
                 $image = $manager->read($imageContent);
@@ -280,17 +300,19 @@ class AdminReimbursementController extends Controller
                     $sigContent = file_get_contents($s['path']);
                     $sigImg = $manager->read($sigContent)->resize($pixelW, $pixelH);
 
-                    // Tempelkan gambar TTD (Aman dari error text/font)
                     $image->place($sigImg, 'top-left', $pixelX, $pixelY);
                 }
                 $image->save($invoicePath);
             } elseif ($extension === 'pdf') {
-                // ── JIKA FORMAT NOTA ADALAH PDF ──
                 try {
+                    // Konversi dulu ke v1.4 sebelum membubuhkan TTD
+                    $pdfData = $this->convertPdfToVersion14($invoicePath);
+                    $targetPdf = $pdfData['path'];
+
                     $pdf = new Fpdi();
                     $pdf->SetAutoPageBreak(false);
 
-                    $pageCount = $pdf->setSourceFile($invoicePath);
+                    $pageCount = $pdf->setSourceFile($targetPdf);
 
                     for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
                         $templateId = $pdf->importPage($pageNo);
@@ -329,8 +351,12 @@ class AdminReimbursementController extends Controller
                         }
                     }
                     $pdf->Output($invoicePath, 'F');
+
+                    if ($pdfData['is_temp'] && file_exists($targetPdf)) {
+                        @unlink($targetPdf);
+                    }
                 } catch (\Throwable $e) {
-                    Log::error('=== PDF ERROR ===', [
+                    Log::error('=== PDF SIGN ERROR ===', [
                         'message' => $e->getMessage(),
                         'file'    => $e->getFile(),
                         'line'    => $e->getLine(),
@@ -340,7 +366,6 @@ class AdminReimbursementController extends Controller
             }
         }
 
-        // 5. TRANSISI STATUS
         $currentRole = strtolower($user->role ?? 'admin_site');
         $nextStatus  = 'pending';
 
@@ -390,7 +415,7 @@ class AdminReimbursementController extends Controller
     {
         $reimbursement = Reimbursement::findOrFail($id);
         if ($reimbursement->receipt_attachment) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($reimbursement->receipt_attachment);
+            Storage::disk('public')->delete($reimbursement->receipt_attachment);
         }
         $reimbursement->delete();
 
@@ -403,16 +428,23 @@ class AdminReimbursementController extends Controller
         return view('reimbursements.index', compact('reimbursement'));
     }
 
+    /**
+     * EXPORT SUMMARY PDF (DENGAN GHOSTSCRIPT CONVERSION)
+     */
     public function exportApprovedPdf(Request $request)
     {
-        $query = Reimbursement::where('user_id', auth()->id())
-            ->with('user');
+        $query = Reimbursement::where('user_id', auth()->id())->with('user');
 
         if ($request->filled('month')) {
             $query->whereMonth('date', $request->month);
         }
 
-        $reimbursements = $query->latest()->get();
+        $reimbursements = $query
+            ->orderByRaw("FIELD(category, 'transportation', 'delivery', 'office')")
+            ->orderBy('person_name', 'asc')
+            ->orderBy('date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
 
         if ($reimbursements->isEmpty()) {
             return redirect()->back()->with('error', 'Tidak ada data reimbursement APPROVED untuk bulan yang dipilih.');
@@ -423,7 +455,6 @@ class AdminReimbursementController extends Controller
 
         $canvasWidth  = 297;
         $canvasHeight = 210;
-
         $marginOuter  = 10;
         $gapCenter    = 6;
         $maxPageWidth = ($canvasWidth - ($marginOuter * 2) - $gapCenter) / 2;
@@ -433,46 +464,59 @@ class AdminReimbursementController extends Controller
         $claimCounter = 1;
 
         foreach ($reimbursements as $reimbursement) {
-            $invoicePath = storage_path('app/public/' . $reimbursement->receipt_attachment);
+            if (!$reimbursement->receipt_attachment) continue;
 
-            if (!$reimbursement->receipt_attachment || !file_exists($invoicePath)) {
-                continue;
+            $cleanPath = str_replace(['storage/', 'public/'], '', $reimbursement->receipt_attachment);
+            $invoicePath = storage_path('app/public/' . $cleanPath);
+
+            if (!file_exists($invoicePath)) {
+                $invoicePath = public_path('storage/' . $cleanPath);
+                if (!file_exists($invoicePath)) continue;
             }
 
             $extension = strtolower(pathinfo($invoicePath, PATHINFO_EXTENSION));
 
             if ($extension === 'pdf') {
+                // 🟢 Konversi PDF via Ghostscript
+                $pdfData = $this->convertPdfToVersion14($invoicePath);
+                $targetPdf = $pdfData['path'];
+
                 try {
                     $subPdf = new Fpdi();
-                    $pageCount = $subPdf->setSourceFile($invoicePath);
+                    $pageCount = $subPdf->setSourceFile($targetPdf);
 
                     for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
                         $documentQueue[] = [
                             'type' => 'pdf',
-                            'file' => $invoicePath,
+                            'file' => $targetPdf,
                             'page_no' => $pageNo,
-                            'claim_no' => $claimCounter
+                            'claim_no' => $claimCounter,
+                            'is_temp' => $pdfData['is_temp']
                         ];
                     }
                 } catch (\Exception $e) {
-                    \Log::error("Gagal membaca file PDF " . $invoicePath . " : " . $e->getMessage());
+                    Log::error("FPDI Error pada Summary PDF ID {$reimbursement->id}: " . $e->getMessage());
+                    if ($pdfData['is_temp'] && file_exists($targetPdf)) @unlink($targetPdf);
                     continue;
                 }
             } elseif (in_array($extension, ['jpg', 'jpeg', 'png'])) {
                 $documentQueue[] = [
                     'type' => 'image',
                     'file' => $invoicePath,
-                    'claim_no' => $claimCounter
+                    'claim_no' => $claimCounter,
+                    'is_temp' => false
                 ];
             }
 
             if (count($documentQueue) % 2 !== 0) {
-                $documentQueue[] = [
-                    'type' => 'blank'
-                ];
+                $documentQueue[] = ['type' => 'blank', 'is_temp' => false];
             }
 
             $claimCounter++;
+        }
+
+        if (empty($documentQueue)) {
+            return redirect()->back()->with('error', 'Tidak ada berkas nota yang dapat diproses ke PDF Summary.');
         }
 
         $totalItems = count($documentQueue);
@@ -524,8 +568,8 @@ class AdminReimbursementController extends Controller
 
                 $pdf->SetFont('Helvetica', 'B', 10);
                 $pdf->SetTextColor(40, 40, 40);
-                $pdf->SetXY($x1 + $maxPageWidth - 20, $y1 + $maxPageHeight - 8);
-                $pdf->Cell(15, 5, 'No. ' . $leftItem['claim_no'], 0, 0, 'R');
+                $pdf->SetXY($x1 + $maxPageWidth - 30, $y1 - 6);
+                $pdf->Cell(30, 5, 'SN. ' . $leftItem['claim_no'], 0, 0, 'R');
             }
 
             if (isset($documentQueue[$i + 1])) {
@@ -571,68 +615,38 @@ class AdminReimbursementController extends Controller
 
                     $pdf->SetFont('Helvetica', 'B', 10);
                     $pdf->SetTextColor(40, 40, 40);
-                    $pdf->SetXY($x2 + $maxPageWidth - 20, $y2 + $maxPageHeight - 8);
-                    $pdf->Cell(15, 5, 'No. ' . $rightItem['claim_no'], 0, 0, 'R');
+                    $pdf->SetXY($x2 + $maxPageWidth - 30, $y2 - 6);
+                    $pdf->Cell(30, 5, 'SN. ' . $rightItem['claim_no'], 0, 0, 'R');
                 }
+            }
+        }
+
+        // Output PDF Stream
+        $pdfContent = $pdf->Output('S');
+
+        // 🟢 Hapus file temporary Ghostscript
+        foreach ($documentQueue as $item) {
+            if (!empty($item['is_temp']) && file_exists($item['file'])) {
+                @unlink($item['file']);
             }
         }
 
         $monthName = $request->filled('month') ? date('F', mktime(0, 0, 0, $request->month, 10)) : 'All_Months';
         $fileName = "reimbursements_approved_{$monthName}_" . now()->format('Y') . ".pdf";
 
-        return response($pdf->Output('S', $fileName))
+        return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
     }
 
-    // public function exportExcel(Request $request)
-    // {
-    //     $search = $request->get('search');
-    //     $fileName = 'Ferdy_Software_Expense_Record_' . now()->format('F_Y') . '.xlsx';
-
-    //     return Excel::download(new ReimbursementExport($search), $fileName);
-    // }
-    public function exportExcel(Request $request)
-    {
-        $user = auth()->user();
-        $search = $request->get('search');
-        $month = $request->get('month');
-
-        // 1. Tentukan Nama Site / Scope untuk Penamaan File
-        if ($user->role === 'superadmin' || $request->boolean('all_site')) {
-            $siteName = 'ALL_SITES';
-        } else {
-            // Ambil nama machine_name dari relasi site (jika null, gunakan default 'SITE')
-            $rawSiteName = $user->site->machine_name ?? 'SITE';
-            $siteName = Str::slug($rawSiteName, '_'); // Sanitasi teks agar aman untuk nama file
-        }
-
-        // 2. Sanitasi Nama User yang sedang login
-        $userName = Str::slug($user->name ?? 'User', '_');
-
-        // 3. Tentukan Format Tanggal (Gunakan nama bulan dari request jika ada filter bulan, jika tidak pakai bulan berjalan)
-        if ($month) {
-            $monthName = \Carbon\Carbon::createFromFormat('m', $month)->format('F_Y');
-        } else {
-            $monthName = now()->format('F_Y');
-        }
-
-        // 4. Susun Nama File
-        // Contoh: Reimbursement_ALL_SITES_Superadmin_July_2026.xlsx
-        // Contoh: Reimbursement_Machine_A_John_Doe_July_2026.xlsx
-        $fileName = "Reimbursement_{$siteName}_{$userName}_{$monthName}.xlsx";
-
-        // 5. Download Excel dengan mengirimkan opsi filter ke Export Class
-        return Excel::download(
-            new ReimbursementExport($search, $month, $user->role === 'superadmin' || $request->boolean('all_site')),
-            $fileName
-        );
-    }
-
+    /**
+     * EXPORT SINGLE INVOICE PDF
+     */
     public function exportSinglePdf($id)
     {
         $reimbursement = Reimbursement::findOrFail($id);
-        $invoicePath = storage_path('app/public/' . $reimbursement->receipt_attachment);
+        $cleanPath = str_replace(['storage/', 'public/'], '', $reimbursement->receipt_attachment);
+        $invoicePath = storage_path('app/public/' . $cleanPath);
 
         if (!$reimbursement->receipt_attachment || !file_exists($invoicePath)) {
             return redirect()->back()->with('error', 'Berkas nota bukti lampiran tidak ditemukan fisik datanya.');
@@ -643,7 +657,6 @@ class AdminReimbursementController extends Controller
 
         $canvasWidth  = 297;
         $canvasHeight = 210;
-
         $marginOuter  = 10;
         $gapCenter    = 6;
         $maxPageWidth = ($canvasWidth - ($marginOuter * 2) - $gapCenter) / 2;
@@ -653,17 +666,28 @@ class AdminReimbursementController extends Controller
         $documentQueue = [];
 
         if ($extension === 'pdf') {
+            $pdfData = $this->convertPdfToVersion14($invoicePath);
+            $targetPdfPath = $pdfData['path'];
+
             try {
                 $subPdf = new Fpdi();
-                $pageCount = $subPdf->setSourceFile($invoicePath);
+                $pageCount = $subPdf->setSourceFile($targetPdfPath);
+
                 for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                    $documentQueue[] = ['type' => 'pdf', 'file' => $invoicePath, 'page_no' => $pageNo];
+                    $documentQueue[] = [
+                        'type' => 'pdf',
+                        'file' => $targetPdfPath,
+                        'page_no' => $pageNo,
+                        'is_temp' => $pdfData['is_temp']
+                    ];
                 }
             } catch (\Exception $e) {
-                return redirect()->back()->with('error', 'Gagal memproses struktur internal PDF lampiran.');
+                Log::error("FPDI Parsing Failed: " . $e->getMessage());
+                if ($pdfData['is_temp'] && file_exists($targetPdfPath)) @unlink($targetPdfPath);
+                return redirect()->back()->with('error', 'Gagal membaca berkas PDF lampiran.');
             }
         } elseif (in_array($extension, ['jpg', 'jpeg', 'png'])) {
-            $documentQueue[] = ['type' => 'image', 'file' => $invoicePath];
+            $documentQueue[] = ['type' => 'image', 'file' => $invoicePath, 'is_temp' => false];
         }
 
         $totalItems = count($documentQueue);
@@ -736,10 +760,197 @@ class AdminReimbursementController extends Controller
             }
         }
 
+        $pdfContent = $pdf->Output('S');
+
+        // 🟢 Hapus file temp Ghostscript
+        foreach ($documentQueue as $item) {
+            if (!empty($item['is_temp']) && file_exists($item['file'])) {
+                @unlink($item['file']);
+            }
+        }
+
         $filename = 'invoice_' . strtolower(str_replace(' ', '_', $reimbursement->person_name)) . '_' . $reimbursement->id . '.pdf';
 
-        return response($pdf->Output('S', $filename))
+        return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $user = auth()->user();
+        $search = $request->get('search');
+        $month = $request->get('month');
+
+        if ($user->role === 'superadmin' || $request->boolean('all_site')) {
+            $siteName = 'ALL_SITES';
+        } else {
+            $rawSiteName = $user->site->machine_name ?? 'SITE';
+            $siteName = Str::slug($rawSiteName, '_');
+        }
+
+        $userName = Str::slug($user->name ?? 'User', '_');
+
+        if ($month) {
+            $monthName = \Carbon\Carbon::createFromFormat('m', $month)->format('F_Y');
+        } else {
+            $monthName = now()->format('F_Y');
+        }
+
+        $fileName = "Reimbursement_{$siteName}_{$userName}_{$monthName}.xlsx";
+
+        return Excel::download(
+            new ReimbursementExport($search, $month, $user->role === 'superadmin' || $request->boolean('all_site')),
+            $fileName
+        );
+    }
+
+    /**
+     * Konversi PDF v1.5+ ke PDF v1.4 menggunakan Ghostscript
+     */
+    private function convertPdfToVersion14($inputPath)
+    {
+        $outputPath = storage_path('app/public/receipts/converted_' . uniqid() . '.pdf');
+
+        // 🟢 Deteksi binary path Ghostscript (Aman untuk macOS Homebrew & Ubuntu)
+        $gsBinary = 'gs';
+        if (file_exists('/opt/homebrew/bin/gs')) {
+            $gsBinary = '/opt/homebrew/bin/gs';
+        } elseif (file_exists('/usr/local/bin/gs')) {
+            $gsBinary = '/usr/local/bin/gs';
+        } elseif (file_exists('/usr/bin/gs')) {
+            $gsBinary = '/usr/bin/gs';
+        }
+
+        $command = "{$gsBinary} -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile=" . escapeshellarg($outputPath) . " " . escapeshellarg($inputPath);
+
+        exec($command, $output, $returnVar);
+
+        if ($returnVar === 0 && file_exists($outputPath) && filesize($outputPath) > 0) {
+            return [
+                'path' => $outputPath,
+                'is_temp' => true
+            ];
+        }
+
+        Log::warning("Ghostscript conversion bypassed or failed. Exec Return: {$returnVar}");
+
+        return [
+            'path' => $inputPath,
+            'is_temp' => false
+        ];
+    }
+
+    /**
+     * TAMPILKAN FORM EDIT REIMBURSEMENT
+     */
+    public function edit($id)
+    {
+        $reimbursement = Reimbursement::findOrFail($id);
+        $user = auth()->user();
+
+        if ($user->role !== 'superadmin' && $reimbursement->user_id !== $user->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $employeesQuery = Employee::query();
+        if ($user && $user->role === 'admin_site') {
+            $employeesQuery->where('site_id', $user->site_id);
+        }
+        $employees = $employeesQuery->orderBy('name', 'asc')->get();
+
+        return view('reimbursements.edit', compact('reimbursement', 'employees'));
+    }
+
+    /**
+     * SIMPAN PERUBAHAN EDIT REIMBURSEMENT
+     */
+    public function update(Request $request, $id)
+    {
+        $reimbursement = Reimbursement::findOrFail($id);
+        $user = auth()->user();
+
+        if ($user->role !== 'superadmin' && $reimbursement->user_id !== $user->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($request->has('amount')) {
+            $cleanedAmount = str_replace('.', '', $request->amount);
+            $request->merge(['amount' => $cleanedAmount]);
+        }
+
+        $request->validate([
+            'person_name'        => 'required|string|max:255',
+            'date'               => 'required|date',
+            'category'           => 'required|in:transportation,delivery,office',
+            'amount'             => 'required|numeric|min:0',
+            'from_location'      => 'nullable|required_if:category,transportation,delivery|string|max:255',
+            'to_location'        => 'nullable|required_if:category,transportation,delivery|string|max:255',
+            'comment'            => 'nullable|string',
+            'receipt_attachment' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:4096',
+        ]);
+
+        $dataToUpdate = [
+            'person_name'   => $request->person_name,
+            'date'          => $request->date,
+            'category'      => $request->category,
+            'from_location' => in_array($request->category, ['transportation', 'delivery']) ? $request->from_location : null,
+            'to_location'   => in_array($request->category, ['transportation', 'delivery']) ? $request->to_location : null,
+            'amount'        => $request->amount,
+            'comment'       => $request->comment,
+        ];
+
+        if ($request->hasFile('receipt_attachment')) {
+            if ($reimbursement->receipt_attachment && Storage::disk('public')->exists($reimbursement->receipt_attachment)) {
+                Storage::disk('public')->delete($reimbursement->receipt_attachment);
+            }
+
+            $file = $request->file('receipt_attachment');
+            $extension = strtolower($file->getClientOriginalExtension());
+            $excludedPages = json_decode($request->excluded_pages, true) ?? [];
+
+            if ($extension === 'pdf' && !empty($excludedPages)) {
+                try {
+                    $tempPath = $file->getRealPath();
+                    $pdfData = $this->convertPdfToVersion14($tempPath);
+                    $targetPdf = $pdfData['path'];
+
+                    $pdf = new Fpdi();
+                    $pageCount = $pdf->setSourceFile($targetPdf);
+
+                    $pagesProcessed = 0;
+                    for ($i = 1; $i <= $pageCount; $i++) {
+                        if (!in_array($i, $excludedPages)) {
+                            $templateId = $pdf->importPage($i);
+                            $size = $pdf->getTemplateSize($templateId);
+                            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                            $pdf->useTemplate($templateId);
+                            $pagesProcessed++;
+                        }
+                    }
+
+                    if ($pdfData['is_temp'] && file_exists($targetPdf)) {
+                        @unlink($targetPdf);
+                    }
+
+                    if ($pagesProcessed === 0) {
+                        return redirect()->back()->with('error', 'Anda tidak boleh menghapus semua halaman PDF.');
+                    }
+
+                    $fileName = 'receipts/processed_' . time() . '_' . uniqid() . '.pdf';
+                    Storage::disk('public')->put($fileName, $pdf->Output('S'));
+                    $dataToUpdate['receipt_attachment'] = $fileName;
+                } catch (\Exception $e) {
+                    Log::error("Gagal memproses PDF Slicing saat edit: " . $e->getMessage());
+                    return redirect()->back()->with('error', 'Gagal memproses lampiran PDF.');
+                }
+            } else {
+                $dataToUpdate['receipt_attachment'] = $file->store('receipts', 'public');
+            }
+        }
+
+        $reimbursement->update($dataToUpdate);
+
+        return redirect()->route('reimbursements.index')->with('success', 'Reimbursement claim updated successfully.');
     }
 }

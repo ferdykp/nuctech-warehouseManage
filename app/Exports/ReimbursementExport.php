@@ -36,31 +36,62 @@ class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, 
     /**
      * Ambil data reimbursement berdasarkan hak akses dan filter
      */
+    // public function collection()
+    // {
+    //     $user = Auth::user();
+    //     $query = Reimbursement::query();
+
+    //     // 1. FILTER BERDASARKAN HAK AKSES / SITE
+    //     // Jika BUKAN Superadmin dan TIDAK MINTA All Site:
+    //     if (!$this->isAllSite && $user->role !== 'superadmin') {
+    //         if ($user->site_id) {
+    //             // Filter berdasarkan site_id milik User yang membuat reimbursement
+    //             $query->whereHas('user', function ($q) use ($user) {
+    //                 $q->where('site_id', $user->site_id);
+    //             });
+    //         } else {
+    //             // Fallback jika user tidak punya site_id, filter berdasarkan user_id pengunduh
+    //             $query->where('user_id', $user->id);
+    //         }
+    //     }
+
+    //     // 2. FILTER BULAN (jika ada)
+    //     if ($this->month) {
+    //         $query->whereMonth('date', $this->month);
+    //     }
+
+    //     // 3. FILTER LIVE SEARCH (jika ada)
+    //     if ($this->search) {
+    //         $query->where(function ($q) {
+    //             $q->where('person_name', 'like', "%{$this->search}%")
+    //                 ->orWhere('comment', 'like', "%{$this->search}%");
+    //         });
+    //     }
+
+    //     return $query->latest('date')->get();
+    // }
     public function collection()
     {
         $user = Auth::user();
         $query = Reimbursement::query();
 
         // 1. FILTER BERDASARKAN HAK AKSES / SITE
-        // Jika BUKAN Superadmin dan TIDAK MINTA All Site:
         if (!$this->isAllSite && $user->role !== 'superadmin') {
             if ($user->site_id) {
-                // Filter berdasarkan site_id milik User yang membuat reimbursement
                 $query->whereHas('user', function ($q) use ($user) {
                     $q->where('site_id', $user->site_id);
                 });
             } else {
-                // Fallback jika user tidak punya site_id, filter berdasarkan user_id pengunduh
                 $query->where('user_id', $user->id);
             }
         }
 
-        // 2. FILTER BULAN (jika ada)
+        // 2. FILTER BULAN
         if ($this->month) {
             $query->whereMonth('date', $this->month);
         }
 
-        // 3. FILTER LIVE SEARCH (jika ada)
+        // 3. FILTER LIVE SEARCH
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('person_name', 'like', "%{$this->search}%")
@@ -68,7 +99,13 @@ class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, 
             });
         }
 
-        return $query->latest('date')->get();
+        // PERBAIKAN: Urutkan berdasarkan Kategori -> Nama Karyawan -> Tanggal Invoice -> ID
+        return $query
+            ->orderByRaw("FIELD(category, 'transportation', 'delivery', 'office')")
+            ->orderBy('person_name', 'asc')
+            ->orderBy('date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
     }
     /**
      * Mapping kosong untuk mencegah dump data model otomatis ke arah kanan (J ke kanan)

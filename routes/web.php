@@ -111,6 +111,8 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::put('/reimbursements/{id}/approve', [AdminReimbursementController::class, 'approve'])->name('reimbursements.approve');
         Route::put('/reimbursements/{id}/reject', [AdminReimbursementController::class, 'reject'])->name('reimbursements.reject');
         Route::delete('/reimbursements/{id}', [AdminReimbursementController::class, 'destroy'])->name('reimbursements.destroy');
+        Route::get('/reimbursements/{id}/edit', [AdminReimbursementController::class, 'edit'])->name('reimbursements.edit');
+        Route::put('/reimbursements/{id}', [AdminReimbursementController::class, 'update'])->name('reimbursements.update');
 
         // PANDUAN PERBAIKAN: Rute-rute ini dimasukkan ke dalam auth grup agar aman
         // Manajemen Profil
