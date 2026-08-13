@@ -53,24 +53,19 @@
 
                     {{-- Row Filter Options --}}
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
-                        {{-- Status Filter --}}
                         <div>
                             <label for="filter_status"
                                 class="block mb-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status</label>
                             <select id="filter_status"
                                 class="filter-trigger block w-full py-2.5 px-3 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-700">
                                 <option value="">All Statuses</option>
-                                <option value="Permanent" {{ request('status') == 'Permanent' ? 'selected' : '' }}>Permanent
-                                </option>
-                                <option value="Contract" {{ request('status') == 'Contract' ? 'selected' : '' }}>Contract
-                                </option>
-                                <option value="Probation" {{ request('status') == 'Probation' ? 'selected' : '' }}>Probation
-                                </option>
-                                <option value="Daily" {{ request('status') == 'Daily' ? 'selected' : '' }}>Daily</option>
+                                <option value="Permanent">Permanent</option>
+                                <option value="Contract">Contract</option>
+                                <option value="Probation">Probation</option>
+                                <option value="Daily">Daily</option>
                             </select>
                         </div>
 
-                        {{-- Site Filter --}}
                         <div>
                             <label for="filter_site"
                                 class="block mb-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Site
@@ -80,16 +75,12 @@
                                 <option value="">All Sites</option>
                                 @if (isset($sites))
                                     @foreach ($sites as $site)
-                                        <option value="{{ $site->id }}"
-                                            {{ request('site_id') == $site->id ? 'selected' : '' }}>
-                                            {{ $site->machine_name }}
-                                        </option>
+                                        <option value="{{ $site->id }}">{{ $site->machine_name }}</option>
                                     @endforeach
                                 @endif
                             </select>
                         </div>
 
-                        {{-- Branch Filter --}}
                         <div>
                             <label for="filter_branch"
                                 class="block mb-1 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Branch</label>
@@ -98,10 +89,7 @@
                                 <option value="">All Branches</option>
                                 @if (isset($branches))
                                     @foreach ($branches as $branch)
-                                        <option value="{{ $branch->id }}"
-                                            {{ request('branch_id') == $branch->id ? 'selected' : '' }}>
-                                            {{ $branch->branch_name }}
-                                        </option>
+                                        <option value="{{ $branch->id }}">{{ $branch->branch_name }}</option>
                                     @endforeach
                                 @endif
                             </select>
@@ -119,7 +107,7 @@
     {{-- MODAL POP-UP DETAIL KARYAWAN --}}
     <div id="employeeDetailModal"
         class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs">
-        <div class="w-full max-w-lg mx-auto overflow-hidden bg-white border shadow-2xl border-slate-200 rounded-2xl">
+        <div class="w-full max-w-xl mx-auto overflow-hidden bg-white border shadow-2xl border-slate-200 rounded-2xl">
             <div class="flex items-center justify-between px-6 py-4 text-white bg-slate-900">
                 <h5 class="flex items-center gap-2 text-sm font-extrabold tracking-wide uppercase">
                     <i class="text-blue-400 fa-solid fa-id-card"></i> Employee Details
@@ -128,7 +116,7 @@
                     class="text-xl leading-none transition-colors text-slate-400 hover:text-white">&times;</button>
             </div>
 
-            <div class="p-6 space-y-4">
+            <div class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
                 <div class="flex items-center gap-4 pb-4 border-b border-slate-100">
                     <div
                         class="flex items-center justify-center w-12 h-12 text-lg font-bold text-blue-600 border rounded-full border-blue-200/80 bg-blue-50 shrink-0">
@@ -150,6 +138,11 @@
                         <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Branch</span>
                         <strong class="text-xs sm:text-sm text-slate-800" id="detail_branch">-</strong>
                     </div>
+                    <div class="p-3 border border-emerald-100 rounded-xl bg-emerald-50/40">
+                        <span class="block mb-1 font-bold text-emerald-600 uppercase text-[10px] tracking-wider">Gaji Pokok
+                            Saat Ini</span>
+                        <strong class="text-sm text-emerald-700" id="detail_basic_salary">Rp 0</strong>
+                    </div>
                     <div class="p-3 border border-slate-100 rounded-xl bg-slate-50/50">
                         <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Employment
                             Status</span>
@@ -164,10 +157,28 @@
                             Date</span>
                         <strong class="text-xs sm:text-sm text-slate-800" id="detail_join_date">-</strong>
                     </div>
-                    <div class="p-3 border border-slate-100 rounded-xl bg-slate-50/50">
-                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Contract
-                            Start</span>
-                        <strong class="text-xs sm:text-sm text-slate-800" id="detail_contract_start">-</strong>
+                </div>
+
+                <!-- HISTORI PERUBAHAN GAJI -->
+                <div class="pt-2">
+                    <h6 class="mb-2 text-xs font-bold tracking-wider uppercase text-slate-700">Histori Perubahan Gaji</h6>
+                    <div class="overflow-hidden border border-slate-200 rounded-xl">
+                        <table class="w-full text-xs text-left">
+                            <thead class="font-bold bg-slate-100 text-slate-600">
+                                <tr>
+                                    <th class="p-2">Tanggal</th>
+                                    <th class="p-2">Lama</th>
+                                    <th class="p-2">Baru</th>
+                                    <th class="p-2">Alasan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detail_salary_history_body" class="divide-y divide-slate-100 text-slate-700">
+                                <tr>
+                                    <td colspan="4" class="p-3 text-center text-slate-400">Belum ada riwayat perubahan.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -187,10 +198,8 @@
         const btnResetFilter = document.getElementById('btn-reset-filter');
         let delayTimer;
 
-        // Fetch data berdasarkan seluruh input filter
         function fetchFilteredData() {
             clearTimeout(delayTimer);
-
             delayTimer = setTimeout(() => {
                 const search = document.getElementById('search').value;
                 const status = document.getElementById('filter_status').value;
@@ -198,8 +207,8 @@
                 const branch = document.getElementById('filter_branch').value;
 
                 const params = new URLSearchParams({
-                    search: search,
-                    status: status,
+                    search,
+                    status,
                     site_id: site,
                     branch_id: branch
                 });
@@ -209,24 +218,16 @@
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     })
-                    .then(response => response.text())
-                    .then(html => {
-                        tableContainer.innerHTML = html;
-                    })
-                    .catch(error => console.error('Error fetching filtered results:', error));
+                    .then(res => res.text())
+                    .then(html => tableContainer.innerHTML = html)
+                    .catch(err => console.error(err));
             }, 300);
         }
 
-        // Jalankan fetchFilteredData ketika filter berubah
-        filterTriggers.forEach(element => {
-            if (element.tagName === 'INPUT') {
-                element.addEventListener('input', fetchFilteredData);
-            } else {
-                element.addEventListener('change', fetchFilteredData);
-            }
+        filterTriggers.forEach(el => {
+            el.addEventListener(el.tagName === 'INPUT' ? 'input' : 'change', fetchFilteredData);
         });
 
-        // Event Listener Tombol Reset Filter
         if (btnResetFilter) {
             btnResetFilter.addEventListener('click', function() {
                 document.getElementById('search').value = '';
@@ -237,42 +238,13 @@
             });
         }
 
-        // Paginasi via AJAX
-        document.addEventListener('click', function(e) {
-            const paginationLink = e.target.closest('#table-container nav a');
-            if (paginationLink) {
-                e.preventDefault();
-                fetch(paginationLink.href, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(response => response.text())
-                    .then(html => {
-                        tableContainer.innerHTML = html;
-                    })
-                    .catch(error => console.error('Error fetching pagination:', error));
-            }
-        });
-
-        // Detail Modal Function
         function showEmployeeDetail(id) {
             fetch(`/employee/${id}`, {
                     headers: {
                         'Accept': 'application/json'
                     }
                 })
-                .then(async res => {
-                    if (!res.ok) {
-                        let errMsg = 'Failed to fetch employee details (' + res.status + ')';
-                        try {
-                            let errJson = await res.json();
-                            if (errJson.message) errMsg = errJson.message;
-                        } catch (e) {}
-                        throw new Error(errMsg);
-                    }
-                    return res.json();
-                })
+                .then(res => res.json())
                 .then(data => {
                     document.getElementById('detail_name').innerText = data.name || '-';
                     document.getElementById('detail_position').innerText = data.position || 'Staff';
@@ -281,31 +253,37 @@
                         .branch.branch_name : '-';
                     document.getElementById('detail_tenure').innerText = data.tenure_formatted || '-';
                     document.getElementById('detail_join_date').innerText = data.join_date_formatted || '-';
-                    document.getElementById('detail_contract_start').innerText = data.contract_start_formatted || '-';
+                    document.getElementById('detail_basic_salary').innerText = data.basic_salary_formatted || 'Rp 0';
 
                     let statusBadge =
-                        '<span class="px-2.5 py-1 text-xs font-bold text-slate-600 bg-slate-100 rounded-full">' + (data
-                            .status || 'Active') + '</span>';
-                    if (data.status === 'Permanent') {
-                        statusBadge =
-                            '<span class="px-2.5 py-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 rounded-full uppercase">Permanent</span>';
-                    } else if (data.status === 'Contract') {
-                        statusBadge =
-                            '<span class="px-2.5 py-1 text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200/60 rounded-full uppercase">Contract</span>';
-                    } else if (data.status === 'Probation') {
-                        statusBadge =
-                            '<span class="px-2.5 py-1 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200/60 rounded-full uppercase">Probation</span>';
-                    } else if (data.status === 'Daily') {
-                        statusBadge =
-                            '<span class="px-2.5 py-1 text-[11px] font-bold text-purple-700 bg-purple-50 border border-purple-200/60 rounded-full uppercase">Daily</span>';
-                    }
+                        `<span class="px-2.5 py-1 text-[11px] font-bold text-slate-700 bg-slate-100 rounded-full">${data.status}</span>`;
                     document.getElementById('detail_status_badge').innerHTML = statusBadge;
+
+                    // Render Histori Gaji
+                    let historyBody = document.getElementById('detail_salary_history_body');
+                    if (data.salary_histories && data.salary_histories.length > 0) {
+                        let rows = '';
+                        data.salary_histories.forEach(h => {
+                            let dt = new Date(h.created_at).toLocaleDateString('id-ID');
+                            let oldSal = 'Rp ' + new Intl.NumberFormat('id-ID').format(h.old_salary);
+                            let newSal = 'Rp ' + new Intl.NumberFormat('id-ID').format(h.new_salary);
+                            rows += `<tr>
+                                <td class="p-2">${dt}</td>
+                                <td class="p-2 text-gray-500">${oldSal}</td>
+                                <td class="p-2 font-bold text-emerald-600">${newSal}</td>
+                                <td class="p-2">${h.reason || '-'}</td>
+                            </tr>`;
+                        });
+                        historyBody.innerHTML = rows;
+                    } else {
+                        historyBody.innerHTML =
+                            '<tr><td colspan="4" class="p-3 text-center text-slate-400">Belum ada riwayat perubahan gaji.</td></tr>';
+                    }
 
                     let modal = document.getElementById('employeeDetailModal');
                     modal.classList.remove('hidden');
                     modal.classList.add('flex');
-                })
-                .catch(err => alert(err.message));
+                });
         }
 
         function closeEmployeeModal() {

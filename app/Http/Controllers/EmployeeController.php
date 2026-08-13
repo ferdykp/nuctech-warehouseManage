@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\Employee;
+use App\Models\EmployeeSalaryHistory;
 use App\Models\Site;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -17,7 +18,6 @@ class EmployeeController extends Controller
         $search = $request->input('search');
         $employeesQuery = Employee::with(['site.branch']);
 
-        // Akses berdasarkan Role
         if ($user->role === 'admin_site') {
             $employeesQuery->where('site_id', $user->site_id);
             $sites = Site::where('id', $user->site_id)->get();
@@ -31,7 +31,8 @@ class EmployeeController extends Controller
         if (!empty($search)) {
             $employeesQuery->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('position', 'like', '%' . $search . '%');
+                    ->orWhere('position', 'like', '%' . $search . '%')
+                    ->orWhere('bank_account_number', 'like', '%' . $search . '%');
             });
         }
 
@@ -48,13 +49,102 @@ class EmployeeController extends Controller
         return view('employee.index', compact('sites', 'employees'));
     }
 
+    public function store(Request $request)
+    {
+        $user = Auth::user();
+
+        $validatedData = $request->validate([
+            'site_id'             => 'required|exists:sites,id',
+            'name'                => 'required|string|max:255',
+            'phone_number'        => 'required|string|max:20',
+            'position'            => 'nullable|string|max:100',
+            'status'              => 'required|in:Permanent,Contract,Probation,Daily',
+            'basic_salary'        => 'nullable|numeric|min:0',
+            'bank_name'           => 'nullable|string|max:100',
+            'bank_account_number' => 'nullable|string|max:100',
+            'join_date'           => 'required|date',
+            'contract_start_date' => 'nullable|date',
+        ]);
+
+        $siteId = ($user->role === 'admin_site') ? $user->site_id : $validatedData['site_id'];
+        $site = Site::findOrFail($siteId);
+
+        $basicSalary = $validatedData['basic_salary'] ?? 0;
+
+        $validatedData['site_id']      = $site->id;
+        $validatedData['branch_id']    = $site->branch_id;
+        $validatedData['basic_salary'] = $basicSalary;
+        $validatedData['is_active']    = true;
+
+        $employee = Employee::create($validatedData);
+
+        if ($basicSalary > 0) {
+            EmployeeSalaryHistory::create([
+                'employee_id' => $employee->id,
+                'old_salary'  => 0,
+                'new_salary'  => $basicSalary,
+                'reason'      => 'Gaji Awal Karyawan Baru',
+                'updated_by'  => $user->name ?? 'System Admin',
+            ]);
+        }
+
+        return redirect()->route('employee.index')->with('success', 'Karyawan baru berhasil terdaftar!');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $user = Auth::user();
+        $employeeId = is_object($id) ? $id->id : $id;
+        $employee = Employee::findOrFail($employeeId);
+
+        if ($user->role === 'admin_site' && (int)$employee->site_id !== (int)$user->site_id) {
+            abort(403, 'Anda tidak memiliki akses mengubah karyawan di site ini.');
+        }
+
+        $validatedData = $request->validate([
+            'site_id'              => 'required|exists:sites,id',
+            'name'                 => 'required|string|max:255',
+            'phone_number'         => 'required|string|max:20',
+            'position'             => 'nullable|string|max:100',
+            'status'               => 'required|in:Permanent,Contract,Probation,Daily',
+            'basic_salary'         => 'nullable|numeric|min:0',
+            'bank_name'            => 'nullable|string|max:100',
+            'bank_account_number'  => 'nullable|string|max:100',
+            'salary_change_reason' => 'nullable|string|max:255',
+            'join_date'            => 'required|date',
+            'contract_start_date'  => 'nullable|date',
+        ]);
+
+        $newSalary = $validatedData['basic_salary'] ?? 0;
+
+        if ((float)$employee->basic_salary !== (float)$newSalary) {
+            EmployeeSalaryHistory::create([
+                'employee_id' => $employee->id,
+                'old_salary'  => $employee->basic_salary ?? 0,
+                'new_salary'  => $newSalary,
+                'reason'      => $request->input('salary_change_reason') ?: 'Penyesuaian Gaji / Promosi',
+                'updated_by'  => $user->name ?? 'System Admin',
+            ]);
+        }
+
+        $siteId = ($user->role === 'admin_site') ? $user->site_id : $validatedData['site_id'];
+        $site = Site::findOrFail($siteId);
+
+        $validatedData['site_id']   = $site->id;
+        $validatedData['branch_id'] = $site->branch_id;
+
+        $employee->update($validatedData);
+
+        return redirect()->route('employee.index')->with('success', 'Data karyawan berhasil diperbarui!');
+    }
+
     public function show($id)
     {
         try {
             $user = Auth::user();
 
             $employeeId = is_object($id) ? $id->id : $id;
-            $employee = Employee::with(['site.branch'])->findOrFail($employeeId);
+            $employee = Employee::with(['site.branch', 'salaryHistories'])->findOrFail($employeeId);
 
             if ($user && $user->role === 'admin_site' && (int)$employee->site_id !== (int)$user->site_id) {
                 return response()->json(['message' => 'Anda tidak memiliki akses ke data karyawan ini.'], 403);
@@ -73,6 +163,7 @@ class EmployeeController extends Controller
             $employee->contract_start_formatted = $employee->contract_start_date
                 ? Carbon::parse($employee->contract_start_date)->translatedFormat('d F Y')
                 : '-';
+            $employee->basic_salary_formatted = 'Rp ' . number_format($employee->basic_salary ?? 0, 0, ',', '.');
 
             return response()->json($employee);
         } catch (\Exception $e) {
@@ -87,7 +178,7 @@ class EmployeeController extends Controller
         $user = Auth::user();
 
         $employeeId = is_object($id) ? $id->id : $id;
-        $employee = Employee::findOrFail($employeeId);
+        $employee = Employee::with('salaryHistories')->findOrFail($employeeId);
 
         if ($user->role === 'admin_site' && (int)$employee->site_id !== (int)$user->site_id) {
             abort(403, 'Anda tidak memiliki akses mengubah karyawan di site ini.');
@@ -166,74 +257,6 @@ class EmployeeController extends Controller
         return view('employee.create', compact('sites'));
     }
 
-    public function store(Request $request)
-    {
-        $user = Auth::user();
-
-        $validatedData = $request->validate([
-            'site_id'             => 'required|exists:sites,id',
-            'name'                => 'required|string|max:255',
-            'phone_number'        => 'required|string|max:20',
-            'position'            => 'nullable|string|max:100',
-            'status'              => 'required|in:Permanent,Contract,Probation,Daily',
-            'join_date'           => 'required|date',
-            'contract_start_date' => 'nullable|date',
-        ]);
-
-        if ($user->role === 'admin_site') {
-            $siteId = $user->site_id;
-        } else {
-            $siteId = $validatedData['site_id'];
-        }
-
-        $site = Site::findOrFail($siteId);
-
-        $validatedData['site_id']   = $site->id;
-        $validatedData['branch_id'] = $site->branch_id;
-        $validatedData['is_active'] = true;
-
-        Employee::create($validatedData);
-
-        return redirect()->route('employee.index')->with('success', 'Karyawan baru berhasil terdaftar!');
-    }
-
-    public function update(Request $request, $id)
-    {
-        $user = Auth::user();
-
-        $employeeId = is_object($id) ? $id->id : $id;
-        $employee = Employee::findOrFail($employeeId);
-
-        if ($user->role === 'admin_site' && (int)$employee->site_id !== (int)$user->site_id) {
-            abort(403, 'Anda tidak memiliki akses mengubah karyawan di site ini.');
-        }
-
-        $validatedData = $request->validate([
-            'site_id'             => 'required|exists:sites,id',
-            'name'                => 'required|string|max:255',
-            'phone_number'        => 'required|string|max:20',
-            'position'            => 'nullable|string|max:100',
-            'status'              => 'required|in:Permanent,Contract,Probation,Daily',
-            'join_date'           => 'required|date',
-            'contract_start_date' => 'nullable|date',
-            'is_active'           => 'nullable|boolean'
-        ]);
-
-        if ($user->role === 'admin_site') {
-            $siteId = $user->site_id;
-        } else {
-            $siteId = $validatedData['site_id'];
-        }
-
-        $site = Site::findOrFail($siteId);
-
-        $validatedData['site_id']   = $site->id;
-        $validatedData['branch_id'] = $site->branch_id;
-
-        $employee->update($validatedData);
-
-        return redirect()->route('employee.index')->with('success', 'Data karyawan berhasil diperbarui!');
-    }
 
     public function destroy($id)
     {
@@ -248,6 +271,7 @@ class EmployeeController extends Controller
 
         $employee->attendances()->delete();
         $employee->schedules()->delete();
+        $employee->salaryHistories()->delete(); // Hapus riwayat perubahan gaji karyawan jika ada
         $employee->delete();
 
         return redirect()->route('employee.index')->with('success', 'Karyawan beserta seluruh riwayat kerjanya berhasil dihapus.');

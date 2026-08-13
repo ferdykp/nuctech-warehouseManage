@@ -38,18 +38,17 @@
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Full Name <span class="text-rose-500">*</span>
                         </label>
-                        <input type="text" name="name"
+                        <input type="text" name="name" value="{{ old('name') }}"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
                             placeholder="Full name as per ID..." required>
                     </div>
 
                     {{-- PHONE NUMBER --}}
-                    {{-- PHONE NUMBER --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Phone Number <span class="text-rose-500">*</span>
                         </label>
-                        <input type="text" name="phone_number" id="phone_number"
+                        <input type="text" name="phone_number" id="phone_number" value="{{ old('phone_number') }}"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
                             placeholder="+62 896-0851-4923" required autocomplete="off">
                     </div>
@@ -66,7 +65,7 @@
                                 required>
                                 <option value="">-- Select Site Location --</option>
                                 @foreach ($sites as $site)
-                                    <option value="{{ $site->id }}">
+                                    <option value="{{ $site->id }}" {{ old('site_id') == $site->id ? 'selected' : '' }}>
                                         {{ $site->machine_name }} (Branch: {{ $site->branch->branch_name ?? '-' }})
                                     </option>
                                 @endforeach
@@ -89,11 +88,73 @@
                         </label>
                         <select name="status"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
-                            <option value="Probation" selected>Probation</option>
-                            <option value="Contract">Contract</option>
-                            <option value="Permanent">Permanent</option>
-                            <option value="Daily">Daily</option>
+                            <option value="Probation" {{ old('status') == 'Probation' ? 'selected' : '' }}>Probation
+                            </option>
+                            <option value="Contract" {{ old('status') == 'Contract' ? 'selected' : '' }}>Contract</option>
+                            <option value="Permanent" {{ old('status') == 'Permanent' ? 'selected' : '' }}>Permanent
+                            </option>
+                            <option value="Daily" {{ old('status') == 'Daily' ? 'selected' : '' }}>Daily</option>
                         </select>
+                    </div>
+
+                    {{-- GAJI POKOK --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Basic Salary (Gaji Pokok)
+                        </label>
+                        <input type="text" id="basic_salary_display"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-emerald-700 placeholder-slate-400"
+                            placeholder="Rp 0" autocomplete="off">
+                        <input type="hidden" name="basic_salary" id="basic_salary_real"
+                            value="{{ old('basic_salary', 0) }}">
+                    </div>
+
+                    {{-- BANK NAME (DROPDOWN) --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Bank Name
+                        </label>
+                        <select name="bank_name"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                            <option value="">-- Select Bank --</option>
+                            @php
+                                $bankList = [
+                                    'BCA',
+                                    'Bank Mandiri',
+                                    'BRI',
+                                    'BNI',
+                                    'BSI',
+                                    'CIMB Niaga',
+                                    'Bank Permata',
+                                    'Bank Danamon',
+                                    'BTN',
+                                    'Maybank',
+                                    'Panin Bank',
+                                    'OCBC NISP',
+                                    'Bank BJB',
+                                    'Bank DKI',
+                                    'Bank Jatim',
+                                    'Bank Jateng',
+                                    'Seabank',
+                                    'Bank Jago',
+                                    'Bank Neo Commerce',
+                                ];
+                            @endphp
+                            @foreach ($bankList as $bank)
+                                <option value="{{ $bank }}" {{ old('bank_name') == $bank ? 'selected' : '' }}>
+                                    {{ $bank }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- BANK ACCOUNT NUMBER --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Bank Account Number
+                        </label>
+                        <input type="text" name="bank_account_number" value="{{ old('bank_account_number') }}"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400 font-mono"
+                            placeholder="e.g. 8830123456">
                     </div>
 
                     {{-- POSITION --}}
@@ -101,7 +162,7 @@
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Position / Job Title
                         </label>
-                        <input type="text" name="position"
+                        <input type="text" name="position" value="{{ old('position') }}"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
                             placeholder="e.g. Supervisor, Operator, Admin">
                     </div>
@@ -111,7 +172,7 @@
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Join Date <span class="text-rose-500">*</span>
                         </label>
-                        <input type="date" name="join_date"
+                        <input type="date" name="join_date" value="{{ old('join_date') }}"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"
                             required>
                     </div>
@@ -121,7 +182,7 @@
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Contract Start Date
                         </label>
-                        <input type="date" name="contract_start_date"
+                        <input type="date" name="contract_start_date" value="{{ old('contract_start_date') }}"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
                     </div>
                 </div>
@@ -144,60 +205,59 @@
             </div>
         </form>
     </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const phoneInput = document.getElementById('phone_number');
+            const salaryDisplay = document.getElementById('basic_salary_display');
+            const salaryReal = document.getElementById('basic_salary_real');
 
+            function formatRupiah(value) {
+                let number = value.replace(/\D/g, '');
+                return number ? 'Rp ' + new Intl.NumberFormat('id-ID').format(number) : '';
+            }
+
+            if (salaryDisplay && salaryReal) {
+                if (salaryReal.value && salaryReal.value !== '0') {
+                    salaryDisplay.value = formatRupiah(salaryReal.value);
+                }
+
+                salaryDisplay.addEventListener('input', function(e) {
+                    let rawValue = e.target.value.replace(/\D/g, '');
+                    salaryReal.value = rawValue ? rawValue : 0;
+                    e.target.value = formatRupiah(rawValue);
+                });
+            }
+
+            const phoneInput = document.getElementById('phone_number');
             if (phoneInput) {
                 phoneInput.addEventListener('input', function(e) {
                     let value = e.target.value;
-
-                    // Ambil hanya digit angka
                     let digits = value.replace(/\D/g, '');
 
-                    // Jika pengguna memasukkan "0" di awal (contoh: 0896...), ubah menjadi prefix "62896..."
                     if (digits.startsWith('0')) {
                         digits = '62' + digits.substring(1);
                     }
-
-                    // Jika belum diawali 62, tambahkan 62 secara otomatis
                     if (!digits.startsWith('62') && digits.length > 0) {
                         digits = '62' + digits;
                     }
 
-                    // Batasi panjang maksimal angka (misal max 13 digit angka untuk standar Indonesia)
                     digits = digits.substring(0, 14);
 
-                    // Buat Format: +62 XXX-XXXX-XXXX
                     let formatted = '';
-                    if (digits.length > 0) {
-                        formatted = '+' + digits.substring(0, 2); // +62
-                    }
-                    if (digits.length > 2) {
-                        formatted += ' ' + digits.substring(2, 5); // +62 896
-                    }
-                    if (digits.length > 5) {
-                        formatted += '-' + digits.substring(5, 9); // +62 896-0851
-                    }
-                    if (digits.length > 9) {
-                        formatted += '-' + digits.substring(9, 13); // +62 896-0851-4923
-                    }
+                    if (digits.length > 0) formatted = '+' + digits.substring(0, 2);
+                    if (digits.length > 2) formatted += ' ' + digits.substring(2, 5);
+                    if (digits.length > 5) formatted += '-' + digits.substring(5, 9);
+                    if (digits.length > 9) formatted += '-' + digits.substring(9, 13);
 
                     e.target.value = formatted;
                 });
 
-                // Set default +62 saat diklik jika masih kosong
                 phoneInput.addEventListener('focus', function(e) {
-                    if (!e.target.value) {
-                        e.target.value = '+62 ';
-                    }
+                    if (!e.target.value) e.target.value = '+62 ';
                 });
 
-                // Bersihkan jika hanya tersisa prefix saat blur
                 phoneInput.addEventListener('blur', function(e) {
-                    if (e.target.value === '+62 ' || e.target.value === '+62') {
-                        e.target.value = '';
-                    }
+                    if (e.target.value === '+62 ' || e.target.value === '+62') e.target.value = '';
                 });
             }
         });

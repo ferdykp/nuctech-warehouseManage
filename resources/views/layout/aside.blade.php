@@ -132,6 +132,12 @@
             <i class="w-5 text-center fa-solid fa-user-check"></i>
             <span>Attendance</span>
         </a>
+
+        <a href="{{ route('salary.index') }}"
+            class="{{ $navItemClass }} {{ request()->routeIs('salary.index') ? $activeClass : '' }}">
+            <i class="w-5 text-center fa-solid fa-user-check"></i>
+            <span>Salary</span>
+        </a>
     </nav>
 </aside>
 

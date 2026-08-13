@@ -55,7 +55,8 @@
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Phone Number <span class="text-rose-500">*</span>
                         </label>
-                        <input type="text" name="phone_number" value="{{ old('phone_number', $employee->phone_number) }}"
+                        <input type="text" name="phone_number" id="phone_number"
+                            value="{{ old('phone_number', $employee->phone_number) }}"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
                             placeholder="Phone number..." required>
                     </div>
@@ -85,8 +86,6 @@
                                 class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-700 bg-slate-100 border border-slate-200 rounded-xl cursor-not-allowed"
                                 readonly>
                         @endif
-                        <p class="text-[11px] text-slate-400 mt-1">Branch will automatically sync based on the selected
-                            Site.</p>
                     </div>
 
                     {{-- STATUS --}}
@@ -107,8 +106,80 @@
                         </select>
                     </div>
 
-                    {{-- POSITION --}}
+                    {{-- GAJI POKOK --}}
                     <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Basic Salary (Gaji Pokok)
+                        </label>
+                        <input type="text" id="basic_salary_display"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-emerald-700 placeholder-slate-400"
+                            placeholder="Rp 0" autocomplete="off">
+                        <input type="hidden" name="basic_salary" id="basic_salary_real"
+                            value="{{ old('basic_salary', (int) ($employee->basic_salary ?? 0)) }}">
+                    </div>
+
+                    {{-- BANK NAME (DROPDOWN) --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Bank Name
+                        </label>
+                        <select name="bank_name"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                            <option value="">-- Select Bank --</option>
+                            @php
+                                $bankList = [
+                                    'BCA',
+                                    'Bank Mandiri',
+                                    'BRI',
+                                    'BNI',
+                                    'BSI',
+                                    'CIMB Niaga',
+                                    'Bank Permata',
+                                    'Bank Danamon',
+                                    'BTN',
+                                    'Maybank',
+                                    'Panin Bank',
+                                    'OCBC NISP',
+                                    'Bank BJB',
+                                    'Bank DKI',
+                                    'Bank Jatim',
+                                    'Bank Jateng',
+                                    'Seabank',
+                                    'Bank Jago',
+                                    'Bank Neo Commerce',
+                                ];
+                            @endphp
+                            @foreach ($bankList as $bank)
+                                <option value="{{ $bank }}"
+                                    {{ old('bank_name', $employee->bank_name) == $bank ? 'selected' : '' }}>
+                                    {{ $bank }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- BANK ACCOUNT NUMBER --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Bank Account Number
+                        </label>
+                        <input type="text" name="bank_account_number"
+                            value="{{ old('bank_account_number', $employee->bank_account_number) }}"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400 font-mono"
+                            placeholder="e.g. 8830123456">
+                    </div>
+
+                    {{-- ALASAN PERUBAHAN GAJI --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Alasan Perubahan Gaji (Jika ada)
+                        </label>
+                        <input type="text" name="salary_change_reason"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
+                            placeholder="e.g. Promosi Jabatan, Penyesuaian UMK">
+                    </div>
+
+                    {{-- POSITION --}}
+                    <div class="space-y-1.5 md:col-span-2">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Position / Job Title
                         </label>
@@ -157,4 +228,61 @@
             </div>
         </form>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const salaryDisplay = document.getElementById('basic_salary_display');
+            const salaryReal = document.getElementById('basic_salary_real');
+
+            function formatRupiah(value) {
+                let number = value.toString().replace(/\D/g, '');
+                return number ? 'Rp ' + new Intl.NumberFormat('id-ID').format(number) : '';
+            }
+
+            if (salaryDisplay && salaryReal) {
+                if (salaryReal.value && salaryReal.value !== '0') {
+                    salaryDisplay.value = formatRupiah(salaryReal.value);
+                }
+
+                salaryDisplay.addEventListener('input', function(e) {
+                    let rawValue = e.target.value.replace(/\D/g, '');
+                    salaryReal.value = rawValue ? rawValue : 0;
+                    e.target.value = formatRupiah(rawValue);
+                });
+            }
+
+            const phoneInput = document.getElementById('phone_number');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function(e) {
+                    let value = e.target.value;
+                    let digits = value.replace(/\D/g, '');
+
+                    if (digits.startsWith('0')) {
+                        digits = '62' + digits.substring(1);
+                    }
+                    if (!digits.startsWith('62') && digits.length > 0) {
+                        digits = '62' + digits;
+                    }
+
+                    digits = digits.substring(0, 14);
+
+                    let formatted = '';
+                    if (digits.length > 0) formatted = '+' + digits.substring(0, 2);
+                    if (digits.length > 2) formatted += ' ' + digits.substring(2, 5);
+                    if (digits.length > 5) formatted += '-' + digits.substring(5, 9);
+                    if (digits.length > 9) formatted += '-' + digits.substring(9, 13);
+
+                    e.target.value = formatted;
+                });
+
+                phoneInput.addEventListener('focus', function(e) {
+                    if (!e.target.value) e.target.value = '+62 ';
+                });
+
+                phoneInput.addEventListener('blur', function(e) {
+                    if (e.target.value === '+62 ' || e.target.value === '+62') e.target.value = '';
+                });
+            }
+        });
+    </script>
 @endsection

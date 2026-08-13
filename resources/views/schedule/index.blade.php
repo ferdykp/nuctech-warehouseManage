@@ -516,8 +516,8 @@
                     <div class="flex items-center gap-2 mb-3">
                         <span
                             class="flex items-center justify-center w-5 h-5 text-[10px] font-black text-white bg-purple-500 rounded-full">3</span>
-                        <span class="text-xs font-extrabold tracking-wider uppercase text-slate-800">Set Shift
-                            Patterns</span>
+                        <span class="text-xs font-extrabold tracking-wider uppercase text-slate-800">Set Shift Rotation &
+                            Custom Sequence</span>
                     </div>
 
                     <!-- OFFICE HOURS FEEDBACK BANNER -->
@@ -529,51 +529,70 @@
                     </div>
 
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        {{-- ACTIVE SHIFT SEQUENCE & CUSTOM ORDER --}}
                         <div>
-                            <label class="block mb-1 text-xs font-bold tracking-wider uppercase text-slate-700">Starting
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Active Shift
+                                    Sequence</label>
+                                <span class="text-[10px] text-slate-400 font-medium">Use <i
+                                        class="fa-solid fa-arrow-up text-slate-500"></i> <i
+                                        class="fa-solid fa-arrow-down text-slate-500"></i> to reorder</span>
+                            </div>
+
+                            <div id="shift-sequence-container"
+                                class="space-y-2 p-2 bg-white border border-slate-200 rounded-xl max-h-[220px] overflow-y-auto">
+                                @foreach (App\Models\Shift::where('is_off', false)->orderBy('start_time', 'asc')->get() as $sf)
+                                    @php
+                                        $sfNameLower = strtolower($sf->shift_name);
+                                        $isOfficeHour =
+                                            str_contains($sfNameLower, 'office') ||
+                                            str_contains($sfNameLower, 'oh') ||
+                                            str_contains($sfNameLower, 'normal');
+                                    @endphp
+                                    <div class="flex items-center justify-between p-2 border bg-slate-50 border-slate-200/80 rounded-xl shift-item-row"
+                                        data-shift-id="{{ $sf->id }}" data-shift-name="{{ $sf->shift_name }}"
+                                        data-is-oh="{{ $isOfficeHour ? 'true' : 'false' }}">
+
+                                        <label
+                                            class="flex items-center gap-2 text-xs font-bold cursor-pointer text-slate-700 active-shift-label"
+                                            data-is-oh="{{ $isOfficeHour ? 'true' : 'false' }}">
+                                            <input type="checkbox" name="active_shifts[]" value="{{ $sf->id }}"
+                                                data-is-oh="{{ $isOfficeHour ? 'true' : 'false' }}"
+                                                onchange="updateStartingShiftDropdown()"
+                                                class="w-4 h-4 text-purple-600 rounded active-shift-checkbox focus:ring-purple-500"
+                                                {{ old('active_shifts') ? (in_array($sf->id, old('active_shifts')) ? 'checked' : '') : 'checked' }}>
+                                            <span>{{ $sf->shift_name }}</span>
+                                        </label>
+
+                                        <div class="flex items-center gap-1">
+                                            <button type="button" onclick="moveShiftItem(this, 'up')"
+                                                class="p-1 transition-colors rounded text-slate-400 hover:text-purple-600 hover:bg-slate-200"
+                                                title="Move Up">
+                                                <i class="text-xs fa-solid fa-arrow-up"></i>
+                                            </button>
+                                            <button type="button" onclick="moveShiftItem(this, 'down')"
+                                                class="p-1 transition-colors rounded text-slate-400 hover:text-purple-600 hover:bg-slate-200"
+                                                title="Move Down">
+                                                <i class="text-xs fa-solid fa-arrow-down"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        {{-- STARTING SHIFT --}}
+                        <div>
+                            <label class="block mb-1.5 text-xs font-bold tracking-wider uppercase text-slate-700">Starting
                                 Shift</label>
                             <select name="start_shift_id" id="gen_start_shift_id"
                                 class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:border-purple-500"
                                 required>
-                                @foreach (App\Models\Shift::where('is_off', false)->orderBy('start_time', 'asc')->get() as $sf)
-                                    @php
-                                        $sfNameLower = strtolower($sf->shift_name);
-                                        $isOfficeHour =
-                                            str_contains($sfNameLower, 'office') ||
-                                            str_contains($sfNameLower, 'oh') ||
-                                            str_contains($sfNameLower, 'normal');
-                                    @endphp
-                                    <option value="{{ $sf->id }}"
-                                        data-is-oh="{{ $isOfficeHour ? 'true' : 'false' }}" class="shift-select-option"
-                                        {{ old('start_shift_id') == $sf->id ? 'selected' : '' }}>
-                                        {{ $sf->shift_name }}
-                                    </option>
-                                @endforeach
+                                {{-- Option akan digenerate otomatis melalui JS syncPatternWithSite/updateStartingShiftDropdown --}}
                             </select>
-                        </div>
-                        <div>
-                            <label class="block mb-1 text-xs font-bold tracking-wider uppercase text-slate-700">Active
-                                Shifts in Rotation</label>
-                            <div class="flex flex-wrap gap-2.5 p-2.5 bg-white border border-slate-200 rounded-xl">
-                                @foreach (App\Models\Shift::where('is_off', false)->orderBy('start_time', 'asc')->get() as $sf)
-                                    @php
-                                        $sfNameLower = strtolower($sf->shift_name);
-                                        $isOfficeHour =
-                                            str_contains($sfNameLower, 'office') ||
-                                            str_contains($sfNameLower, 'oh') ||
-                                            str_contains($sfNameLower, 'normal');
-                                    @endphp
-                                    <label
-                                        class="flex items-center gap-1.5 text-xs font-bold text-slate-700 cursor-pointer active-shift-label"
-                                        data-is-oh="{{ $isOfficeHour ? 'true' : 'false' }}">
-                                        <input type="checkbox" name="active_shifts[]" value="{{ $sf->id }}"
-                                            data-is-oh="{{ $isOfficeHour ? 'true' : 'false' }}"
-                                            class="w-3.5 h-3.5 text-blue-600 rounded active-shift-checkbox focus:ring-blue-500"
-                                            {{ old('active_shifts') ? (in_array($sf->id, old('active_shifts')) ? 'checked' : '') : 'checked' }}>
-                                        {{ $sf->shift_name }}
-                                    </label>
-                                @endforeach
-                            </div>
+                            <p class="mt-2 text-[10px] text-slate-400 leading-relaxed">
+                                Rotation order will follow your custom list on the left (Top to Bottom).
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -739,6 +758,60 @@
             openModal('modal-pattern');
         }
 
+        // --- FUNGSI PINDAH URUTAN SHIFT (UP/DOWN) ---
+        // --- FUNGSI PINDAH URUTAN SHIFT (UP/DOWN) TERHUBUNG DOM TREE ---
+        function moveShiftItem(button, direction) {
+            const row = button.closest('.shift-item-row');
+            if (!row) return;
+
+            const container = document.getElementById('shift-sequence-container');
+
+            if (direction === 'up' && row.previousElementSibling) {
+                container.insertBefore(row, row.previousElementSibling);
+            } else if (direction === 'down' && row.nextElementSibling) {
+                container.insertBefore(row.nextElementSibling, row);
+            }
+
+            // Update dropdown Starting Shift agar selaras dengan posisi terbaru di DOM
+            updateStartingShiftDropdown();
+        }
+
+        // --- UPDATE DROPDOWN STARTING SHIFT SESUAI KUSTOM URUTAN ---
+        function updateStartingShiftDropdown() {
+            const startShiftSelect = document.getElementById('gen_start_shift_id');
+            if (!startShiftSelect) return;
+
+            const currentVal = startShiftSelect.value;
+            startShiftSelect.innerHTML = '';
+
+            let hasSelectedOption = false;
+
+            document.querySelectorAll('.shift-item-row').forEach(row => {
+                if (row.style.display !== 'none') {
+                    const cb = row.querySelector('.active-shift-checkbox');
+                    if (cb && cb.checked) {
+                        const shiftId = row.getAttribute('data-shift-id');
+                        const shiftName = row.getAttribute('data-shift-name');
+
+                        const opt = document.createElement('option');
+                        opt.value = shiftId;
+                        opt.textContent = shiftName;
+
+                        if (shiftId === currentVal) {
+                            opt.selected = true;
+                            hasSelectedOption = true;
+                        }
+
+                        startShiftSelect.appendChild(opt);
+                    }
+                }
+            });
+
+            if (!hasSelectedOption && startShiftSelect.options.length > 0) {
+                startShiftSelect.selectedIndex = 0;
+            }
+        }
+
         function syncPatternWithSite() {
             let activeSiteId = document.getElementById('main_site_select') ? document.getElementById('main_site_select')
                 .value : null;
@@ -751,7 +824,6 @@
                 }
             }
 
-            let startShiftSelect = document.getElementById('gen_start_shift_id');
             let ohNoticeBanner = document.getElementById('oh-notice-banner');
 
             if (ohNoticeBanner) {
@@ -762,49 +834,30 @@
                 }
             }
 
-            document.querySelectorAll('.active-shift-label').forEach(label => {
-                let isOh = label.getAttribute('data-is-oh') === 'true';
-                let cb = label.querySelector('.active-shift-checkbox');
+            document.querySelectorAll('.shift-item-row').forEach(row => {
+                let isOh = row.getAttribute('data-is-oh') === 'true';
+                let cb = row.querySelector('.active-shift-checkbox');
 
                 if (isOfficeHour) {
                     if (isOh) {
-                        label.classList.remove('hidden');
+                        row.style.display = '';
                         if (cb) cb.checked = true;
                     } else {
-                        label.classList.add('hidden');
+                        row.style.display = 'none';
                         if (cb) cb.checked = false;
                     }
                 } else {
                     if (isOh) {
-                        label.classList.add('hidden');
+                        row.style.display = 'none';
                         if (cb) cb.checked = false;
                     } else {
-                        label.classList.remove('hidden');
+                        row.style.display = '';
                         if (cb) cb.checked = true;
                     }
                 }
             });
 
-            if (startShiftSelect) {
-                for (let i = 0; i < startShiftSelect.options.length; i++) {
-                    let opt = startShiftSelect.options[i];
-                    let isOh = opt.getAttribute('data-is-oh') === 'true';
-
-                    if (isOfficeHour) {
-                        opt.style.display = isOh ? '' : 'none';
-                    } else {
-                        opt.style.display = isOh ? 'none' : '';
-                    }
-                }
-
-                for (let i = 0; i < startShiftSelect.options.length; i++) {
-                    let opt = startShiftSelect.options[i];
-                    if (opt.style.display !== 'none') {
-                        startShiftSelect.selectedIndex = i;
-                        break;
-                    }
-                }
-            }
+            updateStartingShiftDropdown();
 
             let durationWrapper = document.getElementById('gen_shift_duration_wrapper');
             let durationInput = document.getElementById('gen_shift_duration');

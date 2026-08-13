@@ -12,6 +12,7 @@ use App\Http\Controllers\SparepartController;
 use App\Http\Controllers\SparepartStockController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ShiftController;
 // use App\Models\User;
@@ -128,6 +129,8 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::get('/profile/profileEdit/{id}', [UserController::class, 'edit'])->name('profile.profileEdit');
         Route::put('/profile/profileEdit/{id}', [UserController::class, 'update'])->name('profile.profileUpdate');
         Route::delete('/profile/{id}', [UserController::class, 'delete'])->name('profile.destroy');
+
+        Route::resource('salary', SalaryController::class);
     });
 
 

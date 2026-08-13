@@ -2,72 +2,29 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Employee extends Model
 {
-    /**
-     * Kolom yang diizinkan untuk pengisian massal (Mass Assignment)
-     * Menampung seluruh data Core HR, Pribadi, Kontak Darurat, dan Payroll.
-     */
+    use HasFactory;
+
     protected $fillable = [
-        // 1. Identitas Utama & Core HR
         'site_id',
         'branch_id',
-        // 'nik',
         'name',
         'phone_number',
         'position',
-        // 'department',
         'status',
+        'basic_salary',
+        'bank_name',
+        'bank_account_number',
         'join_date',
         'contract_start_date',
-        // 'contract_end_date',
-
-        // 2. Data Pribadi Legal & Kontak
-        // 'ktp_number',
-        // 'place_of_birth',
-        // 'date_of_birth',
-        // 'gender',
-        // 'phone_number',
-        // 'email',
-        // 'address_ktp',
-        // 'address_domicile',
-
-        // 3. Kontak Darurat
-        // 'emergency_contact_name',
-        // 'emergency_contact_relation',
-        // 'emergency_contact_phone',
-
-        // 4. Finansial & Jaminan Sosial
-        // 'bank_name',
-        // 'bank_account_number',
-        // 'bank_account_holder',
-        // 'npwp_number',
-        // 'bpjs_ketenagakerjaan',
-        // 'bpjs_kesehatan',
-        // 'ptkp_status',
-
-        // 5. Status Sistem
-        'is_active'
+        'is_active',
     ];
 
-    /**
-     * Mutasi Tipe Data (Casting)
-     * Memastikan string tanggal dari database otomatis diubah menjadi objek Carbon/Date
-     * dan boolean tetap bertipe true/false saat dipanggil di Blade.
-     */
-    protected $casts = [
-        'join_date'           => 'date',
-        'contract_start_date' => 'date',
-        'contract_end_date'   => 'date',
-        'date_of_birth'       => 'date',
-        'is_active'           => 'boolean',
-    ];
-
-    /**
-     * Relasi balik ke Site (Satu karyawan ditempatkan di satu Site)
-     */
     public function site()
     {
         return $this->belongsTo(Site::class, 'site_id');
@@ -78,15 +35,44 @@ class Employee extends Model
         return $this->belongsTo(Branch::class, 'branch_id');
     }
 
-    /**
-     * Hubungkan Karyawan ke Banyak Data Absensi (Satu karyawan punya banyak rekap bulanan)
-     */
+    public function salaryHistories()
+    {
+        return $this->hasMany(EmployeeSalaryHistory::class, 'employee_id')->latest();
+    }
+
+    public function schedules()
+    {
+        return $this->hasMany(EmployeeSchedule::class, 'employee_id');
+    }
+
     public function attendances()
     {
         return $this->hasMany(Attendance::class, 'employee_id');
     }
-    public function schedules()
+
+    /**
+     * Menghitung Otomatis Status Informasi Gaji Berdasarkan Tanggal Join & Status Karyawan
+     */
+    public function getCalculatedSalaryInformation($targetDate = null)
     {
-        return $this->hasMany(EmployeeSchedule::class, 'employee_id');
+        if ($this->status !== 'Probation') {
+            return 'regular salary';
+        }
+
+        $joinDate = $this->join_date ? Carbon::parse($this->join_date)->startOfMonth() : Carbon::now()->startOfMonth();
+        $payrollDate = $targetDate ? Carbon::parse($targetDate)->startOfMonth() : Carbon::now()->startOfMonth();
+
+        // Hitung selisih bulan antara tanggal gabung dengan periode gaji
+        $diffInMonths = $joinDate->diffInMonths($payrollDate, false);
+
+        if ($diffInMonths <= 1) {
+            return '1st probation';
+        } elseif ($diffInMonths == 2) {
+            return '2nd probation';
+        } elseif ($diffInMonths == 3) {
+            return '3rd probation';
+        } else {
+            return 'regular salary';
+        }
     }
 }

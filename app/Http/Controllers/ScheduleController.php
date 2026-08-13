@@ -91,7 +91,6 @@ class ScheduleController extends Controller
     {
         $user = Auth::user();
 
-        // Validasi opsional untuk shift_duration jika yang dipilih adalah Office Hour
         $rules = [
             'month'          => 'required',
             'year'           => 'required',
@@ -122,11 +121,17 @@ class ScheduleController extends Controller
 
         $holidays = $this->holidayService->getHolidays((int) $year);
 
-        $shiftsPool = Shift::whereIn('id', $activeShiftIds)->orderBy('start_time', 'asc')->pluck('id')->toArray();
+        // KUNCI PERBAIKAN: Jaga urutan persis sesuai elemen active_shifts[] dari form POST
+        $existingShiftIds = Shift::whereIn('id', $activeShiftIds)->pluck('id')->toArray();
+        $shiftsPool = array_values(array_filter($activeShiftIds, function ($id) use ($existingShiftIds) {
+            return in_array($id, $existingShiftIds);
+        }));
+
         if (empty($shiftsPool)) {
             return redirect()->back()->withErrors(['error' => 'Gagal! Tidak ada shift aktif yang dipilih.']);
         }
 
+        // Tentukan titik mulainya dari Starting Shift yang dipilih
         $startIndex = array_search($startShiftId, $shiftsPool);
         if ($startIndex !== false) {
             $allowedShifts = array_merge(array_slice($shiftsPool, $startIndex), array_slice($shiftsPool, 0, $startIndex));
