@@ -130,6 +130,8 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::put('/profile/profileEdit/{id}', [UserController::class, 'update'])->name('profile.profileUpdate');
         Route::delete('/profile/{id}', [UserController::class, 'delete'])->name('profile.destroy');
 
+        Route::post('/salary/generate-monthly', [SalaryController::class, 'generateMonthlySalaries'])->name('salary.generateMonthly');
+        Route::get('/salary/export-excel', [SalaryController::class, 'exportExcel'])->name('salary.exportExcel');
         Route::resource('salary', SalaryController::class);
     });
 

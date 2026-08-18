@@ -24,7 +24,7 @@ class RoleMiddleware
             return redirect()->route('login');
         }
 
-        // PERBAIKAN: Deteksi jika session aktif tapi data user di database hilang (akibat migrate:fresh)
+        // Deteksi jika session aktif tapi data user di database hilang (akibat migrate:fresh)
         if (is_null(Auth::user())) {
             Auth::logout(); // Hancurkan session login di server
 
@@ -35,10 +35,10 @@ class RoleMiddleware
             return redirect()->route('login')->with('error', 'Sesi login Anda tidak valid. Silakan masuk kembali.');
         }
 
-        // 2. Ambil role user saat ini (Aman dari error "property on null" karena sudah divalidasi di atas)
+        // 2. Ambil role user saat ini
         $userRole = strtolower(Auth::user()->role);
 
-        // Jika rute dikirim menggunakan pipa 'superadmin|manager', kita pecah dulu menjadi array.
+        // Jika rute dikirim menggunakan pipa 'superadmin|manager', pecah dulu menjadi array.
         $allowedRoles = [];
         foreach ($roles as $role) {
             $allowedRoles = array_merge($allowedRoles, explode('|', strtolower($role)));
@@ -52,9 +52,13 @@ class RoleMiddleware
         // --- TAMBAHAN UNTUK MENCEGAH TOMBOL BACK BROWSER ---
         $response = $next($request);
 
-        // Menambahkan header anti-cache agar browser meminta data baru ke server saat di-back
-        return $response->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', 'Sun, 02 Jan 1990 00:00:00 GMT');
+        // PERBAIKAN: Pengecekan method_exists agar tidak error saat mendownload file Excel (BinaryFileResponse)
+        if (method_exists($response, 'header')) {
+            return $response->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', 'Sun, 02 Jan 1990 00:00:00 GMT');
+        }
+
+        return $response;
     }
 }

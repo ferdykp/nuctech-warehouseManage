@@ -4,210 +4,324 @@
 
 @section('content')
     <div class="w-full px-6 py-8">
+        {{-- ALERT NOTIFIKASI --}}
         @if (session('success'))
             <div
-                class="flex items-center gap-2 p-4 mb-6 text-sm text-green-800 border border-green-200 bg-green-50 rounded-xl">
-                <i class="fa-solid fa-circle-check"></i>
+                class="flex items-center gap-3 p-4 mb-6 text-xs font-semibold transition-all border shadow-xs sm:text-sm text-emerald-800 border-emerald-200 bg-emerald-50/90 rounded-2xl">
+                <i class="text-base fa-solid fa-circle-check text-emerald-600"></i>
                 <span>{{ session('success') }}</span>
             </div>
         @endif
 
-        <div class="flex flex-col gap-2 mb-6">
-            <h1 class="text-3xl font-extrabold tracking-tighter text-black">Salary Management</h1>
-            <p class="text-xs text-gray-500">Kelola informasi penggajian seluruh karyawan.</p>
+        @if (session('info'))
+            <div
+                class="flex items-center gap-3 p-4 mb-6 text-xs font-semibold text-blue-800 transition-all border border-blue-200 shadow-xs sm:text-sm bg-blue-50/90 rounded-2xl">
+                <i class="text-base text-blue-600 fa-solid fa-circle-info"></i>
+                <span>{{ session('info') }}</span>
+            </div>
+        @endif
+
+        {{-- TOP HEADER & ACTION BUTTONS --}}
+        <div class="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between">
+            <div>
+                <h1 class="text-2xl font-black tracking-tight sm:text-3xl text-slate-900">Salary Management</h1>
+                <p class="text-xs font-medium sm:text-sm text-slate-500 mt-0.5">Kelola dan monitor penggajian seluruh
+                    karyawan secara otomatis.</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+                <a href="javascript:void(0)" onclick="exportExcel()"
+                    class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 active:scale-95 transition-all shadow-2xs">
+                    <i class="fa-solid fa-file-excel text-emerald-600"></i> Export Excel
+                </a>
+
+                <button type="button" onclick="openGenerateModal()"
+                    class="inline-flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-bold text-white transition-all bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Gaji
+                </button>
+
+                <a href="{{ route('salary.create') }}"
+                    class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-700 transition-all bg-white border border-slate-200 rounded-xl hover:bg-slate-50 active:scale-95 shadow-2xs">
+                    <i class="fa-solid fa-plus text-slate-400"></i> Tambah Manual
+                </a>
+            </div>
         </div>
 
-        <div class="overflow-hidden bg-white shadow-sm ring-1 ring-gray-200 rounded-2xl">
-            <!-- FILTER BAR -->
-            <div class="p-6 border-b border-gray-100 bg-gray-50/50">
-                <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        {{-- MAIN CARD CONTAINER --}}
+        <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-2xl sm:rounded-3xl">
+            <!-- FILTER TOOLBAR -->
+            <div class="p-5 space-y-3 border-b border-slate-100 bg-slate-50/40">
+                @php
+                    $daftarBulan = [
+                        '01' => 'Januari',
+                        '02' => 'Februari',
+                        '03' => 'Maret',
+                        '04' => 'April',
+                        '05' => 'Mei',
+                        '06' => 'Juni',
+                        '07' => 'Juli',
+                        '08' => 'Agustus',
+                        '09' => 'September',
+                        '10' => 'Oktober',
+                        '11' => 'November',
+                        '12' => 'Desember',
+                    ];
+                @endphp
 
-                    <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-5 xl:w-5/6">
-                        <!-- Filter Month & Year -->
-                        <div>
-                            @php
-                                $daftarBulan = [
-                                    '01' => 'Januari',
-                                    '02' => 'Februari',
-                                    '03' => 'Maret',
-                                    '04' => 'April',
-                                    '05' => 'Mei',
-                                    '06' => 'Juni',
-                                    '07' => 'Juli',
-                                    '08' => 'Agustus',
-                                    '09' => 'September',
-                                    '10' => 'Oktober',
-                                    '11' => 'November',
-                                    '12' => 'Desember',
-                                ];
-                            @endphp
-                            <select id="filter-month"
-                                class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border border-gray-200 shadow-sm outline-none rounded-xl focus:border-blue-500 focus:ring-blue-500">
-                                @foreach ($daftarBulan as $key => $val)
-                                    <option value="{{ $key }}"
-                                        {{ sprintf('%02d', $month) == $key ? 'selected' : '' }}>{{ $val }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                <!-- Row 1: Periode & Search Bar -->
+                <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
+                    <div class="flex gap-2 md:col-span-3">
+                        <select id="filter-month"
+                            class="w-3/5 px-3 py-2.5 text-xs font-bold transition-all bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-800 shadow-2xs">
+                            @foreach ($daftarBulan as $key => $val)
+                                <option value="{{ $key }}" {{ sprintf('%02d', $month) == $key ? 'selected' : '' }}>
+                                    {{ $val }}</option>
+                            @endforeach
+                        </select>
 
-                        <div>
-                            <select id="filter-year"
-                                class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border border-gray-200 shadow-sm outline-none rounded-xl focus:border-blue-500 focus:ring-blue-500">
-                                @for ($y = date('Y') - 2; $y <= date('Y') + 2; $y++)
-                                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>
-                                        {{ $y }}</option>
-                                @endfor
-                            </select>
-                        </div>
-
-                        <!-- Search Input -->
-                        <div class="relative w-full">
-                            <input type="text" id="filter-search" placeholder="Cari Nama / Posisi / No Rek..."
-                                class="block w-full py-2 pl-3 pr-3 text-xs transition-all bg-white border border-gray-200 shadow-sm outline-none rounded-xl focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-
-                        <!-- Filter Information -->
-                        <div>
-                            <select id="filter-information"
-                                class="block w-full px-3 py-2 text-xs transition-all bg-white border border-gray-200 shadow-sm outline-none rounded-xl focus:border-blue-500 focus:ring-blue-500">
-                                <option value="">-- Semua Status Gaji --</option>
-                                <option value="1st probation">1st Probation</option>
-                                <option value="2nd probation">2nd Probation</option>
-                                <option value="3rd probation">3rd Probation</option>
-                                <option value="regular salary">Regular Salary</option>
-                            </select>
-                        </div>
-
-                        <!-- Filter Bank -->
-                        <div>
-                            <select id="filter-bank"
-                                class="block w-full px-3 py-2 text-xs transition-all bg-white border border-gray-200 shadow-sm outline-none rounded-xl focus:border-blue-500 focus:ring-blue-500">
-                                <option value="">-- Semua Bank --</option>
-                                @foreach ($banks as $b)
-                                    <option value="{{ $b }}">{{ $b }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <select id="filter-year"
+                            class="w-2/5 px-3 py-2.5 text-xs font-bold transition-all bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-800 shadow-2xs">
+                            @for ($y = date('Y') - 2; $y <= date('Y') + 2; $y++)
+                                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}
+                                </option>
+                            @endfor
+                        </select>
                     </div>
 
-                    <!-- Action Button -->
-                    <div class="flex items-center justify-end gap-2">
-                        <a href="{{ route('salary.create') }}"
-                            class="flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold text-white transition-all bg-blue-600 rounded-xl hover:bg-blue-700 active:scale-95 shrink-0">
-                            <i class="fa-solid fa-plus"></i> Tambah Data Gaji
-                        </a>
+                    <div class="relative md:col-span-9">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                            <i class="text-xs fa-solid fa-magnifying-glass"></i>
+                        </div>
+                        <input type="text" id="filter-search"
+                            placeholder="Cari nama karyawan, posisi, atau no rekening..."
+                            class="block w-full py-2.5 pl-9 pr-3 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 shadow-2xs">
+                    </div>
+                </div>
+
+                <!-- Row 2: Secondary Filters (Ditambahkan Filter Branch) -->
+                <div class="grid grid-cols-1 gap-3 pt-1 sm:grid-cols-3">
+                    <!-- Filter Branch -->
+                    <div>
+                        <select id="filter-branch"
+                            class="block w-full px-3 py-2 text-xs font-semibold transition-all bg-white border outline-none border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-700 shadow-2xs">
+                            <option value="">Semua Branch / Cabang</option>
+                            @foreach ($branches as $br)
+                                <option value="{{ $br->id }}">{{ $br->branch_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Filter Information -->
+                    <div>
+                        <select id="filter-information"
+                            class="block w-full px-3 py-2 text-xs font-semibold transition-all bg-white border outline-none border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-700 shadow-2xs">
+                            <option value="">Semua Status Gaji</option>
+                            <option value="1st probation">1st Probation</option>
+                            <option value="2nd probation">2nd Probation</option>
+                            <option value="3rd probation">3rd Probation</option>
+                            <option value="regular salary">Regular Salary</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter Bank -->
+                    <div>
+                        <select id="filter-bank"
+                            class="block w-full px-3 py-2 text-xs font-semibold transition-all bg-white border outline-none border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-700 shadow-2xs">
+                            <option value="">Semua Bank</option>
+                            @foreach ($banks as $b)
+                                <option value="{{ $b }}">{{ $b }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
             </div>
 
-            <!-- CONTAINER TABLE AJAX -->
+            <!-- TABLE CONTAINER (LOADED VIA AJAX) -->
             <div id="table-container">
                 @include('salary.table', ['salaries' => $salaries])
             </div>
         </div>
     </div>
 
-    {{-- MODAL POP-UP DETAIL GAJI --}}
+    {{-- MODAL GENERATE GAJI BULANAN --}}
+    <div id="modalGenerateSalary"
+        class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs">
+        <div
+            class="flex flex-col w-full max-w-md overflow-hidden bg-white border shadow-2xl rounded-2xl sm:rounded-3xl border-slate-100">
+            <div class="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="flex items-center justify-center w-10 h-10 text-emerald-600 bg-emerald-50 rounded-xl shrink-0">
+                        <i class="text-base fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-extrabold text-slate-900">Generate Gaji Bulanan</h3>
+                        <p class="text-[11px] text-slate-500">Pilih periode penggajian massal karyawan.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeGenerateModal()"
+                    class="p-1.5 transition-colors rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-200/60">
+                    <i class="text-xs fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form action="{{ route('salary.generateMonthly') }}" method="POST" class="p-6 space-y-4">
+                @csrf
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label
+                            class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Bulan</label>
+                        <select name="month" id="modal_gen_month"
+                            class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-800">
+                            @foreach ($daftarBulan as $k => $v)
+                                <option value="{{ $k }}">{{ $v }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label
+                            class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Tahun</label>
+                        <select name="year" id="modal_gen_year"
+                            class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-800">
+                            @for ($y = date('Y') - 2; $y <= date('Y') + 2; $y++)
+                                <option value="{{ $y }}">{{ $y }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                </div>
+
+                <div
+                    class="p-3.5 text-xs leading-relaxed text-amber-800 bg-amber-50/80 border border-amber-200/80 rounded-xl flex items-start gap-2">
+                    <i class="fa-solid fa-circle-info text-amber-600 mt-0.5 shrink-0"></i>
+                    <span>Jika data gaji periode ini sudah ada, sistem akan memperbaruinya tanpa duplikasi.</span>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeGenerateModal()"
+                        class="px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit"
+                        class="px-5 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95">
+                        <i class="mr-1 fa-solid fa-wand-magic-sparkles"></i> Proses Generate
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- MODAL DETAIL GAJI --}}
     <div id="salaryDetailModal"
-        class="fixed inset-0 z-50 items-center justify-center hidden p-4 bg-slate-900/60 backdrop-blur-xs">
-        <div class="w-full max-w-2xl mx-auto overflow-hidden bg-white border border-gray-100 shadow-2xl rounded-2xl">
-            <div class="flex items-center justify-between px-6 py-4 text-white bg-gray-900">
-                <h5 class="flex items-center gap-2 text-base font-bold">
+        class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs">
+        <div
+            class="w-full max-w-2xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="flex items-center justify-between p-5 text-white border-b border-slate-800 bg-slate-900">
+                <h5 class="flex items-center gap-2.5 text-sm font-extrabold sm:text-base">
                     <i class="text-emerald-400 fa-solid fa-money-check-dollar"></i> Detail Informasi Gaji Karyawan
                 </h5>
                 <button type="button" onclick="closeSalaryModal()"
-                    class="text-xl leading-none text-gray-400 hover:text-white">&times;</button>
+                    class="p-1.5 transition-colors rounded-full text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i class="text-xs fa-solid fa-xmark"></i>
+                </button>
             </div>
 
-            <div class="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+            <div class="p-6 space-y-4 overflow-y-auto">
                 <!-- Header Karyawan -->
-                <div class="flex items-center gap-4 pb-4 border-b border-gray-100">
+                <div class="flex items-center gap-4 pb-4 border-b border-slate-100">
                     <div
-                        class="flex items-center justify-center w-12 h-12 text-xl font-bold border rounded-full text-emerald-600 border-emerald-200 bg-emerald-50 shrink-0">
-                        <i class="fa-solid fa-user-gear"></i>
+                        class="flex items-center justify-center w-12 h-12 text-xl font-bold border rounded-2xl text-emerald-600 border-emerald-200 bg-emerald-50 shrink-0">
+                        <i class="fa-solid fa-user"></i>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold text-gray-900" id="detail_name">-</h3>
-                        <p class="text-xs font-semibold text-gray-500" id="detail_position">-</p>
+                        <h3 class="text-base font-bold sm:text-lg text-slate-900" id="detail_name">-</h3>
+                        <p class="text-xs font-medium text-slate-500" id="detail_position">-</p>
                     </div>
                 </div>
 
                 <!-- Grid Rincian Data Gaji -->
-                <div class="grid grid-cols-1 gap-4 text-xs md:grid-cols-2">
-                    <div class="p-3 border border-gray-100 rounded-xl bg-gray-50/50">
-                        <span class="block mb-1 text-gray-400">Placement / Branch</span>
-                        <strong class="text-sm text-gray-800" id="detail_placement">-</strong>
+                <div class="grid grid-cols-1 gap-3 text-xs md:grid-cols-2">
+                    <div class="p-3.5 border border-slate-100 rounded-2xl bg-slate-50/60">
+                        <span class="block mb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Placement /
+                            Branch</span>
+                        <strong class="text-xs text-slate-800" id="detail_placement">-</strong>
                     </div>
 
-                    <div class="p-3 border border-gray-100 rounded-xl bg-gray-50/50">
-                        <span class="block mb-1 text-gray-400">Status Informasi Gaji</span>
+                    <div class="p-3.5 border border-slate-100 rounded-2xl bg-slate-50/60">
+                        <span class="block mb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status
+                            Informasi Gaji</span>
                         <span id="detail_information_badge">-</span>
                     </div>
 
-                    <div class="p-3 border border-gray-100 rounded-xl bg-gray-50/50">
-                        <span class="block mb-1 text-gray-400">Nama Bank</span>
-                        <strong class="text-sm text-gray-800" id="detail_bank">-</strong>
+                    <div class="p-3.5 border border-slate-100 rounded-2xl bg-slate-50/60">
+                        <span class="block mb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama
+                            Bank</span>
+                        <strong class="text-xs text-slate-800" id="detail_bank">-</strong>
                     </div>
 
-                    <div class="p-3 border border-gray-100 rounded-xl bg-gray-50/50">
-                        <span class="block mb-1 text-gray-400">Nomor Rekening</span>
-                        <strong class="font-mono text-sm text-gray-900" id="detail_account_no">-</strong>
+                    <div class="p-3.5 border border-slate-100 rounded-2xl bg-slate-50/60">
+                        <span class="block mb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nomor
+                            Rekening</span>
+                        <strong class="font-mono text-xs text-slate-900" id="detail_account_no">-</strong>
                     </div>
 
-                    <div class="p-3 border border-emerald-100 rounded-xl bg-emerald-50/40">
-                        <span class="block mb-1 font-medium text-emerald-600">Gaji Pokok Bulanan</span>
-                        <strong class="text-base text-emerald-700" id="detail_amount">-</strong>
+                    <div class="p-3.5 border border-emerald-100 rounded-2xl bg-emerald-50/40">
+                        <span class="block mb-1 text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Gaji Pokok
+                            Bulanan</span>
+                        <strong class="text-sm font-extrabold text-emerald-700" id="detail_amount">-</strong>
                     </div>
 
-                    <div class="p-3 border border-blue-100 rounded-xl bg-blue-50/40">
-                        <span class="block mb-1 font-medium text-blue-600">Before / After (Penyesuaian Lembur)</span>
-                        <strong class="text-sm text-blue-800" id="detail_before_after">-</strong>
+                    <div class="p-3.5 border border-blue-100 rounded-2xl bg-blue-50/40">
+                        <span class="block mb-1 text-[10px] font-bold text-blue-600 uppercase tracking-wider">Before /
+                            After (Penyesuaian Lembur)</span>
+                        <strong class="text-xs font-bold text-blue-800" id="detail_before_after">-</strong>
                     </div>
                 </div>
 
                 <!-- RINGKASAN KALKULASI LEMBUR TANGGAL MERAH -->
-                <div class="p-4 space-y-2 border border-rose-100 rounded-xl bg-rose-50/50">
-                    <h6 class="text-xs font-bold text-rose-700 flex items-center gap-1.5">
+                <div class="p-4 space-y-2 border border-rose-100 rounded-2xl bg-rose-50/50">
+                    <h6 class="text-xs font-extrabold text-rose-700 flex items-center gap-1.5 uppercase tracking-wider">
                         <i class="fa-solid fa-circle-exclamation"></i> Rincian Lembur Tanggal Merah (<span
                             id="detail_period_label">Periode</span>)
                     </h6>
-                    <div class="grid grid-cols-3 gap-2 text-xs">
+                    <div class="grid grid-cols-3 gap-2 pt-1 text-xs">
                         <div>
-                            <span class="block text-gray-400">Hari Kerja Efektif:</span>
-                            <strong class="text-gray-800" id="detail_effective_days">0 Hari</strong>
+                            <span class="block text-[10px] text-slate-400">Hari Kerja Efektif:</span>
+                            <strong class="text-slate-800" id="detail_effective_days">0 Hari</strong>
                         </div>
                         <div>
-                            <span class="block text-gray-400">Lembur Tgl Merah:</span>
+                            <span class="block text-[10px] text-slate-400">Lembur Tgl Merah:</span>
                             <strong class="text-rose-600" id="detail_holiday_days">0 Hari</strong>
                         </div>
                         <div>
-                            <span class="block text-gray-400">Bonus Lembur:</span>
+                            <span class="block text-[10px] text-slate-400">Bonus Lembur:</span>
                             <strong class="text-emerald-600" id="detail_holiday_pay">Rp 0</strong>
                         </div>
                     </div>
-                    <div class="flex items-center justify-between pt-2 border-t border-rose-200/60">
-                        <span class="text-xs font-bold text-gray-700">Total Gaji Diterima (Penerimaan Akhir):</span>
-                        <strong class="text-base font-extrabold text-blue-700" id="detail_total_pay">Rp 0</strong>
+                    <div class="flex items-center justify-between pt-2.5 border-t border-rose-200/60">
+                        <span class="text-xs font-bold text-slate-700">Total Gaji Diterima (Penerimaan Akhir):</span>
+                        <strong class="text-sm font-black text-blue-700" id="detail_total_pay">Rp 0</strong>
                     </div>
                 </div>
 
-                <!-- More Info & Get Info (Note) -->
-                <div class="pt-2 space-y-3 text-xs">
-                    <div class="p-3 border border-gray-100 rounded-xl bg-gray-50/50">
-                        <span class="block mb-1 font-semibold text-gray-500">More Information:</span>
-                        <p class="text-gray-700 whitespace-pre-line" id="detail_more_information">-</p>
+                <!-- More Info & Get Info -->
+                <div class="pt-1 space-y-3 text-xs">
+                    <div class="p-3.5 border border-slate-100 rounded-2xl bg-slate-50/60">
+                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">More
+                            Information:</span>
+                        <p class="leading-relaxed whitespace-pre-line text-slate-700" id="detail_more_information">-</p>
                     </div>
 
-                    <div class="p-3 border border-gray-100 rounded-xl bg-gray-50/50">
-                        <span class="block mb-1 font-semibold text-gray-500">Get Information (Note):</span>
-                        <p class="text-gray-700 whitespace-pre-line" id="detail_get_information">-</p>
+                    <div class="p-3.5 border border-slate-100 rounded-2xl bg-slate-50/60">
+                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Get
+                            Information (Note):</span>
+                        <p class="leading-relaxed whitespace-pre-line text-slate-700" id="detail_get_information">-</p>
                     </div>
                 </div>
             </div>
 
-            <div class="flex justify-end px-6 py-4 border-t border-gray-100 bg-gray-50">
+            <div class="flex justify-end p-4 border-t border-slate-100 bg-slate-50">
                 <button type="button" onclick="closeSalaryModal()"
-                    class="px-5 py-2 text-xs font-bold text-gray-600 transition-all bg-white border border-gray-300 rounded-xl hover:bg-gray-100">
+                    class="px-5 py-2 text-xs font-bold transition-colors bg-white border text-slate-600 border-slate-200 rounded-xl hover:bg-slate-100">
                     Tutup
                 </button>
             </div>
@@ -215,17 +329,36 @@
     </div>
 
     <script>
+        function openGenerateModal() {
+            const currentFilterMonth = document.getElementById('filter-month').value;
+            const currentFilterYear = document.getElementById('filter-year').value;
+
+            document.getElementById('modal_gen_month').value = currentFilterMonth;
+            document.getElementById('modal_gen_year').value = currentFilterYear;
+
+            let modal = document.getElementById('modalGenerateSalary');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeGenerateModal() {
+            let modal = document.getElementById('modalGenerateSalary');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
         let debounceTimer;
 
         function fetchSalaries(targetUrl = null) {
             const month = document.getElementById('filter-month').value;
             const year = document.getElementById('filter-year').value;
             const search = document.getElementById('filter-search').value;
+            const branchId = document.getElementById('filter-branch').value; // <-- Ambil branch_id
             const information = document.getElementById('filter-information').value;
             const bank = document.getElementById('filter-bank').value;
 
             const url = targetUrl ||
-                `{{ route('salary.index') }}?month=${month}&year=${year}&search=${encodeURIComponent(search)}&information=${encodeURIComponent(information)}&bank=${encodeURIComponent(bank)}`;
+                `{{ route('salary.index') }}?month=${month}&year=${year}&search=${encodeURIComponent(search)}&branch_id=${encodeURIComponent(branchId)}&information=${encodeURIComponent(information)}&bank=${encodeURIComponent(bank)}`;
 
             fetch(url, {
                     headers: {
@@ -241,6 +374,8 @@
 
         document.getElementById('filter-month').addEventListener('change', () => fetchSalaries());
         document.getElementById('filter-year').addEventListener('change', () => fetchSalaries());
+        document.getElementById('filter-branch').addEventListener('change', () =>
+            fetchSalaries()); // <-- Add Event Listener
         document.getElementById('filter-information').addEventListener('change', () => fetchSalaries());
         document.getElementById('filter-bank').addEventListener('change', () => fetchSalaries());
 
@@ -251,11 +386,9 @@
             }, 300);
         });
 
-        // PERBAIKAN: Hanya tangkap link di dalam navigasi Pagination
         document.getElementById('table-container').addEventListener('click', function(e) {
             const pageLink = e.target.closest('a');
 
-            // Cek apakah link yang diklik merupakan bagian dari pagination (nav/pagination)
             if (pageLink && pageLink.href && (pageLink.closest('nav') || pageLink.closest('.pagination') || pageLink
                     .getAttribute('rel'))) {
                 e.preventDefault();
@@ -297,10 +430,8 @@
                     document.getElementById('detail_get_information').innerText = data.get_information ||
                         'Tidak ada catatan.';
 
-                    // Label Periode
                     document.getElementById('detail_period_label').innerText = month + '/' + year;
 
-                    // Rincian Kalkulasi Lembur
                     document.getElementById('detail_effective_days').innerText = (data.calculation ? data.calculation
                         .effective_days : 0) + ' Hari';
                     document.getElementById('detail_holiday_days').innerText = (data.calculation ? data.calculation
@@ -330,6 +461,20 @@
             let modal = document.getElementById('salaryDetailModal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+        }
+
+        function exportExcel() {
+            const month = document.getElementById('filter-month').value;
+            const year = document.getElementById('filter-year').value;
+            const search = document.getElementById('filter-search').value;
+            const branchId = document.getElementById('filter-branch').value; // <-- Tambah param branch
+            const information = document.getElementById('filter-information').value;
+            const bank = document.getElementById('filter-bank').value;
+
+            const url =
+                `{{ route('salary.exportExcel') }}?month=${month}&year=${year}&search=${encodeURIComponent(search)}&branch_id=${encodeURIComponent(branchId)}&information=${encodeURIComponent(information)}&bank=${encodeURIComponent(bank)}`;
+
+            window.location.href = url;
         }
     </script>
 @endsection
