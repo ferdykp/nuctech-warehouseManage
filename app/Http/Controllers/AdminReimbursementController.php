@@ -392,7 +392,7 @@ class AdminReimbursementController extends Controller
         }
         $reimbursement->save();
 
-        return redirect()->route('reimbursements.index')->with('success', 'Dokumen berhasil ditandatangani. Status saat ini: ' . strtoupper($nextStatus));
+        return redirect()->route('reimbursements.index')->with('success', 'The document has been successfully signed. Current status: ' . strtoupper($nextStatus));
     }
 
     public function reject(Request $request, $id)

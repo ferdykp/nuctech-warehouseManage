@@ -21,57 +21,64 @@
 
     <div class="w-full space-y-6">
 
-        {{-- BACK TO INDEX HEADER --}}
-        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-            <div class="space-y-1">
-                <a href="{{ route('reimbursements.index') }}"
-                    class="inline-flex items-center gap-2 text-xs font-bold transition-colors text-slate-400 hover:text-amber-600">
-                    <i class="fa-solid fa-arrow-left"></i> Back to Claim Directory
-                </a>
-                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 flex items-center gap-2.5">
-                    <span
-                        class="w-2.5 h-2.5 rounded-full bg-amber-500 @if ($reimbursement->status != 'approved' && $reimbursement->status != 'rejected') animate-pulse @endif"></span>
-                    Review & Sign Claim #{{ $reimbursement->id }}
-                </h1>
-            </div>
+        {{-- 1. HEADER CARD (TERPISAH) --}}
+        <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
+                        <a href="{{ route('reimbursements.index') }}"
+                            class="transition-colors hover:text-amber-600">Reimbursement Logs</a>
+                        <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                        <span class="font-extrabold text-amber-600">Approval Review</span>
+                    </nav>
+                    <h1 class="flex items-center gap-3 text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
+                        <span
+                            class="w-3 h-3 rounded-full bg-amber-500 @if ($reimbursement->status != 'approved' && $reimbursement->status != 'rejected') animate-pulse @endif"></span>
+                        Review & Sign Claim #{{ $reimbursement->id }}
+                    </h1>
+                </div>
 
-            {{-- BADGE STATUS --}}
-            <div>
-                @if ($reimbursement->status == 'approved')
-                    <span
-                        class="px-3.5 py-1.5 text-xs font-black tracking-wider uppercase border text-emerald-700 bg-emerald-50 border-emerald-200/60 rounded-xl">Approved
-                        / Final</span>
-                @elseif($reimbursement->status == 'rejected')
-                    <span
-                        class="px-3.5 py-1.5 text-xs font-black tracking-wider uppercase border text-rose-700 bg-rose-50 border-rose-200/60 rounded-xl">Rejected</span>
-                @else
-                    <span
-                        class="px-3.5 py-1.5 text-xs font-black tracking-wider uppercase border text-amber-700 bg-amber-50 border-amber-200/60 rounded-xl animate-pulse">
-                        @if ($reimbursement->status == 'pending')
-                            Awaiting Staff Sign
-                        @elseif($reimbursement->status == 'pending_leader')
-                            Awaiting Leader Sign
-                        @elseif($reimbursement->status == 'pending_station')
-                            Awaiting Station Master Sign
-                        @elseif($reimbursement->status == 'pending_manager')
-                            Awaiting Manager Sign
-                        @endif
-                    </span>
-                @endif
+                {{-- BADGE STATUS --}}
+                <div class="shrink-0">
+                    @if ($reimbursement->status == 'approved')
+                        <span
+                            class="px-3.5 py-1.5 text-xs font-extrabold tracking-wider uppercase border text-emerald-800 bg-emerald-50 border-emerald-200 rounded-xl">
+                            Approved / Final
+                        </span>
+                    @elseif($reimbursement->status == 'rejected')
+                        <span
+                            class="px-3.5 py-1.5 text-xs font-extrabold tracking-wider uppercase border text-rose-800 bg-rose-50 border-rose-200 rounded-xl">
+                            Rejected
+                        </span>
+                    @else
+                        <span
+                            class="px-3.5 py-1.5 text-xs font-extrabold tracking-wider uppercase border text-amber-800 bg-amber-50 border-amber-200 rounded-xl animate-pulse">
+                            @if ($reimbursement->status == 'pending')
+                                Awaiting Staff Sign
+                            @elseif($reimbursement->status == 'pending_leader')
+                                Awaiting Leader Sign
+                            @elseif($reimbursement->status == 'pending_station')
+                                Awaiting Station Master Sign
+                            @elseif($reimbursement->status == 'pending_manager')
+                                Awaiting Manager Sign
+                            @endif
+                        </span>
+                    @endif
+                </div>
             </div>
         </div>
 
-        {{-- MAIN WORKSPACE --}}
+        {{-- 2. MAIN WORKSPACE --}}
         <div class="grid items-start grid-cols-1 gap-6 lg:grid-cols-5">
 
-            {{-- LEFT COLUMN: PANEL DATA & CANVAS TTD (2/5) --}}
-            <div class="w-full space-y-5 lg:col-span-2">
+            {{-- LEFT COLUMN: PANEL DATA & DIGITAL SIGNATURE (2/5) --}}
+            <div class="w-full space-y-6 lg:col-span-2">
 
-                {{-- SPECIFICATIONS --}}
-                <div class="p-5 space-y-4 bg-white border shadow-sm border-slate-200/80 rounded-2xl sm:rounded-3xl sm:p-6">
+                {{-- SPECIFICATIONS CARD --}}
+                <div class="p-6 space-y-4 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
                     <h4
-                        class="flex items-center gap-2 pb-3 text-xs font-extrabold tracking-wider uppercase border-b text-slate-400 border-slate-100">
-                        <i class="text-sm fa-solid fa-receipt text-amber-500"></i> Claim Specifications
+                        class="flex items-center gap-2 pb-3 text-xs font-extrabold tracking-wider uppercase border-b text-slate-800 border-slate-100">
+                        <i class="text-sm fa-solid fa-receipt text-amber-600"></i> Claim Specifications
                     </h4>
 
                     <div class="grid grid-cols-2 gap-4 text-xs">
@@ -79,13 +86,13 @@
                             <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Requester
                                 Name</span>
                             <span
-                                class="font-bold text-slate-800 text-sm block mt-0.5">{{ $reimbursement->person_name }}</span>
+                                class="font-bold text-slate-900 text-sm block mt-0.5">{{ $reimbursement->person_name }}</span>
                         </div>
                         <div>
                             <span
                                 class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Category</span>
                             <span
-                                class="px-2.5 py-1 inline-block text-[10px] font-bold rounded-lg bg-amber-50 text-amber-800 uppercase mt-0.5 tracking-wide border border-amber-200/60">
+                                class="px-2.5 py-1 inline-block text-[10px] font-extrabold rounded-lg bg-amber-50 text-amber-800 uppercase mt-0.5 tracking-wide border border-amber-200">
                                 {{ $reimbursement->category }}
                             </span>
                         </div>
@@ -95,7 +102,7 @@
                         <div class="pt-3 text-xs border-t border-slate-100">
                             <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider mb-1">Route
                                 Info</span>
-                            <p class="font-bold text-slate-700">
+                            <p class="font-bold text-slate-800">
                                 <i
                                     class="mr-1 fa-solid fa-location-dot text-rose-500"></i>{{ $reimbursement->from_location }}
                                 <i class="fa-solid fa-arrow-right mx-2 text-slate-400 text-[10px]"></i>
@@ -107,7 +114,7 @@
                     <div class="pt-3 text-xs border-t border-slate-100">
                         <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Amount
                             Claimed</span>
-                        <span class="font-black text-rose-600 text-lg block mt-0.5">
+                        <span class="font-black text-rose-600 text-xl block mt-0.5">
                             Rp {{ number_format($reimbursement->amount, 0, ',', '.') }}
                         </span>
                     </div>
@@ -116,7 +123,7 @@
                         <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Comment /
                             Remarks</span>
                         <p
-                            class="p-3 mt-1 italic font-medium leading-relaxed border text-slate-600 bg-slate-50 rounded-xl border-slate-200/80">
+                            class="p-3.5 mt-1.5 italic font-medium leading-relaxed border text-slate-700 bg-amber-50/40 rounded-2xl border-amber-200/60">
                             "{{ $reimbursement->comment ?? 'No extra notes provided.' }}"
                         </p>
                     </div>
@@ -124,8 +131,7 @@
 
                 {{-- DIGITAL SIGNATURE PANEL --}}
                 @if ($canSign)
-                    <div
-                        class="p-5 space-y-4 bg-white border shadow-sm border-slate-200/80 rounded-2xl sm:rounded-3xl sm:p-6">
+                    <div class="p-6 space-y-4 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
                         <h4
                             class="flex items-center gap-2 pb-3 text-xs font-extrabold tracking-wider uppercase border-b text-slate-800 border-slate-100">
                             <i class="text-sm fa-solid fa-signature text-emerald-600"></i>
@@ -155,7 +161,7 @@
                         {{-- DRAW CANVAS PANEL --}}
                         <div id="panel-signature-draw" class="space-y-1.5">
                             <div class="overflow-hidden bg-white border border-slate-200 rounded-2xl">
-                                <canvas id="signature-canvas" class="w-full h-32 cursor-crosshair"
+                                <canvas id="signature-canvas" class="w-full h-36 cursor-crosshair"
                                     style="touch-action: none;"></canvas>
                             </div>
                             <button type="button" onclick="clearSignature()"
@@ -167,13 +173,13 @@
                         {{-- UPLOAD PANEL --}}
                         <div id="panel-signature-upload" class="hidden">
                             <div id="dropzone" ondragover="event.preventDefault()" ondrop="handleSignatureDrop(event)"
-                                class="relative p-5 text-center transition-colors border-2 border-dashed cursor-pointer border-slate-200 hover:border-amber-500 rounded-2xl bg-slate-50/50 group">
+                                class="relative p-6 text-center transition-all border-2 border-dashed cursor-pointer border-slate-200 hover:border-amber-500 rounded-2xl bg-slate-50/50 group">
                                 <input type="file" id="file-input" accept="image/png, image/jpeg"
                                     onchange="handleSignatureFileSelect(event)"
                                     class="absolute inset-0 opacity-0 cursor-pointer">
                                 <i
-                                    class="block mb-1 text-2xl transition-colors fa-solid fa-cloud-arrow-up text-slate-400 group-hover:text-amber-500"></i>
-                                <p class="text-xs font-bold text-slate-600" id="dropzone-text">Drag & drop signature image
+                                    class="block mb-1 text-2xl transition-colors fa-solid fa-cloud-arrow-up text-slate-400 group-hover:text-amber-600"></i>
+                                <p class="text-xs font-bold text-slate-700" id="dropzone-text">Drag & drop signature image
                                     or click</p>
                                 <p class="text-[10px] text-slate-400 mt-0.5">Supports PNG or JPG formats</p>
                             </div>
@@ -182,29 +188,29 @@
                         {{-- SIGNER INPUTS --}}
                         <div class="grid grid-cols-2 gap-3 text-xs">
                             <div class="space-y-1">
-                                <label class="text-slate-500 font-bold block uppercase text-[10px] tracking-wider">Signer
+                                <label class="text-slate-700 font-bold block uppercase text-[10px] tracking-wider">Signer
                                     Name <span class="text-rose-500">*</span></label>
                                 <input type="text" id="signer-name" placeholder="e.g. Budi S."
                                     value="{{ auth()->user()->name }}"
-                                    class="w-full px-3 py-2 font-semibold transition-all border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-700" />
+                                    class="w-full px-3.5 py-2 font-bold transition-all border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800" />
                             </div>
                             <div class="space-y-1">
-                                <label class="text-slate-500 font-bold block uppercase text-[10px] tracking-wider">Date
+                                <label class="text-slate-700 font-bold block uppercase text-[10px] tracking-wider">Date
                                     <span class="text-rose-500">*</span></label>
                                 <input type="date" id="signer-date" value="{{ now()->format('Y-m-d') }}"
-                                    class="w-full px-3 py-2 font-semibold transition-all border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-700" />
+                                    class="w-full px-3.5 py-2 font-bold transition-all border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800" />
                             </div>
                         </div>
 
                         {{-- STAMP ACTIONS --}}
                         <div class="pt-2 space-y-2">
                             <button type="button" onclick="applySignatureToPreview()"
-                                class="flex items-center justify-center w-full gap-2 py-2.5 text-xs font-bold text-white uppercase transition-all bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md shadow-amber-600/20 active:scale-95">
+                                class="flex items-center justify-center w-full gap-2 py-3 text-xs font-bold text-white uppercase transition-all bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md shadow-amber-600/20 active:scale-[0.98]">
                                 <i class="fa-solid fa-stamp"></i> Lock & Place Stamp on Document
                             </button>
 
                             <button type="button" onclick="duplicateLastStamp()"
-                                class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-[11px] uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-1.5">
+                                class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-1.5">
                                 <i class="fa-solid fa-copy"></i> Duplicate Last Stamp
                             </button>
                         </div>
@@ -229,7 +235,7 @@
                             <input type="hidden" name="page" id="page-input">
 
                             <button type="submit"
-                                class="w-full py-3 text-xs font-bold text-white uppercase transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95">
+                                class="w-full py-3 text-xs font-bold text-white uppercase transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-[0.98]">
                                 Approve & Save Document
                             </button>
                         </form>
@@ -243,24 +249,25 @@
                                     value="Claim rejected via review workspace.">
                                 <button type="submit"
                                     onclick="return confirm('Are you sure you want to reject this operational claim?')"
-                                    class="block w-full py-2 text-xs font-bold tracking-wider text-center uppercase transition-colors text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl">
+                                    class="block w-full py-2.5 text-xs font-bold tracking-wider text-center uppercase transition-colors text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl">
                                     <i class="mr-1 fa-solid fa-xmark"></i> Reject Claim
                                 </button>
                             </form>
                         @endif
                     </div>
                 @else
-                    {{-- PENDING BANNER --}}
+                    {{-- PENDING BANNER CARD --}}
                     <div
-                        class="p-6 space-y-3 text-center bg-white border shadow-sm border-slate-200/80 rounded-2xl sm:rounded-3xl">
+                        class="p-6 space-y-3 text-center bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
                         <div
-                            class="flex items-center justify-center w-10 h-10 mx-auto rounded-xl bg-amber-50 text-amber-500">
-                            <i class="text-base fa-solid fa-clock-rotate-left animate-spin"
+                            class="flex items-center justify-center w-12 h-12 mx-auto border rounded-2xl bg-amber-50 text-amber-500 border-amber-100">
+                            <i class="text-lg fa-solid fa-clock-rotate-left animate-spin"
                                 style="animation-duration: 4s"></i>
                         </div>
                         <div>
-                            <h5 class="text-xs font-bold tracking-wider uppercase text-slate-700">Document In Queue</h5>
-                            <p class="text-[11px] text-slate-400 font-medium mt-1 leading-normal max-w-xs mx-auto">
+                            <h5 class="text-xs font-extrabold tracking-wider uppercase text-slate-800">Document In Queue
+                            </h5>
+                            <p class="max-w-xs mx-auto mt-1 text-xs font-medium leading-relaxed text-slate-500">
                                 @if ($reimbursement->status == 'pending')
                                     Waiting for first signature from <strong>Staff Requester</strong>.
                                 @elseif($reimbursement->status == 'pending_leader')
@@ -280,7 +287,7 @@
                 @endif
             </div>
 
-            {{-- RIGHT COLUMN: DOCUMENT CANVAS (3/5) --}}
+            {{-- RIGHT COLUMN: DOCUMENT LIVE CANVAS (3/5) --}}
             <div class="w-full space-y-3 lg:col-span-3">
                 <div class="flex items-center justify-between px-1">
                     <span
@@ -288,13 +295,13 @@
                         <i class="fa-solid fa-file-lines text-slate-500"></i> Document Live Canvas Area
                     </span>
                     <span
-                        class="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200/60 px-2.5 py-0.5 rounded-md uppercase tracking-wider">
+                        class="text-[10px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-md uppercase tracking-wider">
                         <i class="fa-solid fa-scroll mr-0.5"></i> Multi-Page PDF Canvas
                     </span>
                 </div>
 
                 <div id="workspace-area"
-                    class="relative flex flex-col items-center w-full p-4 overflow-y-auto border shadow-inner border-slate-200 bg-slate-400 rounded-2xl sm:rounded-3xl"
+                    class="relative flex flex-col items-center w-full p-4 overflow-y-auto border shadow-inner border-slate-200 bg-slate-400 rounded-3xl"
                     style="height: 800px;">
 
                     @if ($reimbursement->receipt_attachment)
@@ -307,7 +314,7 @@
                             <div id="invoice-target-img" class="flex flex-col items-center w-full gap-4"></div>
                         @else
                             <div id="invoice-target-img"
-                                class="relative w-full max-w-full overflow-hidden transition-all duration-200 bg-white shadow-xl rounded-xl">
+                                class="relative w-full max-w-full overflow-hidden transition-all duration-200 bg-white shadow-xl rounded-2xl">
                                 <img src="{{ asset('storage/' . $reimbursement->receipt_attachment) }}"
                                     class="block object-contain w-full h-auto pointer-events-none"
                                     alt="Invoice Attachment" />
@@ -315,7 +322,7 @@
                         @endif
                     @else
                         <div
-                            class="w-full py-40 text-xs italic font-semibold text-center bg-white border border-dashed text-slate-400 rounded-xl border-slate-200">
+                            class="w-full py-40 text-xs italic font-semibold text-center bg-white border border-dashed text-slate-400 rounded-2xl border-slate-200">
                             <i class="block mb-2 text-xl fa-solid fa-triangle-exclamation text-slate-300"></i> No
                             attachment loaded.
                         </div>
@@ -326,9 +333,9 @@
                 </div>
 
                 @if ($canSign)
-                    <div class="flex items-start gap-2 px-3.5 py-2.5 border bg-slate-50 rounded-xl border-slate-200/80">
+                    <div class="flex items-start gap-2.5 px-4 py-3 border bg-slate-50 rounded-2xl border-slate-200/80">
                         <i class="fa-solid fa-circle-info text-amber-500 text-xs mt-0.5"></i>
-                        <p class="text-[11px] text-slate-500 leading-normal font-medium">
+                        <p class="text-xs font-medium leading-normal text-slate-600">
                             <strong>Instructions:</strong> Click "Lock & Place" to place signature onto document &bull; Drag
                             signature freely across canvas &bull; Use blue handle at bottom right corner to resize stamp.
                         </p>
@@ -402,7 +409,7 @@
             return pdf.getPage(pageNum).then(function(page) {
                 const pageWrapper = document.createElement('div');
                 pageWrapper.className =
-                    'pdf-page-wrapper relative bg-white shadow-lg rounded-xl overflow-hidden w-full max-w-full';
+                    'pdf-page-wrapper relative bg-white shadow-lg rounded-2xl overflow-hidden w-full max-w-full';
                 pageWrapper.dataset.pageNum = pageNum;
 
                 const canvas = document.createElement('canvas');

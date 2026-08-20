@@ -1,46 +1,55 @@
 @extends('layout.master')
 
-@section('title', 'Tambah Data Gaji Karyawan')
+@section('title', 'Add Employee Salary Data')
 
 @section('content')
     <div class="w-full max-w-3xl mx-auto space-y-6">
 
-        {{-- HEADER --}}
-        <div class="flex items-center justify-between gap-3">
-            <div>
-                <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                    Tambah Data Gaji
-                </h1>
-                <p class="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">
-                    Pilih karyawan untuk menarik otomatis Gaji Pokok, Bank, No Rekening, & Status Probation terdaftar.
-                </p>
+        {{-- 1. HEADER CARD (TERPISAH) --}}
+        <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
+            <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <div>
+                    <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
+                        <a href="{{ route('salary.index') }}" class="transition-colors hover:text-emerald-600">Salary
+                            Management</a>
+                        <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                        <span class="font-extrabold text-emerald-600">Add Record</span>
+                    </nav>
+                    <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
+                        Add Salary Data
+                    </h1>
+                    <p class="mt-1 text-xs font-medium sm:text-sm text-slate-500">
+                        Select an employee to auto-pull registered Basic Salary, Bank Name, Account Number & Probation
+                        status.
+                    </p>
+                </div>
+                <a href="{{ route('salary.index') }}"
+                    class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all rounded-xl active:scale-95 shrink-0">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Back</span>
+                </a>
             </div>
-            <a href="{{ route('salary.index') }}"
-                class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold transition-all bg-white border text-slate-600 border-slate-200 rounded-xl hover:bg-slate-50 active:scale-95 shrink-0">
-                <i class="fa-solid fa-arrow-left"></i>
-                <span>Kembali</span>
-            </a>
         </div>
 
-        {{-- FORM CARD --}}
+        {{-- 2. FORM CARD --}}
         <form action="{{ route('salary.store') }}" method="POST"
-            class="overflow-hidden bg-white border shadow-sm border-slate-200/80 rounded-2xl sm:rounded-3xl">
+            class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
             @csrf
 
             <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Rincian Penggajian</h2>
+                <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Payroll Details</h2>
             </div>
 
-            <div class="p-6 space-y-5 sm:p-8">
-                {{-- PILIH KARYAWAN --}}
+            <div class="p-6 space-y-6 sm:p-8">
+                {{-- SELECT EMPLOYEE --}}
                 <div class="space-y-1.5">
                     <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                        Pilih Karyawan <span class="text-rose-500">*</span>
+                        Select Employee <span class="text-rose-500">*</span>
                     </label>
                     <select name="employee_id" id="employee_select"
-                        class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"
+                        class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 font-medium"
                         required onchange="autoFillSalaryDetails()">
-                        <option value="">-- Pilih Karyawan --</option>
+                        <option value="">-- Choose Employee --</option>
                         @foreach ($employees as $emp)
                             @php
                                 $branchName = $emp->branch->branch_name ?? ($emp->site->branch->branch_name ?? '-');
@@ -58,14 +67,14 @@
                 </div>
 
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-                    {{-- POSISI (READONLY AUTO-FILL) --}}
+                    {{-- POSITION (READONLY AUTO-FILL) --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-500">
-                            Posisi / Jabatan
+                            Position / Job Title
                         </label>
                         <input type="text" id="position_display"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-700 bg-slate-100 border border-slate-200 rounded-xl cursor-not-allowed"
-                            placeholder="Otomatis dari profil..." readonly>
+                            placeholder="Auto-filled from profile..." readonly>
                     </div>
 
                     {{-- PLACEMENT / BRANCH (READONLY AUTO-FILL) --}}
@@ -75,18 +84,18 @@
                         </label>
                         <input type="text" id="placement_display"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-700 bg-slate-100 border border-slate-200 rounded-xl cursor-not-allowed"
-                            placeholder="Otomatis dari profil..." readonly>
+                            placeholder="Auto-filled from profile..." readonly>
                     </div>
 
-                    {{-- NAMA BANK --}}
+                    {{-- BANK NAME --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Nama Bank <span class="text-rose-500">*</span>
+                            Bank Name <span class="text-rose-500">*</span>
                         </label>
                         <select name="bank" id="bank_input"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 font-medium"
                             required>
-                            <option value="">-- Pilih Bank --</option>
+                            <option value="">-- Select Bank --</option>
                             @php
                                 $bankList = [
                                     'BCA',
@@ -116,34 +125,34 @@
                         </select>
                     </div>
 
-                    {{-- NOMOR REKENING --}}
+                    {{-- ACCOUNT NUMBER --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Nomor Rekening <span class="text-rose-500">*</span>
+                            Account Number <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" name="account_no" id="account_no_input"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 font-mono placeholder-slate-400"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 font-mono placeholder-slate-400"
                             placeholder="e.g. 8830123456" required>
                     </div>
 
-                    {{-- GAJI POKOK (NOMINAL AMOUNT) --}}
+                    {{-- BASIC SALARY --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Gaji Pokok Bulanan <span class="text-rose-500">*</span>
+                            Monthly Basic Salary <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" id="amount_display"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-emerald-50/50 focus:bg-white text-emerald-700 placeholder-slate-400"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all bg-emerald-50/50 focus:bg-white text-emerald-700 placeholder-slate-400"
                             placeholder="Rp 0" autocomplete="off">
                         <input type="hidden" name="amount" id="amount_real_input" required>
                     </div>
 
-                    {{-- STATUS INFORMASI GAJI (AUTO-SELECTED BY PROBATION CALCULATOR) --}}
+                    {{-- SALARY STATUS --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Status Informasi Gaji <span class="text-rose-500">*</span>
+                            Salary Information Status <span class="text-rose-500">*</span>
                         </label>
                         <select name="information" id="information_input"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 font-medium"
                             required>
                             <option value="regular salary">Regular Salary</option>
                             <option value="1st probation">1st Probation</option>
@@ -155,27 +164,27 @@
                     {{-- MORE INFORMATION --}}
                     <div class="space-y-1.5 md:col-span-2">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Catatan Tambahan (More Information)
+                            Additional Note (More Information)
                         </label>
                         <textarea name="more_information" rows="2"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
-                            placeholder="Catatan tambahan untuk slip gaji ini..."></textarea>
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
+                            placeholder="Additional notes for this salary slip..."></textarea>
                     </div>
                 </div>
             </div>
 
             <div class="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
                 <div class="text-xs font-medium text-slate-400">
-                    Tanda bintang (<span class="text-rose-500">*</span>) wajib diisi.
+                    Asterisk (<span class="text-rose-500">*</span>) fields are required.
                 </div>
-                <div class="flex items-center gap-2.5">
+                <div class="flex items-center gap-3">
                     <a href="{{ route('salary.index') }}"
-                        class="px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors">
-                        Batal
+                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
+                        Discard
                     </a>
                     <button type="submit"
-                        class="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95 transition-all">
-                        Simpan Data Gaji
+                        class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95">
+                        <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Save Salary Data
                     </button>
                 </div>
             </div>

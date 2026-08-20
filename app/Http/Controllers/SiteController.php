@@ -45,8 +45,8 @@ class SiteController extends Controller
             'location' => $request->location,
 
         ]);
-        return redirect()->route('site.index')->with('success', 'Site berhasil dibuat');
-        // return redirect()->back()->with('success', 'Site berhasil dibuat');
+        return redirect()->route('site.index')->with('success', 'Site successfully created.');
+        // return redirect()->back()->with('success', 'Site successfully created.');
     }
 
 
@@ -82,7 +82,7 @@ class SiteController extends Controller
 
         ]);
 
-        return redirect()->route('site.index')->with('success', 'Site berhasil diperbarui');
+        return redirect()->route('site.index')->with('success', 'Site Successfully Updated');
     }
 
 
@@ -91,6 +91,6 @@ class SiteController extends Controller
         $site = Site::findOrFail($id);
         $site->delete();
 
-        return redirect()->route('site.index')->with('success', 'Site berhasil dihapus.');
+        return redirect()->route('site.index')->with('success', 'Site successfully Deleted.');
     }
 }

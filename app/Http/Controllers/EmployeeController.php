@@ -88,7 +88,7 @@ class EmployeeController extends Controller
             ]);
         }
 
-        return redirect()->route('employee.index')->with('success', 'Karyawan baru berhasil terdaftar!');
+        return redirect()->route('employee.index')->with('success', 'The new employee has been successfully registered.!');
     }
 
     public function update(Request $request, $id)
@@ -135,7 +135,7 @@ class EmployeeController extends Controller
 
         $employee->update($validatedData);
 
-        return redirect()->route('employee.index')->with('success', 'Data karyawan berhasil diperbarui!');
+        return redirect()->route('employee.index')->with('success', 'Employee data successfully updated.!');
     }
 
     public function show($id)
@@ -274,6 +274,6 @@ class EmployeeController extends Controller
         $employee->salaryHistories()->delete(); // Hapus riwayat perubahan gaji karyawan jika ada
         $employee->delete();
 
-        return redirect()->route('employee.index')->with('success', 'Karyawan beserta seluruh riwayat kerjanya berhasil dihapus.');
+        return redirect()->route('employee.index')->with('success', 'The employee and their entire work history have been successfully deleted..');
     }
 }

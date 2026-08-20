@@ -5,170 +5,173 @@
 @section('content')
     <div class="w-full space-y-6">
 
-        {{-- ============ FLASH MESSAGES ============ --}}
-        {{-- @if (session('success'))
-            <div
-                class="flex items-center gap-3 p-4 text-xs font-semibold border sm:text-sm text-emerald-800 border-emerald-200/80 bg-emerald-50 rounded-2xl">
-                <i class="text-base fa-solid fa-circle-check text-emerald-600"></i>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
-        @if (session('error'))
-            <div
-                class="flex items-center gap-3 p-4 text-xs font-semibold border sm:text-sm text-rose-800 border-rose-200/80 bg-rose-50 rounded-2xl">
-                <i class="text-base fa-solid fa-triangle-exclamation text-rose-600"></i>
-                <span>{{ session('error') }}</span>
-            </div>
-        @endif --}}
-
-        {{-- ============ PAGE HEADER ============ --}}
-        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-            <div>
-                <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                    Attendance Recap
-                </h1>
-                <p class="mt-0.5 text-xs sm:text-sm font-medium text-slate-500">
-                    Manage and monitor employee attendance sessions per site location and period.
-                </p>
-                @if (Auth::user()->role === 'admin_site')
-                    <p class="mt-1 text-xs font-semibold text-blue-600 flex items-center gap-1.5">
-                        <i class="fa-solid fa-building-user"></i> Site Admin: {{ Auth::user()->site->machine_name ?? '-' }}
+        {{-- ============ 1. PAGE HEADER CARD ============ --}}
+        <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
+                        <span class="transition-colors cursor-pointer hover:text-blue-600">Attendance & Roster</span>
+                        <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                        <span class="font-extrabold text-blue-600">Attendance Recap</span>
+                    </nav>
+                    <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
+                        Attendance Recap
+                    </h1>
+                    <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
+                        Manage and monitor employee attendance sessions per site location and operational period.
                     </p>
-                @endif
+                    @if (Auth::user()?->role === 'admin_site')
+                        <p
+                            class="mt-2 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200/80 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+                            <i class="fa-solid fa-building-user"></i> Site Admin:
+                            {{ Auth::user()->site->machine_name ?? '-' }}
+                        </p>
+                    @endif
+                </div>
             </div>
         </div>
 
-        {{-- ============ STEP 1: FILTER / WORKSPACE ============ --}}
-        <div class="p-5 bg-white border shadow-sm sm:p-6 border-slate-200/80 rounded-2xl sm:rounded-3xl">
-            <h5 class="flex items-center gap-2.5 mb-4 text-sm sm:text-base font-extrabold text-slate-800">
-                <span
-                    class="flex items-center justify-center w-6 h-6 text-xs font-black text-white bg-blue-600 rounded-full shrink-0">1</span>
-                Select Site &amp; Period
-            </h5>
-            <form action="{{ route('attendance.index') }}" method="GET" id="mainWorkspaceFilterForm"
-                class="grid items-end grid-cols-1 gap-4 md:grid-cols-12">
+        {{-- ============ STEP 1: FILTER / WORKSPACE CARD ============ --}}
+        <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
+            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                <h5 class="flex items-center gap-2.5 text-xs font-extrabold tracking-wider uppercase text-slate-700">
+                    <span
+                        class="flex items-center justify-center w-5 h-5 text-[10px] font-black text-white bg-blue-600 rounded-full shrink-0">1</span>
+                    Select Site &amp; Period
+                </h5>
+            </div>
 
-                <div class="md:col-span-5 space-y-1.5">
-                    <label for="main_branch_select" class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                        Target Site Location / Branch
-                    </label>
+            <div class="p-6">
+                <form action="{{ route('attendance.index') }}" method="GET" id="mainWorkspaceFilterForm"
+                    class="grid items-end grid-cols-1 gap-4 md:grid-cols-12">
 
-                    @if (Auth::user()->role === 'superadmin')
-                        <select name="site_id" id="main_branch_select"
-                            class="w-full p-2.5 text-xs sm:text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-slate-800 outline-none transition-all"
-                            required onchange="handleFilterChange()">
-                            <option value="">-- Select Branch Site --</option>
-                            <option value="all" {{ request('site_id', $siteId) === 'all' ? 'selected' : '' }}>
-                                🌐 -- Display All Sites / Branches --
-                            </option>
-                            @foreach ($sites as $site)
-                                <option value="{{ $site->id }}"
-                                    {{ request('site_id', $siteId) == $site->id ? 'selected' : '' }}>
-                                    {{ $site->machine_name }}
+                    <div class="md:col-span-5 space-y-1.5">
+                        <label for="main_branch_select"
+                            class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Target Site Location / Branch
+                        </label>
+
+                        @if (Auth::user()?->role === 'superadmin')
+                            <select name="site_id" id="main_branch_select"
+                                class="w-full p-2.5 text-xs sm:text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-slate-800 outline-none transition-all"
+                                required onchange="handleFilterChange()">
+                                <option value="">-- Select Branch Site --</option>
+                                <option value="all" {{ request('site_id', $siteId) === 'all' ? 'selected' : '' }}>
+                                    🌐 -- Display All Sites / Branches --
                                 </option>
-                            @endforeach
-                        </select>
-                    @else
-                        <input type="hidden" name="site_id" id="main_branch_select" value="{{ Auth::user()->site_id }}">
-                        <input type="text" value="{{ Auth::user()->site->machine_name ?? 'Registered Site' }}"
-                            class="w-full p-2.5 text-xs sm:text-sm font-bold text-slate-700 bg-slate-100 border border-slate-200 rounded-xl cursor-not-allowed"
-                            readonly>
-                    @endif
-                </div>
-
-                <div class="md:col-span-4 space-y-1.5">
-                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Recap Period</label>
-                    <div class="flex gap-2">
-                        @php
-                            $requestMonthRaw = request('month', date('Y-m'));
-                            $selectedMonth = date('m', strtotime($requestMonthRaw . '-01'));
-                            $selectedYear = date('Y', strtotime($requestMonthRaw . '-01'));
-                            $daftarBulan = [
-                                '01' => 'January',
-                                '02' => 'February',
-                                '03' => 'March',
-                                '04' => 'April',
-                                '05' => 'May',
-                                '06' => 'June',
-                                '07' => 'July',
-                                '08' => 'August',
-                                '09' => 'September',
-                                '10' => 'October',
-                                '11' => 'November',
-                                '12' => 'December',
-                            ];
-                        @endphp
-                        <select id="filter_bulan" aria-label="Month"
-                            class="w-full p-2.5 text-xs sm:text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-slate-800 outline-none transition-all"
-                            onchange="handleFilterChange()" required>
-                            @foreach ($daftarBulan as $angka => $nama)
-                                <option value="{{ $angka }}" {{ $selectedMonth == $angka ? 'selected' : '' }}>
-                                    {{ $nama }}</option>
-                            @endforeach
-                        </select>
-                        <select id="filter_tahun" aria-label="Year"
-                            class="w-full p-2.5 text-xs sm:text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-slate-800 outline-none transition-all"
-                            onchange="handleFilterChange()" required>
-                            @for ($year = date('Y') - 2; $year <= date('Y') + 2; $year++)
-                                <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>
-                                    {{ $year }}</option>
-                            @endfor
-                        </select>
+                                @foreach ($sites as $site)
+                                    <option value="{{ $site->id }}"
+                                        {{ request('site_id', $siteId) == $site->id ? 'selected' : '' }}>
+                                        {{ $site->machine_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @else
+                            <input type="hidden" name="site_id" id="main_branch_select"
+                                value="{{ Auth::user()->site_id }}">
+                            <input type="text" value="{{ Auth::user()->site->machine_name ?? 'Registered Site' }}"
+                                class="w-full p-2.5 text-xs sm:text-sm font-bold text-slate-700 bg-slate-100 border border-slate-200 rounded-xl cursor-not-allowed"
+                                readonly>
+                        @endif
                     </div>
-                    <input type="hidden" name="month" id="main_month_hidden" value="{{ $requestMonthRaw }}">
-                </div>
 
-                <div class="flex gap-2 md:col-span-3">
-                    <button type="submit"
-                        class="flex-grow flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95">
-                        <i class="fa-solid fa-folder-open"></i> Load Data
-                    </button>
-                    @php $activeSiteId = request('site_id', $siteId); @endphp
-                    <a id="exportBtn"
-                        href="{{ route('attendance.export', ['site_id' => $activeSiteId, 'month' => request('month', date('Y-m'))]) }}"
-                        title="Export to Excel"
-                        class="px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center transition-all active:scale-95 {{ empty($activeSiteId) ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed pointer-events-none' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20' }}">
-                        <i class="mr-1 fa-solid fa-file-excel"></i> Export
-                    </a>
-                </div>
-            </form>
+                    <div class="md:col-span-4 space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Recap Period</label>
+                        <div class="flex gap-2">
+                            @php
+                                $requestMonthRaw = request('month', date('Y-m'));
+                                $selectedMonth = date('m', strtotime($requestMonthRaw . '-01'));
+                                $selectedYear = date('Y', strtotime($requestMonthRaw . '-01'));
+                                $monthList = [
+                                    '01' => 'January',
+                                    '02' => 'February',
+                                    '03' => 'March',
+                                    '04' => 'April',
+                                    '05' => 'May',
+                                    '06' => 'June',
+                                    '07' => 'July',
+                                    '08' => 'August',
+                                    '09' => 'September',
+                                    '10' => 'October',
+                                    '11' => 'November',
+                                    '12' => 'December',
+                                ];
+                            @endphp
+                            <select id="filter_bulan" aria-label="Month"
+                                class="w-full p-2.5 text-xs sm:text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-slate-800 outline-none transition-all"
+                                onchange="handleFilterChange()" required>
+                                @foreach ($monthList as $code => $name)
+                                    <option value="{{ $code }}" {{ $selectedMonth == $code ? 'selected' : '' }}>
+                                        {{ $name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <select id="filter_tahun" aria-label="Year"
+                                class="w-full p-2.5 text-xs sm:text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-slate-800 outline-none transition-all"
+                                onchange="handleFilterChange()" required>
+                                @for ($year = date('Y') - 2; $year <= date('Y') + 2; $year++)
+                                    <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>
+                                        {{ $year }}
+                                    </option>
+                                @endfor
+                            </select>
+                        </div>
+                        <input type="hidden" name="month" id="main_month_hidden" value="{{ $requestMonthRaw }}">
+                    </div>
+
+                    <div class="flex gap-2 md:col-span-3">
+                        <button type="submit"
+                            class="flex-grow flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95">
+                            <i class="fa-solid fa-folder-open"></i> Load Data
+                        </button>
+                        @php $activeSiteId = request('site_id', $siteId); @endphp
+                        <a id="exportBtn"
+                            href="{{ route('attendance.export', ['site_id' => $activeSiteId, 'month' => request('month', date('Y-m'))]) }}"
+                            title="Export to Excel"
+                            class="px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center transition-all active:scale-95 {{ empty($activeSiteId) ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed pointer-events-none' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20' }}">
+                            <i class="mr-1 fa-solid fa-file-excel"></i> Export
+                        </a>
+                    </div>
+                </form>
+            </div>
         </div>
 
         {{-- ============ NATIONAL HOLIDAYS BANNER ============ --}}
         @if (!empty($holidays))
             <div class="p-4 border border-rose-200/80 rounded-2xl bg-rose-50/60">
-                <h6 class="flex items-center gap-2 mb-2 text-xs font-extrabold tracking-wider uppercase text-rose-600">
+                <h6 class="flex items-center gap-2 mb-2 text-xs font-extrabold tracking-wider uppercase text-rose-700">
                     <i class="fa-solid fa-circle-exclamation"></i> National Holidays & Red Dates This Month
                 </h6>
                 <ul class="grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($holidays as $date => $name)
                         <li class="flex items-baseline gap-2 text-xs">
                             <span
-                                class="w-6 font-bold text-right text-rose-700 shrink-0">{{ \Carbon\Carbon::parse($date)->format('d') }}</span>
-                            <span class="font-medium text-slate-700">{{ $name }}</span>
+                                class="w-6 font-black text-right text-rose-700 shrink-0">{{ \Carbon\Carbon::parse($date)->format('d') }}</span>
+                            <span class="font-semibold text-slate-700">{{ $name }}</span>
                         </li>
                     @endforeach
                 </ul>
             </div>
         @endif
 
-        {{-- ============ STEP 2: MASS ATTENDANCE INPUT ============ --}}
+        {{-- ============ STEP 2: MASS ATTENDANCE INPUT CARD ============ --}}
         @php $currentSiteId = request('site_id', $siteId); @endphp
         @if ($currentSiteId)
-            <div class="p-5 space-y-4 bg-white border shadow-sm sm:p-6 border-slate-200/80 rounded-2xl sm:rounded-3xl">
+            <div class="p-6 space-y-5 bg-white border shadow-xs border-slate-200/80 rounded-3xl">
                 <div
-                    class="flex flex-col gap-3 pb-3 border-b border-slate-100 sm:flex-row sm:justify-between sm:items-center">
+                    class="flex flex-col gap-3 pb-4 border-b border-slate-100 sm:flex-row sm:justify-between sm:items-center">
                     <div>
                         <h5 class="flex items-center gap-2.5 text-sm sm:text-base font-extrabold text-slate-800">
                             <span
                                 class="flex items-center justify-center w-6 h-6 text-xs font-black text-white bg-blue-600 rounded-full shrink-0">2</span>
                             Record Employee Attendance {{ $currentSiteId === 'all' ? '(All Sites)' : '' }}
                         </h5>
-                        <small class="text-xs font-medium text-slate-500 ms-8">Check working sessions per date, or toggle
-                            automatic schedule alignment below.</small>
+                        <p class="mt-1 text-xs font-medium text-slate-500 ms-8">
+                            Check working sessions per date, or toggle automatic schedule alignment below.
+                        </p>
                     </div>
                     <div
-                        class="flex items-center gap-3 px-3.5 py-2 border border-slate-200 rounded-xl bg-slate-50 shrink-0">
+                        class="flex items-center gap-3 px-3.5 py-2 border border-slate-200 rounded-2xl bg-slate-50 shrink-0">
                         <label for="autoFullAttendance" class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="autoFullAttendance"
                                 {{ request('auto_full', 'true') === 'true' ? 'checked' : '' }}
@@ -176,26 +179,31 @@
                             <div
                                 class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600">
                             </div>
-                            <span class="text-xs font-bold select-none text-slate-600 ms-2">
+                            <span class="text-xs font-bold select-none text-slate-700 ms-2">
                                 Auto-Fill From Schedule
                             </span>
                         </label>
                     </div>
                 </div>
 
-                <p class="text-xs font-medium text-slate-400 ms-1">
-                    <i class="fa-solid fa-circle-info"></i>
-                    When enabled: employees are automatically marked present according to the shift rotas set in the
-                    Schedule module.
-                </p>
+                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+                    <p class="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
+                        <i class="text-blue-600 fa-solid fa-circle-info"></i>
+                        When enabled: employees are automatically marked present according to the shift rotas set in the
+                        Schedule module.
+                    </p>
 
-                <div class="flex flex-wrap items-center gap-3 text-[11px] font-bold text-slate-500 ms-1">
-                    <span class="flex items-center gap-1"><span class="text-blue-600">S1</span> = Shift 1</span>
-                    <span class="flex items-center gap-1"><span class="text-amber-600">S2</span> = Shift 2</span>
-                    <span class="flex items-center gap-1"><span class="text-rose-600">S3</span> = Shift 3</span>
-                    <span class="flex items-center gap-1 text-rose-500">
-                        <i class="fa-solid fa-circle-exclamation"></i> National Holiday / Off
-                    </span>
+                    <div class="flex flex-wrap items-center gap-4 pt-1 text-xs font-extrabold text-slate-600">
+                        <span class="flex items-center gap-1.5"><span class="font-black text-blue-600">S1</span> = Shift
+                            1</span>
+                        <span class="flex items-center gap-1.5"><span class="font-black text-amber-600">S2</span> = Shift
+                            2</span>
+                        <span class="flex items-center gap-1.5"><span class="font-black text-rose-600">S3</span> = Shift
+                            3</span>
+                        <span class="flex items-center gap-1.5 text-rose-600">
+                            <i class="fa-solid fa-circle-exclamation"></i> National Holiday / Off
+                        </span>
+                    </div>
                 </div>
 
                 <form action="{{ route('attendance.store') }}" method="POST" id="massAttendanceForm">
@@ -207,8 +215,8 @@
                         value="{{ request('auto_full', 'true') }}">
 
                     <div id="employee_loading"
-                        class="flex items-center justify-center gap-2 py-8 text-xs font-bold sm:text-sm text-slate-400">
-                        <i class="text-base animate-spin fa-solid fa-spinner"></i> Loading employee data...
+                        class="flex items-center justify-center gap-2 py-12 text-xs font-bold sm:text-sm text-slate-400">
+                        <i class="text-base text-blue-600 animate-spin fa-solid fa-spinner"></i> Loading employee data...
                     </div>
 
                     <div id="employee_fields" class="space-y-3"></div>
@@ -216,7 +224,7 @@
                     <div class="flex items-center justify-between pt-4 mt-6 border-t border-slate-100">
                         <span class="text-xs font-bold text-slate-400" id="employeeCountLabel"></span>
                         <button type="submit"
-                            class="flex items-center gap-2 px-5 py-2.5 ml-auto text-xs font-bold text-white transition-all bg-blue-600 rounded-xl shadow-md shadow-blue-600/20 hover:bg-blue-700 active:scale-95">
+                            class="flex items-center gap-2 px-6 py-2.5 ml-auto text-xs font-bold text-white transition-all bg-blue-600 rounded-xl shadow-md shadow-blue-600/20 hover:bg-blue-700 active:scale-95">
                             <i class="fa-solid fa-cloud-arrow-up"></i> Save &amp; Update Attendance
                         </button>
                     </div>
@@ -228,36 +236,37 @@
         <div id="plotCalendarModal"
             class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs">
             <div class="w-full max-w-md mx-auto">
-                <div class="overflow-hidden bg-white border shadow-2xl border-slate-200 rounded-2xl">
-                    <div class="flex items-center justify-between px-5 py-4 text-white bg-slate-900">
+                <div class="overflow-hidden bg-white border shadow-2xl border-slate-100 rounded-3xl">
+                    <div class="flex items-center justify-between px-6 py-5 text-white bg-slate-900">
                         <h5 class="flex items-center gap-2 text-xs font-extrabold tracking-wide uppercase sm:text-sm">
                             <i class="text-blue-400 fa-solid fa-calendar-days"></i> Plot Sessions:
                             <span id="modalEmployeeName" class="text-blue-200"></span>
                         </h5>
                         <button type="button"
-                            class="text-xl leading-none transition-colors text-slate-400 hover:text-white focus:outline-none"
+                            class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700"
                             onclick="closeModal('plotCalendarModal')" aria-label="Close">&times;</button>
                     </div>
-                    <div class="p-4 bg-slate-50">
+                    <div class="p-5 bg-slate-50">
                         <div
-                            class="bg-white border border-slate-200/80 rounded-xl overflow-y-auto max-h-[380px] shadow-2xs">
+                            class="bg-white border border-slate-200/80 rounded-2xl overflow-y-auto max-h-[380px] shadow-2xs">
                             <table class="w-full text-xs text-center border-collapse">
                                 <thead
                                     class="sticky top-0 font-extrabold tracking-wider uppercase border-b text-slate-600 bg-slate-100/90 border-slate-200">
                                     <tr>
-                                        <th class="px-3 py-2.5 text-left">Date</th>
-                                        <th class="px-3 py-2.5 text-blue-600">S1</th>
-                                        <th class="px-3 py-2.5 text-amber-600">S2</th>
-                                        <th class="px-3 py-2.5 text-rose-600">S3</th>
+                                        <th class="px-4 py-3 text-left">Date</th>
+                                        <th class="px-3 py-3 font-black text-blue-600">S1</th>
+                                        <th class="px-3 py-3 font-black text-amber-600">S2</th>
+                                        <th class="px-3 py-3 font-black text-rose-600">S3</th>
                                     </tr>
                                 </thead>
-                                <tbody id="calendarGridBody" class="divide-y text-slate-700 divide-slate-100"></tbody>
+                                <tbody id="calendarGridBody"
+                                    class="font-semibold divide-y text-slate-700 divide-slate-100"></tbody>
                             </table>
                         </div>
                     </div>
-                    <div class="px-5 py-3.5 border-t border-slate-100 bg-slate-50/50">
+                    <div class="px-6 py-4 border-t border-slate-100 bg-slate-50">
                         <button type="button"
-                            class="flex items-center justify-center w-full gap-2 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 rounded-xl hover:bg-blue-700 active:scale-95"
+                            class="flex items-center justify-center w-full gap-2 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 rounded-xl hover:bg-blue-700 active:scale-95 shadow-md shadow-blue-600/20"
                             onclick="closeModal('plotCalendarModal')">
                             <i class="fa-solid fa-check"></i> Done Plotting
                         </button>
@@ -266,8 +275,8 @@
             </div>
         </div>
 
-        {{-- ============ STEP 3: REPORT TABLE ============ --}}
-        <div class="overflow-hidden bg-white border shadow-sm border-slate-200/80 rounded-2xl sm:rounded-3xl">
+        {{-- ============ STEP 3: REPORT TABLE CARD ============ --}}
+        <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
             <div
                 class="flex flex-col gap-4 p-5 border-b sm:p-6 border-slate-100 bg-slate-50/50 md:flex-row md:items-center md:justify-between">
                 <div class="flex items-center gap-3">
@@ -276,7 +285,7 @@
                         3
                     </span>
                     <div>
-                        <h5 class="text-base font-extrabold text-slate-800">Review Attendance Summary</h5>
+                        <h5 class="text-base font-extrabold text-slate-900">Review Attendance Summary</h5>
                         <p class="text-xs font-medium text-slate-500">Overview of effective working days and total attended
                             sessions.</p>
                     </div>
@@ -285,7 +294,7 @@
                 <div class="flex items-center gap-3">
                     <div class="relative min-w-[200px]">
                         <select id="recapMonthFilter" onchange="filterRecapTable()"
-                            class="block w-full py-2 pl-3 pr-8 text-xs font-bold transition-all bg-white border cursor-pointer text-slate-700 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs">
+                            class="block w-full py-2.5 pl-3.5 pr-8 text-xs font-bold transition-all bg-white border cursor-pointer text-slate-800 border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 shadow-2xs">
                             <option value="all">-- All Months --</option>
                             @php
                                 $availableMonths = $attendances->pluck('month')->unique()->sortDesc();
@@ -300,7 +309,7 @@
                     </div>
 
                     <span id="recapCountBadge"
-                        class="hidden md:inline-flex items-center px-3 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100 rounded-xl">
+                        class="items-center hidden px-3 py-2 text-xs font-extrabold text-blue-800 border md:inline-flex bg-blue-50 border-blue-200/80 rounded-xl">
                         0 Records
                     </span>
                 </div>
@@ -310,48 +319,48 @@
                 <table class="w-full text-left border-collapse min-w-[850px]">
                     <thead>
                         <tr
-                            class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider bg-slate-100/70 border-b border-slate-200/80">
-                            <th scope="col" class="px-6 py-3.5">Branch / Site Location</th>
-                            <th scope="col" class="px-6 py-3.5">Employee Name</th>
-                            <th scope="col" class="px-6 py-3.5 text-center">Month Period</th>
-                            <th scope="col" class="px-6 py-3.5 text-center">Effective Work Days</th>
-                            <th scope="col" class="px-6 py-3.5 text-center">Total Attended Sessions</th>
-                            <th scope="col" class="px-6 py-3.5 text-right">Attendance Ratio</th>
-                            <th scope="col" class="px-6 py-3.5 text-center w-24">Action</th>
+                            class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
+                            <th scope="col" class="px-6 py-4">Branch / Site Location</th>
+                            <th scope="col" class="px-6 py-4">Employee Name</th>
+                            <th scope="col" class="px-6 py-4 text-center">Month Period</th>
+                            <th scope="col" class="px-6 py-4 text-center">Effective Work Days</th>
+                            <th scope="col" class="px-6 py-4 text-center">Total Attended Sessions</th>
+                            <th scope="col" class="px-6 py-4 text-right">Attendance Ratio</th>
+                            <th scope="col" class="w-24 px-6 py-4 text-center">Action</th>
                         </tr>
                     </thead>
-                    <tbody id="recapTableBody"
-                        class="text-xs font-medium divide-y sm:text-sm divide-slate-100 text-slate-700">
+                    <tbody id="recapTableBody" class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
                         @forelse($attendances as $row)
-                            @if (Auth::user()->role === 'superadmin' ||
-                                    (Auth::user()->role === 'admin_site' && Auth::user()->site_id === $row->employee->site_id))
+                            @if (Auth::user()?->role === 'superadmin' ||
+                                    (Auth::user()?->role === 'admin_site' && Auth::user()->site_id === $row->employee->site_id))
                                 @php
                                     $percentage =
                                         $row->working_days > 0
                                             ? round(($row->attendance_count / $row->working_days) * 100)
                                             : 0;
 
-                                    $progressBg = 'bg-emerald-50 text-emerald-700 border-emerald-200/60';
+                                    $progressBg = 'bg-emerald-50 text-emerald-800 border-emerald-200';
                                     if ($percentage < 50) {
-                                        $progressBg = 'bg-rose-50 text-rose-700 border-rose-200/60';
+                                        $progressBg = 'bg-rose-50 text-rose-800 border-rose-200';
                                     } elseif ($percentage < 80) {
-                                        $progressBg = 'bg-amber-50 text-amber-700 border-amber-200/60';
+                                        $progressBg = 'bg-amber-50 text-amber-800 border-amber-200';
                                     }
                                 @endphp
-                                <tr class="transition-colors recap-row hover:bg-slate-50/80"
+                                <tr class="transition-colors hover:bg-slate-50/60 recap-row"
                                     data-month="{{ $row->month }}">
                                     <td class="px-6 py-4 font-bold text-slate-800">
                                         <span
-                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200 rounded-lg">
+                                            class="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200/80 rounded-lg">
                                             <i class="fa-solid fa-location-dot text-slate-400 text-[10px]"></i>
                                             {{ $row->employee->site->machine_name ?? '-' }}
                                         </span>
                                     </td>
 
                                     <td class="px-6 py-4">
-                                        <div class="text-xs font-bold sm:text-sm text-slate-900">
-                                            {{ $row->employee->name ?? 'Deleted Employee' }}</div>
-                                        <div class="text-[10px] text-slate-400 font-semibold">
+                                        <div class="text-xs font-extrabold sm:text-sm text-slate-900">
+                                            {{ $row->employee->name ?? 'Deleted Employee' }}
+                                        </div>
+                                        <div class="text-[10px] text-slate-400 font-semibold mt-0.5">
                                             {{ $row->employee->position ?? 'Staff' }}
                                         </div>
                                     </td>
@@ -360,24 +369,24 @@
                                         {{ \Carbon\Carbon::parse($row->month)->format('F Y') }}
                                     </td>
 
-                                    <td class="px-6 py-4 font-semibold text-center text-slate-600">
+                                    <td class="px-6 py-4 font-bold text-center text-slate-600">
                                         {{ $row->working_days }} Days
                                     </td>
 
                                     <td class="px-6 py-4 text-center">
                                         <span
-                                            class="font-bold text-blue-700 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-lg text-xs">
+                                            class="px-3 py-1 text-xs font-bold text-blue-800 border border-blue-200 rounded-lg bg-blue-50">
                                             {{ $row->attendance_count }} Sessions
                                         </span>
                                     </td>
 
                                     <td class="px-6 py-4 text-right">
                                         <div class="inline-flex items-center gap-2">
-                                            <span class="font-extrabold text-slate-800">
+                                            <span class="font-extrabold text-slate-900">
                                                 {{ $row->attendance_count }}/{{ $row->working_days }}
                                             </span>
                                             <span
-                                                class="px-2 py-0.5 text-[10px] font-bold border rounded-full uppercase {{ $progressBg }}">
+                                                class="px-2.5 py-0.5 text-[10px] font-extrabold border rounded-full uppercase {{ $progressBg }}">
                                                 {{ $percentage }}%
                                             </span>
                                         </div>
@@ -389,7 +398,7 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
-                                                class="p-1.5 text-rose-600 transition-colors bg-rose-50 rounded-lg hover:bg-rose-600 hover:text-white"
+                                                class="flex items-center justify-center w-8 h-8 mx-auto transition-all border rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
                                                 title="Delete Attendance Record">
                                                 <i class="text-xs fa-solid fa-trash-can"></i>
                                             </button>
@@ -399,22 +408,25 @@
                             @endif
                         @empty
                             <tr id="emptyRecapRow">
-                                <td colspan="7" class="px-6 py-12 text-center text-slate-400">
-                                    <div class="flex flex-col items-center justify-center gap-2">
-                                        <i class="text-3xl opacity-50 text-slate-300 fa-solid fa-inbox"></i>
-                                        <p class="text-sm font-bold text-slate-700">No attendance logs recorded yet.</p>
+                                <td colspan="7" class="p-12 text-center text-slate-400">
+                                    <div
+                                        class="flex items-center justify-center w-12 h-12 mx-auto mb-3 text-xl rounded-2xl bg-slate-100 text-slate-400">
+                                        <i class="fa-solid fa-inbox"></i>
                                     </div>
+                                    <p class="text-sm font-bold text-slate-800">No Attendance Logs Recorded Yet</p>
+                                    <p class="mt-1 text-xs text-slate-400">Use the panel above to submit attendance
+                                        records.</p>
                                 </td>
                             </tr>
                         @endforelse
 
                         <tr id="noFilteredRecapRow" class="hidden">
-                            <td colspan="7" class="px-6 py-12 text-center text-slate-400">
-                                <div class="flex flex-col items-center justify-center gap-2">
-                                    <i class="text-3xl opacity-50 text-slate-300 fa-solid fa-filter-circle-xmark"></i>
-                                    <p class="text-sm font-bold text-slate-700">No attendance data found for the selected
-                                        month filter.</p>
+                            <td colspan="7" class="p-12 text-center text-slate-400">
+                                <div
+                                    class="flex items-center justify-center w-12 h-12 mx-auto mb-3 text-xl rounded-2xl bg-slate-100 text-slate-400">
+                                    <i class="fa-solid fa-filter-circle-xmark"></i>
                                 </div>
+                                <p class="text-sm font-bold text-slate-800">No Attendance Data Found for Month Filter</p>
                             </td>
                         </tr>
                     </tbody>
@@ -462,7 +474,7 @@
             if (!el) return;
             el.classList.remove('hidden');
             el.classList.add('flex');
-            document.body.style.overflow = 'hidden';
+            document.body.classList.add('overflow-hidden');
         }
 
         function closeModal(modalId) {
@@ -470,7 +482,7 @@
             if (!el) return;
             el.classList.add('hidden');
             el.classList.remove('flex');
-            document.body.style.overflow = '';
+            document.body.classList.remove('overflow-hidden');
         }
 
         function parseMonthRaw() {
@@ -630,7 +642,7 @@
 
                     if (!data || data.length === 0) {
                         fieldContainer.innerHTML = `
-                        <div class="py-10 text-center text-slate-400">
+                        <div class="py-12 text-center text-slate-400">
                             <i class="block mb-2 text-3xl opacity-50 fa-solid fa-user-xmark"></i>
                             <span class="text-xs font-bold sm:text-sm text-slate-700">No employees registered yet.</span>
                         </div>`;
@@ -722,13 +734,13 @@
                         }
 
                         let siteBadge = emp.site ?
-                            `<span class="px-2 py-0.5 text-[10px] font-bold bg-slate-100 text-slate-600 rounded-md border border-slate-200 me-1.5">${emp.site.machine_name}</span>` :
+                            `<span class="px-2 py-0.5 text-[10px] font-extrabold bg-slate-100 text-slate-700 rounded-md border border-slate-200 me-2">${emp.site.machine_name}</span>` :
                             '';
 
                         fieldContainer.insertAdjacentHTML('beforeend', `
-                        <div class="grid items-center grid-cols-1 gap-3 p-3.5 transition-colors border border-slate-200/80 rounded-2xl md:grid-cols-12 hover:border-slate-300 bg-slate-50/50">
+                        <div class="grid items-center grid-cols-1 gap-3 p-4 transition-all border border-slate-200/80 rounded-2xl md:grid-cols-12 hover:border-slate-300 bg-slate-50/50">
                             <div class="md:col-span-4">
-                                <span class="flex items-center gap-2 text-xs font-bold truncate text-slate-800 sm:text-sm" title="${emp.name}">
+                                <span class="flex items-center gap-2 text-xs font-extrabold truncate text-slate-900 sm:text-sm" title="${emp.name}">
                                     <i class="text-sm text-slate-400 fa-solid fa-circle-user"></i>${siteBadge}${emp.name}
                                 </span>
                             </div>
@@ -745,7 +757,7 @@
                                     <span class="flex items-center px-2 text-xs font-black border-r text-slate-500 bg-slate-100 border-slate-200">S3</span>
                                     <input type="text" id="counter_s3_${emp.id}" class="w-full py-1 text-xs font-bold text-center bg-white text-rose-600 focus:outline-none" readonly>
                                 </div>
-                                <button type="button" class="w-full px-2 py-1.5 text-xs font-bold text-blue-600 transition-colors bg-blue-50/80 border border-blue-200/80 rounded-xl hover:bg-blue-600 hover:text-white" onclick="openPlotCalendar(${emp.id})">
+                                <button type="button" class="w-full px-2 py-2 text-xs font-bold text-blue-600 transition-colors border bg-blue-50 border-blue-200/80 rounded-xl hover:bg-blue-600 hover:text-white" onclick="openPlotCalendar(${emp.id})">
                                     <i class="fa-solid fa-pen-to-square"></i> Plot / Edit
                                 </button>
                             </div>
@@ -819,10 +831,10 @@
                     '';
                 rows += `
                 <tr class="border-b border-slate-100 hover:bg-slate-50">
-                    <td class="px-3 py-2 text-xs font-bold text-left text-slate-700">Date ${d}${weekendBadge}</td>
-                    <td class="px-3 py-2"><input type="checkbox" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" onchange="toggleDateShift(${d}, 's1', this.checked)" ${dayData.s1 ? 'checked' : ''}></td>
-                    <td class="px-3 py-2"><input type="checkbox" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500" onchange="toggleDateShift(${d}, 's2', this.checked)" ${dayData.s2 ? 'checked' : ''}></td>
-                    <td class="px-3 py-2"><input type="checkbox" class="w-4 h-4 rounded text-rose-600 focus:ring-rose-500" onchange="toggleDateShift(${d}, 's3', this.checked)" ${dayData.s3 ? 'checked' : ''}></td>
+                    <td class="px-4 py-2.5 text-xs font-bold text-left text-slate-700">Date ${d}${weekendBadge}</td>
+                    <td class="px-3 py-2.5"><input type="checkbox" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500" onchange="toggleDateShift(${d}, 's1', this.checked)" ${dayData.s1 ? 'checked' : ''}></td>
+                    <td class="px-3 py-2.5"><input type="checkbox" class="w-4 h-4 rounded text-amber-600 border-slate-300 focus:ring-amber-500" onchange="toggleDateShift(${d}, 's2', this.checked)" ${dayData.s2 ? 'checked' : ''}></td>
+                    <td class="px-3 py-2.5"><input type="checkbox" class="w-4 h-4 rounded text-rose-600 border-slate-300 focus:ring-rose-500" onchange="toggleDateShift(${d}, 's3', this.checked)" ${dayData.s3 ? 'checked' : ''}></td>
                 </tr>`;
             }
             gridBody.innerHTML = rows;

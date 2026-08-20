@@ -5,60 +5,53 @@
 @section('content')
     <div class="w-full space-y-6">
 
-        {{-- HEADER --}}
-        <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-            <div>
-                <div class="flex items-center gap-2 mb-1">
-                    <span
-                        class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200/60 uppercase">
-                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5 animate-pulse"></span>Operational Claim
-                    </span>
+        {{-- 1. HEADER CARD (TERPISAH) --}}
+        <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
+            <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                <div>
+                    <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
+                        <a href="{{ route('reimbursements.index') }}"
+                            class="transition-colors hover:text-amber-600">Reimbursements</a>
+                        <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                        <span class="font-extrabold text-amber-600">New Claim Request</span>
+                    </nav>
+                    <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
+                        New Reimbursement Claim
+                    </h1>
+                    <p class="mt-1 text-xs font-medium sm:text-sm text-slate-500">
+                        Fill in operational expense details and upload receipt documentation proof.
+                    </p>
                 </div>
-                <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">New Reimbursement Claim</h1>
-                <p class="text-xs sm:text-sm font-medium text-slate-500 mt-0.5">Fill in operational claim details and attach
-                    receipt proofs.</p>
+                <a href="{{ route('reimbursements.index') }}"
+                    class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all rounded-xl active:scale-95 shrink-0">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Back</span>
+                </a>
             </div>
-            <a href="{{ route('reimbursements.index') }}"
-                class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold transition-all bg-white border text-slate-600 border-slate-200 rounded-xl hover:bg-slate-50 active:scale-95 shrink-0">
-                <i class="fa-solid fa-arrow-left"></i>
-                <span>Back</span>
-            </a>
         </div>
 
-        {{-- FORM WORKSPACE --}}
+        {{-- 2. FORM WORKSPACE CARD --}}
         <form method="POST" action="{{ route('reimbursements.store') }}" enctype="multipart/form-data" id="claimForm"
             class="grid items-start grid-cols-1 gap-6 xl:grid-cols-12">
             @csrf
             <input type="hidden" name="excluded_pages" id="excludedPagesInput" value="[]">
 
-            {{-- LEFT SECTOR (xl:col-span-5) --}}
+            {{-- LEFT SECTOR --}}
             <div class="space-y-6 xl:col-span-5">
-                <div class="p-6 space-y-6 bg-white border shadow-sm border-slate-200/80 rounded-2xl sm:rounded-3xl">
+                <div class="p-6 space-y-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
 
                     {{-- Section 1: Requester --}}
                     <div class="space-y-4">
-                        <div class="flex items-center gap-2 pb-2 border-b border-slate-100">
+                        <div class="flex items-center gap-2.5 pb-3 border-b border-slate-100">
                             <span
-                                class="flex items-center justify-center w-5 h-5 rounded-md bg-slate-900 text-white text-[10px] font-black">01</span>
-                            <h3 class="text-xs font-black tracking-wider uppercase text-slate-700">Requester Information
+                                class="flex items-center justify-center w-6 h-6 rounded-lg bg-slate-900 text-white text-[10px] font-black">01</span>
+                            <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-800">Requester Information
                             </h3>
                         </div>
-                        <div class="space-y-3.5">
-                            {{-- <div class="space-y-1.5">
-                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Person
-                                    Name</label>
-                                <div class="relative">
-                                    <span
-                                        class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none">
-                                        <i class="text-xs fa-solid fa-user-tie"></i>
-                                    </span>
-                                    <input type="text" name="person_name" required placeholder="Employee full name..."
-                                        class="w-full py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
-                                </div>
-                            </div> --}}
+                        <div class="space-y-4">
                             <div class="space-y-1.5">
-                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Person
-                                    Name</label>
+                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Person Name
+                                    <span class="text-rose-500">*</span></label>
                                 <div class="relative">
                                     <span
                                         class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none">
@@ -81,9 +74,10 @@
                                     </span>
                                 </div>
                             </div>
+
                             <div class="space-y-1.5">
                                 <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Date of
-                                    Expense</label>
+                                    Expense <span class="text-rose-500">*</span></label>
                                 <div class="relative">
                                     <span
                                         class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none">
@@ -98,16 +92,16 @@
 
                     {{-- Section 2: Financials --}}
                     <div class="space-y-4">
-                        <div class="flex items-center gap-2 pb-2 border-b border-slate-100">
+                        <div class="flex items-center gap-2.5 pb-3 border-b border-slate-100">
                             <span
-                                class="flex items-center justify-center w-5 h-5 rounded-md bg-slate-900 text-white text-[10px] font-black">02</span>
-                            <h3 class="text-xs font-black tracking-wider uppercase text-slate-700">Financial Details &
+                                class="flex items-center justify-center w-6 h-6 rounded-lg bg-slate-900 text-white text-[10px] font-black">02</span>
+                            <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-800">Financial Details &
                                 Allocation</h3>
                         </div>
-                        <div class="space-y-3.5">
+                        <div class="space-y-4">
                             <div class="space-y-1.5">
                                 <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Expense
-                                    Category</label>
+                                    Category <span class="text-rose-500">*</span></label>
                                 <div class="relative">
                                     <span
                                         class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none">
@@ -128,7 +122,7 @@
 
                             <div class="space-y-1.5">
                                 <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Total Claim
-                                    Amount (IDR)</label>
+                                    Amount (IDR) <span class="text-rose-500">*</span></label>
                                 <div class="relative">
                                     <span
                                         class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-xs font-black text-slate-400">Rp</span>
@@ -140,7 +134,7 @@
 
                             {{-- DYNAMIC ROUTING --}}
                             <div id="routingFields"
-                                class="hidden grid-cols-1 gap-3 p-3.5 border border-slate-200/80 bg-slate-50 rounded-xl">
+                                class="hidden grid-cols-1 gap-3 p-4 border border-slate-200/80 bg-slate-50/50 rounded-2xl">
                                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                     <div class="space-y-1">
                                         <label
@@ -148,7 +142,7 @@
                                             (Origin)</label>
                                         <div class="relative">
                                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i
-                                                    class="fa-solid fa-circle-dot text-[10px] text-teal-500"></i></span>
+                                                    class="fa-solid fa-circle-dot text-[10px] text-emerald-500"></i></span>
                                             <input type="text" name="from_location" id="fromLocation"
                                                 placeholder="Origin..."
                                                 class="w-full py-2 pl-8 pr-3 text-xs font-semibold bg-white border outline-none border-slate-200 rounded-xl focus:border-amber-500">
@@ -170,19 +164,19 @@
                             </div>
 
                             <div class="space-y-1.5">
-                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Invoice /
-                                    Remarks</label>
+                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Invoice No.
+                                    / Remarks</label>
                                 <textarea name="comment" rows="2" placeholder="Invoice number or remarks..."
-                                    class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"></textarea>
+                                    class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {{-- SUBMIT FOOTER --}}
-                <div class="flex items-center gap-2.5 p-4 bg-slate-900 rounded-2xl">
+                <div class="flex items-center gap-3 p-4 shadow-md bg-slate-900 rounded-2xl">
                     <button type="submit"
-                        class="flex-1 py-3 text-xs font-bold tracking-wider text-white uppercase transition-all shadow-md bg-amber-600 hover:bg-amber-700 rounded-xl shadow-amber-600/20 active:scale-95">
+                        class="flex-1 py-3 text-xs font-bold tracking-wider text-white uppercase transition-all shadow-md bg-amber-600 hover:bg-amber-700 rounded-xl shadow-amber-600/20 active:scale-[0.98]">
                         Submit Claim Request <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i>
                     </button>
                     <a href="{{ route('reimbursements.index') }}"
@@ -192,34 +186,34 @@
                 </div>
             </div>
 
-            {{-- RIGHT SECTOR (xl:col-span-7) --}}
+            {{-- RIGHT SECTOR --}}
             <div class="space-y-4 xl:col-span-7">
-                <div class="p-6 space-y-4 bg-white border shadow-sm border-slate-200/80 rounded-2xl sm:rounded-3xl">
+                <div class="p-6 space-y-4 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
 
-                    <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-                        <div class="flex items-center gap-2">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                        <div class="flex items-center gap-2.5">
                             <span
-                                class="flex items-center justify-center w-5 h-5 rounded-md bg-slate-900 text-white text-[10px] font-black">03</span>
-                            <h3 class="text-xs font-black tracking-wider uppercase text-slate-700">Invoice Documentation
-                                Proof</h3>
+                                class="flex items-center justify-center w-6 h-6 rounded-lg bg-slate-900 text-white text-[10px] font-black">03</span>
+                            <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-800">Invoice
+                                Documentation Proof</h3>
                         </div>
                         <span id="pageCountBadge"
-                            class="hidden text-[10px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/60"></span>
+                            class="hidden text-[10px] font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200"></span>
                     </div>
 
                     {{-- FILE INPUT --}}
                     <div id="dropzone"
-                        class="relative p-6 text-center transition-colors border-2 border-dashed cursor-pointer rounded-2xl bg-slate-50/50 border-slate-200 hover:border-amber-500 group">
+                        class="relative p-8 text-center transition-all border-2 border-dashed cursor-pointer rounded-2xl bg-slate-50/50 border-slate-200 hover:border-amber-500 group">
                         <input type="file" name="receipt_attachment" id="fileInput" required
                             accept="image/*,application/pdf"
                             class="absolute inset-0 z-20 w-full h-full opacity-0 cursor-pointer">
-                        <div id="dropzoneContent" class="space-y-1.5 pointer-events-none">
+                        <div id="dropzoneContent" class="space-y-2 pointer-events-none">
                             <div
-                                class="inline-flex items-center justify-center w-10 h-10 transition-all bg-white border shadow-2xs rounded-xl border-slate-200 text-slate-400 group-hover:text-amber-500">
-                                <i class="text-lg fa-solid fa-cloud-arrow-up"></i>
+                                class="inline-flex items-center justify-center w-12 h-12 transition-all bg-white border shadow-2xs rounded-2xl border-slate-200 text-slate-400 group-hover:text-amber-600">
+                                <i class="text-xl fa-solid fa-cloud-arrow-up"></i>
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-slate-700">Drag & drop invoice file here, or <span
+                                <p class="text-xs font-bold text-slate-800">Drag & drop invoice file here, or <span
                                         class="underline text-amber-600">browse</span></p>
                                 <p class="text-[10px] text-slate-400 mt-0.5">Supports high-res Images & multi-page PDF
                                     documents (Max 4MB)</p>
@@ -229,14 +223,14 @@
 
                     {{-- LOADING INDICATOR --}}
                     <div id="rendering-loader"
-                        class="items-center justify-center hidden gap-2 py-5 text-xs font-bold tracking-wider uppercase border border-dashed border-slate-200 bg-slate-50 rounded-2xl text-slate-500 animate-pulse">
-                        <i class="text-sm fa-solid fa-spinner animate-spin text-amber-500"></i> Rendering PDF document
+                        class="items-center justify-center hidden gap-2 py-6 text-xs font-bold tracking-wider uppercase border border-dashed border-slate-200 bg-slate-50/50 rounded-2xl text-slate-500 animate-pulse">
+                        <i class="text-base fa-solid fa-spinner animate-spin text-amber-500"></i> Rendering PDF document
                         pages...
                     </div>
 
                     {{-- PREVIEW CONTAINER --}}
                     <div id="filePreviewContainer"
-                        class="hidden grid-cols-1 md:grid-cols-2 gap-3 p-3.5 border bg-slate-50 border-slate-200/80 rounded-2xl overflow-y-auto"
+                        class="hidden grid-cols-1 gap-3 p-4 overflow-y-auto border md:grid-cols-2 bg-slate-50/50 border-slate-200/80 rounded-2xl"
                         style="max-height: 500px;">
                     </div>
 
@@ -244,8 +238,8 @@
                     <div id="emptyPreviewPlaceholder"
                         class="flex flex-col items-center justify-center py-16 border border-dashed border-slate-200 bg-slate-50/50 rounded-2xl text-slate-400">
                         <i class="mb-2 text-3xl opacity-50 fa-solid fa-paste"></i>
-                        <p class="text-xs font-bold text-slate-500">No attachments uploaded yet</p>
-                        <p class="text-[10px] text-slate-400">Previews will be rendered in this workspace panel</p>
+                        <p class="text-xs font-bold text-slate-600">No attachments uploaded yet</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Previews will be rendered in this workspace panel</p>
                     </div>
 
                 </div>
@@ -308,7 +302,7 @@
                 pageCountBadge.innerHTML = `<i class="fa-solid fa-image mr-1 mt-0.5"></i> Image File`;
 
                 previewContainer.innerHTML = `
-                    <div class="relative md:col-span-2 overflow-hidden border border-slate-200 bg-white p-1.5 rounded-xl shadow-2xs">
+                    <div class="relative p-2 overflow-hidden bg-white border md:col-span-2 border-slate-200 rounded-xl shadow-2xs">
                         <img src="${e.target.result}" class="w-full h-auto max-h-[400px] object-contain rounded-lg bg-slate-50">
                         <div class="absolute top-3 left-3 bg-slate-900 text-white text-[8px] px-2 py-0.5 rounded-md font-bold uppercase">Single Image</div>
                     </div>

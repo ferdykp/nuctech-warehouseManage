@@ -199,7 +199,7 @@ class AttendanceController extends Controller
             'site_id'   => $siteId,
             'month'     => $month,
             'auto_full' => $request->input('auto_full', 'true')
-        ]))->with('success', 'Seluruh data plot absensi massal karyawan berhasil disimpan!');
+        ]))->with('success', 'All bulk employee attendance plot data has been successfully saved!');
     }
 
     private function getWorkingDaysCount(string $monthString): int
@@ -256,6 +256,6 @@ class AttendanceController extends Controller
 
         $attendance->delete();
 
-        return redirect()->back()->with('success', 'Data rekap absensi karyawan berhasil dihapus.');
+        return redirect()->back()->with('success', 'The employee attendance summary data has been successfully deleted.');
     }
 }

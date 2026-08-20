@@ -1,13 +1,18 @@
 <script>
     $(document).ready(function() {
-        const site = window.location.pathname.split('/')[1];
+        const pathSegments = window.location.pathname.split('/');
+        const site = pathSegments[1] || '';
         let timer = null;
         let xhr = null;
 
-        function fetchFilteredData() {
-            const query = $('#search').val().trim();
+        // AJAX Filter & Search Helper
+        window.fetchFilteredData = function() {
+            const $search = $('#search');
+            if (!$search.length) return;
+
+            const query = $search.val().trim();
             const condition = $('#filter-condition').val();
-            const url = $('#search').data('route');
+            const url = $search.data('route') || window.location.href;
 
             if (xhr) xhr.abort();
 
@@ -19,43 +24,45 @@
                     condition: condition
                 },
                 beforeSend: function() {
-                    $('#table-container').css('opacity', '0.5');
+                    $('#table-container').addClass('opacity-50 pointer-events-none');
                 },
                 success: function(res) {
-                    $('#table-container').html(res.html);
-                    $('#table-container').css('opacity', '1');
+                    $('#table-container').html(res.html).removeClass(
+                        'opacity-50 pointer-events-none');
                 },
                 error: function(err) {
                     if (err.statusText !== 'abort') {
-                        $('#table-container').css('opacity', '1');
+                        $('#table-container').removeClass('opacity-50 pointer-events-none');
                     }
                 }
             });
-        }
+        };
 
-        $('#search').on('input', function() {
+        // Event Listeners dengan Debounce
+        $(document).on('input', '#search', function() {
             clearTimeout(timer);
-            timer = setTimeout(fetchFilteredData, 400);
+            timer = setTimeout(fetchFilteredData, 350);
         });
 
-        $('#filter-condition').on('change', fetchFilteredData);
+        $(document).on('change', '#filter-condition', fetchFilteredData);
 
+        // Checkbox Select All Toggle
         $(document).on('change', '#select_all_id', function() {
             $('.checkbox-id').prop('checked', this.checked);
         });
 
-        $('#btn-delete').on('click', function() {
-            let ids = [];
-            $('.checkbox-id:checked').each(function() {
-                ids.push($(this).val());
-            });
+        // Bulk Delete Action
+        $(document).on('click', '#btn-delete', function() {
+            let ids = $('.checkbox-id:checked').map(function() {
+                return $(this).val();
+            }).get();
 
             if (ids.length === 0) {
-                alert('Pilih minimal 1 data!');
+                alert('Pilih minimal 1 data untuk dihapus.');
                 return;
             }
 
-            if (!confirm('Yakin ingin menghapus data terpilih?')) return;
+            if (!confirm(`Apakah Anda yakin ingin menghapus ${ids.length} data terpilih?`)) return;
 
             $.ajax({
                 url: `/${site}/sparepart/bulk-delete`,
@@ -67,29 +74,31 @@
                 success: function(res) {
                     if (res.success) {
                         fetchFilteredData();
-                        alert('Data berhasil dihapus');
                     } else {
-                        alert(res.message);
+                        alert(res.message || 'Gagal menghapus data.');
                     }
+                },
+                error: function() {
+                    alert('Terjadi kesalahan pada sistem.');
                 }
             });
         });
     });
 
+    // Modal Control Global Helpers
     function openCreateModal() {
-        document.getElementById('modal-create').classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
+        const modal = document.getElementById('modal-create');
+        if (modal) {
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
     }
 
     function closeCreateModal() {
-        document.getElementById('modal-create').classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }
-
-    window.onclick = function(event) {
-        const createModal = document.getElementById('modal-create');
-        const importModal = document.getElementById('modal-import');
-        if (event.target == createModal) closeCreateModal();
-        if (event.target == importModal) importModal.classList.add('hidden');
+        const modal = document.getElementById('modal-create');
+        if (modal) {
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
     }
 </script>

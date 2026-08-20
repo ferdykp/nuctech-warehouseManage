@@ -34,7 +34,7 @@ class AuthController extends Controller
             $request->session()->regenerate(); // 🔐 penting
 
             return redirect()->route('dashboard')
-                ->with('success', 'Login berhasil');
+                ->with('success', 'Login successful');
         }
 
         return back()
@@ -50,6 +50,6 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login')
-            ->with('success', 'Logout berhasil');
+            ->with('success', 'Logout successful');
     }
 }

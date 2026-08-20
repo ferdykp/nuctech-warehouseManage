@@ -94,7 +94,7 @@ class ReportController extends Controller
                 }
             }
 
-            return redirect()->route('report.index')->with('success', 'Report Berhasil Dibuat & Antrean Diperbarui');
+            return redirect()->route('report.index')->with('success', 'Report Successfully Created and Queue Updated');
         });
     }
 
@@ -103,7 +103,7 @@ class ReportController extends Controller
     {
         if (!Auth::check() || Auth::user()->role !== 'superadmin') {
             return redirect()->route('report.index')
-                ->with('error', 'Tidak memiliki akses');
+                ->with('error', 'No access');
         }
 
         $report = Report::findOrFail($id);
@@ -172,7 +172,7 @@ class ReportController extends Controller
         Report::findOrFail($id)->delete();
 
         return redirect()->route('report.index')
-            ->with('success', 'Data berhasil dihapus.');
+            ->with('success', 'Data Successfully Deleted.');
     }
 
     public function search(Request $request)

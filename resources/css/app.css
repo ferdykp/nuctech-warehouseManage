@@ -1,3 +1,24 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    /* Mempercepat Render GPU di Browser */
+    *,
+    ::before,
+    ::after {
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+    }
+
+    /* Smooth Scrolling */
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
+/* Akselerasi Transisi Modal & Sidebar */
+.transition-transform,
+.transition-all {
+    will-change: transform, opacity;
+}

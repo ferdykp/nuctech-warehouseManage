@@ -3,19 +3,14 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-// use Illuminate\View\View;
-use Illuminate\Support\Facades\View;
-// use Illuminate\Support\Facades\Auth;
-// use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\URL;
-
-
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Cache;
 
 use App\Models\Site;
 use App\Models\Sparepart;
 use App\Models\Report;
 use App\Models\Branch;
-
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -37,29 +32,38 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        $this->app->booted(function () {
+        // HANYA SHARE KEDALAM ASIDE NAV, BUKAN WILDCARD ('*')
+        View::composer('layout.aside', function ($view) {
 
-            \Illuminate\Support\Facades\View::composer('*', function ($view) {
-
-                // ===== Dashboard Counters =====
-                $dataCounts = [
-                    'totalMachine'   => \App\Models\Site::count(),
-                    'totalSparepart' => \App\Models\Sparepart::count(),
-                    'totalReport'    => \App\Models\Report::count(),
-                    'totalBranch'    => \App\Models\Branch::count()
-                ];
-
-                // ===== Sidebar Data =====
-                $sidebarSites = \App\Models\Site::with('branch')
+            // Cache data sidebar selama 10 menit agar tidak query terus-menerus di lokal
+            $sidebarSites = Cache::remember('global_sidebar_sites', 600, function () {
+                return Site::select('id', 'machine_name', 'slug', 'branch_id')
                     ->orderBy('machine_name')
                     ->get();
-
-                $sidebarBranches = \App\Models\Branch::orderBy('branch_name')->get();
-
-                $view->with($dataCounts)
-                    ->with('sidebarSites', $sidebarSites)
-                    ->with('sidebarBranches', $sidebarBranches);
             });
+
+            $globalBranches = Cache::remember('global_branches', 600, function () {
+                return Branch::select('id', 'branch_name')
+                    ->orderBy('branch_name')
+                    ->get();
+            });
+
+            $view->with('sidebarSites', $sidebarSites)
+                ->with('globalBranches', $globalBranches);
+        });
+
+        // HANYA SHARE COUNTERS KE DASHBOARD VIEW
+        View::composer('dashboard.index', function ($view) {
+            $dataCounts = Cache::remember('dashboard_counters', 60, function () {
+                return [
+                    'totalMachine'   => Site::count(),
+                    'totalSparepart' => Sparepart::count(),
+                    'totalReport'    => Report::count(),
+                    'totalBranch'    => Branch::count()
+                ];
+            });
+
+            $view->with($dataCounts);
         });
     }
 }
