@@ -85,13 +85,14 @@
                         <label for="username" class="block text-[11px] font-bold text-slate-700 tracking-wider uppercase">
                             Username / Account ID
                         </label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-                                <i class="text-xs fa-solid fa-user"></i>
+                        <div class="relative flex items-center">
+                            <span
+                                class="absolute left-0 z-10 flex items-center justify-center w-10 pl-1 pointer-events-none text-slate-400">
+                                <i class="text-xs fa-solid fa-user text-slate-400"></i>
                             </span>
                             <input type="text" id="username" name="username" value="{{ old('username') }}" required
                                 autofocus placeholder="e.g. admin_hris"
-                                class="w-full py-3 pr-4 text-sm font-semibold transition-all border pl-11 text-slate-900 bg-slate-50 border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none placeholder:text-slate-400">
+                                class="w-full py-3 pl-10 pr-4 text-sm font-semibold transition-all border text-slate-900 bg-slate-50 border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none placeholder:text-slate-400">
                         </div>
                     </div>
 
@@ -100,15 +101,16 @@
                         <label for="password" class="block text-[11px] font-bold text-slate-700 tracking-wider uppercase">
                             Password
                         </label>
-                        <div class="relative" x-data="{ showPass: false }">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-                                <i class="text-xs fa-solid fa-lock"></i>
+                        <div class="relative flex items-center" x-data="{ showPass: false }">
+                            <span
+                                class="absolute left-0 z-10 flex items-center justify-center w-10 pl-1 pointer-events-none text-slate-400">
+                                <i class="text-xs fa-solid fa-lock text-slate-400"></i>
                             </span>
                             <input :type="showPass ? 'text' : 'password'" id="password" name="password" required
                                 placeholder="••••••••"
-                                class="w-full py-3 text-sm font-semibold transition-all border pl-11 pr-11 text-slate-900 bg-slate-50 border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none placeholder:text-slate-400">
+                                class="w-full py-3 pl-10 pr-10 text-sm font-semibold transition-all border text-slate-900 bg-slate-50 border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none placeholder:text-slate-400">
                             <button type="button" @click="showPass = !showPass"
-                                class="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-slate-600 focus:outline-none">
+                                class="absolute right-0 z-10 flex items-center justify-center w-10 pr-1 text-slate-400 hover:text-slate-600 focus:outline-none">
                                 <i class="text-xs fa-solid" :class="showPass ? 'fa-eye-slash' : 'fa-eye'"></i>
                             </button>
                         </div>
@@ -121,7 +123,6 @@
                         <i class="text-xs transition-transform fa-solid fa-arrow-right group-hover:translate-x-1"></i>
                     </button>
                 </form>
-
                 {{-- Footer Legal Notice --}}
                 <div class="pt-5 mt-8 text-center border-t border-slate-100">
                     <p class="text-[11px] font-semibold text-slate-400">

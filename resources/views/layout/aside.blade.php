@@ -35,18 +35,20 @@
                     'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150';
                 $defaultClass = 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60';
                 $activeClass = 'bg-blue-600 text-white shadow-md shadow-blue-600/30';
+                // Target swap: konten utama + aside sendiri, supaya active-state menu selalu update
+                $upTarget = 'up-target="#main-content, aside"';
             @endphp
 
             <!-- MENU GROUP: GENERAL -->
             <div>
                 <p class="px-3 mb-2 text-[10px] font-bold tracking-wider uppercase text-slate-500">General</p>
                 <div class="space-y-1">
-                    <a href="{{ route('dashboard') }}"
+                    <a href="{{ route('dashboard') }}" {!! $upTarget !!}
                         class="{{ $baseItemClass }} {{ request()->routeIs('dashboard') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-chart-pie"></i>
                         <span>Dashboard</span>
                     </a>
-                    <a href="{{ route('branches.index') }}"
+                    <a href="{{ route('branches.index') }}" {!! $upTarget !!}
                         class="{{ $baseItemClass }} {{ request()->routeIs('branches.*') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-building"></i>
                         <span>Branches</span>
@@ -71,7 +73,7 @@
 
                     <div x-show="open" x-cloak x-collapse class="pl-3 mt-1 ml-4 space-y-1 border-l border-slate-800">
                         @foreach ($sidebarSites as $site)
-                            <a href="{{ route('sparepart.index', $site->slug) }}"
+                            <a href="{{ route('sparepart.index', $site->slug) }}" {!! $upTarget !!}
                                 class="block px-3 py-1.5 text-xs font-medium rounded-lg transition-colors truncate
                                 {{ request()->segment(2) == $site->slug ? 'text-blue-400 font-bold bg-blue-500/10' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40' }}">
                                 {{ $site->machine_name }}
@@ -93,22 +95,22 @@
                 <p class="px-3 mb-2 text-[10px] font-bold tracking-wider uppercase text-slate-500">Logistics & Support
                 </p>
                 <div class="space-y-1">
-                    <a href="{{ route('categories.index') }}"
+                    <a href="{{ route('categories.index') }}" {!! $upTarget !!}
                         class="{{ $baseItemClass }} {{ request()->routeIs('categories.*') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-layer-group"></i>
                         <span>Categories</span>
                     </a>
-                    <a href="{{ route('site.index') }}"
+                    <a href="{{ route('site.index') }}" {!! $upTarget !!}
                         class="{{ $baseItemClass }} {{ request()->routeIs('site.index') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-map-pin"></i>
                         <span>All Sites</span>
                     </a>
-                    <a href="{{ route('sparepart.all') }}"
+                    <a href="{{ route('sparepart.all') }}" {!! $upTarget !!}
                         class="{{ $baseItemClass }} {{ request()->routeIs('sparepart.all') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-boxes-stacked"></i>
                         <span>Spareparts</span>
                     </a>
-                    <a href="{{ route('report.index') }}"
+                    <a href="{{ route('report.index') }}" {!! $upTarget !!}
                         class="{{ $baseItemClass }} {{ request()->routeIs('report.*') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-triangle-exclamation"></i>
                         <span>Failure Reports</span>
@@ -120,7 +122,7 @@
             <div>
                 <p class="px-3 mb-2 text-[10px] font-bold tracking-wider uppercase text-slate-500">HR & Finance</p>
                 <div class="space-y-1">
-                    <a href="{{ route('reimbursements.index') }}"
+                    <a href="{{ route('reimbursements.index') }}" {!! $upTarget !!}
                         class="{{ $baseItemClass }} justify-between {{ request()->routeIs('reimbursements.*') ? $activeClass : $defaultClass }}">
                         <div class="flex items-center gap-3">
                             <i class="w-5 text-sm text-center fa-solid fa-receipt"></i>
@@ -136,25 +138,30 @@
                             @endif
                         @endif
                     </a>
-                    <a href="{{ route('employee.index') }}"
+                    <a href="{{ route('employee.index') }}" {!! $upTarget !!}
                         class="{{ $baseItemClass }} {{ request()->routeIs('employee.index') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-users"></i>
                         <span>Employees</span>
                     </a>
-                    <a href="{{ route('schedule.index') }}"
+                    <a href="{{ route('schedule.index') }}" {!! $upTarget !!}
                         class="{{ $baseItemClass }} {{ request()->routeIs('schedule.index') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-calendar-days"></i>
                         <span>Schedules</span>
                     </a>
-                    <a href="{{ route('attendance.index') }}"
+                    <a href="{{ route('attendance.index') }}" {!! $upTarget !!}
                         class="{{ $baseItemClass }} {{ request()->routeIs('attendance.index') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-user-check"></i>
                         <span>Attendance</span>
                     </a>
-                    <a href="{{ route('salary.index') }}"
+                    <a href="{{ route('salary.index') }}" {!! $upTarget !!}
                         class="{{ $baseItemClass }} {{ request()->routeIs('salary.index') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-wallet"></i>
                         <span>Payroll / Salary</span>
+                    </a>
+                    <a href="{{ route('leave.index') }}" {!! $upTarget !!}
+                        class="{{ $baseItemClass }} {{ request()->routeIs('leave.index') ? $activeClass : $defaultClass }}">
+                        <i class="w-5 text-sm text-center fa-solid fa-wallet"></i>
+                        <span>Leave</span>
                     </a>
                 </div>
             </div>
@@ -178,7 +185,7 @@
     </div>
 </aside>
 
-<!-- MODAL ADD MACHINE (Clean Enterprise Styling) -->
+<!-- MODAL ADD MACHINE -->
 <div x-data="{ show: false }" x-on:open-add-machine.window="show = true" x-show="show" x-cloak
     class="fixed inset-0 z-[70] flex items-center justify-center p-4">
     <div x-show="show" x-transition.opacity class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs"></div>

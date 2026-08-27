@@ -12,6 +12,7 @@ use App\Http\Controllers\SparepartController;
 use App\Http\Controllers\SparepartStockController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ShiftController;
@@ -161,6 +162,17 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::post('/attendance/store', [AttendanceController::class, 'storeAttendance'])->name('attendance.store');
     Route::get('/attendance/export', [AttendanceController::class, 'exportExcel'])->name('attendance.export');
     Route::delete('/attendance/{attendance}', [AttendanceController::class, 'destroy'])->name('attendance.destroy');
+
+
+    // Leave Management Routes
+    Route::get('/leave', [LeaveRequestController::class, 'index'])->name('leave.index');
+    Route::get('/leave/create', [LeaveRequestController::class, 'create'])->name('leave.create');
+    Route::post('/leave', [LeaveRequestController::class, 'store'])->name('leave.store');
+    Route::post('/leave/{id}/approve', [LeaveRequestController::class, 'approve'])->name('leave.approve');
+    Route::post('/leave/{id}/reject', [LeaveRequestController::class, 'reject'])->name('leave.reject');
+    Route::get('/leave/{id}/edit', [LeaveRequestController::class, 'edit'])->name('leave.edit');
+    Route::put('/leave/{id}', [LeaveRequestController::class, 'update'])->name('leave.update');
+    Route::delete('/leave/{id}', [LeaveRequestController::class, 'destroy'])->name('leave.destroy');
 
     /*
     |--------------------------------------------------------------------------

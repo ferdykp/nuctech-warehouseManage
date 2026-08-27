@@ -1,4 +1,36 @@
+<!-- Third-party scripts: defer supaya tidak blocking render -->
+<script defer src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script defer src="https://unpkg.com/unpoly@3.8.0/unpoly.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/unpoly@3.8.0/unpoly.min.css">
+
 <script>
+    // ============================================
+    // UNPOLY CONFIGURATION
+    // Aktif setelah unpoly.min.js selesai load (defer)
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof up === 'undefined') {
+            console.warn('Unpoly belum ter-load, cek urutan script.');
+            return;
+        }
+
+        // Aktifkan Unpoly untuk semua link <a href> dan <form>
+        up.link.config.followSelectors.push('a[href]');
+        up.form.config.submitSelectors.push('form');
+
+        // Progress bar tipis di atas saat navigasi (UX terasa responsif)
+        up.network.config.progressBar = true;
+
+        // Target default kalau sebuah link tidak menentukan up-target
+        up.fragment.config.mainTargets.push('#main-content');
+
+        // Cache halaman yang sudah dikunjungi (opsional, bikin navigasi balik lebih instan)
+        up.network.config.cacheExpireAge = 15 * 60 * 1000; // 15 menit
+    });
+
+    // ============================================
+    // KODE EXISTING (jQuery, AJAX search, dsb)
+    // ============================================
     $(document).ready(function() {
         const pathSegments = window.location.pathname.split('/');
         const site = pathSegments[1] || '';

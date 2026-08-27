@@ -50,6 +50,32 @@ class Employee extends Model
         return $this->hasMany(Attendance::class, 'employee_id');
     }
 
+    // --- RELASI MODUL CUTI & IZIN ---
+
+    public function leaveBalances()
+    {
+        return $this->hasMany(EmployeeLeaveBalance::class, 'employee_id');
+    }
+
+    public function leaveRequests()
+    {
+        return $this->hasMany(LeaveRequest::class, 'employee_id');
+    }
+
+    // --- RELASI MODUL TUKAR SHIFT / LEMBUR PENGGANTI ---
+
+    // Sebagai karyawan B (yang digantikan/cuti)
+    public function shiftReplacementsAsOriginal()
+    {
+        return $this->hasMany(ShiftReplacementRequest::class, 'original_employee_id');
+    }
+
+    // Sebagai karyawan A (pengganti yang dapat lemburan)
+    public function shiftReplacementsAsReplacement()
+    {
+        return $this->hasMany(ShiftReplacementRequest::class, 'replacement_employee_id');
+    }
+
     /**
      * Menghitung Otomatis Status Informasi Gaji Berdasarkan Tanggal Join & Status Karyawan
      */
