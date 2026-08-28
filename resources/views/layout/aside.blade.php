@@ -7,7 +7,9 @@
 </div>
 
 <!-- SIDEBAR NAVIGATION -->
-<aside x-cloak :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+<!-- SIDEBAR NAVIGATION -->
+{{-- PERBAIKAN: Hapus x-cloak pada <aside> agar langsung ter-render di desktop tanpa menunggu Alpine --}}
+<aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
     class="fixed inset-y-0 left-0 z-50 flex flex-col justify-between w-64 transition-transform duration-300 ease-in-out border-r shadow-xl bg-slate-900 text-slate-300 lg:translate-x-0 lg:static lg:inset-0 shrink-0 border-slate-800">
 
     <!-- LOGO / BRANDING -->
@@ -160,7 +162,7 @@
                     </a>
                     <a href="{{ route('leave.index') }}" {!! $upTarget !!}
                         class="{{ $baseItemClass }} {{ request()->routeIs('leave.index') ? $activeClass : $defaultClass }}">
-                        <i class="w-5 text-sm text-center fa-solid fa-wallet"></i>
+                        <i class="w-5 text-sm text-center fa-solid fa-person-walking-arrow-right"></i>
                         <span>Leave</span>
                     </a>
                 </div>
@@ -184,7 +186,6 @@
         </div>
     </div>
 </aside>
-
 <!-- MODAL ADD MACHINE -->
 <div x-data="{ show: false }" x-on:open-add-machine.window="show = true" x-show="show" x-cloak
     class="fixed inset-0 z-[70] flex items-center justify-center p-4">

@@ -59,6 +59,11 @@ class ScheduleController extends Controller
         return view('schedule.index', compact('employees', 'datesInMonth', 'month', 'year', 'sites', 'selectedSiteId', 'holidays'));
     }
 
+    /**
+     * NOTE: Endpoint ini tidak lagi dipanggil dari UI (modal Site Patterns terpisah
+     * sudah dihapus dan digabung ke dalam generate()). Dibiarkan tetap ada
+     * untuk kompatibilitas mundur / kebutuhan API lain.
+     */
     public function updateSitePattern(Request $request, $siteId)
     {
         $user = Auth::user();
@@ -92,6 +97,7 @@ class ScheduleController extends Controller
         $user = Auth::user();
 
         $rules = [
+            'target_site_id' => 'required|exists:sites,id',
             'month'          => 'required',
             'year'           => 'required',
             'start_day'      => 'required|integer|min:1|max:31',
@@ -99,9 +105,30 @@ class ScheduleController extends Controller
             'employee_ids'   => 'required|array|min:1',
             'start_shift_id' => 'required',
             'active_shifts'  => 'required|array|min:1',
+            'schedule_type'  => 'required|in:office_hour,shift_rotation',
+            'work_days'      => 'nullable|integer|min:1',
+            'off_days'       => 'nullable|integer|min:1',
         ];
 
         $request->validate($rules);
+
+        $site = Site::findOrFail($request->input('target_site_id'));
+
+        if ($user->role === 'admin_site' && (int) $user->site_id !== (int) $site->id) {
+            abort(403, 'Anda tidak memiliki akses untuk site ini.');
+        }
+
+        // KUNCI PERBAIKAN UX: pola kerja langsung disimpan bersamaan di sini,
+        // jadi tidak mungkin lagi terjadi "generate sukses" tapi pattern belum tersimpan.
+        $site->schedulePattern()->updateOrCreate(
+            ['site_id' => $site->id],
+            [
+                'schedule_type' => $request->input('schedule_type'),
+                'work_days'     => $request->input('work_days') ?? 6,
+                'off_days'      => $request->input('off_days') ?? 2,
+            ]
+        );
+        $pattern = $site->schedulePattern()->first();
 
         $month = $request->input('month');
         $year = $request->input('year');
@@ -139,7 +166,8 @@ class ScheduleController extends Controller
             $allowedShifts = $shiftsPool;
         }
 
-        $employeesQuery = Employee::whereIn('id', $selectedEmployeeIds)->with('site.schedulePattern');
+        // Batasi hanya karyawan milik target_site_id — mencegah kebocoran data lintas-site
+        $employeesQuery = Employee::whereIn('id', $selectedEmployeeIds)->where('site_id', $site->id);
 
         if ($user->role === 'admin_site') {
             $employeesQuery->where('site_id', $user->site_id);
@@ -147,10 +175,11 @@ class ScheduleController extends Controller
 
         $employees = $employeesQuery->get();
 
-        foreach ($employees as $employee) {
-            $pattern = $employee->site->schedulePattern ?? null;
-            if (!$pattern) continue;
+        if ($employees->isEmpty()) {
+            return redirect()->back()->withErrors(['error' => 'Tidak ada karyawan valid ditemukan untuk site yang dipilih.']);
+        }
 
+        foreach ($employees as $employee) {
             if ($pattern->schedule_type === 'shift_rotation') {
                 $workDays = $pattern->work_days ?? 6;
                 $offDays = $pattern->off_days ?? 2;
@@ -198,7 +227,10 @@ class ScheduleController extends Controller
             }
         }
 
-        return redirect()->back()->with('success', "Sukses men-generate jadwal regu untuk " . count($employees) . " karyawan.");
+        return redirect()->back()->with(
+            'success',
+            "Sukses men-generate jadwal regu untuk {$employees->count()} karyawan di site \"{$site->machine_name}\"."
+        );
     }
 
     public function updateSingle(Request $request)

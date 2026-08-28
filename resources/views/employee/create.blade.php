@@ -5,7 +5,7 @@
 @section('content')
     <div class="w-full max-w-3xl mx-auto space-y-6">
 
-        {{-- 1. HEADER CARD (TERPISAH) --}}
+        {{-- 1. HEADER CARD --}}
         <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
             <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
@@ -51,6 +51,26 @@
                             placeholder="Full name as per ID..." required>
                     </div>
 
+                    {{-- NIK --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            NIK (National ID / KTP)
+                        </label>
+                        <input type="text" name="nik" value="{{ old('nik') }}" maxlength="16"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400 font-mono"
+                            placeholder="16-digit NIK...">
+                    </div>
+
+                    {{-- EMAIL --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Email Address
+                        </label>
+                        <input type="email" name="email" value="{{ old('email') }}"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
+                            placeholder="employee@company.com">
+                    </div>
+
                     {{-- PHONE NUMBER --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
@@ -66,7 +86,6 @@
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Site Placement <span class="text-rose-500">*</span>
                         </label>
-
                         @if (Auth::user()?->role === 'superadmin')
                             <select name="site_id"
                                 class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"
@@ -85,8 +104,6 @@
                                 class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-600 bg-slate-100 border border-slate-200 rounded-xl cursor-not-allowed"
                                 readonly>
                         @endif
-                        <p class="text-[11px] font-medium text-slate-400 mt-1">Branch will automatically sync based on the
-                            selected Site.</p>
                     </div>
 
                     {{-- STATUS --}}
@@ -103,6 +120,16 @@
                             </option>
                             <option value="Daily" {{ old('status') == 'Daily' ? 'selected' : '' }}>Daily</option>
                         </select>
+                    </div>
+
+                    {{-- POSITION --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Position / Job Title
+                        </label>
+                        <input type="text" name="position" value="{{ old('position') }}"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
+                            placeholder="e.g. Supervisor, Operator, Admin">
                     </div>
 
                     {{-- GAJI POKOK --}}
@@ -166,14 +193,28 @@
                             placeholder="e.g. 8830123456">
                     </div>
 
-                    {{-- POSITION --}}
+                    {{-- MCU STATUS --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Position / Job Title
+                            MCU Passed
                         </label>
-                        <input type="text" name="position" value="{{ old('position') }}"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
-                            placeholder="e.g. Supervisor, Operator, Admin">
+                        <select name="mcu"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                            <option value="no" {{ old('mcu') == 'no' ? 'selected' : '' }}>NO</option>
+                            <option value="yes" {{ old('mcu') == 'yes' ? 'selected' : '' }}>YES</option>
+                        </select>
+                    </div>
+
+                    {{-- TLD BADGE --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            TLD Badge
+                        </label>
+                        <select name="tld"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                            <option value="no" {{ old('tld') == 'no' ? 'selected' : '' }}>NO</option>
+                            <option value="yes" {{ old('tld') == 'yes' ? 'selected' : '' }}>YES</option>
+                        </select>
                     </div>
 
                     {{-- JOIN DATE --}}
@@ -216,12 +257,12 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        function initCreateEmployeeScripts() {
             const salaryDisplay = document.getElementById('basic_salary_display');
             const salaryReal = document.getElementById('basic_salary_real');
 
             function formatRupiah(value) {
-                let number = value.replace(/\D/g, '');
+                let number = String(value).replace(/\D/g, '');
                 return number ? 'Rp ' + new Intl.NumberFormat('id-ID').format(number) : '';
             }
 
@@ -230,7 +271,10 @@
                     salaryDisplay.value = formatRupiah(salaryReal.value);
                 }
 
-                salaryDisplay.addEventListener('input', function(e) {
+                salaryDisplay.replaceWith(salaryDisplay.cloneNode(true));
+                const newSalaryDisplay = document.getElementById('basic_salary_display');
+
+                newSalaryDisplay.addEventListener('input', function(e) {
                     let rawValue = e.target.value.replace(/\D/g, '');
                     salaryReal.value = rawValue ? rawValue : 0;
                     e.target.value = formatRupiah(rawValue);
@@ -239,7 +283,10 @@
 
             const phoneInput = document.getElementById('phone_number');
             if (phoneInput) {
-                phoneInput.addEventListener('input', function(e) {
+                phoneInput.replaceWith(phoneInput.cloneNode(true));
+                const newPhoneInput = document.getElementById('phone_number');
+
+                newPhoneInput.addEventListener('input', function(e) {
                     let value = e.target.value;
                     let digits = value.replace(/\D/g, '');
 
@@ -261,14 +308,22 @@
                     e.target.value = formatted;
                 });
 
-                phoneInput.addEventListener('focus', function(e) {
+                newPhoneInput.addEventListener('focus', function(e) {
                     if (!e.target.value) e.target.value = '+62 ';
                 });
 
-                phoneInput.addEventListener('blur', function(e) {
+                newPhoneInput.addEventListener('blur', function(e) {
                     if (e.target.value === '+62 ' || e.target.value === '+62') e.target.value = '';
                 });
             }
-        });
+        }
+
+        document.addEventListener('DOMContentLoaded', initCreateEmployeeScripts);
+
+        if (window.up) {
+            up.on('up:fragment:inserted', function() {
+                initCreateEmployeeScripts();
+            });
+        }
     </script>
 @endsection

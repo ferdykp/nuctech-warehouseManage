@@ -18,14 +18,38 @@
         up.link.config.followSelectors.push('a[href]');
         up.form.config.submitSelectors.push('form');
 
+        // 🔧 FIX: Route yang mengganti LAYOUT (guest <-> app) harus full reload,
+        // jangan di-intercept Unpoly sebagai fragment update.
+        // Ini mencegah sidebar/navbar lama "nyangkut" setelah logout,
+        // dan mencegah redirect POST/GET jadi salah kaprah lewat fetch.
+        up.link.config.noFollowSelectors.push(
+            'a[href*="/logout"]',
+            'a[href*="/login"]'
+        );
+        up.form.config.noSubmitSelectors.push(
+            'form[action*="/logout"]',
+            'form[action*="/login"]'
+        );
+
         // Progress bar tipis di atas saat navigasi (UX terasa responsif)
         up.network.config.progressBar = true;
 
         // Target default kalau sebuah link tidak menentukan up-target
         up.fragment.config.mainTargets.push('#main-content');
 
-        // Cache halaman yang sudah dikunjungi (opsional, bikin navigasi balik lebih instan)
-        up.network.config.cacheExpireAge = 15 * 60 * 1000; // 15 menit
+        // Cache halaman yang sudah dikunjungi (durasi diperpendek dari 15 menit
+        // supaya tidak ada fragment lama nyangkut lintas sesi/user)
+        up.network.config.cacheExpireAge = 60 * 1000; // 1 menit
+    });
+
+    // Bersihkan cache Unpoly begitu ada submit logout,
+    // supaya tidak ada fragment halaman lama yang tersisa di cache
+    document.addEventListener('submit', function(e) {
+        if (e.target.matches && e.target.matches('form[action*="/logout"]')) {
+            if (typeof up !== 'undefined') {
+                up.cache.clear();
+            }
+        }
     });
 
     // ============================================

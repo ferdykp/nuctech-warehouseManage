@@ -9,6 +9,10 @@ use App\Models\Site;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Exports\EmployeesExport;
+use App\Imports\EmployeesImport;
+use Maatwebsite\Excel\Facades\Excel;
+
 
 class EmployeeController extends Controller
 {
@@ -31,7 +35,10 @@ class EmployeeController extends Controller
         if (!empty($search)) {
             $employeesQuery->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('email', 'like', '%' . $search . '%')
+                    ->orWhere('nik', 'like', '%' . $search . '%')
                     ->orWhere('position', 'like', '%' . $search . '%')
+                    ->orWhere('phone_number', 'like', '%' . $search . '%')
                     ->orWhere('bank_account_number', 'like', '%' . $search . '%');
             });
         }
@@ -56,12 +63,16 @@ class EmployeeController extends Controller
         $validatedData = $request->validate([
             'site_id'             => 'required|exists:sites,id',
             'name'                => 'required|string|max:255',
+            'email'               => 'nullable|email|unique:employees,email|max:255',
+            'nik'                 => 'nullable|string|max:16|unique:employees,nik',
             'phone_number'        => 'required|string|max:20',
             'position'            => 'nullable|string|max:100',
             'status'              => 'required|in:Permanent,Contract,Probation,Daily',
             'basic_salary'        => 'nullable|numeric|min:0',
             'bank_name'           => 'nullable|string|max:100',
             'bank_account_number' => 'nullable|string|max:100',
+            'mcu'                 => 'nullable|in:yes,no',
+            'tld'                 => 'nullable|in:yes,no',
             'join_date'           => 'required|date',
             'contract_start_date' => 'nullable|date',
         ]);
@@ -74,6 +85,8 @@ class EmployeeController extends Controller
         $validatedData['site_id']      = $site->id;
         $validatedData['branch_id']    = $site->branch_id;
         $validatedData['basic_salary'] = $basicSalary;
+        $validatedData['mcu']          = $validatedData['mcu'] ?? 'no';
+        $validatedData['tld']          = $validatedData['tld'] ?? 'no';
         $validatedData['is_active']    = true;
 
         $employee = Employee::create($validatedData);
@@ -104,12 +117,16 @@ class EmployeeController extends Controller
         $validatedData = $request->validate([
             'site_id'              => 'required|exists:sites,id',
             'name'                 => 'required|string|max:255',
+            'email'                => 'nullable|email|max:255|unique:employees,email,' . $employee->id,
+            'nik'                  => 'nullable|string|max:16|unique:employees,nik,' . $employee->id,
             'phone_number'         => 'required|string|max:20',
             'position'             => 'nullable|string|max:100',
             'status'               => 'required|in:Permanent,Contract,Probation,Daily',
             'basic_salary'         => 'nullable|numeric|min:0',
             'bank_name'            => 'nullable|string|max:100',
             'bank_account_number'  => 'nullable|string|max:100',
+            'mcu'                  => 'nullable|in:yes,no',
+            'tld'                  => 'nullable|in:yes,no',
             'salary_change_reason' => 'nullable|string|max:255',
             'join_date'            => 'required|date',
             'contract_start_date'  => 'nullable|date',
@@ -132,18 +149,63 @@ class EmployeeController extends Controller
 
         $validatedData['site_id']   = $site->id;
         $validatedData['branch_id'] = $site->branch_id;
+        $validatedData['mcu']       = $validatedData['mcu'] ?? $employee->mcu ?? 'no';
+        $validatedData['tld']       = $validatedData['tld'] ?? $employee->tld ?? 'no';
 
         $employee->update($validatedData);
 
         return redirect()->route('employee.index')->with('success', 'Employee data successfully updated.!');
     }
 
+    // public function show($id)
+    // {
+    //     try {
+    //         $user = Auth::user();
+
+    //         $employeeId = is_object($id) ? $id->id : $id;
+    //         $employee = Employee::with(['site.branch', 'salaryHistories'])->findOrFail($employeeId);
+
+    //         if ($user && $user->role === 'admin_site' && (int)$employee->site_id !== (int)$user->site_id) {
+    //             return response()->json(['message' => 'Anda tidak memiliki akses ke data karyawan ini.'], 403);
+    //         }
+
+    //         $joinDate = Carbon::parse($employee->join_date);
+    //         $diff = $joinDate->diff(Carbon::now());
+
+    //         $tenureParts = [];
+    //         if ($diff->y > 0) $tenureParts[] = $diff->y . ' Tahun';
+    //         if ($diff->m > 0) $tenureParts[] = $diff->m . ' Bulan';
+    //         $tenureParts[] = $diff->d . ' Hari';
+
+    //         $employee->tenure_formatted = implode(' ', $tenureParts);
+    //         $employee->join_date_formatted = $joinDate->translatedFormat('d F Y');
+    //         $employee->contract_start_formatted = $employee->contract_start_date
+    //             ? Carbon::parse($employee->contract_start_date)->translatedFormat('d F Y')
+    //             : '-';
+    //         $employee->basic_salary_formatted = 'Rp ' . number_format($employee->basic_salary ?? 0, 0, ',', '.');
+
+    //         // Tambahkan format string untuk status MCU & TLD di respon JSON
+    //         $employee->mcu_formatted = strtoupper($employee->mcu ?? 'no');
+    //         $employee->tld_formatted = strtoupper($employee->tld ?? 'no');
+
+    //         return response()->json($employee);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'message' => 'Gagal mengambil data karyawan: ' . $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
     public function show($id)
     {
         try {
             $user = Auth::user();
-
             $employeeId = is_object($id) ? $id->id : $id;
+
+            // Cegah eksekusi jika $id bukan angka (misal melempar string 'export')
+            if (!is_numeric($employeeId)) {
+                return response()->json(['message' => 'Invalid Employee ID'], 400);
+            }
+
             $employee = Employee::with(['site.branch', 'salaryHistories'])->findOrFail($employeeId);
 
             if ($user && $user->role === 'admin_site' && (int)$employee->site_id !== (int)$user->site_id) {
@@ -164,6 +226,8 @@ class EmployeeController extends Controller
                 ? Carbon::parse($employee->contract_start_date)->translatedFormat('d F Y')
                 : '-';
             $employee->basic_salary_formatted = 'Rp ' . number_format($employee->basic_salary ?? 0, 0, ',', '.');
+            $employee->mcu_formatted = strtoupper($employee->mcu ?? 'no');
+            $employee->tld_formatted = strtoupper($employee->tld ?? 'no');
 
             return response()->json($employee);
         } catch (\Exception $e) {
@@ -257,7 +321,6 @@ class EmployeeController extends Controller
         return view('employee.create', compact('sites'));
     }
 
-
     public function destroy($id)
     {
         $user = Auth::user();
@@ -271,9 +334,43 @@ class EmployeeController extends Controller
 
         $employee->attendances()->delete();
         $employee->schedules()->delete();
-        $employee->salaryHistories()->delete(); // Hapus riwayat perubahan gaji karyawan jika ada
+        $employee->salaryHistories()->delete();
         $employee->delete();
 
         return redirect()->route('employee.index')->with('success', 'The employee and their entire work history have been successfully deleted..');
+    }
+
+
+    public function export(Request $request)
+    {
+        $user = Auth::user();
+        $siteId = $request->input('site_id');
+
+        if ($user && $user->role === 'admin_site') {
+            $siteId = $user->site_id;
+        }
+
+        $fileName = 'Employee_List_' . date('Y-m-d_H-i-s') . '.xlsx';
+
+        // Dipanggil tanpa parameter filter karena EmployeesExport mengekspor seluruh data
+        return Excel::download(new EmployeesExport(), $fileName);
+    }
+
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:5120',
+        ]);
+
+        $user = Auth::user();
+        $siteId = ($user->role === 'admin_site') ? $user->site_id : $request->input('site_id');
+
+        try {
+            Excel::import(new EmployeesImport($siteId), $request->file('file'));
+            return redirect()->back()->with('success', 'Employee data imported successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to import employee data: ' . $e->getMessage());
+        }
     }
 }

@@ -1,13 +1,15 @@
 <div class="overflow-x-auto">
-    <table class="w-full text-left border-collapse min-w-[850px]">
+    <table class="w-full text-left border-collapse min-w-[950px]">
         <thead>
             <tr
                 class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
-                <th scope="col" class="w-16 px-6 py-4 text-center">No</th>
-                <th scope="col" class="px-6 py-4">Full Name</th>
+                <th scope="col" class="w-12 px-4 py-4 text-center">No</th>
+                <th scope="col" class="px-6 py-4">Employee Identity</th>
                 <th scope="col" class="px-6 py-4">Position</th>
                 <th scope="col" class="px-6 py-4">Site & Branch</th>
                 <th scope="col" class="px-6 py-4 text-emerald-700">Gaji Pokok</th>
+                <th scope="col" class="px-4 py-4 text-center">MCU</th>
+                <th scope="col" class="px-4 py-4 text-center">TLD</th>
                 <th scope="col" class="px-6 py-4 text-center">Status</th>
                 <th scope="col" class="px-6 py-4 text-center">Join Date</th>
                 <th scope="col" class="w-32 px-6 py-4 text-center">Actions</th>
@@ -16,11 +18,22 @@
         <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
             @forelse ($employees as $employee)
                 <tr class="transition-colors hover:bg-slate-50/60">
-                    <td class="px-6 py-4 font-bold text-center text-slate-400">
+                    <td class="px-4 py-4 font-bold text-center text-slate-400">
                         {{ ($employees->currentPage() - 1) * $employees->perPage() + $loop->iteration }}
                     </td>
-                    <td class="px-6 py-4 text-sm font-bold text-slate-900">
-                        {{ $employee->name }}
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-bold text-slate-900">
+                            {{ $employee->name }}
+                        </div>
+                        <div class="text-[11px] font-medium text-slate-400 mt-0.5 flex flex-col gap-0.5">
+                            @if ($employee->nik)
+                                <span><i class="fa-regular fa-id-card text-[10px] me-1"></i>{{ $employee->nik }}</span>
+                            @endif
+                            @if ($employee->email)
+                                <span><i
+                                        class="fa-regular fa-envelope text-[10px] me-1"></i>{{ $employee->email }}</span>
+                            @endif
+                        </div>
                     </td>
                     <td class="px-6 py-4 font-semibold text-slate-600">
                         {{ $employee->position ?? '-' }}
@@ -35,6 +48,24 @@
                     </td>
                     <td class="px-6 py-4 text-xs font-black text-emerald-600">
                         Rp {{ number_format($employee->basic_salary ?? 0, 0, ',', '.') }}
+                    </td>
+                    <td class="px-4 py-4 text-center">
+                        @if ($employee->mcu === 'yes')
+                            <span
+                                class="px-2 py-0.5 text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md">YES</span>
+                        @else
+                            <span
+                                class="px-2 py-0.5 text-[10px] font-black text-slate-400 bg-slate-100 border border-slate-200 rounded-md">NO</span>
+                        @endif
+                    </td>
+                    <td class="px-4 py-4 text-center">
+                        @if ($employee->tld === 'yes')
+                            <span
+                                class="px-2 py-0.5 text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-200 rounded-md">YES</span>
+                        @else
+                            <span
+                                class="px-2 py-0.5 text-[10px] font-black text-slate-400 bg-slate-100 border border-slate-200 rounded-md">NO</span>
+                        @endif
                     </td>
                     <td class="px-6 py-4 text-center">
                         @php
@@ -85,7 +116,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" class="p-12 text-center text-slate-400">
+                    <td colspan="10" class="p-12 text-center text-slate-400">
                         <div
                             class="flex items-center justify-center w-12 h-12 mx-auto mb-3 text-xl rounded-2xl bg-slate-100 text-slate-400">
                             <i class="fa-solid fa-users-slash"></i>

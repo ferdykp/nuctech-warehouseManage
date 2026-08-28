@@ -31,11 +31,6 @@
 
                 {{-- ACTION BUTTONS TOOLBAR --}}
                 <div class="flex flex-wrap items-center gap-2.5 shrink-0">
-                    <button type="button" onclick="openPatternModal()"
-                        class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-700 transition-all bg-white border border-slate-200 rounded-xl hover:bg-slate-50 active:scale-95 shadow-2xs">
-                        <i class="text-slate-400 fa-solid fa-sliders"></i> Site Patterns
-                    </button>
-
                     <button type="button" onclick="openGenerateModal()"
                         class="inline-flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-amber-600 hover:bg-amber-700 rounded-xl shadow-amber-600/20 active:scale-95">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Rotas
@@ -94,7 +89,7 @@
                             <label
                                 class="block mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Site
                                 Location</label>
-                            <select name="site_id" id="main_site_select" onchange="syncPatternWithSite()"
+                            <select name="site_id" id="main_site_select"
                                 class="w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all outline-none">
                                 <option value="all" {{ ($selectedSiteId ?? 'all') == 'all' ? 'selected' : '' }}>-- All
                                     Sites --</option>
@@ -259,11 +254,14 @@
                                         @php
                                             $totalWorkCount = 0;
                                             $totalOffCount = 0;
+                                            $schedulesByDate = $emp->schedules->keyBy(
+                                                fn($s) => $s->date->format('Y-m-d'),
+                                            );
                                         @endphp
 
                                         @foreach ($datesInMonth as $date)
                                             @php
-                                                $schedule = $emp->schedules->firstWhere('date', $date->format('Y-m-d'));
+                                                $schedule = $schedulesByDate->get($date->format('Y-m-d'));
                                                 $shiftName = $schedule?->shift?->shift_name;
 
                                                 $badgeColor = 'bg-white text-slate-300 border-slate-200';
@@ -343,303 +341,354 @@
     </div>
 
     {{-- =========================================================== --}}
-    {{-- MODAL 1: SITE WORK PATTERN CONFIGURATION --}}
-    {{-- =========================================================== --}}
-    <div id="modal-pattern"
-        class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs modal-overlay"
-        onclick="if(event.target===this) closeModal('modal-pattern')">
-        <div
-            class="w-full max-w-2xl bg-white border border-slate-100 shadow-2xl rounded-3xl overflow-hidden max-h-[85vh] flex flex-col">
-            <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50">
-                <div>
-                    <h3 class="text-base font-extrabold text-slate-900">Configure Site Work Patterns</h3>
-                    <p class="text-xs font-medium text-slate-500 mt-0.5">Define operational work/off day rules used by the
-                        auto-generator.</p>
-                </div>
-                <button type="button" onclick="closeModal('modal-pattern')"
-                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
-            </div>
-
-            <div class="p-6 space-y-4 overflow-y-auto">
-                @foreach ($sites as $site)
-                    @if (Auth::user()?->role === 'superadmin' ||
-                            (Auth::user()?->role === 'admin_site' && Auth::user()->site_id === $site->id))
-                        <form action="{{ route('schedule.site.update', $site->id) }}" method="POST"
-                            id="pattern_form_{{ $site->id }}"
-                            class="p-4.5 border border-slate-200/80 bg-slate-50/50 rounded-2xl pattern-site-form"
-                            data-site-id="{{ $site->id }}">
-                            @csrf
-                            <div class="mb-3 text-xs font-extrabold tracking-wider uppercase text-slate-800">
-                                {{ $site->machine_name }}
-                            </div>
-                            <div class="space-y-3">
-                                <div>
-                                    <label
-                                        class="block mb-1.5 text-xs font-bold uppercase tracking-wider text-slate-700">Pattern
-                                        Type</label>
-                                    <select name="schedule_type" id="pattern_type_{{ $site->id }}"
-                                        class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-slate-800"
-                                        onchange="toggleShiftInputs(this, '{{ $site->id }}')">
-                                        <option value="office_hour"
-                                            {{ ($site->schedulePattern->schedule_type ?? '') == 'office_hour' ? 'selected' : '' }}>
-                                            Office Hours (Mon - Fri)
-                                        </option>
-                                        <option value="shift_rotation"
-                                            {{ ($site->schedulePattern->schedule_type ?? '') == 'shift_rotation' ? 'selected' : '' }}>
-                                            Dynamic Shift Rotation
-                                        </option>
-                                    </select>
-                                </div>
-
-                                <div id="rotation-fields-{{ $site->id }}"
-                                    class="{{ ($site->schedulePattern->schedule_type ?? '') == 'shift_rotation' ? '' : 'hidden' }} grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label
-                                            class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Work
-                                            Days</label>
-                                        <input type="number" name="work_days"
-                                            value="{{ $site->schedulePattern->work_days ?? 6 }}" min="1"
-                                            class="w-full p-2 text-xs font-bold bg-white border outline-none border-slate-200 rounded-xl text-slate-800">
-                                    </div>
-                                    <div>
-                                        <label
-                                            class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Off
-                                            Days</label>
-                                        <input type="number" name="off_days"
-                                            value="{{ $site->schedulePattern->off_days ?? 2 }}" min="1"
-                                            class="w-full p-2 text-xs font-bold bg-white border outline-none border-slate-200 rounded-xl text-slate-800">
-                                    </div>
-                                </div>
-
-                                <button type="submit"
-                                    class="w-full py-2.5 text-xs font-bold text-white transition-all bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95">
-                                    Save Pattern for {{ $site->machine_name }}
-                                </button>
-                            </div>
-                        </form>
-                    @endif
-                @endforeach
-            </div>
-        </div>
-    </div>
-
-    {{-- =========================================================== --}}
-    {{-- MODAL 2: GENERATE TEAM ROTAS --}}
+    {{-- MODAL: GENERATE TEAM ROTAS (site pattern + generate, 1 alur) --}}
     {{-- =========================================================== --}}
     <div id="modal-generate"
-        class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs modal-overlay"
+        class="fixed inset-0 z-50 items-center justify-center hidden p-3 transition-all duration-200 sm:p-6 bg-slate-900/60 backdrop-blur-xs modal-overlay"
         onclick="if(event.target===this) closeModal('modal-generate')">
         <div
-            class="w-full max-w-3xl bg-white border border-slate-100 shadow-2xl rounded-3xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
+            class="w-full max-w-6xl bg-white border border-slate-100 shadow-2xl rounded-3xl overflow-hidden max-h-[94vh] flex flex-col">
+
+            {{-- MODAL HEADER --}}
+            <div
+                class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50 shrink-0 sm:px-8">
                 <div>
-                    <h3 class="text-base font-extrabold text-slate-900">Generate Team Rota Schedule</h3>
-                    <p class="text-xs font-medium text-slate-500 mt-0.5">Complete the 3 steps below to automatically
-                        populate employee work rotas.</p>
+                    <h3 class="text-lg font-extrabold text-slate-900">Generate Team Rota Schedule</h3>
+                    <p class="mt-1 text-xs font-medium sm:text-sm text-slate-500">Atur pola kerja site dan generate
+                        jadwal dalam satu alur — tidak perlu pindah menu.</p>
                 </div>
                 <button type="button" onclick="closeModal('modal-generate')"
-                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
+                    class="flex items-center justify-center transition-colors rounded-lg w-9 h-9 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 shrink-0">&times;</button>
             </div>
 
-            <form action="{{ route('schedule.generate') }}" method="POST" class="p-6 space-y-5 overflow-y-auto">
+            <form action="{{ route('schedule.generate') }}" method="POST" id="generateForm"
+                class="flex flex-col flex-1 overflow-hidden">
                 @csrf
 
-                {{-- STEP 1 --}}
-                <div class="p-4.5 border border-amber-200/80 bg-amber-50/40 rounded-2xl">
-                    <div class="flex items-center gap-2 mb-3">
-                        <span
-                            class="flex items-center justify-center w-5 h-5 text-[10px] font-black text-white bg-amber-500 rounded-full">1</span>
-                        <span class="text-xs font-extrabold tracking-wider uppercase text-slate-800">Set Target
-                            Period</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                        <div>
-                            <label
-                                class="block mb-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Month</label>
-                            <select name="month" id="gen_month"
-                                class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:border-amber-500 text-slate-800">
-                                @for ($m = 1; $m <= 12; $m++)
-                                    <option value="{{ sprintf('%02d', $m) }}"
-                                        {{ sprintf('%02d', $month) == sprintf('%02d', $m) ? 'selected' : '' }}>
-                                        {{ date('F', mktime(0, 0, 0, $m, 1)) }}
-                                    </option>
-                                @endfor
-                            </select>
-                        </div>
-                        <div>
-                            <label
-                                class="block mb-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Year</label>
-                            <select name="year" id="gen_year"
-                                class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:border-amber-500 text-slate-800">
-                                @for ($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
-                                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>
-                                        {{ $y }}</option>
-                                @endfor
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block mb-1 text-[10px] font-bold text-slate-700 uppercase tracking-wider">Start
-                                Day</label>
-                            <input type="number" name="start_day" value="{{ old('start_day', 1) }}" min="1"
-                                max="31"
-                                class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:border-amber-500 text-slate-800"
-                                required>
-                        </div>
-                        <div id="gen_shift_duration_wrapper">
-                            <label class="block mb-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Shift
-                                Duration (Days)</label>
-                            <input type="number" name="shift_duration" id="gen_shift_duration"
-                                value="{{ old('shift_duration', 2) }}" min="1"
-                                class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:border-amber-500 text-slate-800">
-                            <p class="mt-1 text-[9px] text-slate-400 font-medium">Consecutive days in the same shift.</p>
-                        </div>
-                    </div>
-                </div>
+                {{-- SCROLLABLE BODY --}}
+                <div class="flex-1 px-6 py-6 space-y-6 overflow-y-auto sm:px-8">
 
-                {{-- STEP 2 --}}
-                <div class="p-4.5 border border-blue-200/80 bg-blue-50/40 rounded-2xl">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-2">
-                            <span
-                                class="flex items-center justify-center w-5 h-5 text-[10px] font-black text-white bg-blue-500 rounded-full">2</span>
-                            <span class="text-xs font-extrabold tracking-wider uppercase text-slate-800">Select
-                                Staff</span>
-                        </div>
-                        <label class="flex items-center gap-1.5 text-xs font-bold text-slate-600 cursor-pointer">
-                            <input type="checkbox" onchange="toggleAllEmployees(this.checked)"
-                                class="w-3.5 h-3.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
-                            Select All
-                        </label>
-                    </div>
+                    {{-- ROW 1: STEP 1 + STEP 2 (left) / STEP 3 (right) --}}
+                    <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
 
-                    <input type="text" id="employee-search" oninput="filterEmployees()"
-                        placeholder="Search employee name..."
-                        class="w-full p-2.5 mb-3 text-xs font-medium bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500 text-slate-800 placeholder-slate-400">
+                        {{-- LEFT COLUMN --}}
+                        <div class="space-y-6 lg:col-span-7">
 
-                    <div
-                        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 p-3 bg-white border border-slate-200 rounded-2xl max-h-[180px] overflow-y-auto">
-                        @foreach ($employees as $emp)
-                            @if (Auth::user()?->role === 'superadmin' ||
-                                    (Auth::user()?->role === 'admin_site' && Auth::user()->site_id === $emp->site_id))
-                                <label data-name="{{ strtolower($emp->name) }}" data-site-id="{{ $emp->site_id }}"
-                                    class="flex items-center gap-2 p-2 text-xs font-medium border border-transparent cursor-pointer text-slate-700 rounded-xl employee-option hover:bg-slate-50 hover:border-slate-100">
-                                    <input type="checkbox" name="employee_ids[]" value="{{ $emp->id }}"
-                                        class="w-4 h-4 text-blue-600 rounded border-slate-300 employee-checkbox focus:ring-blue-500"
-                                        {{ in_array($emp->id, old('employee_ids', [])) ? 'checked' : '' }}>
-                                    <div class="truncate">
-                                        <span class="block text-xs font-bold text-slate-800">{{ $emp->name }}</span>
-                                        <span class="text-[10px] block text-slate-400 font-semibold">Site:
-                                            {{ $emp->site->machine_name ?? '-' }}</span>
-                                    </div>
-                                </label>
-                            @endif
-                        @endforeach
-                    </div>
-                    <p id="employee-count" class="mt-2 text-[10px] font-bold text-slate-500"></p>
-                </div>
+                            {{-- STEP 1: SITE & PERIOD --}}
+                            <div class="p-5 border border-teal-200/80 bg-teal-50/40 rounded-2xl sm:p-6">
+                                <div class="flex items-center gap-2.5 mb-4">
+                                    <span
+                                        class="flex items-center justify-center w-6 h-6 text-xs font-black text-white bg-teal-500 rounded-full shrink-0">1</span>
+                                    <span
+                                        class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">
+                                        Site & Target Periode
+                                    </span>
+                                </div>
 
-                {{-- STEP 3 --}}
-                <div class="p-4.5 border border-purple-200/80 bg-purple-50/40 rounded-2xl">
-                    <div class="flex items-center gap-2 mb-3">
-                        <span
-                            class="flex items-center justify-center w-5 h-5 text-[10px] font-black text-white bg-purple-500 rounded-full">3</span>
-                        <span class="text-xs font-extrabold tracking-wider uppercase text-slate-800">Set Shift Rotation &
-                            Custom Sequence</span>
-                    </div>
-
-                    <!-- OFFICE HOURS FEEDBACK BANNER -->
-                    <div id="oh-notice-banner"
-                        class="hidden p-3.5 mb-3 text-xs text-blue-800 border border-blue-200/80 bg-blue-50 rounded-xl font-medium">
-                        <i class="mr-1.5 fa-solid fa-circle-info"></i>
-                        This site is configured for <strong>Office Hours</strong>. Schedules will automatically be generated
-                        for normal work days (Monday–Friday) without shift rotations.
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        {{-- ACTIVE SHIFT SEQUENCE & CUSTOM ORDER --}}
-                        <div>
-                            <div class="flex items-center justify-between mb-1.5">
-                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Active Shift
-                                    Sequence</label>
-                                <span class="text-[10px] text-slate-400 font-medium">Use <i
-                                        class="fa-solid fa-arrow-up text-slate-500"></i> <i
-                                        class="fa-solid fa-arrow-down text-slate-500"></i> to reorder</span>
-                            </div>
-
-                            <div id="shift-sequence-container"
-                                class="space-y-2 p-2 bg-white border border-slate-200 rounded-2xl max-h-[220px] overflow-y-auto">
-                                @foreach (App\Models\Shift::where('is_off', false)->orderBy('start_time', 'asc')->get() as $sf)
-                                    @php
-                                        $sfNameLower = strtolower($sf->shift_name);
-                                        $isOfficeHour =
-                                            str_contains($sfNameLower, 'office') ||
-                                            str_contains($sfNameLower, 'oh') ||
-                                            str_contains($sfNameLower, 'normal');
-                                    @endphp
-                                    <div class="flex items-center justify-between p-2 border bg-slate-50 border-slate-200/80 rounded-xl shift-item-row"
-                                        data-shift-id="{{ $sf->id }}" data-shift-name="{{ $sf->shift_name }}"
-                                        data-is-oh="{{ $isOfficeHour ? 'true' : 'false' }}">
-
-                                        <label
-                                            class="flex items-center gap-2 text-xs font-bold cursor-pointer text-slate-700 active-shift-label"
-                                            data-is-oh="{{ $isOfficeHour ? 'true' : 'false' }}">
-                                            <input type="checkbox" name="active_shifts[]" value="{{ $sf->id }}"
-                                                data-is-oh="{{ $isOfficeHour ? 'true' : 'false' }}"
-                                                onchange="updateStartingShiftDropdown()"
-                                                class="w-4 h-4 text-purple-600 rounded active-shift-checkbox focus:ring-purple-500"
-                                                {{ old('active_shifts') ? (in_array($sf->id, old('active_shifts')) ? 'checked' : '') : 'checked' }}>
-                                            <span>{{ $sf->shift_name }}</span>
-                                        </label>
-
-                                        <div class="flex items-center gap-1">
-                                            <button type="button" onclick="moveShiftItem(this, 'up')"
-                                                class="p-1.5 transition-colors rounded-lg text-slate-400 hover:text-purple-600 hover:bg-slate-200"
-                                                title="Move Up">
-                                                <i class="text-xs fa-solid fa-arrow-up"></i>
-                                            </button>
-                                            <button type="button" onclick="moveShiftItem(this, 'down')"
-                                                class="p-1.5 transition-colors rounded-lg text-slate-400 hover:text-purple-600 hover:bg-slate-200"
-                                                title="Move Down">
-                                                <i class="text-xs fa-solid fa-arrow-down"></i>
-                                            </button>
+                                <div class="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4">
+                                    @if (Auth::user()?->role === 'superadmin')
+                                        <div class="col-span-2 sm:col-span-2">
+                                            <label
+                                                class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Target
+                                                Site</label>
+                                            <select name="target_site_id" id="gen_target_site"
+                                                onchange="onGenSiteChange()"
+                                                class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all"
+                                                required>
+                                                <option value="">-- Pilih Site --</option>
+                                                @foreach ($sites as $st)
+                                                    <option value="{{ $st->id }}"
+                                                        {{ ($selectedSiteId ?? '') == $st->id ? 'selected' : '' }}>
+                                                        {{ $st->machine_name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
                                         </div>
+                                    @else
+                                        <input type="hidden" name="target_site_id" id="gen_target_site"
+                                            value="{{ Auth::user()->site_id }}">
+                                        <div class="col-span-2 sm:col-span-2">
+                                            <label
+                                                class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Target
+                                                Site</label>
+                                            <div
+                                                class="w-full p-2.5 text-xs font-bold bg-slate-100 border border-slate-200 rounded-xl text-slate-600">
+                                                {{ Auth::user()->site->machine_name ?? '-' }}
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <div class="col-span-1 sm:col-span-1">
+                                        <label
+                                            class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Start
+                                            Day</label>
+                                        <input type="number" name="start_day" value="{{ old('start_day', 1) }}"
+                                            min="1" max="31"
+                                            class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all"
+                                            required>
                                     </div>
-                                @endforeach
+
+                                    <div class="col-span-1 sm:col-span-1"></div>
+
+                                    <div class="col-span-1 sm:col-span-2">
+                                        <label
+                                            class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Month</label>
+                                        <select name="month" id="gen_month"
+                                            class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all">
+                                            @for ($m = 1; $m <= 12; $m++)
+                                                <option value="{{ sprintf('%02d', $m) }}"
+                                                    {{ sprintf('%02d', $month) == sprintf('%02d', $m) ? 'selected' : '' }}>
+                                                    {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                                                </option>
+                                            @endfor
+                                        </select>
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                        <label
+                                            class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Year</label>
+                                        <select name="year" id="gen_year"
+                                            class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all">
+                                            @for ($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
+                                                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>
+                                                    {{ $y }}</option>
+                                            @endfor
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- STEP 2: SITE WORK PATTERN --}}
+                            <div class="p-5 border border-amber-200/80 bg-amber-50/40 rounded-2xl sm:p-6">
+                                <div class="flex items-center gap-2.5 mb-1.5">
+                                    <span
+                                        class="flex items-center justify-center w-6 h-6 text-xs font-black text-white rounded-full bg-amber-500 shrink-0">2</span>
+                                    <span
+                                        class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">
+                                        Pola Kerja Site
+                                    </span>
+                                </div>
+                                <p class="mb-4 text-[10px] font-medium leading-relaxed text-slate-500 ml-[34px]">
+                                    Pola ini akan otomatis disimpan untuk site yang dipilih saat Anda menekan Generate —
+                                    tidak perlu disimpan terpisah.
+                                </p>
+
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                    <div class="sm:col-span-1">
+                                        <label
+                                            class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pattern
+                                            Type</label>
+                                        <select name="schedule_type" id="gen_schedule_type"
+                                            onchange="onScheduleTypeChange()"
+                                            class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all">
+                                            <option value="office_hour">Office Hours (Mon - Fri)</option>
+                                            <option value="shift_rotation">Dynamic Shift Rotation</option>
+                                        </select>
+                                    </div>
+                                    <div id="gen_work_days_wrapper">
+                                        <label
+                                            class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Work
+                                            Days</label>
+                                        <input type="number" name="work_days" id="gen_work_days" value="6"
+                                            min="1"
+                                            class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all">
+                                    </div>
+                                    <div id="gen_off_days_wrapper">
+                                        <label
+                                            class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Off
+                                            Days</label>
+                                        <input type="number" name="off_days" id="gen_off_days" value="2"
+                                            min="1"
+                                            class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all">
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        {{-- STARTING SHIFT --}}
-                        <div>
-                            <label class="block mb-1.5 text-xs font-bold tracking-wider uppercase text-slate-700">Starting
-                                Shift</label>
-                            <select name="start_shift_id" id="gen_start_shift_id"
-                                class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:border-purple-500 text-slate-800"
-                                required>
-                                {{-- Generated via JS --}}
-                            </select>
-                            <p class="mt-2 text-[10px] text-slate-400 leading-relaxed font-medium">
-                                Rotation order will follow your custom list on the left (Top to Bottom).
-                            </p>
+                        {{-- RIGHT COLUMN: STEP 3 --}}
+                        <div class="lg:col-span-5">
+                            <div
+                                class="flex flex-col h-full p-5 border border-blue-200/80 bg-blue-50/40 rounded-2xl sm:p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center gap-2.5">
+                                        <span
+                                            class="flex items-center justify-center w-6 h-6 text-xs font-black text-white bg-blue-500 rounded-full shrink-0">3</span>
+                                        <span
+                                            class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">
+                                            Select Staff
+                                        </span>
+                                    </div>
+                                    <label
+                                        class="flex items-center gap-1.5 text-xs font-bold text-slate-600 cursor-pointer">
+                                        <input type="checkbox" onchange="toggleAllEmployees(this.checked)"
+                                            class="w-3.5 h-3.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
+                                        Select All
+                                    </label>
+                                </div>
+
+                                <input type="text" id="employee-search" oninput="filterEmployees()"
+                                    placeholder="Search employee name..."
+                                    class="w-full p-2.5 mb-3 text-xs font-medium bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-slate-800 placeholder-slate-400 transition-all">
+
+                                <div id="employee-empty-notice"
+                                    class="hidden p-3 mb-3 text-xs font-semibold text-center border border-dashed text-slate-400 border-slate-300 rounded-xl">
+                                    Pilih Target Site di Step 1 untuk menampilkan daftar staff.
+                                </div>
+
+                                <div
+                                    class="grid flex-1 grid-cols-1 content-start sm:grid-cols-2 gap-2.5 p-3 bg-white border border-slate-200 rounded-2xl min-h-[220px] max-h-[340px] lg:max-h-none overflow-y-auto">
+                                    @foreach ($employees as $emp)
+                                        @if (Auth::user()?->role === 'superadmin' ||
+                                                (Auth::user()?->role === 'admin_site' && Auth::user()->site_id === $emp->site_id))
+                                            <label data-name="{{ strtolower($emp->name) }}"
+                                                data-site-id="{{ $emp->site_id }}"
+                                                class="flex items-center gap-2 p-2 text-xs font-medium border border-transparent cursor-pointer text-slate-700 rounded-xl employee-option hover:bg-slate-50 hover:border-slate-100">
+                                                <input type="checkbox" name="employee_ids[]" value="{{ $emp->id }}"
+                                                    class="w-4 h-4 text-blue-600 rounded border-slate-300 employee-checkbox focus:ring-blue-500 shrink-0"
+                                                    {{ in_array($emp->id, old('employee_ids', [])) ? 'checked' : '' }}>
+                                                <div class="truncate">
+                                                    <span
+                                                        class="block text-xs font-bold text-slate-800">{{ $emp->name }}</span>
+                                                    <span class="text-[10px] block text-slate-400 font-semibold">Site:
+                                                        {{ $emp->site->machine_name ?? '-' }}</span>
+                                                </div>
+                                            </label>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- STEP 4: SHIFT ROTATION & SEQUENCE (FULL WIDTH) --}}
+                    <div id="gen_step4" class="p-5 border border-purple-200/80 bg-purple-50/40 rounded-2xl sm:p-6">
+                        <div class="flex items-center gap-2.5 mb-4">
+                            <span
+                                class="flex items-center justify-center w-6 h-6 text-xs font-black text-white bg-purple-500 rounded-full shrink-0">4</span>
+                            <span class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">
+                                Set Shift Rotation & Custom Sequence
+                            </span>
+                        </div>
+
+                        <div id="oh-notice-banner"
+                            class="hidden p-4 mb-4 text-xs font-medium leading-relaxed text-blue-800 border border-blue-200/80 bg-blue-50 rounded-xl">
+                            <i class="mr-1.5 fa-solid fa-circle-info"></i>
+                            Site ini dikonfigurasi untuk <strong>Office Hours</strong>. Jadwal akan otomatis dibuat untuk
+                            hari kerja normal (Senin–Jumat) tanpa rotasi shift.
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-5 lg:grid-cols-12">
+
+                            {{-- ACTIVE SHIFT SEQUENCE (now also defines the starting shift — top of list) --}}
+                            <div class="lg:col-span-8">
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Active
+                                        Shift Sequence</label>
+                                    <span class="text-[10px] text-slate-400 font-medium">Use <i
+                                            class="fa-solid fa-arrow-up text-slate-500"></i> <i
+                                            class="fa-solid fa-arrow-down text-slate-500"></i> to reorder — top item
+                                        starts the rotation</span>
+                                </div>
+
+                                <div id="shift-sequence-container"
+                                    class="space-y-2 p-2.5 bg-white border border-slate-200 rounded-2xl min-h-[200px] max-h-[280px] overflow-y-auto">
+                                    @foreach (App\Models\Shift::where('is_off', false)->orderBy('start_time', 'asc')->get() as $sf)
+                                        @php
+                                            $sfNameLower = strtolower($sf->shift_name);
+                                            $isOfficeHour =
+                                                str_contains($sfNameLower, 'office') ||
+                                                str_contains($sfNameLower, 'oh') ||
+                                                str_contains($sfNameLower, 'normal');
+                                        @endphp
+                                        <div class="flex items-center justify-between p-2.5 border bg-slate-50 border-slate-200/80 rounded-xl shift-item-row transition-shadow duration-200"
+                                            data-shift-id="{{ $sf->id }}" data-shift-name="{{ $sf->shift_name }}"
+                                            data-is-oh="{{ $isOfficeHour ? 'true' : 'false' }}">
+
+                                            <label
+                                                class="flex items-center gap-2 text-xs font-bold cursor-pointer text-slate-700">
+                                                <input type="checkbox" name="active_shifts[]"
+                                                    value="{{ $sf->id }}" onchange="updateStartingShift()"
+                                                    class="w-4 h-4 text-purple-600 rounded active-shift-checkbox focus:ring-purple-500"
+                                                    {{ old('active_shifts') ? (in_array($sf->id, old('active_shifts')) ? 'checked' : '') : 'checked' }}>
+                                                <span>{{ $sf->shift_name }}</span>
+                                                <span
+                                                    class="start-badge hidden items-center gap-1 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white uppercase bg-purple-600 rounded-full">
+                                                    <i class="fa-solid fa-flag text-[8px]"></i> Start
+                                                </span>
+                                            </label>
+
+                                            <div class="flex items-center gap-1">
+                                                <button type="button" onclick="moveShiftItem(this, 'up')"
+                                                    class="p-1.5 transition-colors rounded-lg text-slate-400 hover:text-purple-600 hover:bg-slate-200"
+                                                    title="Move Up">
+                                                    <i class="text-xs fa-solid fa-arrow-up"></i>
+                                                </button>
+                                                <button type="button" onclick="moveShiftItem(this, 'down')"
+                                                    class="p-1.5 transition-colors rounded-lg text-slate-400 hover:text-purple-600 hover:bg-slate-200"
+                                                    title="Move Down">
+                                                    <i class="text-xs fa-solid fa-arrow-down"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            {{-- RIGHT SIDE: derived starting shift readout + shift duration --}}
+                            <div class="flex flex-col gap-5 lg:col-span-4">
+
+                                {{-- STARTING SHIFT (read-only, auto-derived from the list above) --}}
+                                <div>
+                                    <label class="block mb-2 text-xs font-bold tracking-wider uppercase text-slate-700">
+                                        Rotation Starts With
+                                    </label>
+                                    <input type="hidden" name="start_shift_id" id="gen_start_shift_id">
+                                    <div id="start_shift_display"
+                                        class="flex items-center gap-2 w-full p-2.5 text-xs font-bold bg-purple-50 border border-purple-200 rounded-xl text-purple-800 transition-colors">
+                                        <i class="text-purple-500 fa-solid fa-flag"></i>
+                                        <span id="start_shift_display_text">—</span>
+                                    </div>
+                                    <p class="mt-2.5 text-[10px] text-slate-400 leading-relaxed font-medium">
+                                        Follows the top item of Active Shift Sequence. Reorder the list to change it.
+                                    </p>
+                                </div>
+
+                                {{-- SHIFT DURATION --}}
+                                <div id="gen_shift_duration_wrapper">
+                                    <label
+                                        class="block mb-2 text-xs font-bold tracking-wider uppercase text-slate-700">Shift
+                                        Duration (Days)</label>
+                                    <input type="number" name="shift_duration" id="gen_shift_duration"
+                                        value="{{ old('shift_duration', 2) }}" min="1"
+                                        class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 text-slate-800 transition-all">
+                                    <p class="mt-2.5 text-[10px] text-slate-400 font-medium leading-relaxed">Consecutive
+                                        days in the same shift.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-                    <button type="button" onclick="closeModal('modal-generate')"
-                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
-                        Cancel
-                    </button>
-                    <button type="submit" id="btn-submit-generate"
-                        class="px-6 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-amber-600 hover:bg-amber-700 rounded-xl shadow-amber-600/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i class="mr-1.5 fa-solid fa-wand-magic-sparkles"></i> Generate Schedules
-                    </button>
+                {{-- STICKY FOOTER --}}
+                <div
+                    class="flex flex-col-reverse items-center justify-between gap-3 px-6 py-4 border-t sm:flex-row border-slate-100 bg-slate-50/70 shrink-0 sm:px-8">
+                    <p id="employee-count" class="text-xs font-bold text-slate-500">No employees selected</p>
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="closeModal('modal-generate')"
+                            class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" id="btn-submit-generate"
+                            class="px-6 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-amber-600 hover:bg-amber-700 rounded-xl shadow-amber-600/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="mr-1.5 fa-solid fa-wand-magic-sparkles"></i> Save Pattern & Generate Schedules
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
 
     {{-- =========================================================== --}}
-    {{-- MODAL 3: EDIT INDIVIDUAL SHIFT BY DATE --}}
+    {{-- MODAL: EDIT INDIVIDUAL SHIFT BY DATE --}}
     {{-- =========================================================== --}}
     <div id="modal-edit-shift"
         class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs modal-overlay"
@@ -684,7 +733,7 @@
     </div>
 
     {{-- =========================================================== --}}
-    {{-- MODAL 4: RESET / CLEAR PERIOD SCHEDULE --}}
+    {{-- MODAL: RESET / CLEAR PERIOD SCHEDULE --}}
     {{-- =========================================================== --}}
     <div id="modal-clear"
         class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs modal-overlay"
@@ -731,7 +780,20 @@
         </div>
     </div>
 
+    @php
+        $sitePatternsForJs = $sites->mapWithKeys(function ($s) {
+            return [
+                $s->id => [
+                    'schedule_type' => $s->schedulePattern->schedule_type ?? 'office_hour',
+                    'work_days' => $s->schedulePattern->work_days ?? 6,
+                    'off_days' => $s->schedulePattern->off_days ?? 2,
+                ],
+            ];
+        });
+    @endphp
     <script>
+        const SITE_PATTERNS = @json($sitePatternsForJs);
+
         function openModal(id) {
             const modal = document.getElementById(id);
             if (!modal) return;
@@ -756,181 +818,157 @@
             }
         });
 
-        function toggleShiftInputs(selectElement, siteId) {
-            const fields = document.getElementById(`rotation-fields-${siteId}`);
-            if (fields) {
-                if (selectElement.value === 'shift_rotation') {
-                    fields.classList.remove('hidden');
-                } else {
-                    fields.classList.add('hidden');
-                }
-            }
-        }
-
-        function openPatternModal() {
-            let activeSiteId = document.getElementById('main_site_select') ? document.getElementById('main_site_select')
-                .value : null;
-
-            document.querySelectorAll('.pattern-site-form').forEach(form => {
-                let siteId = form.getAttribute('data-site-id');
-                if (!activeSiteId || activeSiteId === 'all' || siteId == activeSiteId) {
-                    form.classList.remove('hidden');
-                } else {
-                    form.classList.add('hidden');
-                }
-            });
-
-            openModal('modal-pattern');
-        }
-
+        // Smooth reorder (FLIP technique): capture positions before the DOM move,
+        // then animate every row from its old position to its new one.
         function moveShiftItem(button, direction) {
             const row = button.closest('.shift-item-row');
             if (!row) return;
 
             const container = document.getElementById('shift-sequence-container');
+            const rows = Array.from(container.children);
 
+            // FIRST: record current position of every row
+            const firstRects = new Map();
+            rows.forEach(r => firstRects.set(r, r.getBoundingClientRect()));
+
+            // move the DOM node
             if (direction === 'up' && row.previousElementSibling) {
                 container.insertBefore(row, row.previousElementSibling);
             } else if (direction === 'down' && row.nextElementSibling) {
                 container.insertBefore(row.nextElementSibling, row);
+            } else {
+                updateStartingShift();
+                return;
             }
 
-            updateStartingShiftDropdown();
+            // LAST + INVERT + PLAY: animate from old position to new position
+            rows.forEach(r => {
+                const first = firstRects.get(r);
+                const last = r.getBoundingClientRect();
+                const deltaY = first.top - last.top;
+
+                if (deltaY) {
+                    r.style.transition = 'none';
+                    r.style.transform = `translateY(${deltaY}px)`;
+                    requestAnimationFrame(() => {
+                        r.style.transition = 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)';
+                        r.style.transform = '';
+                    });
+                }
+            });
+
+            // brief highlight on the row that actually moved
+            row.classList.add('ring-2', 'ring-purple-400', 'ring-offset-1');
+            setTimeout(() => row.classList.remove('ring-2', 'ring-purple-400', 'ring-offset-1'), 260);
+
+            updateStartingShift();
         }
 
-        function updateStartingShiftDropdown() {
-            const startShiftSelect = document.getElementById('gen_start_shift_id');
-            if (!startShiftSelect) return;
+        // The starting shift is simply the first visible, checked row in the
+        // Active Shift Sequence list — no separate dropdown needed.
+        function updateStartingShift() {
+            const startShiftInput = document.getElementById('gen_start_shift_id');
+            const startShiftDisplayText = document.getElementById('start_shift_display_text');
+            if (!startShiftInput) return;
 
-            const currentVal = startShiftSelect.value;
-            startShiftSelect.innerHTML = '';
-
-            let hasSelectedOption = false;
+            let starter = null;
 
             document.querySelectorAll('.shift-item-row').forEach(row => {
-                if (row.style.display !== 'none') {
+                row.querySelector('.start-badge')?.classList.add('hidden');
+                row.querySelector('.start-badge')?.classList.remove('inline-flex');
+
+                if (!starter && row.style.display !== 'none') {
                     const cb = row.querySelector('.active-shift-checkbox');
                     if (cb && cb.checked) {
-                        const shiftId = row.getAttribute('data-shift-id');
-                        const shiftName = row.getAttribute('data-shift-name');
-
-                        const opt = document.createElement('option');
-                        opt.value = shiftId;
-                        opt.textContent = shiftName;
-
-                        if (shiftId === currentVal) {
-                            opt.selected = true;
-                            hasSelectedOption = true;
-                        }
-
-                        startShiftSelect.appendChild(opt);
+                        starter = row;
                     }
                 }
             });
 
-            if (!hasSelectedOption && startShiftSelect.options.length > 0) {
-                startShiftSelect.selectedIndex = 0;
+            if (starter) {
+                startShiftInput.value = starter.getAttribute('data-shift-id');
+                if (startShiftDisplayText) startShiftDisplayText.textContent = starter.getAttribute('data-shift-name');
+                const badge = starter.querySelector('.start-badge');
+                badge?.classList.remove('hidden');
+                badge?.classList.add('inline-flex');
+            } else {
+                startShiftInput.value = '';
+                if (startShiftDisplayText) startShiftDisplayText.textContent = 'No active shift selected';
             }
         }
 
-        function syncPatternWithSite() {
-            let activeSiteId = document.getElementById('main_site_select') ? document.getElementById('main_site_select')
-                .value : null;
-            let isOfficeHour = false;
+        // Step 2: toggle work/off days input berdasarkan pattern type
+        function onScheduleTypeChange() {
+            const type = document.getElementById('gen_schedule_type').value;
+            const workWrap = document.getElementById('gen_work_days_wrapper');
+            const offWrap = document.getElementById('gen_off_days_wrapper');
+            const durationWrapper = document.getElementById('gen_shift_duration_wrapper');
+            const durationInput = document.getElementById('gen_shift_duration');
+            const ohNoticeBanner = document.getElementById('oh-notice-banner');
+            const isOfficeHour = type === 'office_hour';
 
-            if (activeSiteId && activeSiteId !== 'all') {
-                let patternSelect = document.getElementById(`pattern_type_${activeSiteId}`);
-                if (patternSelect && patternSelect.value === 'office_hour') {
-                    isOfficeHour = true;
-                }
+            workWrap.classList.toggle('hidden', isOfficeHour);
+            offWrap.classList.toggle('hidden', isOfficeHour);
+            ohNoticeBanner.classList.toggle('hidden', !isOfficeHour);
+
+            if (isOfficeHour) {
+                durationWrapper.classList.add('hidden');
+                durationInput.removeAttribute('required');
+            } else {
+                durationWrapper.classList.remove('hidden');
+                durationInput.setAttribute('required', 'required');
             }
 
-            let ohNoticeBanner = document.getElementById('oh-notice-banner');
-
-            if (ohNoticeBanner) {
-                if (isOfficeHour) {
-                    ohNoticeBanner.classList.remove('hidden');
-                } else {
-                    ohNoticeBanner.classList.add('hidden');
-                }
-            }
-
+            // Step 4: filter shift aktif sesuai office_hour vs shift_rotation
             document.querySelectorAll('.shift-item-row').forEach(row => {
-                let isOh = row.getAttribute('data-is-oh') === 'true';
-                let cb = row.querySelector('.active-shift-checkbox');
-
-                if (isOfficeHour) {
-                    if (isOh) {
-                        row.style.display = '';
-                        if (cb) cb.checked = true;
-                    } else {
-                        row.style.display = 'none';
-                        if (cb) cb.checked = false;
-                    }
-                } else {
-                    if (isOh) {
-                        row.style.display = 'none';
-                        if (cb) cb.checked = false;
-                    } else {
-                        row.style.display = '';
-                        if (cb) cb.checked = true;
-                    }
-                }
+                const isOh = row.getAttribute('data-is-oh') === 'true';
+                const cb = row.querySelector('.active-shift-checkbox');
+                const shouldShow = isOfficeHour ? isOh : !isOh;
+                row.style.display = shouldShow ? '' : 'none';
+                if (cb) cb.checked = shouldShow;
             });
 
-            updateStartingShiftDropdown();
+            updateStartingShift();
+        }
 
-            let durationWrapper = document.getElementById('gen_shift_duration_wrapper');
-            let durationInput = document.getElementById('gen_shift_duration');
-            if (durationWrapper && durationInput) {
-                if (isOfficeHour) {
-                    durationWrapper.classList.add('hidden');
-                    durationInput.removeAttribute('required');
-                } else {
-                    durationWrapper.classList.remove('hidden');
-                    durationInput.setAttribute('required', 'required');
-                }
-            }
+        // Step 1: site berubah -> filter staff (Step 3) + prefill pattern (Step 2)
+        function onGenSiteChange() {
+            const siteId = document.getElementById('gen_target_site').value;
 
             document.querySelectorAll('.employee-option').forEach(el => {
-                let empSiteId = el.getAttribute('data-site-id');
-                if (!activeSiteId || activeSiteId === 'all' || empSiteId == activeSiteId) {
-                    el.style.display = '';
-                } else {
-                    el.style.display = 'none';
-                    let cb = el.querySelector('.employee-checkbox');
+                const empSiteId = el.getAttribute('data-site-id');
+                const match = siteId && empSiteId == siteId;
+                el.style.display = match ? '' : 'none';
+                if (!match) {
+                    const cb = el.querySelector('.employee-checkbox');
                     if (cb) cb.checked = false;
                 }
             });
+
+            const emptyNotice = document.getElementById('employee-empty-notice');
+            if (emptyNotice) emptyNotice.classList.toggle('hidden', !!siteId);
+
+            const pattern = SITE_PATTERNS[siteId] ?? {
+                schedule_type: 'office_hour',
+                work_days: 6,
+                off_days: 2
+            };
+            document.getElementById('gen_schedule_type').value = pattern.schedule_type;
+            document.getElementById('gen_work_days').value = pattern.work_days;
+            document.getElementById('gen_off_days').value = pattern.off_days;
+
+            onScheduleTypeChange();
             updateEmployeeCount();
-        }
-
-        function openGenerateModal() {
-            let mainMonth = document.getElementById('main_month_select') ? document.getElementById('main_month_select')
-                .value : null;
-            let mainYear = document.getElementById('main_year_select') ? document.getElementById('main_year_select').value :
-                null;
-
-            if (mainMonth && document.getElementById('gen_month')) {
-                document.getElementById('gen_month').value = mainMonth;
-            }
-            if (mainYear && document.getElementById('gen_year')) {
-                document.getElementById('gen_year').value = mainYear;
-            }
-
-            syncPatternWithSite();
-            openModal('modal-generate');
         }
 
         function filterEmployees() {
             const q = document.getElementById('employee-search').value.toLowerCase();
-            let activeSiteId = document.getElementById('main_site_select') ? document.getElementById('main_site_select')
-                .value : null;
+            const siteId = document.getElementById('gen_target_site').value;
 
             document.querySelectorAll('.employee-option').forEach(function(el) {
-                let empSiteId = el.getAttribute('data-site-id');
-                let matchesName = el.dataset.name.includes(q);
-                let matchesSite = (!activeSiteId || activeSiteId === 'all' || empSiteId == activeSiteId);
+                const empSiteId = el.getAttribute('data-site-id');
+                const matchesName = el.dataset.name.includes(q);
+                const matchesSite = siteId && empSiteId == siteId;
 
                 el.style.display = (matchesName && matchesSite) ? '' : 'none';
             });
@@ -939,7 +977,7 @@
         function toggleAllEmployees(checked) {
             document.querySelectorAll('.employee-option').forEach(function(el) {
                 if (el.style.display !== 'none') {
-                    let cb = el.querySelector('.employee-checkbox');
+                    const cb = el.querySelector('.employee-checkbox');
                     if (cb) cb.checked = checked;
                 }
             });
@@ -964,18 +1002,43 @@
             cb.addEventListener('change', updateEmployeeCount);
         });
 
+        function openGenerateModal() {
+            const targetSelect = document.getElementById('gen_target_site');
+            const mainSiteSelect = document.getElementById('main_site_select');
+            const mainMonth = document.getElementById('main_month_select');
+            const mainYear = document.getElementById('main_year_select');
+
+            if (mainMonth && document.getElementById('gen_month')) {
+                document.getElementById('gen_month').value = mainMonth.value;
+            }
+            if (mainYear && document.getElementById('gen_year')) {
+                document.getElementById('gen_year').value = mainYear.value;
+            }
+
+            // Jika superadmin dan filter utama sedang menunjuk 1 site spesifik, auto-pilih di modal
+            if (targetSelect && targetSelect.tagName === 'SELECT' && mainSiteSelect && mainSiteSelect.value !== 'all') {
+                targetSelect.value = mainSiteSelect.value;
+            }
+
+            onGenSiteChange();
+            openModal('modal-generate');
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             updateEmployeeCount();
+            onGenSiteChange();
 
             @if (
                 $errors->has('employee_ids') ||
                     $errors->has('start_shift_id') ||
                     $errors->has('active_shifts') ||
                     $errors->has('start_day') ||
-                    $errors->has('shift_duration'))
+                    $errors->has('shift_duration') ||
+                    $errors->has('schedule_type') ||
+                    $errors->has('work_days') ||
+                    $errors->has('off_days') ||
+                    $errors->has('target_site_id'))
                 openGenerateModal();
-            @elseif ($errors->has('schedule_type') || $errors->has('work_days') || $errors->has('off_days'))
-                openPatternModal();
             @endif
         });
 

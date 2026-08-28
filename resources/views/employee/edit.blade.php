@@ -5,7 +5,7 @@
 @section('content')
     <div class="w-full max-w-3xl mx-auto space-y-6">
 
-        {{-- 1. HEADER CARD (TERPISAH) --}}
+        {{-- 1. HEADER CARD --}}
         <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
             <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
@@ -52,6 +52,26 @@
                             placeholder="Full name as per ID..." required>
                     </div>
 
+                    {{-- NIK --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            NIK (National ID / KTP)
+                        </label>
+                        <input type="text" name="nik" value="{{ old('nik', $employee->nik) }}" maxlength="16"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400 font-mono"
+                            placeholder="16-digit NIK...">
+                    </div>
+
+                    {{-- EMAIL --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Email Address
+                        </label>
+                        <input type="email" name="email" value="{{ old('email', $employee->email) }}"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
+                            placeholder="employee@company.com">
+                    </div>
+
                     {{-- PHONE NUMBER --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
@@ -68,7 +88,6 @@
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Site Placement <span class="text-rose-500">*</span>
                         </label>
-
                         @if (Auth::user()?->role === 'superadmin')
                             <select name="site_id"
                                 class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"
@@ -106,6 +125,16 @@
                             <option value="Daily" {{ old('status', $employee->status) == 'Daily' ? 'selected' : '' }}>
                                 Daily</option>
                         </select>
+                    </div>
+
+                    {{-- POSITION --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Position / Job Title
+                        </label>
+                        <input type="text" name="position" value="{{ old('position', $employee->position) }}"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
+                            placeholder="e.g. Supervisor, Operator, Admin">
                     </div>
 
                     {{-- GAJI POKOK --}}
@@ -171,24 +200,40 @@
                             placeholder="e.g. 8830123456">
                     </div>
 
-                    {{-- ALASAN PERUBAHAN GAJI --}}
+                    {{-- MCU STATUS --}}
                     <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            MCU Passed
+                        </label>
+                        <select name="mcu"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                            <option value="no" {{ old('mcu', $employee->mcu) == 'no' ? 'selected' : '' }}>NO</option>
+                            <option value="yes" {{ old('mcu', $employee->mcu) == 'yes' ? 'selected' : '' }}>YES
+                            </option>
+                        </select>
+                    </div>
+
+                    {{-- TLD BADGE --}}
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            TLD Badge
+                        </label>
+                        <select name="tld"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                            <option value="no" {{ old('tld', $employee->tld) == 'no' ? 'selected' : '' }}>NO</option>
+                            <option value="yes" {{ old('tld', $employee->tld) == 'yes' ? 'selected' : '' }}>YES
+                            </option>
+                        </select>
+                    </div>
+
+                    {{-- ALASAN PERUBAHAN GAJI --}}
+                    <div class="space-y-1.5 md:col-span-2">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Alasan Perubahan Gaji (Jika ada)
                         </label>
                         <input type="text" name="salary_change_reason"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
                             placeholder="e.g. Promosi Jabatan, Penyesuaian UMK">
-                    </div>
-
-                    {{-- POSITION --}}
-                    <div class="space-y-1.5 md:col-span-2">
-                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Position / Job Title
-                        </label>
-                        <input type="text" name="position" value="{{ old('position', $employee->position) }}"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
-                            placeholder="e.g. Supervisor, Operator, Admin">
                     </div>
 
                     {{-- JOIN DATE --}}

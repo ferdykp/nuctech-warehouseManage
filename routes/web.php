@@ -144,6 +144,8 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     // Manajemen Employee
     Route::prefix('employee')->name('employee.')->group(function () {
         Route::get('/', [EmployeeController::class, 'index'])->name('index');
+        Route::get('/export', [EmployeeController::class, 'export'])->name('export');
+        Route::post('/import', [EmployeeController::class, 'import'])->name('import');
         Route::get('/create', [EmployeeController::class, 'create'])->name('create');
         Route::post('/store', [EmployeeController::class, 'store'])->name('store');
         Route::get('/{id}', [EmployeeController::class, 'show'])->name('show');
