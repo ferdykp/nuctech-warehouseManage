@@ -150,7 +150,20 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
         $endOfMonth = Carbon::parse($monthPeriod . '-01')->endOfMonth();
         $daysInMonth = $startOfMonth->daysInMonth;
 
-        $nationalHolidays = $holidayService->getHolidaysForMonth($monthPeriod);
+        $rawHolidays = $holidayService->getHolidaysForMonth($monthPeriod);
+
+        // Standardisasi key array agar selalu berupa string "Y-m-d"
+        $nationalHolidays = [];
+        if (!empty($rawHolidays)) {
+            foreach ($rawHolidays as $key => $val) {
+                if ($key instanceof Carbon) {
+                    $dateKey = $key->format('Y-m-d');
+                } else {
+                    $dateKey = (string) $key;
+                }
+                $nationalHolidays[$dateKey] = $val;
+            }
+        }
 
         $effectiveWorkingDays = 0;
         for ($d = 1; $d <= $daysInMonth; $d++) {
@@ -174,7 +187,11 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
 
         foreach ($schedules as $sched) {
             if ($sched->shift && !$sched->shift->is_off) {
-                $dateStr = $sched->date;
+                // Pastikan $dateStr berupa string murni
+                $dateStr = $sched->date instanceof Carbon
+                    ? $sched->date->format('Y-m-d')
+                    : (string) $sched->date;
+
                 if (isset($nationalHolidays[$dateStr])) {
                     $holidayOvertimeDays++;
                 }

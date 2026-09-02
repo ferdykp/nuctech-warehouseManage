@@ -90,7 +90,7 @@
                         </label>
                         @if (Auth::user()?->role === 'superadmin')
                             <select name="site_id"
-                                class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"
+                                class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer"
                                 required>
                                 <option value="">-- Select Site Location --</option>
                                 @foreach ($sites as $site)
@@ -115,7 +115,7 @@
                             Employment Status
                         </label>
                         <select name="status"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
                             <option value="Probation"
                                 {{ old('status', $employee->status) == 'Probation' ? 'selected' : '' }}>Probation</option>
                             <option value="Contract"
@@ -155,7 +155,7 @@
                             Bank Name
                         </label>
                         <select name="bank_name"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
                             <option value="">-- Select Bank --</option>
                             @php
                                 $bankList = [
@@ -206,7 +206,7 @@
                             MCU Passed
                         </label>
                         <select name="mcu"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
                             <option value="no" {{ old('mcu', $employee->mcu) == 'no' ? 'selected' : '' }}>NO</option>
                             <option value="yes" {{ old('mcu', $employee->mcu) == 'yes' ? 'selected' : '' }}>YES
                             </option>
@@ -219,7 +219,7 @@
                             TLD Badge
                         </label>
                         <select name="tld"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
                             <option value="no" {{ old('tld', $employee->tld) == 'no' ? 'selected' : '' }}>NO</option>
                             <option value="yes" {{ old('tld', $employee->tld) == 'yes' ? 'selected' : '' }}>YES
                             </option>
@@ -269,7 +269,7 @@
                         Discard
                     </a>
                     <button type="submit"
-                        class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-600/20 active:scale-[0.98]">
+                        class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-600/20 active:scale-[0.98] cursor-pointer">
                         <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Update Employee
                     </button>
                 </div>
@@ -277,60 +277,76 @@
         </form>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const salaryDisplay = document.getElementById('basic_salary_display');
-            const salaryReal = document.getElementById('basic_salary_real');
+    @push('scripts')
+        <script>
+            function initEditEmployeeScripts() {
+                const salaryDisplay = document.getElementById('basic_salary_display');
+                const salaryReal = document.getElementById('basic_salary_real');
 
-            function formatRupiah(value) {
-                let number = value.toString().replace(/\D/g, '');
-                return number ? 'Rp ' + new Intl.NumberFormat('id-ID').format(number) : '';
-            }
-
-            if (salaryDisplay && salaryReal) {
-                if (salaryReal.value && salaryReal.value !== '0') {
-                    salaryDisplay.value = formatRupiah(salaryReal.value);
+                function formatRupiah(value) {
+                    let number = String(value).replace(/\D/g, '');
+                    return number ? 'Rp ' + new Intl.NumberFormat('id-ID').format(number) : '';
                 }
 
-                salaryDisplay.addEventListener('input', function(e) {
-                    let rawValue = e.target.value.replace(/\D/g, '');
-                    salaryReal.value = rawValue ? rawValue : 0;
-                    e.target.value = formatRupiah(rawValue);
-                });
-            }
-
-            const phoneInput = document.getElementById('phone_number');
-            if (phoneInput) {
-                phoneInput.addEventListener('input', function(e) {
-                    let value = e.target.value;
-                    let digits = value.replace(/\D/g, '');
-
-                    if (digits.startsWith('0')) {
-                        digits = '62' + digits.substring(1);
-                    }
-                    if (!digits.startsWith('62') && digits.length > 0) {
-                        digits = '62' + digits;
+                if (salaryDisplay && salaryReal) {
+                    if (salaryReal.value && salaryReal.value !== '0') {
+                        salaryDisplay.value = formatRupiah(salaryReal.value);
                     }
 
-                    digits = digits.substring(0, 14);
+                    salaryDisplay.replaceWith(salaryDisplay.cloneNode(true));
+                    const newSalaryDisplay = document.getElementById('basic_salary_display');
 
-                    let formatted = '';
-                    if (digits.length > 0) formatted = '+' + digits.substring(0, 2);
-                    if (digits.length > 2) formatted += ' ' + digits.substring(2, 5);
-                    if (digits.length > 5) formatted += '-' + digits.substring(5, 9);
-                    if (digits.length > 9) formatted += '-' + digits.substring(9, 13);
+                    newSalaryDisplay.addEventListener('input', function(e) {
+                        let rawValue = e.target.value.replace(/\D/g, '');
+                        salaryReal.value = rawValue ? rawValue : 0;
+                        e.target.value = formatRupiah(rawValue);
+                    });
+                }
 
-                    e.target.value = formatted;
-                });
+                const phoneInput = document.getElementById('phone_number');
+                if (phoneInput) {
+                    phoneInput.replaceWith(phoneInput.cloneNode(true));
+                    const newPhoneInput = document.getElementById('phone_number');
 
-                phoneInput.addEventListener('focus', function(e) {
-                    if (!e.target.value) e.target.value = '+62 ';
-                });
+                    newPhoneInput.addEventListener('input', function(e) {
+                        let value = e.target.value;
+                        let digits = value.replace(/\D/g, '');
 
-                phoneInput.addEventListener('blur', function(e) {
-                    if (e.target.value === '+62 ' || e.target.value === '+62') e.target.value = '';
+                        if (digits.startsWith('0')) {
+                            digits = '62' + digits.substring(1);
+                        }
+                        if (!digits.startsWith('62') && digits.length > 0) {
+                            digits = '62' + digits;
+                        }
+
+                        digits = digits.substring(0, 14);
+
+                        let formatted = '';
+                        if (digits.length > 0) formatted = '+' + digits.substring(0, 2);
+                        if (digits.length > 2) formatted += ' ' + digits.substring(2, 5);
+                        if (digits.length > 5) formatted += '-' + digits.substring(5, 9);
+                        if (digits.length > 9) formatted += '-' + digits.substring(9, 13);
+
+                        e.target.value = formatted;
+                    });
+
+                    newPhoneInput.addEventListener('focus', function(e) {
+                        if (!e.target.value) e.target.value = '+62 ';
+                    });
+
+                    newPhoneInput.addEventListener('blur', function(e) {
+                        if (e.target.value === '+62 ' || e.target.value === '+62') e.target.value = '';
+                    });
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', initEditEmployeeScripts);
+
+            if (window.up) {
+                up.on('up:fragment:inserted', function() {
+                    initEditEmployeeScripts();
                 });
             }
-        });
-    </script>
+        </script>
+    @endpush
 @endsection

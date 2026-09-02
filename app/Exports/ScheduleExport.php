@@ -34,9 +34,6 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
         return date('F \'y', mktime(0, 0, 0, (int)$this->month, 1, $this->year));
     }
 
-    /**
-     * Sisipkan Logo Nuctech
-     */
     public function drawings()
     {
         $drawing = new Drawing();
@@ -62,9 +59,6 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
         $endDate = Carbon::createFromDate($this->year, $this->month, 1)->endOfMonth();
         $totalDays = $startDate->daysInMonth;
 
-        // -------------------------------------------------------------
-        // DINAMIS: SET SITE NAME DAN SUBTITLE
-        // -------------------------------------------------------------
         $siteName = 'ALL SITES';
         $subTitle = 'ALL SITES - ALL LOCATIONS';
 
@@ -72,11 +66,8 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
             $site = Site::find($this->siteId);
             if ($site) {
                 $siteName = $site->machine_name;
-
-                // Trim nilai location untuk membuang spasi yang tidak disengaja
                 $locVal = trim((string) $site->location);
 
-                // Cek apakah lokasi benar-benar ada nilainya dan bukan tanda strip "--"
                 if (!empty($locVal) && $locVal !== '--' && $locVal !== '-') {
                     $subTitle = strtoupper($site->machine_name . ' - ' . $locVal);
                 } else {
@@ -84,6 +75,7 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
                 }
             }
         }
+
         $employeesQuery = Employee::with(['schedules' => function ($q) use ($startDate, $endDate) {
             $q->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
                 ->with('shift');
@@ -96,18 +88,14 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
         $employees = $employeesQuery->get();
         $rows = collect();
 
-        // -------------------------------------------------------------
-        // BARIS 1-5: HEADER TITLE & WORKING SITE
-        // -------------------------------------------------------------
-        $rows->push(['', '', 'WORK SCHEDULE ENGINEERS - NUCTECH COMPANY LIMITED INDONESIA']); // Baris 1
-        $rows->push(['', '', $subTitle]); // Baris 2 (Sudah Dinamis)
-        $rows->push(['', '']); // Baris 3
-        $rows->push(['', '']); // Baris 4
-        $rows->push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'Working Site: ' . $siteName]); // Baris 5
+        // BARIS 1-5
+        $rows->push(['', '', 'WORK SCHEDULE ENGINEERS - NUCTECH COMPANY LIMITED INDONESIA']);
+        $rows->push(['', '', $subTitle]);
+        $rows->push(['', '']);
+        $rows->push(['', '']);
+        $rows->push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'Working Site: ' . $siteName]);
 
-        // -------------------------------------------------------------
         // BLOK 1: Tanggal 1 s/d 16
-        // -------------------------------------------------------------
         $monthName = Carbon::createFromDate($this->year, $this->month, 1)->format('F  Y');
 
         $rowMonth1 = ['', 'NAME', 'MONTH', $monthName];
@@ -120,29 +108,31 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
             $rowDate1[] = $d;
         }
 
-        $rows->push($rowMonth1); // Baris 6
-        $rows->push($rowDay1);   // Baris 7
-        $rows->push($rowDate1);  // Baris 8
+        $rows->push($rowMonth1);
+        $rows->push($rowDay1);
+        $rows->push($rowDate1);
 
         $no = 1;
         foreach ($employees as $emp) {
+            // Mapping jadwal berdasarkan string Y-m-d agar akurat
+            $schedulesMap = $emp->schedules->keyBy(function ($item) {
+                return $item->date instanceof Carbon ? $item->date->format('Y-m-d') : (string)$item->date;
+            });
+
             $empRow = [$no, '', $emp->name];
             for ($d = 1; $d <= 16; $d++) {
                 $dateStr = Carbon::createFromDate($this->year, $this->month, $d)->format('Y-m-d');
-                $sched = $emp->schedules->firstWhere('date', $dateStr);
+                $sched = $schedulesMap->get($dateStr);
                 $empRow[] = $this->getShiftCode($sched);
             }
             $rows->push($empRow);
             $no++;
         }
 
-        // MARGIN 2 BARIS KOSONG ANTARA TABEL 1 DAN TABEL 2
         $rows->push(['', '']);
         $rows->push(['', '']);
 
-        // -------------------------------------------------------------
         // BLOK 2: Tanggal 17 s/d Akhir Bulan
-        // -------------------------------------------------------------
         $rowMonth2 = ['', 'NAME', 'MONTH', $monthName];
         $rowDay2   = ['', '', 'DAY'];
         $rowDate2  = ['', '', 'DATE'];
@@ -159,21 +149,23 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
 
         $no = 1;
         foreach ($employees as $emp) {
+            $schedulesMap = $emp->schedules->keyBy(function ($item) {
+                return $item->date instanceof Carbon ? $item->date->format('Y-m-d') : (string)$item->date;
+            });
+
             $empRow = [$no, '', $emp->name];
             for ($d = 17; $d <= $totalDays; $d++) {
                 $dateStr = Carbon::createFromDate($this->year, $this->month, $d)->format('Y-m-d');
-                $sched = $emp->schedules->firstWhere('date', $dateStr);
+                $sched = $schedulesMap->get($dateStr);
                 $empRow[] = $this->getShiftCode($sched);
             }
             $rows->push($empRow);
             $no++;
         }
 
-        $rows->push(['', '']); // Pemisah
+        $rows->push(['', '']);
 
-        // -------------------------------------------------------------
         // COMMENT: SHIFT DINAMIS DARI DB
-        // -------------------------------------------------------------
         $rows->push(['', 'Comment:']);
         $shifts = Shift::orderBy('is_off', 'asc')->orderBy('start_time', 'asc')->get();
 
@@ -187,22 +179,17 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
             }
         }
 
-        $rows->push(['', '']); // Pemisah
+        $rows->push(['', '']);
 
-        // -------------------------------------------------------------
         // NOTE
-        // -------------------------------------------------------------
         $rows->push(['', 'Note:', 'If you have to take a leave, you must adjust your duty with some other person. There shall be no gap in duty.']);
         $rows->push(['', '', 'If you want to take a leave, you must ask the permission from your site team leader at least 8 hours before your duty time.']);
 
-        // JARAK SEBELUM TABEL SUMMARY
         $rows->push(['', '']);
         $rows->push(['', '']);
         $rows->push(['', '']);
 
-        // -------------------------------------------------------------
         // TABEL SUMMARY BAWAH
-        // -------------------------------------------------------------
         $rows->push(['', 'Name', 'Phone Number', '', '', '', 'Scheduled Days', '', 'Off Days', '', 'Attend Days', '', 'Absent Days']);
 
         $no = 1;
@@ -210,9 +197,13 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
             $totalWork = 0;
             $totalOff = 0;
 
+            $schedulesMap = $emp->schedules->keyBy(function ($item) {
+                return $item->date instanceof Carbon ? $item->date->format('Y-m-d') : (string)$item->date;
+            });
+
             for ($d = 1; $d <= $totalDays; $d++) {
                 $dateStr = Carbon::createFromDate($this->year, $this->month, $d)->format('Y-m-d');
-                $sched = $emp->schedules->firstWhere('date', $dateStr);
+                $sched = $schedulesMap->get($dateStr);
 
                 if ($sched && $sched->shift) {
                     if ($sched->shift->is_off) {
@@ -258,6 +249,13 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
 
     private function extractShiftCode($shiftName)
     {
+        $nameLower = strtolower($shiftName);
+
+        // Jika nama shift mengandung Office Hour / OH
+        if (str_contains($nameLower, 'office') || str_contains($nameLower, 'oh')) {
+            return 'OH';
+        }
+
         if (preg_match('/\d+/', $shiftName, $matches)) {
             return $matches[0];
         }
@@ -272,19 +270,16 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
 
     public function styles(Worksheet $sheet)
     {
-        // 1. Font default: Calibri 11pt
         $sheet->getParent()->getDefaultStyle()->getFont()->setName('Calibri')->setSize(11);
 
-        // 2. LEBAR KOLOM
-        $sheet->getColumnDimension('A')->setWidth(4.71);   // No
-        $sheet->getColumnDimension('B')->setWidth(20.00);  // Header NAME / Label
-        $sheet->getColumnDimension('C')->setWidth(26.00);  // Nama Karyawan & MONTH/DAY/DATE
-        $sheet->getColumnDimension('D')->setWidth(14.00);  // Tanggal 1 / 17
+        $sheet->getColumnDimension('A')->setWidth(4.71);
+        $sheet->getColumnDimension('B')->setWidth(20.00);
+        $sheet->getColumnDimension('C')->setWidth(26.00);
+        $sheet->getColumnDimension('D')->setWidth(14.00);
         $sheet->getColumnDimension('U')->setWidth(8.14);
 
         $dateColumns = ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S'];
 
-        // 3. Border Tipis
         $thinBorder = [
             'borders' => [
                 'allBorders' => [
@@ -294,18 +289,16 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
             ],
         ];
 
-        // 4. DEFINISI PEWARNAAN HEX
         $fillYellow = ['fillType' => Fill::FILL_SOLID, 'color' => ['rgb' => 'FFFF00']]; // Shift 1
         $fillOrange = ['fillType' => Fill::FILL_SOLID, 'color' => ['rgb' => 'FFC000']]; // Shift 2
         $fillBlue   = ['fillType' => Fill::FILL_SOLID, 'color' => ['rgb' => '9BC2E6']]; // Shift 3
+        $fillGreen  = ['fillType' => Fill::FILL_SOLID, 'color' => ['rgb' => 'E2EFDA']]; // OH (Office Hour)
         $fillRed    = ['fillType' => Fill::FILL_SOLID, 'color' => ['rgb' => 'FF0000']]; // Sunday
 
-        // 5. Alignment Global
         $sheet->getStyle('A1:U200')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
         $sheet->getStyle('A1:A200')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle('D1:S200')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-        // Merges Judul Atas
         $sheet->mergeCells('C1:U1');
         $sheet->mergeCells('C2:U2');
         $sheet->getStyle('C1:U2')->getFont()->setBold(true)->setSize(16);
@@ -325,16 +318,12 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
             $valB = trim((string)$sheet->getCell('B' . $row)->getValue());
             $valC = trim((string)$sheet->getCell('C' . $row)->getValue());
 
-            // -------------------------------------------------------------
-            // A. HEADER KALENDER (NAME, MONTH, DAY, DATE)
-            // -------------------------------------------------------------
             if ($valB === 'NAME' || $valC === 'MONTH' || $valC === 'DAY' || $valC === 'DATE') {
                 $sheet->getStyle("B{$row}:S{$row}")->getFont()->setBold(true);
                 $sheet->getStyle("B{$row}:S{$row}")->applyFromArray($thinBorder);
                 $sheet->getStyle("B{$row}:S{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             }
 
-            // WARNA MERAH UNTUK HARI MINGGU (Sun) PADA HEADER DAY
             if ($valC === 'DAY') {
                 foreach ($dateColumns as $col) {
                     $dayVal = trim((string)$sheet->getCell($col . $row)->getValue());
@@ -346,16 +335,12 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
                 }
             }
 
-            // MERGE HEADER NAME
             if ($valB === 'NAME') {
                 $sheet->mergeCells("B{$row}:B" . ($row + 2));
                 $sheet->getStyle("B{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle("B{$row}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
             }
 
-            // -------------------------------------------------------------
-            // B. PROSES PEWARNAAN BARIS DATA MATRIKS SHIFT
-            // -------------------------------------------------------------
             if (is_numeric($valA) && (int)$valA > 0 && ($summaryHeaderRow === null || $row < $summaryHeaderRow)) {
                 $sheet->getStyle("B{$row}:S{$row}")->applyFromArray($thinBorder);
 
@@ -368,13 +353,12 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
                         $sheet->getStyle($col . $row)->getFill()->applyFromArray($fillOrange);
                     } elseif ($shiftVal === '3') {
                         $sheet->getStyle($col . $row)->getFill()->applyFromArray($fillBlue);
+                    } elseif ($shiftVal === 'OH') {
+                        $sheet->getStyle($col . $row)->getFill()->applyFromArray($fillGreen);
                     }
                 }
             }
 
-            // -------------------------------------------------------------
-            // C. BAGIAN COMMENT & PEWARNAAN KOTAK SHIFT COMMENT
-            // -------------------------------------------------------------
             if ($valB === 'Comment:') {
                 $isCommentSection = true;
                 $commentStartRow = $row;
@@ -389,12 +373,11 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
                     $sheet->getStyle("C{$row}")->getFill()->applyFromArray($fillOrange);
                 } elseif ($valC === '3') {
                     $sheet->getStyle("C{$row}")->getFill()->applyFromArray($fillBlue);
+                } elseif ($valC === 'OH') {
+                    $sheet->getStyle("C{$row}")->getFill()->applyFromArray($fillGreen);
                 }
             }
 
-            // -------------------------------------------------------------
-            // D. BAGIAN NOTE (LEFT ALIGN)
-            // -------------------------------------------------------------
             if ($valB === 'Note:' || str_contains($valC, 'If you want to take a leave')) {
                 if ($commentStartRow !== null) {
                     $sheet->getStyle("C" . ($commentStartRow + 1) . ":D" . ($row - 2))->applyFromArray($thinBorder);
@@ -403,9 +386,6 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
                 $sheet->getStyle("B{$row}:U{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
             }
 
-            // -------------------------------------------------------------
-            // E. TABEL SUMMARY BAWAH
-            // -------------------------------------------------------------
             if ($valB === 'Name' && $valC === 'Phone Number') {
                 $summaryHeaderRow = $row;
 

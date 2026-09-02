@@ -14,7 +14,7 @@
                     <span>{{ session('success') }}</span>
                 </div>
                 <button type="button" onclick="this.parentElement.remove()"
-                    class="text-emerald-600 hover:text-emerald-900">&times;</button>
+                    class="cursor-pointer text-emerald-600 hover:text-emerald-900">&times;</button>
             </div>
         @endif
 
@@ -26,7 +26,7 @@
                     <span>{{ session('error') }}</span>
                 </div>
                 <button type="button" onclick="this.parentElement.remove()"
-                    class="text-rose-600 hover:text-rose-900">&times;</button>
+                    class="cursor-pointer text-rose-600 hover:text-rose-900">&times;</button>
             </div>
         @endif
 
@@ -64,16 +64,17 @@
                 <div class="flex flex-wrap items-center gap-2 shrink-0">
                     {{-- TOMBOL IMPORT EXCEL --}}
                     <button type="button" onclick="openImportModal()"
-                        class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-emerald-700 transition-all bg-emerald-50 border border-emerald-200/80 hover:bg-emerald-600 hover:text-white rounded-xl active:scale-95">
+                        class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-emerald-700 transition-all bg-emerald-50 border border-emerald-200/80 hover:bg-emerald-600 hover:text-white rounded-xl active:scale-95 cursor-pointer">
                         <i class="fa-solid fa-file-import"></i> Import Excel
                     </button>
 
                     {{-- TOMBOL EXPORT EXCEL --}}
-                    {{-- TOMBOL EXPORT EXCEL (TAMBAHKAN up-follow="false") --}}
-                    <a href="{{ route('employee.export', request()->query()) }}" up-follow="false" download
+                    <a id="btn-export-excel" href="{{ route('employee.export', request()->query()) }}" up-follow="false"
+                        download
                         class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-700 transition-all bg-slate-100 border border-slate-200/80 hover:bg-slate-800 hover:text-white rounded-xl active:scale-95">
                         <i class="fa-solid fa-file-excel"></i> Export Excel
                     </a>
+
                     {{-- TOMBOL ADD EMPLOYEE --}}
                     <a href="{{ route('employee.create') }}"
                         class="flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 shadow-md hover:bg-blue-700 rounded-xl shadow-blue-600/20 active:scale-95">
@@ -100,7 +101,7 @@
                         </div>
 
                         <button type="button" id="btn-reset-filter"
-                            class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-600 transition-colors bg-white border border-slate-200 rounded-xl hover:bg-slate-100 hover:text-slate-800 active:scale-95 shrink-0 shadow-2xs">
+                            class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-600 transition-colors bg-white border border-slate-200 rounded-xl hover:bg-slate-100 hover:text-slate-800 active:scale-95 shrink-0 shadow-2xs cursor-pointer">
                             <i class="fa-solid fa-rotate-left text-[11px]"></i> Reset Filter
                         </button>
                     </div>
@@ -111,12 +112,15 @@
                             <label for="filter_status"
                                 class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Status</label>
                             <select id="filter_status"
-                                class="filter-trigger block w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-800">
+                                class="filter-trigger block w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-800 cursor-pointer">
                                 <option value="">All Statuses</option>
-                                <option value="Permanent">Permanent</option>
-                                <option value="Contract">Contract</option>
-                                <option value="Probation">Probation</option>
-                                <option value="Daily">Daily</option>
+                                <option value="Permanent" {{ request('status') == 'Permanent' ? 'selected' : '' }}>Permanent
+                                </option>
+                                <option value="Contract" {{ request('status') == 'Contract' ? 'selected' : '' }}>Contract
+                                </option>
+                                <option value="Probation" {{ request('status') == 'Probation' ? 'selected' : '' }}>Probation
+                                </option>
+                                <option value="Daily" {{ request('status') == 'Daily' ? 'selected' : '' }}>Daily</option>
                             </select>
                         </div>
 
@@ -125,11 +129,13 @@
                                 class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Site
                                 Location</label>
                             <select id="filter_site"
-                                class="filter-trigger block w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-800">
+                                class="filter-trigger block w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-800 cursor-pointer">
                                 <option value="">All Sites</option>
                                 @if (isset($sites))
                                     @foreach ($sites as $site)
-                                        <option value="{{ $site->id }}">{{ $site->machine_name }}</option>
+                                        <option value="{{ $site->id }}"
+                                            {{ request('site_id') == $site->id ? 'selected' : '' }}>
+                                            {{ $site->machine_name }}</option>
                                     @endforeach
                                 @endif
                             </select>
@@ -139,11 +145,13 @@
                             <label for="filter_branch"
                                 class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Branch</label>
                             <select id="filter_branch"
-                                class="filter-trigger block w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-800">
+                                class="filter-trigger block w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-800 cursor-pointer">
                                 <option value="">All Branches</option>
                                 @if (isset($branches))
                                     @foreach ($branches as $branch)
-                                        <option value="{{ $branch->id }}">{{ $branch->branch_name }}</option>
+                                        <option value="{{ $branch->id }}"
+                                            {{ request('branch_id') == $branch->id ? 'selected' : '' }}>
+                                            {{ $branch->branch_name }}</option>
                                     @endforeach
                                 @endif
                             </select>
@@ -152,14 +160,14 @@
                 </div>
             </div>
 
-            <div id="table-container">
+            <div id="table-container" class="transition-opacity duration-200">
                 @include('employee.table', ['employees' => $employees])
             </div>
         </div>
     </div>
 
     {{-- MODAL IMPORT EXCEL --}}
-    <div id="importModal"
+    <div id="importModal" onclick="if(event.target===this) closeImportModal()"
         class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs">
         <div class="w-full max-w-md mx-auto overflow-hidden bg-white border shadow-2xl border-slate-100 rounded-3xl">
             <div class="flex items-center justify-between px-6 py-5 text-white bg-slate-900">
@@ -167,7 +175,7 @@
                     <i class="text-emerald-400 fa-solid fa-file-excel"></i> Import Employees Excel
                 </h5>
                 <button type="button" onclick="closeImportModal()"
-                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">&times;</button>
+                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-white hover:bg-slate-800">&times;</button>
             </div>
             <form action="{{ route('employee.import') }}" method="POST" enctype="multipart/form-data"
                 up-target="#main-content" up-on-accepted="closeImportModal()" class="p-6 space-y-4">
@@ -181,9 +189,9 @@
 
                 <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
                     <button type="button" onclick="closeImportModal()"
-                        class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800">Cancel</button>
-                    <button type="submit" onclick="closeImportModal()"
-                        class="px-5 py-2 text-xs font-bold text-white shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95">Upload
+                        class="px-4 py-2 text-xs font-bold cursor-pointer text-slate-600 hover:text-slate-800">Cancel</button>
+                    <button type="submit"
+                        class="px-5 py-2 text-xs font-bold text-white shadow-md cursor-pointer bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95">Upload
                         & Import</button>
                 </div>
             </form>
@@ -191,7 +199,7 @@
     </div>
 
     {{-- MODAL POP-UP DETAIL KARYAWAN --}}
-    <div id="employeeDetailModal"
+    <div id="employeeDetailModal" onclick="if(event.target===this) closeEmployeeModal()"
         class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs">
         <div class="w-full max-w-2xl mx-auto overflow-hidden bg-white border shadow-2xl border-slate-100 rounded-3xl">
             <div class="flex items-center justify-between px-6 py-5 text-white bg-slate-900">
@@ -199,7 +207,7 @@
                     <i class="text-blue-400 fa-solid fa-id-card"></i> Employee Specifications
                 </h5>
                 <button type="button" onclick="closeEmployeeModal()"
-                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">&times;</button>
+                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-white hover:bg-slate-800">&times;</button>
             </div>
 
             <div class="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
@@ -272,7 +280,6 @@
                             Date</span>
                         <strong class="text-xs sm:text-sm text-slate-800" id="detail_join_date">-</strong>
                     </div>
-                    {{-- PENAMBAHAN CONTRACT START DATE --}}
                     <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
                         <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Contract
                             Start Date</span>
@@ -307,17 +314,19 @@
 
             <div class="flex justify-end px-6 py-4 border-t border-slate-100 bg-slate-50/50">
                 <button type="button" onclick="closeEmployeeModal()"
-                    class="px-5 py-2.5 text-xs font-bold transition-all bg-white border text-slate-700 border-slate-200 rounded-xl hover:bg-slate-100 active:scale-95 shadow-2xs">
+                    class="px-5 py-2.5 text-xs font-bold transition-all bg-white border text-slate-700 border-slate-200 rounded-xl hover:bg-slate-100 active:scale-95 shadow-2xs cursor-pointer">
                     Close
                 </button>
             </div>
         </div>
     </div>
+@endsection
 
+@push('scripts')
     <script>
         var delayTimer = delayTimer || null;
 
-        function fetchFilteredData() {
+        function fetchFilteredData(targetUrl = null) {
             clearTimeout(delayTimer);
             delayTimer = setTimeout(() => {
                 const searchInput = document.getElementById('search');
@@ -328,7 +337,9 @@
 
                 if (!tableContainer) return;
 
-                const search = searchInput ? searchInput.value : '';
+                tableContainer.style.opacity = '0.5';
+
+                const search = searchInput ? searchInput.value.trim() : '';
                 const status = statusInput ? statusInput.value : '';
                 const site = siteInput ? siteInput.value : '';
                 const branch = branchInput ? branchInput.value : '';
@@ -340,15 +351,41 @@
                     branch_id: branch
                 });
 
-                fetch(`{{ route('employee.index') }}?${params.toString()}`, {
+                // Sync tombol Export Excel dengan parameter pencarian saat ini
+                const exportBtn = document.getElementById('btn-export-excel');
+                if (exportBtn) {
+                    exportBtn.href = `{{ route('employee.export') }}?${params.toString()}`;
+                }
+
+                let fetchUrl = targetUrl ? targetUrl : `{{ route('employee.index') }}?${params.toString()}`;
+
+                fetch(fetchUrl, {
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     })
                     .then(res => res.text())
-                    .then(html => tableContainer.innerHTML = html)
-                    .catch(err => console.error(err));
+                    .then(html => {
+                        tableContainer.innerHTML = html;
+                        tableContainer.style.opacity = '1';
+                        bindPaginationLinks();
+                    })
+                    .catch(err => {
+                        console.error('Fetch Error:', err);
+                        tableContainer.style.opacity = '1';
+                    });
             }, 300);
+        }
+
+        function bindPaginationLinks() {
+            const paginationLinks = document.querySelectorAll(
+                '#table-container .pagination a, #table-container a[rel="prev"], #table-container a[rel="next"]');
+            paginationLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    fetchFilteredData(this.href);
+                });
+            });
         }
 
         function initEmployeePageScripts() {
@@ -356,8 +393,8 @@
             const btnResetFilter = document.getElementById('btn-reset-filter');
 
             filterTriggers.forEach(el => {
-                el.removeEventListener(el.tagName === 'INPUT' ? 'input' : 'change', fetchFilteredData);
-                el.addEventListener(el.tagName === 'INPUT' ? 'input' : 'change', fetchFilteredData);
+                el.removeEventListener(el.tagName === 'INPUT' ? 'input' : 'change', handleFilterChange);
+                el.addEventListener(el.tagName === 'INPUT' ? 'input' : 'change', handleFilterChange);
             });
 
             if (btnResetFilter) {
@@ -369,6 +406,12 @@
                     fetchFilteredData();
                 };
             }
+
+            bindPaginationLinks();
+        }
+
+        function handleFilterChange() {
+            fetchFilteredData();
         }
 
         function openImportModal() {
@@ -390,7 +433,8 @@
         function showEmployeeDetail(id) {
             fetch(`/employee/${id}`, {
                     headers: {
-                        'Accept': 'application/json'
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
                 })
                 .then(res => res.json())
@@ -406,13 +450,13 @@
                     document.getElementById('detail_tenure').innerText = data.tenure_formatted || '-';
                     document.getElementById('detail_join_date').innerText = data.join_date_formatted || '-';
                     document.getElementById('detail_contract_start_date').innerText = data.contract_start_formatted ||
-                        '-'; // BINDING CONTRACT START DATE
+                        '-';
                     document.getElementById('detail_basic_salary').innerText = data.basic_salary_formatted || 'Rp 0';
                     document.getElementById('detail_bank').innerText = (data.bank_name && data.bank_account_number) ?
                         `${data.bank_name} - ${data.bank_account_number}` : '-';
 
                     let statusBadge =
-                        `<span class="px-2.5 py-1 text-[10px] font-extrabold text-slate-700 bg-slate-100 border border-slate-200 rounded-full uppercase">${data.status}</span>`;
+                        `<span class="px-2.5 py-1 text-[10px] font-extrabold text-slate-700 bg-slate-100 border border-slate-200 rounded-full uppercase">${data.status || 'Active'}</span>`;
                     document.getElementById('detail_status_badge').innerHTML = statusBadge;
 
                     let mcuBadge = (data.mcu === 'yes') ?
@@ -430,8 +474,8 @@
                         let rows = '';
                         data.salary_histories.forEach(h => {
                             let dt = new Date(h.created_at).toLocaleDateString('id-ID');
-                            let oldSal = 'Rp ' + new Intl.NumberFormat('id-ID').format(h.old_salary);
-                            let newSal = 'Rp ' + new Intl.NumberFormat('id-ID').format(h.new_salary);
+                            let oldSal = 'Rp ' + new Intl.NumberFormat('id-ID').format(h.old_salary || 0);
+                            let newSal = 'Rp ' + new Intl.NumberFormat('id-ID').format(h.new_salary || 0);
                             rows += `<tr>
                                 <td class="p-3">${dt}</td>
                                 <td class="p-3 font-semibold text-slate-400">${oldSal}</td>
@@ -451,6 +495,9 @@
                         modal.classList.add('flex');
                         document.body.classList.add('overflow-hidden');
                     }
+                })
+                .catch(err => {
+                    console.error('Failed to load employee details:', err);
                 });
         }
 
@@ -463,7 +510,16 @@
             }
         }
 
-        initEmployeePageScripts();
+        document.addEventListener('DOMContentLoaded', function() {
+            initEmployeePageScripts();
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeImportModal();
+                    closeEmployeeModal();
+                }
+            });
+        });
 
         if (window.up) {
             up.compiler('#main-content', function() {
@@ -471,4 +527,4 @@
             });
         }
     </script>
-@endsection
+@endpush

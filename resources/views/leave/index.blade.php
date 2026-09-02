@@ -5,7 +5,7 @@
 @section('content')
     <div class="w-full space-y-6">
 
-        {{-- 1. HEADER CARD (TERPISAH) --}}
+        {{-- 1. HEADER CARD --}}
         <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -24,7 +24,7 @@
 
                 <div class="flex flex-wrap items-center gap-2.5 shrink-0">
                     <a href="{{ route('leave.create') }}"
-                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold text-white transition-all bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95">
+                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold text-white transition-all bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer">
                         <i class="fa-solid fa-plus"></i> Apply Leave
                     </a>
                 </div>
@@ -64,7 +64,7 @@
 
                     <div class="sm:col-span-4 md:col-span-3">
                         <select name="status" onchange="this.form.submit()"
-                            class="block w-full px-3.5 py-2.5 text-xs font-bold transition-all bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 shadow-2xs">
+                            class="block w-full px-3.5 py-2.5 text-xs font-bold transition-all bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 shadow-2xs cursor-pointer">
                             <option value="">All Approval Statuses</option>
                             <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending Approval
                             </option>
@@ -86,17 +86,17 @@
 
             <!-- TABLE CONTENT -->
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table class="w-full text-left border-collapse min-w-[700px]">
                     <thead>
                         <tr
                             class="border-b border-slate-100 bg-slate-50/60 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                            <th class="px-6 py-4">Employee</th>
-                            <th class="px-4 py-4">Leave Type</th>
-                            <th class="px-4 py-4">Date Range</th>
-                            <th class="px-4 py-4">Duration</th>
-                            <th class="px-4 py-4">Reason</th>
-                            <th class="px-4 py-4">Status</th>
-                            <th class="px-6 py-4 text-center">Action</th>
+                            <th scope="col" class="px-6 py-4">Employee</th>
+                            <th scope="col" class="px-4 py-4">Leave Type</th>
+                            <th scope="col" class="px-4 py-4">Date Range</th>
+                            <th scope="col" class="px-4 py-4">Duration</th>
+                            <th scope="col" class="px-4 py-4">Reason</th>
+                            <th scope="col" class="px-4 py-4">Status</th>
+                            <th scope="col" class="px-6 py-4 text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
@@ -104,26 +104,27 @@
                             <tr class="transition-colors hover:bg-slate-50/50">
                                 <td class="px-6 py-4">
                                     <strong
-                                        class="block text-sm font-bold text-slate-900">{{ $req->employee->name }}</strong>
+                                        class="block text-sm font-bold text-slate-900">{{ $req->employee->name ?? '-' }}</strong>
                                     <span
                                         class="text-[11px] text-slate-400 font-semibold">{{ $req->employee->position ?? '-' }}</span>
                                 </td>
                                 <td class="px-4 py-4">
                                     <span
                                         class="px-3 py-1 text-[11px] font-extrabold rounded-full bg-slate-100 text-slate-700 border border-slate-200/60">
-                                        {{ $req->leaveType->name }}
+                                        {{ $req->leaveType->name ?? '-' }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-4 font-semibold text-slate-800">
-                                    {{ \Carbon\Carbon::parse($req->start_date)->format('d M Y') }} -
-                                    {{ \Carbon\Carbon::parse($req->end_date)->format('d M Y') }}
+                                <td class="px-4 py-4 font-semibold text-slate-800 whitespace-nowrap">
+                                    {{ $req->start_date ? \Carbon\Carbon::parse($req->start_date)->format('d M Y') : '-' }}
+                                    -
+                                    {{ $req->end_date ? \Carbon\Carbon::parse($req->end_date)->format('d M Y') : '-' }}
                                 </td>
-                                <td class="px-4 py-4 font-black text-slate-900">
+                                <td class="px-4 py-4 font-black text-slate-900 whitespace-nowrap">
                                     {{ $req->total_days }} {{ Str::plural('Day', $req->total_days) }}
                                 </td>
                                 <td class="max-w-xs px-4 py-4 font-medium truncate text-slate-600"
                                     title="{{ $req->reason }}">
-                                    {{ $req->reason }}
+                                    {{ $req->reason ?? '-' }}
                                 </td>
                                 <td class="px-4 py-4">
                                     @if ($req->status === 'approved')
@@ -150,13 +151,13 @@
                                                 onsubmit="return confirm('Approve this leave request?')">
                                                 @csrf
                                                 <button type="submit"
-                                                    class="px-3 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl active:scale-95 transition-all shadow-xs">
+                                                    class="px-3 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl active:scale-95 transition-all shadow-xs cursor-pointer">
                                                     Approve
                                                 </button>
                                             </form>
 
                                             <button type="button" onclick="openRejectModal({{ $req->id }})"
-                                                class="px-3 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-all active:scale-95">
+                                                class="px-3 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-all active:scale-95 cursor-pointer">
                                                 Reject
                                             </button>
 
@@ -172,7 +173,7 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
-                                                class="p-2 text-xs font-bold transition-all text-slate-400 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 rounded-xl"
+                                                class="p-2 text-xs font-bold transition-all cursor-pointer text-slate-400 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 rounded-xl"
                                                 title="Delete Request">
                                                 <i class="fa-solid fa-trash-can"></i>
                                             </button>
@@ -198,7 +199,7 @@
     </div>
 
     {{-- MODAL REJECT --}}
-    <div id="rejectModal"
+    <div id="rejectModal" onclick="if(event.target===this) closeRejectModal()"
         class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs">
         <div class="flex flex-col w-full max-w-md overflow-hidden bg-white border shadow-2xl border-slate-100 rounded-3xl">
             <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50">
@@ -213,7 +214,7 @@
                     </div>
                 </div>
                 <button type="button" onclick="closeRejectModal()"
-                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
+                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
             </div>
 
             <form id="rejectForm" method="POST" class="p-6 space-y-4">
@@ -228,32 +229,47 @@
 
                 <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                     <button type="button" onclick="closeRejectModal()"
-                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
+                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">
                         Cancel
                     </button>
                     <button type="submit"
-                        class="px-5 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-rose-600 hover:bg-rose-700 rounded-xl shadow-rose-600/20 active:scale-95">
+                        class="px-5 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-rose-600 hover:bg-rose-700 rounded-xl shadow-rose-600/20 active:scale-95 cursor-pointer">
                         Confirm Rejection
                     </button>
                 </div>
             </form>
         </div>
     </div>
+@endsection
 
+@push('scripts')
     <script>
         function openRejectModal(id) {
-            document.getElementById('rejectForm').action = `/leave/${id}/reject`;
-            let modal = document.getElementById('rejectModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.body.classList.add('overflow-hidden');
+            const form = document.getElementById('rejectForm');
+            const modal = document.getElementById('rejectModal');
+            if (form) form.action = `/leave/${id}/reject`;
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
+            }
         }
 
         function closeRejectModal() {
-            let modal = document.getElementById('rejectModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            const modal = document.getElementById('rejectModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
             document.body.classList.remove('overflow-hidden');
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeRejectModal();
+                }
+            });
+        });
     </script>
-@endsection
+@endpush

@@ -5,7 +5,7 @@
 @section('content')
     <div class="w-full space-y-6">
 
-        {{-- 1. HEADER CARD (TERPISAH) --}}
+        {{-- 1. HEADER CARD --}}
         <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
             <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
@@ -35,12 +35,12 @@
                     <thead>
                         <tr
                             class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
-                            <th class="w-16 px-6 py-4 text-center">No</th>
-                            <th class="px-6 py-4 text-center w-36">Site Code</th>
-                            <th class="px-6 py-4">Machine Name</th>
-                            <th class="px-6 py-4">Machine Type</th>
-                            <th class="px-6 py-4 text-center w-28">Status</th>
-                            <th class="px-6 py-4 text-center w-36">Actions</th>
+                            <th scope="col" class="w-16 px-6 py-4 text-center">No</th>
+                            <th scope="col" class="px-6 py-4 text-center w-36">Site Code</th>
+                            <th scope="col" class="px-6 py-4">Machine Name</th>
+                            <th scope="col" class="px-6 py-4">Machine Type</th>
+                            <th scope="col" class="px-6 py-4 text-center w-28">Status</th>
+                            <th scope="col" class="px-6 py-4 text-center w-36">Actions</th>
                         </tr>
                     </thead>
 
@@ -54,16 +54,16 @@
                                 <td class="px-6 py-4 text-center">
                                     <span
                                         class="px-3 py-1 font-mono font-extrabold text-[11px] text-blue-700 bg-blue-50 border border-blue-200/80 rounded-lg">
-                                        {{ $item->code }}
+                                        {{ $item->code ?? '-' }}
                                     </span>
                                 </td>
 
                                 <td class="px-6 py-4 text-sm font-bold text-slate-900">
-                                    {{ $item->name }}
+                                    {{ $item->machine_name ?? ($item->name ?? '-') }}
                                 </td>
 
                                 <td class="px-6 py-4 font-semibold text-slate-600">
-                                    {{ $item->machine_type }}
+                                    {{ $item->machine_type ?? '-' }}
                                 </td>
 
                                 <td class="px-6 py-4 text-center">
@@ -95,7 +95,7 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
-                                                class="flex items-center justify-center w-8 h-8 transition-all border rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
+                                                class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
                                                 title="Delete Machine">
                                                 <i class="text-xs fa-solid fa-trash-can"></i>
                                             </button>

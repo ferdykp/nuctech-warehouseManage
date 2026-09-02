@@ -5,7 +5,7 @@
 @section('content')
     <div class="w-full max-w-3xl mx-auto space-y-6">
 
-        {{-- 1. HEADER CARD (TERPISAH) --}}
+        {{-- 1. HEADER CARD --}}
         <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
             <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
@@ -35,11 +35,11 @@
                 <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Site Information</h2>
                 <span
                     class="px-3 py-1 text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200/80 rounded-full uppercase tracking-wide">
-                    ID: #{{ str_pad($user->id, 4, '0', STR_PAD_LEFT) }}
+                    ID: #{{ str_pad($site->id ?? ($user->id ?? 0), 4, '0', STR_PAD_LEFT) }}
                 </span>
             </div>
 
-            <form action="{{ route('profile.profileUpdate', $user->id) }}" method="POST" class="p-6 space-y-6 sm:p-8">
+            <form action="{{ route('site.update', $site->id ?? $user->id) }}" method="POST" class="p-6 space-y-6 sm:p-8">
                 @csrf
                 @method('PUT')
 
@@ -50,7 +50,8 @@
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Site Code <span class="text-rose-500">*</span>
                         </label>
-                        <input type="text" name="code" value="{{ old('code', $user->code) }}" required
+                        <input type="text" name="code" value="{{ old('code', $site->code ?? ($user->code ?? '')) }}"
+                            required
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-mono uppercase font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 @error('code') border-rose-500 @enderror"
                             placeholder="e.g. IDN_FS6000">
 
@@ -64,11 +65,12 @@
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Machine Name <span class="text-rose-500">*</span>
                         </label>
-                        <input type="text" name="name" value="{{ old('name', $user->name) }}" required
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 @error('name') border-rose-500 @enderror"
+                        <input type="text" name="machine_name"
+                            value="{{ old('machine_name', $site->machine_name ?? ($user->name ?? '')) }}" required
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 @error('machine_name') border-rose-500 @enderror"
                             placeholder="e.g. FS6000 Jakarta HQ">
 
-                        @error('name')
+                        @error('machine_name')
                             <p class="mt-1 text-xs font-semibold text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
@@ -78,8 +80,8 @@
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Machine Type <span class="text-rose-500">*</span>
                         </label>
-                        <input type="text" name="machine_type" value="{{ old('machine_type', $user->machine_type) }}"
-                            required
+                        <input type="text" name="machine_type"
+                            value="{{ old('machine_type', $site->machine_type ?? ($user->machine_type ?? '')) }}" required
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 @error('machine_type') border-rose-500 @enderror"
                             placeholder="e.g. Industrial Scanner">
 
@@ -100,7 +102,7 @@
                             Discard
                         </a>
                         <button type="submit"
-                            class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-600/20 active:scale-95">
+                            class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-600/20 active:scale-95 cursor-pointer">
                             <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Save Changes
                         </button>
                     </div>

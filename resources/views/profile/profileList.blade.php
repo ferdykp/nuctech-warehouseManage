@@ -5,7 +5,7 @@
 @section('content')
     <div class="w-full space-y-6">
 
-        {{-- 1. HEADER CARD (TERPISAH) --}}
+        {{-- 1. HEADER CARD --}}
         <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -29,7 +29,7 @@
             </div>
         </div>
 
-        {{-- 2. TABLE CARD (TERPISAH SEBAGAI CARD KEDUA) --}}
+        {{-- 2. TABLE CARD CONTAINER --}}
         <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
             <div class="overflow-x-auto">
                 <table id="datatable" class="w-full text-left border-collapse min-w-[700px]">
@@ -100,7 +100,7 @@
 
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex items-center justify-center gap-1.5">
-                                        <a href="{{ route('profile.profileUpdate', $user->id) }}"
+                                        <a href="{{ route('profile.profileEdit', $user->id) }}"
                                             class="flex items-center justify-center w-8 h-8 transition-all border rounded-xl text-amber-600 bg-amber-50 border-amber-100 hover:bg-amber-600 hover:text-white active:scale-95"
                                             title="Edit User">
                                             <i class="text-xs fa-solid fa-pen-to-square"></i>
@@ -112,7 +112,7 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
-                                                class="flex items-center justify-center w-8 h-8 transition-all border rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
+                                                class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
                                                 title="Delete User">
                                                 <i class="text-xs fa-solid fa-trash-can"></i>
                                             </button>

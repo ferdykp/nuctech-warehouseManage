@@ -31,6 +31,8 @@
                                 <p class="text-slate-400 text-[11px] font-normal truncate max-w-md mt-0.5">
                                     <i class="mr-1 fa-solid fa-location-dot text-slate-300"></i>{{ $b->branch_address }}
                                 </p>
+                            @else
+                                <p class="text-slate-300 text-[11px] italic font-normal mt-0.5">No address specified</p>
                             @endif
                         </div>
                     </td>
@@ -39,7 +41,8 @@
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ route('branches.edit', $b->id) }}"
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-600 hover:text-white transition-all active:scale-95">
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-600 hover:text-white transition-all active:scale-95"
+                                    title="Edit Branch">
                                     <i class="fa-solid fa-pen-to-square text-[11px]"></i>
                                     <span>Edit</span>
                                 </a>
@@ -47,7 +50,8 @@
                                 {{-- DELETE CONFIRMATION MODAL --}}
                                 <div x-data="{ open: false }">
                                     <button @click="open = true" type="button"
-                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-600 hover:text-white transition-all active:scale-95">
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-600 hover:text-white transition-all active:scale-95"
+                                        title="Delete Branch">
                                         <i class="fa-solid fa-trash-can text-[11px]"></i>
                                         <span>Delete</span>
                                     </button>
@@ -103,7 +107,8 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" class="p-12 text-center text-slate-400">
+                    <td colspan="{{ Auth::user()?->role === 'superadmin' ? 4 : 3 }}"
+                        class="p-12 text-center text-slate-400">
                         <div
                             class="flex items-center justify-center w-12 h-12 mx-auto mb-3 text-xl rounded-2xl bg-slate-100 text-slate-400">
                             <i class="fa-solid fa-building-circle-xmark"></i>

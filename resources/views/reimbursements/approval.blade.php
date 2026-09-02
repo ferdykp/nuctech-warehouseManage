@@ -17,11 +17,14 @@
         } elseif ($reimbursement->status == 'pending_manager' && $currentRole == 'manager') {
             $canSign = true;
         }
+
+        $attachmentPath = storage_path('app/public/' . $reimbursement->receipt_attachment);
+        $fileVersion = file_exists($attachmentPath) ? filemtime($attachmentPath) : time();
     @endphp
 
     <div class="w-full space-y-6">
 
-        {{-- 1. HEADER CARD (TERPISAH) --}}
+        {{-- 1. HEADER CARD --}}
         <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -115,7 +118,7 @@
                         <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Amount
                             Claimed</span>
                         <span class="font-black text-rose-600 text-xl block mt-0.5">
-                            Rp {{ number_format($reimbursement->amount, 0, ',', '.') }}
+                            Rp {{ number_format((float) $reimbursement->amount, 0, ',', '.') }}
                         </span>
                     </div>
 
@@ -149,11 +152,11 @@
                         {{-- TAB TTD --}}
                         <div class="flex gap-1.5 p-1 bg-slate-100 rounded-xl">
                             <button type="button" onclick="switchSignatureTab('draw')" id="btn-tab-draw"
-                                class="flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all bg-white text-slate-800 shadow-2xs">
+                                class="flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all bg-white text-slate-800 shadow-2xs cursor-pointer">
                                 <i class="mr-1 fa-solid fa-pen"></i> Draw Sign
                             </button>
                             <button type="button" onclick="switchSignatureTab('upload')" id="btn-tab-upload"
-                                class="flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all text-slate-500 hover:text-slate-700">
+                                class="flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all text-slate-500 hover:text-slate-700 cursor-pointer">
                                 <i class="mr-1 fa-solid fa-upload"></i> Upload File
                             </button>
                         </div>
@@ -165,7 +168,7 @@
                                     style="touch-action: none;"></canvas>
                             </div>
                             <button type="button" onclick="clearSignature()"
-                                class="text-[10px] text-rose-600 font-bold uppercase tracking-wider inline-block hover:text-rose-700 transition-colors px-1">
+                                class="text-[10px] text-rose-600 font-bold uppercase tracking-wider inline-block hover:text-rose-700 transition-colors px-1 cursor-pointer">
                                 <i class="fa-solid fa-trash-can mr-0.5"></i> Clear Canvas
                             </button>
                         </div>
@@ -205,12 +208,12 @@
                         {{-- STAMP ACTIONS --}}
                         <div class="pt-2 space-y-2">
                             <button type="button" onclick="applySignatureToPreview()"
-                                class="flex items-center justify-center w-full gap-2 py-3 text-xs font-bold text-white uppercase transition-all bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md shadow-amber-600/20 active:scale-[0.98]">
+                                class="flex items-center justify-center w-full gap-2 py-3 text-xs font-bold text-white uppercase transition-all bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md shadow-amber-600/20 active:scale-[0.98] cursor-pointer">
                                 <i class="fa-solid fa-stamp"></i> Lock & Place Stamp on Document
                             </button>
 
                             <button type="button" onclick="duplicateLastStamp()"
-                                class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-1.5">
+                                class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
                                 <i class="fa-solid fa-copy"></i> Duplicate Last Stamp
                             </button>
                         </div>
@@ -235,7 +238,7 @@
                             <input type="hidden" name="page" id="page-input">
 
                             <button type="submit"
-                                class="w-full py-3 text-xs font-bold text-white uppercase transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-[0.98]">
+                                class="w-full py-3 text-xs font-bold text-white uppercase transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-[0.98] cursor-pointer">
                                 Approve & Save Document
                             </button>
                         </form>
@@ -249,7 +252,7 @@
                                     value="Claim rejected via review workspace.">
                                 <button type="submit"
                                     onclick="return confirm('Are you sure you want to reject this operational claim?')"
-                                    class="block w-full py-2.5 text-xs font-bold tracking-wider text-center uppercase transition-colors text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl">
+                                    class="block w-full py-2.5 text-xs font-bold tracking-wider text-center uppercase transition-colors text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl cursor-pointer">
                                     <i class="mr-1 fa-solid fa-xmark"></i> Reject Claim
                                 </button>
                             </form>
@@ -357,48 +360,71 @@
         let loadedSignatureBase64 = null;
         let activeStampsArray = [];
 
-        const pdfUrl = "{{ asset('storage/' . $reimbursement->receipt_attachment) }}" +
-            "?v={{ filemtime(storage_path('app/public/' . $reimbursement->receipt_attachment)) }}";
-
+        const pdfUrl = "{{ asset('storage/' . $reimbursement->receipt_attachment) }}?v={{ $fileVersion }}";
         const isPdf = {{ pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf' ? 'true' : 'false' }};
 
-        document.addEventListener("DOMContentLoaded", function() {
+        function initApprovalWorkspace() {
             const canvas = document.getElementById('signature-canvas');
             if (canvas) {
                 const ratio = Math.max(window.devicePixelRatio || 1, 1);
-                canvas.width = canvas.offsetWidth * ratio;
-                canvas.height = canvas.offsetHeight * ratio;
-                canvas.getContext("2d").scale(ratio, ratio);
+                const rect = canvas.getBoundingClientRect();
 
-                signaturePad = new SignaturePad(canvas, {
-                    minWidth: 1.5,
-                    maxWidth: 3.5,
-                    penColor: "rgb(30, 41, 59)"
-                });
+                if (rect.width > 0 && rect.height > 0) {
+                    canvas.width = rect.width * ratio;
+                    canvas.height = rect.height * ratio;
+                    const ctx = canvas.getContext("2d");
+                    if (ctx) ctx.scale(ratio, ratio);
+                }
+
+                if (typeof SignaturePad !== 'undefined') {
+                    signaturePad = new SignaturePad(canvas, {
+                        minWidth: 1.5,
+                        maxWidth: 3.5,
+                        penColor: "rgb(30, 41, 59)"
+                    });
+                }
             }
 
             if (isPdf) {
-                renderPdfWithPdfJs(pdfUrl);
+                setTimeout(function() {
+                    renderPdfWithPdfJs(pdfUrl);
+                }, 150);
             } else {
                 setTimeout(syncLayerHeight, 800);
             }
-        });
+        }
+
+        document.addEventListener("DOMContentLoaded", initApprovalWorkspace);
+
+        if (window.up) {
+            up.compiler('#workspace-area', function(element) {
+                initApprovalWorkspace();
+            });
+            up.on('up:fragment:inserted', function() {
+                initApprovalWorkspace();
+            });
+        }
 
         function renderPdfWithPdfJs(url) {
+            const container = document.getElementById('invoice-target-img');
+            if (!container) return;
+
+            container.innerHTML = '';
+
             const loadingTask = pdfjsLib.getDocument(url);
             loadingTask.promise.then(function(pdf) {
-                document.getElementById('pdf-loading-indicator')?.remove();
-                const container = document.getElementById('invoice-target-img');
+                const indicator = document.getElementById('pdf-loading-indicator');
+                if (indicator) indicator.remove();
 
                 let renderPromises = [];
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                     renderPromises.push(renderSinglePage(pdf, pageNum, container));
                 }
 
-                Promise.all(renderPromises).then(() => {
-                    setTimeout(syncLayerHeight, 600);
+                Promise.all(renderPromises).then(function() {
+                    setTimeout(syncLayerHeight, 500);
                 });
-            }).catch(err => {
+            }).catch(function(err) {
                 console.error("PDF.js Error: ", err);
                 const indicator = document.getElementById('pdf-loading-indicator');
                 if (indicator) indicator.innerText = "❌ Failed to load PDF document.";
@@ -409,7 +435,7 @@
             return pdf.getPage(pageNum).then(function(page) {
                 const pageWrapper = document.createElement('div');
                 pageWrapper.className =
-                    'pdf-page-wrapper relative bg-white shadow-lg rounded-2xl overflow-hidden w-full max-w-full';
+                    'pdf-page-wrapper relative bg-white shadow-lg rounded-2xl overflow-hidden w-full max-w-full mb-4';
                 pageWrapper.dataset.pageNum = pageNum;
 
                 const canvas = document.createElement('canvas');
@@ -417,7 +443,7 @@
                 pageWrapper.appendChild(canvas);
                 container.appendChild(pageWrapper);
 
-                const containerWidth = container.clientWidth || 650;
+                const containerWidth = container.clientWidth > 0 ? container.clientWidth : 650;
                 const unscaledViewport = page.getViewport({
                     scale: 1
                 });
@@ -461,16 +487,16 @@
 
             if (type === 'draw') {
                 btnDraw.className =
-                    "flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all bg-white text-slate-800 shadow-2xs";
+                    "flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all bg-white text-slate-800 shadow-2xs cursor-pointer";
                 btnUpload.className =
-                    "flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all text-slate-500 hover:text-slate-700";
+                    "flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all text-slate-500 hover:text-slate-700 cursor-pointer";
                 panelDraw.classList.remove('hidden');
                 panelUpload.classList.add('hidden');
             } else {
                 btnUpload.className =
-                    "flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all bg-white text-slate-800 shadow-2xs";
+                    "flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all bg-white text-slate-800 shadow-2xs cursor-pointer";
                 btnDraw.className =
-                    "flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all text-slate-500 hover:text-slate-700";
+                    "flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all text-slate-500 hover:text-slate-700 cursor-pointer";
                 panelUpload.classList.remove('hidden');
                 panelDraw.classList.add('hidden');
             }
@@ -578,7 +604,7 @@
                     <span class="absolute -top-4 left-0 bg-amber-500 text-white font-black rounded px-1.5 uppercase text-[7px] tracking-wider pointer-events-none shadow-xs">
                         Drag &bull; ${signerName}
                     </span>
-                    <button type="button" class="stamp-delete-btn flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white border-none rounded-full absolute -top-3.5 -right-1.5 transition-colors" style="width: 16px; height: 16px; font-size: 8px; font-weight: 900; line-height: 1;" onclick="removeTargetStamp(this)">✕</button>
+                    <button type="button" class="stamp-delete-btn flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white border-none rounded-full absolute -top-3.5 -right-1.5 transition-colors cursor-pointer" style="width: 16px; height: 16px; font-size: 8px; font-weight: 900; line-height: 1;" onclick="removeTargetStamp(this)">✕</button>
                     <div class="absolute bg-blue-500 border-2 border-white rounded shadow-xs stamp-resize-handle bottom-1 right-1 cursor-se-resize" style="width: 12px; height: 12px; z-index: 60;"></div>
                 </div>
             `;
@@ -587,10 +613,10 @@
             syncLayerHeight();
 
             activeStampsArray.push({
-                stampEl,
-                imgData,
-                signerName,
-                signerDate
+                stampEl: stampEl,
+                imgData: imgData,
+                signerName: signerName,
+                signerDate: signerDate
             });
 
             const infoText = document.getElementById('stamp-count-info');
@@ -603,7 +629,9 @@
         function removeTargetStamp(btn) {
             const stampWrapper = btn.closest('.absolute.cursor-move');
             if (!stampWrapper) return;
-            activeStampsArray = activeStampsArray.filter(item => item.stampEl !== stampWrapper);
+            activeStampsArray = activeStampsArray.filter(function(item) {
+                return item.stampEl !== stampWrapper;
+            });
             const infoText = document.getElementById('stamp-count-info');
             if (infoText) infoText.textContent = `${activeStampsArray.length} signature(s) placed on document`;
             stampWrapper.remove();
@@ -717,12 +745,12 @@
                 return false;
             }
 
-            const signaturesMap = activeStampsArray.map(({
-                stampEl,
-                imgData,
-                signerName,
-                signerDate
-            }) => {
+            const signaturesMap = activeStampsArray.map(function(item) {
+                const stampEl = item.stampEl;
+                const imgData = item.imgData;
+                const signerName = item.signerName;
+                const signerDate = item.signerDate;
+
                 const stampRect = stampEl.getBoundingClientRect();
 
                 let detectedPageNum = 1;
@@ -767,13 +795,19 @@
                     }
                 }
 
+                // Normalisasi persentase posisi agar aman dari batas overflow
+                const posXPercent = Math.max(0, Math.min((finalRelLeft / baseWidth) * 100, 100));
+                const posYPercent = Math.max(0, Math.min((finalRelTop / baseHeight) * 100, 100));
+                const scaleWPercent = Math.max(1, Math.min((stampRect.width / baseWidth) * 100, 100));
+                const scaleHPercent = Math.max(1, Math.min((stampRect.height / baseHeight) * 100, 100));
+
                 return {
                     image: imgData,
                     page: detectedPageNum,
-                    pos_x: (finalRelLeft / baseWidth) * 100,
-                    pos_y: (finalRelTop / baseHeight) * 100,
-                    scale_w: (stampRect.width / baseWidth) * 100,
-                    scale_h: (stampRect.height / baseHeight) * 100,
+                    pos_x: posXPercent,
+                    pos_y: posYPercent,
+                    scale_w: scaleWPercent,
+                    scale_h: scaleHPercent,
                     signer_name: signerName,
                     signer_date: signerDate
                 };

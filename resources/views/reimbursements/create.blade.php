@@ -5,7 +5,7 @@
 @section('content')
     <div class="w-full space-y-6">
 
-        {{-- 1. HEADER CARD (TERPISAH) --}}
+        {{-- 1. HEADER CARD --}}
         <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
             <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
@@ -30,6 +30,20 @@
             </div>
         </div>
 
+        {{-- ALERT ERROR VALIDASI --}}
+        @if ($errors->any())
+            <div class="p-4 space-y-1 text-xs border text-rose-800 border-rose-200 bg-rose-50 rounded-2xl">
+                <div class="flex items-center gap-2 font-extrabold">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> Please check form input errors:
+                </div>
+                <ul class="list-disc pl-5 font-semibold space-y-0.5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         {{-- 2. FORM WORKSPACE CARD --}}
         <form method="POST" action="{{ route('reimbursements.store') }}" enctype="multipart/form-data" id="claimForm"
             class="grid items-start grid-cols-1 gap-6 xl:grid-cols-12">
@@ -52,14 +66,15 @@
                             <div class="space-y-1.5">
                                 <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Person Name
                                     <span class="text-rose-500">*</span></label>
-                                <div class="relative">
+                                <div class="relative flex items-center">
                                     <span
-                                        class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none">
-                                        <i class="text-xs fa-solid fa-user-tie"></i>
+                                        class="absolute left-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
+                                        <i class="text-xs fa-solid fa-user"></i>
                                     </span>
                                     <select name="person_name" required
-                                        class="w-full py-2.5 pl-10 pr-10 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none appearance-none transition-all bg-slate-50 focus:bg-white text-slate-800">
-                                        <option value="" disabled selected>Select Employee...</option>
+                                        class="w-full py-2.5 pl-10 pr-10 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none appearance-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
+                                        <option value="" disabled {{ old('person_name') ? '' : 'selected' }}>Select
+                                            Employee...</option>
                                         @foreach ($employees as $employee)
                                             <option value="{{ $employee->name }}"
                                                 {{ old('person_name') == $employee->name ? 'selected' : '' }}>
@@ -69,8 +84,8 @@
                                         @endforeach
                                     </select>
                                     <span
-                                        class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 pointer-events-none">
-                                        <i class="fa-solid fa-chevron-down text-[9px]"></i>
+                                        class="absolute right-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
+                                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
                                     </span>
                                 </div>
                             </div>
@@ -78,12 +93,12 @@
                             <div class="space-y-1.5">
                                 <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Date of
                                     Expense <span class="text-rose-500">*</span></label>
-                                <div class="relative">
+                                <div class="relative flex items-center">
                                     <span
-                                        class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none">
-                                        <i class="text-xs fa-solid fa-calendar"></i>
+                                        class="absolute left-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
+                                        <i class="text-xs fa-solid fa-calendar-days"></i>
                                     </span>
-                                    <input type="date" name="date" required value="{{ date('Y-m-d') }}"
+                                    <input type="date" name="date" required value="{{ old('date', date('Y-m-d')) }}"
                                         class="w-full py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
                                 </div>
                             </div>
@@ -102,20 +117,24 @@
                             <div class="space-y-1.5">
                                 <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Expense
                                     Category <span class="text-rose-500">*</span></label>
-                                <div class="relative">
+                                <div class="relative flex items-center">
                                     <span
-                                        class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none">
-                                        <i class="text-xs fa-solid fa-tags"></i>
+                                        class="absolute left-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
+                                        <i class="text-xs fa-solid fa-layer-group"></i>
                                     </span>
                                     <select name="category" id="categorySelect" onchange="handleCategoryChange()" required
-                                        class="w-full py-2.5 pl-10 pr-10 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none appearance-none transition-all bg-slate-50 focus:bg-white text-slate-800">
-                                        <option value="office">Office Supplies / Others</option>
-                                        <option value="transportation">Transportation</option>
-                                        <option value="delivery">Delivery / Logistics</option>
+                                        class="w-full py-2.5 pl-10 pr-10 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none appearance-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
+                                        <option value="office" {{ old('category') == 'office' ? 'selected' : '' }}>Office
+                                            Supplies / Others</option>
+                                        <option value="transportation"
+                                            {{ old('category') == 'transportation' ? 'selected' : '' }}>Transportation
+                                        </option>
+                                        <option value="delivery" {{ old('category') == 'delivery' ? 'selected' : '' }}>
+                                            Delivery / Logistics</option>
                                     </select>
                                     <span
-                                        class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 pointer-events-none">
-                                        <i class="fa-solid fa-chevron-down text-[9px]"></i>
+                                        class="absolute right-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
+                                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
                                     </span>
                                 </div>
                             </div>
@@ -123,12 +142,13 @@
                             <div class="space-y-1.5">
                                 <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Total Claim
                                     Amount (IDR) <span class="text-rose-500">*</span></label>
-                                <div class="relative">
+                                <div class="relative flex items-center">
                                     <span
-                                        class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-xs font-black text-slate-400">Rp</span>
+                                        class="absolute left-3.5 z-10 flex items-center justify-center text-xs font-black text-slate-400 pointer-events-none">Rp</span>
                                     <input type="text" id="currencyMaskInput" required placeholder="e.g. 250.000"
                                         class="w-full py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-black border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
-                                    <input type="hidden" name="amount" id="actualAmountInput">
+                                    <input type="hidden" name="amount" id="actualAmountInput"
+                                        value="{{ old('amount') }}">
                                 </div>
                             </div>
 
@@ -140,11 +160,13 @@
                                         <label
                                             class="block text-[10px] font-bold uppercase text-slate-500 tracking-wider">From
                                             (Origin)</label>
-                                        <div class="relative">
-                                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i
-                                                    class="fa-solid fa-circle-dot text-[10px] text-emerald-500"></i></span>
+                                        <div class="relative flex items-center">
+                                            <span
+                                                class="absolute z-10 flex items-center justify-center pointer-events-none left-3 text-slate-400">
+                                                <i class="fa-solid fa-circle-dot text-[11px] text-emerald-500"></i>
+                                            </span>
                                             <input type="text" name="from_location" id="fromLocation"
-                                                placeholder="Origin..."
+                                                value="{{ old('from_location') }}" placeholder="Origin..."
                                                 class="w-full py-2 pl-8 pr-3 text-xs font-semibold bg-white border outline-none border-slate-200 rounded-xl focus:border-amber-500">
                                         </div>
                                     </div>
@@ -152,11 +174,13 @@
                                         <label
                                             class="block text-[10px] font-bold uppercase text-slate-500 tracking-wider">To
                                             (Destination)</label>
-                                        <div class="relative">
-                                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i
-                                                    class="fa-solid fa-location-dot text-[10px] text-rose-500"></i></span>
+                                        <div class="relative flex items-center">
+                                            <span
+                                                class="absolute z-10 flex items-center justify-center pointer-events-none left-3 text-slate-400">
+                                                <i class="fa-solid fa-location-dot text-[11px] text-rose-500"></i>
+                                            </span>
                                             <input type="text" name="to_location" id="toLocation"
-                                                placeholder="Destination..."
+                                                value="{{ old('to_location') }}" placeholder="Destination..."
                                                 class="w-full py-2 pl-8 pr-3 text-xs font-semibold bg-white border outline-none border-slate-200 rounded-xl focus:border-amber-500">
                                         </div>
                                     </div>
@@ -166,8 +190,14 @@
                             <div class="space-y-1.5">
                                 <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Invoice No.
                                     / Remarks</label>
-                                <textarea name="comment" rows="2" placeholder="Invoice number or remarks..."
-                                    class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"></textarea>
+                                <div class="relative">
+                                    <span
+                                        class="absolute top-3 left-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
+                                        <i class="text-xs fa-solid fa-receipt"></i>
+                                    </span>
+                                    <textarea name="comment" rows="2" placeholder="Invoice number or remarks..."
+                                        class="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">{{ old('comment') }}</textarea>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -176,7 +206,7 @@
                 {{-- SUBMIT FOOTER --}}
                 <div class="flex items-center gap-3 p-4 shadow-md bg-slate-900 rounded-2xl">
                     <button type="submit"
-                        class="flex-1 py-3 text-xs font-bold tracking-wider text-white uppercase transition-all shadow-md bg-amber-600 hover:bg-amber-700 rounded-xl shadow-amber-600/20 active:scale-[0.98]">
+                        class="flex-1 py-3 text-xs font-bold tracking-wider text-white uppercase transition-all shadow-md bg-amber-600 hover:bg-amber-700 rounded-xl shadow-amber-600/20 active:scale-[0.98] cursor-pointer">
                         Submit Claim Request <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i>
                     </button>
                     <a href="{{ route('reimbursements.index') }}"
@@ -263,35 +293,37 @@
         const excludedInput = document.getElementById('excludedPagesInput');
         let excludedPages = [];
 
-        ['dragenter', 'dragover'].forEach(eventName => {
-            fileInput.addEventListener(eventName, () => {
-                dropzone.classList.add('border-amber-500', 'bg-amber-50/20');
-            }, false);
-        });
-        ['dragleave', 'drop'].forEach(eventName => {
-            fileInput.addEventListener(eventName, () => {
-                dropzone.classList.remove('border-amber-500', 'bg-amber-50/20');
-            }, false);
-        });
+        if (fileInput && dropzone) {
+            ['dragenter', 'dragover'].forEach(eventName => {
+                fileInput.addEventListener(eventName, () => {
+                    dropzone.classList.add('border-amber-500', 'bg-amber-50/20');
+                }, false);
+            });
+            ['dragleave', 'drop'].forEach(eventName => {
+                fileInput.addEventListener(eventName, () => {
+                    dropzone.classList.remove('border-amber-500', 'bg-amber-50/20');
+                }, false);
+            });
 
-        fileInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
 
-            previewContainer.innerHTML = '';
-            previewContainer.classList.add('hidden');
-            placeholder.classList.add('hidden');
-            pageCountBadge.classList.add('hidden');
-            excludedPages = [];
-            excludedInput.value = JSON.stringify(excludedPages);
+                previewContainer.innerHTML = '';
+                previewContainer.classList.add('hidden');
+                placeholder.classList.add('hidden');
+                pageCountBadge.classList.add('hidden');
+                excludedPages = [];
+                excludedInput.value = JSON.stringify(excludedPages);
 
-            if (file.type === 'application/pdf') {
-                renderingLoader.classList.replace('hidden', 'flex');
-                renderPdfPreview(file);
-            } else if (file.type.startsWith('image/')) {
-                renderImagePreview(file);
-            }
-        });
+                if (file.type === 'application/pdf') {
+                    renderingLoader.classList.replace('hidden', 'flex');
+                    renderPdfPreview(file);
+                } else if (file.type.startsWith('image/')) {
+                    renderImagePreview(file);
+                }
+            });
+        }
 
         function renderImagePreview(file) {
             const reader = new FileReader();
@@ -349,7 +381,7 @@
                     wrapper.id = `page-wrapper-${i}`;
                     wrapper.innerHTML = `
                         <div class="absolute top-3 left-3 z-10 bg-slate-900 text-white text-[8px] px-2 py-0.5 rounded-md font-bold uppercase">Page ${i}</div>
-                        <button type="button" onclick="togglePage(${i})" class="absolute z-10 flex items-center justify-center w-6 h-6 transition-colors bg-white border rounded-full border-slate-200 shadow-2xs text-slate-400 top-3 right-3 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200" title="Exclude Page">
+                        <button type="button" onclick="togglePage(${i})" class="absolute z-10 flex items-center justify-center w-6 h-6 transition-colors bg-white border rounded-full cursor-pointer border-slate-200 shadow-2xs text-slate-400 top-3 right-3 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200" title="Exclude Page">
                             <i class="fa-solid fa-trash-can text-[9px]"></i>
                         </button>
                         <div class="overflow-hidden rounded-lg bg-slate-50">
@@ -358,7 +390,7 @@
                         <div id="overlay-${i}" class="absolute inset-0 bg-white/95 hidden flex-col gap-1.5 items-center justify-center rounded-xl z-20">
                             <div class="flex items-center justify-center w-6 h-6 border rounded-full bg-rose-50 border-rose-200 text-rose-500"><i class="fa-solid fa-eye-slash text-[9px]"></i></div>
                             <span class="text-rose-600 font-bold text-[9px] uppercase">Page Excluded</span>
-                            <button type="button" onclick="togglePage(${i})" class="mt-1 bg-slate-900 hover:bg-slate-800 text-white text-[8px] px-2 py-1 rounded-md font-bold uppercase">Restore Page</button>
+                            <button type="button" onclick="togglePage(${i})" class="mt-1 bg-slate-900 hover:bg-slate-800 text-white text-[8px] px-2 py-1 rounded-md font-bold uppercase cursor-pointer">Restore Page</button>
                         </div>
                     `;
                     previewContainer.appendChild(wrapper);
@@ -377,32 +409,35 @@
 
             if (idx === -1) {
                 excludedPages.push(pageNum);
-                overlay.classList.replace('hidden', 'flex');
-                wrapper.classList.add('border-rose-200', 'bg-rose-50/20');
+                overlay?.classList.replace('hidden', 'flex');
+                wrapper?.classList.add('border-rose-200', 'bg-rose-50/20');
             } else {
                 excludedPages.splice(idx, 1);
-                overlay.classList.replace('flex', 'hidden');
-                wrapper.classList.remove('border-rose-200', 'bg-rose-50/20');
+                overlay?.classList.replace('flex', 'hidden');
+                wrapper?.classList.remove('border-rose-200', 'bg-rose-50/20');
             }
             excludedInput.value = JSON.stringify(excludedPages);
         }
 
         function handleCategoryChange() {
-            const category = document.getElementById('categorySelect').value;
+            const categorySelect = document.getElementById('categorySelect');
+            if (!categorySelect) return;
+
+            const category = categorySelect.value;
             const routingFields = document.getElementById('routingFields');
             const fromInput = document.getElementById('fromLocation');
             const toInput = document.getElementById('toLocation');
 
             if (category === 'transportation' || category === 'delivery') {
-                routingFields.classList.replace('hidden', 'grid');
-                fromInput.setAttribute('required', 'required');
-                toInput.setAttribute('required', 'required');
+                routingFields?.classList.replace('hidden', 'grid');
+                fromInput?.setAttribute('required', 'required');
+                toInput?.setAttribute('required', 'required');
             } else {
-                routingFields.classList.replace('grid', 'hidden');
-                fromInput.removeAttribute('required');
-                toInput.removeAttribute('required');
-                fromInput.value = '';
-                toInput.value = '';
+                routingFields?.classList.replace('grid', 'hidden');
+                fromInput?.removeAttribute('required');
+                toInput?.removeAttribute('required');
+                if (fromInput) fromInput.value = '';
+                if (toInput) toInput.value = '';
             }
         }
 
@@ -413,13 +448,19 @@
             let rawValue = e.target.value.replace(/\D/g, '');
             if (rawValue === '') {
                 maskInput.value = '';
-                actualInput.value = '';
+                if (actualInput) actualInput.value = '';
                 return;
             }
-            actualInput.value = rawValue;
+            if (actualInput) actualInput.value = rawValue;
             e.target.value = new Intl.NumberFormat('id-ID').format(rawValue);
         });
 
-        document.addEventListener("DOMContentLoaded", handleCategoryChange);
+        document.addEventListener("DOMContentLoaded", function() {
+            handleCategoryChange();
+
+            if (actualInput && actualInput.value) {
+                if (maskInput) maskInput.value = new Intl.NumberFormat('id-ID').format(actualInput.value);
+            }
+        });
     </script>
 @endpush

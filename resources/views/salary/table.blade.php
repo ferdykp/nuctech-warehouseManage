@@ -3,12 +3,12 @@
         <thead>
             <tr
                 class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
-                <th class="px-6 py-4">Employee</th>
-                <th class="px-6 py-4">Bank Account</th>
-                <th class="px-6 py-4">Basic Salary</th>
-                <th class="px-6 py-4">Status</th>
-                <th class="px-6 py-4">Adjustment (Overtime)</th>
-                <th class="px-6 py-4 text-center w-28">Actions</th>
+                <th scope="col" class="px-6 py-4">Employee</th>
+                <th scope="col" class="px-6 py-4">Bank Account</th>
+                <th scope="col" class="px-6 py-4">Basic Salary</th>
+                <th scope="col" class="px-6 py-4">Status</th>
+                <th scope="col" class="px-6 py-4">Adjustment (Overtime)</th>
+                <th scope="col" class="px-6 py-4 text-center w-28">Actions</th>
             </tr>
         </thead>
         <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
@@ -25,27 +25,33 @@
 
                     {{-- Bank Account --}}
                     <td class="px-6 py-4">
-                        <div class="font-extrabold text-slate-800">{{ $item->bank }}</div>
-                        <div class="font-mono text-[11px] text-slate-400 font-semibold">{{ $item->account_no }}</div>
+                        <div class="font-extrabold text-slate-800">{{ $item->bank ?? '-' }}</div>
+                        <div class="font-mono text-[11px] text-slate-400 font-semibold">{{ $item->account_no ?? '-' }}
+                        </div>
                     </td>
 
                     {{-- Basic Salary --}}
                     <td class="px-6 py-4 text-sm font-black text-emerald-700 whitespace-nowrap">
-                        Rp {{ number_format($item->amount, 0, ',', '.') }}
+                        Rp {{ number_format((float) ($item->amount ?? 0), 0, ',', '.') }}
                     </td>
 
                     {{-- Information Badge --}}
                     <td class="px-6 py-4">
+                        @php
+                            $infoStr = strtolower($item->information ?? 'regular salary');
+                            $badgeStyle = str_contains($infoStr, 'probation')
+                                ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                : 'bg-blue-50 text-blue-800 border-blue-200';
+                        @endphp
                         <span
-                            class="inline-block px-2.5 py-1 text-[10px] font-extrabold rounded-full border tracking-wide uppercase leading-tight
-                            {{ str_contains($item->information, 'probation') ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-blue-50 text-blue-800 border-blue-200' }}">
-                            {{ strtoupper($item->information) }}
+                            class="inline-block px-2.5 py-1 text-[10px] font-extrabold rounded-full border tracking-wide uppercase leading-tight {{ $badgeStyle }}">
+                            {{ strtoupper($item->information ?? 'REGULAR SALARY') }}
                         </span>
                     </td>
 
                     {{-- Before / After --}}
                     <td class="px-6 py-4">
-                        @if (str_contains($item->calculated_before_after, '+Lembur'))
+                        @if (str_contains($item->calculated_before_after ?? '', '+Lembur'))
                             @php
                                 $parts = explode('/', $item->calculated_before_after);
                                 $beforeVal = trim($parts[0] ?? '');
@@ -69,7 +75,7 @@
                             </div>
                         @else
                             <span class="font-semibold text-slate-600">
-                                {{ $item->calculated_before_after }}
+                                {{ $item->calculated_before_after ?? '-' }}
                             </span>
                         @endif
                     </td>
@@ -79,7 +85,7 @@
                         <div class="flex items-center justify-center gap-1.5">
                             {{-- VIEW DETAIL --}}
                             <button type="button" onclick="showSalaryDetail({{ $item->id }})"
-                                class="flex items-center justify-center w-8 h-8 transition-colors rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                                class="flex items-center justify-center w-8 h-8 transition-colors cursor-pointer rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100"
                                 title="Salary Details">
                                 <i class="text-xs fa-solid fa-eye"></i>
                             </button>
@@ -97,7 +103,7 @@
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit"
-                                    class="flex items-center justify-center w-8 h-8 transition-all border rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
+                                    class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
                                     title="Delete Salary Record">
                                     <i class="text-xs fa-solid fa-trash-can"></i>
                                 </button>

@@ -23,7 +23,16 @@ class ScheduleController extends Controller
         $month = $request->input('month', Carbon::now()->month);
         $year = $request->input('year', Carbon::now()->year);
 
-        $holidays = $this->holidayService->getHolidaysForMonth(sprintf('%04d-%02d', $year, $month));
+        $rawHolidays = $this->holidayService->getHolidaysForMonth(sprintf('%04d-%02d', $year, $month));
+
+        // Standardisasi key agar bertipe string "Y-m-d"
+        $holidays = [];
+        if (!empty($rawHolidays)) {
+            foreach ($rawHolidays as $key => $val) {
+                $dateKey = ($key instanceof Carbon) ? $key->format('Y-m-d') : (string) $key;
+                $holidays[$dateKey] = $val;
+            }
+        }
 
         if ($user->role === 'admin_site') {
             $selectedSiteId = $user->site_id;
@@ -58,7 +67,6 @@ class ScheduleController extends Controller
 
         return view('schedule.index', compact('employees', 'datesInMonth', 'month', 'year', 'sites', 'selectedSiteId', 'holidays'));
     }
-
     /**
      * NOTE: Endpoint ini tidak lagi dipanggil dari UI (modal Site Patterns terpisah
      * sudah dihapus dan digabung ke dalam generate()). Dibiarkan tetap ada

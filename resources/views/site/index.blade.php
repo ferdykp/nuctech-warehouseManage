@@ -5,7 +5,7 @@
 @section('content')
     <div class="w-full space-y-6">
 
-        {{-- 1. HEADER CARD (TERPISAH) --}}
+        {{-- 1. HEADER CARD --}}
         <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -24,8 +24,8 @@
 
                 @if (auth()->user()?->role === 'superadmin')
                     <div class="flex items-center gap-3 shrink-0">
-                        <button onclick="openCreateModal()"
-                            class="flex items-center justify-center gap-2 px-5 py-3 text-xs font-bold text-white transition-all bg-blue-600 shadow-md sm:text-sm hover:bg-blue-700 rounded-xl shadow-blue-600/20 active:scale-95 group shrink-0">
+                        <button type="button" onclick="openCreateModal()"
+                            class="flex items-center justify-center gap-2 px-5 py-3 text-xs font-bold text-white transition-all bg-blue-600 shadow-md cursor-pointer sm:text-sm hover:bg-blue-700 rounded-xl shadow-blue-600/20 active:scale-95 group shrink-0">
                             <i class="text-xs transition-transform fa-solid fa-plus group-hover:rotate-90"></i>
                             <span>Register New Site</span>
                         </button>
@@ -85,10 +85,10 @@
                     <thead>
                         <tr
                             class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
-                            <th class="px-6 py-4">Machine Identity</th>
-                            <th class="px-6 py-4">Branch</th>
-                            <th class="px-6 py-4">Location / Address</th>
-                            <th class="px-6 py-4 text-right">Actions</th>
+                            <th scope="col" class="px-6 py-4">Machine Identity</th>
+                            <th scope="col" class="px-6 py-4">Branch</th>
+                            <th scope="col" class="px-6 py-4">Location / Address</th>
+                            <th scope="col" class="px-6 py-4 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
@@ -106,7 +106,7 @@
                                             </span>
                                             <span class="block text-[11px] text-slate-400 font-semibold truncate mt-0.5">
                                                 ID: #{{ str_pad($site->id, 4, '0', STR_PAD_LEFT) }} &bull;
-                                                {{ $site->created_at->diffForHumans() }}
+                                                {{ $site->created_at ? $site->created_at->diffForHumans() : '-' }}
                                             </span>
                                         </div>
                                     </div>
@@ -124,7 +124,7 @@
                                     <div class="flex flex-col max-w-[260px]">
                                         <div class="flex items-center gap-1.5 text-slate-800 mb-0.5 font-bold">
                                             <i class="text-xs fa-solid fa-location-dot text-slate-400"></i>
-                                            <span class="truncate">{{ $site->location }}</span>
+                                            <span class="truncate">{{ $site->location ?? '-' }}</span>
                                         </div>
                                         <span class="text-[11px] text-slate-400 font-medium line-clamp-1">
                                             {{ $site->address ?? 'No detailed address provided' }}
@@ -135,14 +135,15 @@
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex items-center justify-end gap-1.5">
                                         {{-- VIEW DETAIL --}}
-                                        <button onclick="openDetailModal({{ json_encode($site->load('branch')) }})"
-                                            class="flex items-center justify-center w-8 h-8 transition-colors rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                                        <button type="button"
+                                            onclick="openDetailModal({{ json_encode($site->load('branch'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) }})"
+                                            class="flex items-center justify-center w-8 h-8 transition-colors cursor-pointer rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100"
                                             title="View Details">
                                             <i class="text-xs fa-solid fa-eye"></i>
                                         </button>
 
                                         {{-- OPEN VAULT --}}
-                                        <a href="{{ route('sparepart.index', $site->slug) }}"
+                                        <a href="{{ route('sparepart.index', $site->slug ?? $site->id) }}"
                                             class="inline-flex items-center px-3 py-1.5 text-xs font-extrabold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-900 hover:text-white transition-all active:scale-95 shrink-0 shadow-2xs">
                                             Open Vault
                                         </a>
@@ -151,15 +152,17 @@
                                             <div class="w-px h-4 mx-1 bg-slate-200"></div>
 
                                             {{-- EDIT --}}
-                                            <button onclick="openEditModal({{ json_encode($site) }})"
-                                                class="flex items-center justify-center w-8 h-8 text-blue-600 transition-all border border-blue-100 rounded-xl bg-blue-50 hover:bg-blue-600 hover:text-white active:scale-95"
+                                            <button type="button"
+                                                onclick="openEditModal({{ json_encode($site, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) }})"
+                                                class="flex items-center justify-center w-8 h-8 text-blue-600 transition-all border border-blue-100 cursor-pointer rounded-xl bg-blue-50 hover:bg-blue-600 hover:text-white active:scale-95"
                                                 title="Edit Site">
                                                 <i class="text-xs fa-solid fa-pen-to-square"></i>
                                             </button>
 
                                             {{-- DELETE --}}
-                                            <button type="button" onclick="openDeleteModal({{ json_encode($site) }})"
-                                                class="flex items-center justify-center w-8 h-8 transition-all border rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
+                                            <button type="button"
+                                                onclick="openDeleteModal({{ json_encode($site, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) }})"
+                                                class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
                                                 title="Delete Site">
                                                 <i class="text-xs fa-solid fa-trash-can"></i>
                                             </button>
@@ -194,7 +197,7 @@
     @php $modalBase = "fixed inset-0 z-50 flex items-center justify-center hidden p-4 bg-slate-900/60 backdrop-blur-xs transition-all duration-300"; @endphp
 
     {{-- MODAL DETAIL --}}
-    <div id="modal-detail" class="{{ $modalBase }}">
+    <div id="modal-detail" onclick="if(event.target===this) closeDetailModal()" class="{{ $modalBase }}">
         <div
             class="w-full max-w-xl overflow-hidden bg-white border border-slate-100 shadow-2xl rounded-3xl max-h-[90vh] flex flex-col">
             <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
@@ -209,8 +212,8 @@
                             class="text-[10px] font-extrabold tracking-widest text-slate-400 uppercase truncate"></p>
                     </div>
                 </div>
-                <button onclick="closeDetailModal()"
-                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
+                <button type="button" onclick="closeDetailModal()"
+                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
             </div>
 
             <div class="p-6 space-y-5 overflow-y-auto text-xs sm:text-sm">
@@ -236,8 +239,8 @@
             </div>
 
             <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50 shrink-0">
-                <button onclick="closeDetailModal()"
-                    class="px-4 py-2.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 active:scale-95 shadow-2xs">Close</button>
+                <button type="button" onclick="closeDetailModal()"
+                    class="px-4 py-2.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 active:scale-95 shadow-2xs cursor-pointer">Close</button>
                 <a id="det_vault_link" href="#"
                     class="px-5 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95 transition-all">Access
                     Vault</a>
@@ -246,7 +249,7 @@
     </div>
 
     {{-- MODAL CREATE --}}
-    <div id="modal-create" class="{{ $modalBase }}">
+    <div id="modal-create" onclick="if(event.target===this) closeCreateModal()" class="{{ $modalBase }}">
         <div
             class="w-full max-w-lg overflow-hidden bg-white border border-slate-100 shadow-2xl rounded-3xl max-h-[90vh] flex flex-col">
             <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
@@ -254,8 +257,8 @@
                     <h3 class="text-base font-extrabold text-slate-900">New Machine Site</h3>
                     <p class="text-xs font-medium text-slate-500">Define location and machine identification.</p>
                 </div>
-                <button onclick="closeCreateModal()"
-                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
+                <button type="button" onclick="closeCreateModal()"
+                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
             </div>
             <form action="{{ route('site.store') }}" method="POST" class="p-6 space-y-4 overflow-y-auto">
                 @csrf
@@ -269,7 +272,7 @@
                     <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Assign Branch <span
                             class="text-rose-500">*</span></label>
                     <select name="branch_id" required
-                        class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                        class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
                         <option value="">Choose regional branch...</option>
                         @foreach ($branches as $branch)
                             <option value="{{ $branch->id }}">{{ $branch->branch_name }}</option>
@@ -285,9 +288,9 @@
 
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                     <button type="button" onclick="closeCreateModal()"
-                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">Discard</button>
+                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">Discard</button>
                     <button type="submit"
-                        class="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95 transition-all">Register
+                        class="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95 transition-all cursor-pointer">Register
                         Site</button>
                 </div>
             </form>
@@ -295,7 +298,7 @@
     </div>
 
     {{-- MODAL EDIT --}}
-    <div id="modal-edit" class="{{ $modalBase }}">
+    <div id="modal-edit" onclick="if(event.target===this) closeEditModal()" class="{{ $modalBase }}">
         <div
             class="w-full max-w-lg overflow-hidden bg-white border border-slate-100 shadow-2xl rounded-3xl max-h-[90vh] flex flex-col">
             <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
@@ -303,8 +306,8 @@
                     <h3 class="text-base font-extrabold text-slate-900">Update Machine Site</h3>
                     <p class="text-xs font-medium text-slate-500">Modify regional site information.</p>
                 </div>
-                <button onclick="closeEditModal()"
-                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
+                <button type="button" onclick="closeEditModal()"
+                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
             </div>
             <form id="form-edit" method="POST" class="p-6 space-y-4 overflow-y-auto">
                 @csrf
@@ -319,7 +322,7 @@
                     <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Branch Assignment <span
                             class="text-rose-500">*</span></label>
                     <select id="edit_branch_id" name="branch_id" required
-                        class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                        class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
                         @foreach ($branches as $branch)
                             <option value="{{ $branch->id }}">{{ $branch->branch_name }}</option>
                         @endforeach
@@ -334,9 +337,9 @@
 
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                     <button type="button" onclick="closeEditModal()"
-                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">Cancel</button>
+                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">Cancel</button>
                     <button type="submit"
-                        class="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95 transition-all">Update
+                        class="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95 transition-all cursor-pointer">Update
                         Data</button>
                 </div>
             </form>
@@ -344,7 +347,7 @@
     </div>
 
     {{-- MODAL DELETE --}}
-    <div id="modal-delete" class="{{ $modalBase }}">
+    <div id="modal-delete" onclick="if(event.target===this) closeDeleteModal()" class="{{ $modalBase }}">
         <div
             class="w-full max-w-sm p-6 overflow-hidden text-center bg-white border shadow-2xl border-slate-100 rounded-3xl">
             <div
@@ -359,30 +362,39 @@
 
             <div class="flex items-center justify-end gap-2.5 mt-6 pt-4 border-t border-slate-100">
                 <button type="button" onclick="closeDeleteModal()"
-                    class="w-full py-2.5 text-xs font-bold text-slate-700 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
+                    class="w-full py-2.5 text-xs font-bold text-slate-700 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors cursor-pointer">Cancel</button>
                 <form id="form-delete" method="POST" class="w-full">
                     @csrf
                     @method('DELETE')
                     <button type="submit"
-                        class="w-full py-2.5 text-xs font-bold text-white bg-rose-600 rounded-xl hover:bg-rose-700 shadow-md shadow-rose-600/20 active:scale-95 transition-all">Delete</button>
+                        class="w-full py-2.5 text-xs font-bold text-white bg-rose-600 rounded-xl hover:bg-rose-700 shadow-md shadow-rose-600/20 active:scale-95 transition-all cursor-pointer">Delete</button>
                 </form>
             </div>
         </div>
     </div>
+@endsection
 
+@push('scripts')
     <script>
         function openDetailModal(site) {
             const modal = document.getElementById('modal-detail');
-            document.getElementById('det_title').innerText = site.machine_name;
+            if (!modal) return;
+            document.getElementById('det_title').innerText = site.machine_name || '-';
             document.getElementById('det_subtitle').innerText = `System ID: #ST-${String(site.id).padStart(4, '0')}`;
             document.getElementById('det_branch').innerText = site.branch ? site.branch.branch_name : 'Unassigned';
-            document.getElementById('det_location').innerText = site.location || 'No address specified.';
-            document.getElementById('det_created').innerText = new Date(site.created_at).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            document.getElementById('det_vault_link').href = `/spareparts/${site.slug}`;
+            document.getElementById('det_location').innerText = site.location || site.address || 'No address specified.';
+
+            const createdDate = site.created_at ? new Date(site.created_at) : null;
+            document.getElementById('det_created').innerText = createdDate && !isNaN(createdDate) ?
+                createdDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }) :
+                '-';
+
+            document.getElementById('det_vault_link').href = `/spareparts/${site.slug || site.id}`;
+
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             document.body.classList.add('overflow-hidden');
@@ -390,32 +402,41 @@
 
         function closeDetailModal() {
             const modal = document.getElementById('modal-detail');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
             document.body.classList.remove('overflow-hidden');
         }
 
         function openCreateModal() {
             const modal = document.getElementById('modal-create');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
             document.body.classList.add('overflow-hidden');
         }
 
         function closeCreateModal() {
             const modal = document.getElementById('modal-create');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
             document.body.classList.remove('overflow-hidden');
         }
 
         function openEditModal(site) {
             const modal = document.getElementById('modal-edit');
             const form = document.getElementById('form-edit');
+            if (!modal || !form) return;
+
             form.action = `/sites/${site.id}`;
-            document.getElementById('edit_machine_name').value = site.machine_name;
-            document.getElementById('edit_branch_id').value = site.branch_id;
-            document.getElementById('edit_location').value = site.location || '';
+            document.getElementById('edit_machine_name').value = site.machine_name || '';
+            document.getElementById('edit_branch_id').value = site.branch_id || '';
+            document.getElementById('edit_location').value = site.location || site.address || '';
+
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             document.body.classList.add('overflow-hidden');
@@ -423,16 +444,21 @@
 
         function closeEditModal() {
             const modal = document.getElementById('modal-edit');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
             document.body.classList.remove('overflow-hidden');
         }
 
         function openDeleteModal(site) {
             const modal = document.getElementById('modal-delete');
             const form = document.getElementById('form-delete');
+            if (!modal || !form) return;
+
             form.action = `/sites/${site.id}`;
-            document.getElementById('delete_site_name').innerText = site.machine_name;
+            document.getElementById('delete_site_name').innerText = site.machine_name || 'this site';
+
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             document.body.classList.add('overflow-hidden');
@@ -440,16 +466,22 @@
 
         function closeDeleteModal() {
             const modal = document.getElementById('modal-delete');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
             document.body.classList.remove('overflow-hidden');
         }
 
-        window.onclick = function(event) {
-            if (event.target === document.getElementById('modal-detail')) closeDetailModal();
-            if (event.target === document.getElementById('modal-create')) closeCreateModal();
-            if (event.target === document.getElementById('modal-edit')) closeEditModal();
-            if (event.target === document.getElementById('modal-delete')) closeDeleteModal();
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeDetailModal();
+                    closeCreateModal();
+                    closeEditModal();
+                    closeDeleteModal();
+                }
+            });
+        });
     </script>
-@endsection
+@endpush

@@ -5,7 +5,7 @@
 @section('content')
     <div class="w-full space-y-6">
 
-        {{-- 1. HEADER CARD (TERPISAH) --}}
+        {{-- 1. HEADER CARD --}}
         <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -41,9 +41,9 @@
                 {{-- EMPLOYEE SELECTION --}}
                 <div>
                     <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Select
-                        Employee</label>
+                        Employee <span class="text-rose-500">*</span></label>
                     <select name="employee_id" required
-                        class="w-full px-3.5 py-2.5 text-xs font-bold transition-all bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800">
+                        class="w-full px-3.5 py-2.5 text-xs font-bold transition-all bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
                         <option value="">-- Choose Employee --</option>
                         @foreach ($employees as $emp)
                             <option value="{{ $emp->id }}" {{ old('employee_id') == $emp->id ? 'selected' : '' }}>
@@ -56,9 +56,9 @@
                 {{-- LEAVE TYPE --}}
                 <div>
                     <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Leave
-                        Type</label>
+                        Type <span class="text-rose-500">*</span></label>
                     <select name="leave_type_id" required
-                        class="w-full px-3.5 py-2.5 text-xs font-bold transition-all bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800">
+                        class="w-full px-3.5 py-2.5 text-xs font-bold transition-all bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
                         <option value="">-- Choose Leave Type --</option>
                         @foreach ($leaveTypes as $type)
                             <option value="{{ $type->id }}" {{ old('leave_type_id') == $type->id ? 'selected' : '' }}>
@@ -76,13 +76,15 @@
                         <label
                             class="flex items-center gap-2.5 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-all text-xs font-bold text-slate-700 bg-slate-50/50">
                             <input type="radio" name="duration_type" value="single" checked
-                                onclick="toggleDurationType('single')" class="text-emerald-600 focus:ring-emerald-500">
+                                onclick="toggleDurationType('single')"
+                                class="cursor-pointer text-emerald-600 focus:ring-emerald-500">
                             <span>Single Day Only (1 Day)</span>
                         </label>
                         <label
                             class="flex items-center gap-2.5 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-all text-xs font-bold text-slate-700 bg-slate-50/50">
                             <input type="radio" name="duration_type" value="multiple"
-                                onclick="toggleDurationType('multiple')" class="text-emerald-600 focus:ring-emerald-500">
+                                onclick="toggleDurationType('multiple')"
+                                class="cursor-pointer text-emerald-600 focus:ring-emerald-500">
                             <span>Multiple Days (Date Range)</span>
                         </label>
                     </div>
@@ -91,31 +93,31 @@
                 {{-- SINGLE DATE CONTAINER --}}
                 <div id="single_date_container">
                     <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Leave
-                        Date</label>
+                        Date <span class="text-rose-500">*</span></label>
                     <input type="date" id="single_date" onchange="syncSingleDate(this.value)"
-                        class="w-full px-3.5 py-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800">
+                        class="w-full px-3.5 py-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
                 </div>
 
                 {{-- MULTIPLE DATES CONTAINER --}}
                 <div id="multiple_date_container" class="grid hidden grid-cols-2 gap-3">
                     <div>
                         <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Start
-                            Date</label>
+                            Date <span class="text-rose-500">*</span></label>
                         <input type="date" id="start_date" name="start_date" value="{{ old('start_date') }}" required
-                            class="w-full px-3.5 py-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800">
+                            class="w-full px-3.5 py-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
                     </div>
                     <div>
                         <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">End
-                            Date</label>
+                            Date <span class="text-rose-500">*</span></label>
                         <input type="date" id="end_date" name="end_date" value="{{ old('end_date') }}" required
-                            class="w-full px-3.5 py-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800">
+                            class="w-full px-3.5 py-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
                     </div>
                 </div>
 
                 {{-- REASON --}}
                 <div>
                     <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Reason /
-                        Description</label>
+                        Description <span class="text-rose-500">*</span></label>
                     <textarea name="reason" required rows="3"
                         class="w-full px-3.5 py-2.5 text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 placeholder-slate-400"
                         placeholder="Detail the purpose of leave request...">{{ old('reason') }}</textarea>
@@ -136,7 +138,7 @@
                         Cancel
                     </a>
                     <button type="submit"
-                        class="px-5 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95">
+                        class="px-5 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95 cursor-pointer">
                         <i class="mr-1.5 fa-solid fa-paper-plane"></i> Submit Leave Request
                     </button>
                 </div>
@@ -144,31 +146,42 @@
         </div>
     </div>
 
-    <script>
-        function toggleDurationType(type) {
-            const singleContainer = document.getElementById('single_date_container');
-            const multipleContainer = document.getElementById('multiple_date_container');
-            const singleInput = document.getElementById('single_date');
-            const startDateInput = document.getElementById('start_date');
-            const endDateInput = document.getElementById('end_date');
+    @push('scripts')
+        <script>
+            function toggleDurationType(type) {
+                const singleContainer = document.getElementById('single_date_container');
+                const multipleContainer = document.getElementById('multiple_date_container');
+                const singleInput = document.getElementById('single_date');
+                const startDateInput = document.getElementById('start_date');
+                const endDateInput = document.getElementById('end_date');
 
-            if (type === 'single') {
-                singleContainer.classList.remove('hidden');
-                multipleContainer.classList.add('hidden');
+                if (type === 'single') {
+                    if (singleContainer) singleContainer.classList.remove('hidden');
+                    if (multipleContainer) multipleContainer.classList.add('hidden');
 
-                if (singleInput.value) {
-                    startDateInput.value = singleInput.value;
-                    endDateInput.value = singleInput.value;
+                    if (singleInput && singleInput.value) {
+                        if (startDateInput) startDateInput.value = singleInput.value;
+                        if (endDateInput) endDateInput.value = singleInput.value;
+                    }
+                } else {
+                    if (singleContainer) singleContainer.classList.add('hidden');
+                    if (multipleContainer) multipleContainer.classList.remove('hidden');
                 }
-            } else {
-                singleContainer.classList.add('hidden');
-                multipleContainer.classList.remove('hidden');
             }
-        }
 
-        function syncSingleDate(val) {
-            document.getElementById('start_date').value = val;
-            document.getElementById('end_date').value = val;
-        }
-    </script>
+            function syncSingleDate(val) {
+                const startDateInput = document.getElementById('start_date');
+                const endDateInput = document.getElementById('end_date');
+                if (startDateInput) startDateInput.value = val;
+                if (endDateInput) endDateInput.value = val;
+            }
+
+            if (window.up) {
+                up.on('up:fragment:inserted', function() {
+                    const checkedDuration = document.querySelector('input[name="duration_type"]:checked');
+                    if (checkedDuration) toggleDurationType(checkedDuration.value);
+                });
+            }
+        </script>
+    @endpush
 @endsection

@@ -5,7 +5,7 @@
 @section('content')
     <div class="w-full space-y-6">
 
-        {{-- 1. HEADER CARD (TERPISAH) --}}
+        {{-- 1. HEADER CARD --}}
         <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -23,7 +23,7 @@
 
                 @if (Auth::user()?->role === 'superadmin')
                     <button onclick="openCreateCategoryModal()" type="button"
-                        class="inline-flex items-center justify-center gap-2 px-5 py-3 text-xs font-bold text-white transition-all shadow-md sm:text-sm bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95 shrink-0">
+                        class="inline-flex items-center justify-center gap-2 px-5 py-3 text-xs font-bold text-white transition-all shadow-md cursor-pointer sm:text-sm bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95 shrink-0">
                         <i class="text-xs fa-solid fa-plus"></i>
                         <span>Add New Category</span>
                     </button>
@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        {{-- 2. TABLE CARD (TERPISAH SEBAGAI CARD KEDUA) --}}
+        {{-- 2. TABLE CARD --}}
         <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse min-w-[600px]">
@@ -78,30 +78,26 @@
                                             {{-- EDIT --}}
                                             <button type="button" onclick="openEditCategoryModal(this)"
                                                 data-item="{{ json_encode($cat) }}"
-                                                class="flex items-center justify-center w-8 h-8 text-blue-600 transition-all border border-blue-100 rounded-xl bg-blue-50 hover:bg-blue-600 hover:text-white active:scale-95"
+                                                class="flex items-center justify-center w-8 h-8 text-blue-600 transition-all border border-blue-100 cursor-pointer rounded-xl bg-blue-50 hover:bg-blue-600 hover:text-white active:scale-95"
                                                 title="Edit Category">
                                                 <i class="text-xs fa-solid fa-pen-to-square"></i>
                                             </button>
 
                                             {{-- DELETE --}}
-                                            <form action="{{ route('categories.destroy', $cat->id) }}" method="POST"
-                                                class="inline-block"
-                                                onsubmit="return confirm('Are you sure you want to delete this category? This action cannot be undone.');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit"
-                                                    class="flex items-center justify-center w-8 h-8 transition-all border rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
-                                                    title="Delete Category">
-                                                    <i class="text-xs fa-solid fa-trash-can"></i>
-                                                </button>
-                                            </form>
+                                            <button type="button"
+                                                onclick="openDeleteCategoryModal('{{ route('categories.destroy', $cat->id) }}', '{{ addslashes($cat->name) }}')"
+                                                class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
+                                                title="Delete Category">
+                                                <i class="text-xs fa-solid fa-trash-can"></i>
+                                            </button>
                                         </div>
                                     </td>
                                 @endif
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="p-12 text-center text-slate-400">
+                                <td colspan="{{ Auth::user()?->role === 'superadmin' ? 4 : 3 }}"
+                                    class="p-12 text-center text-slate-400">
                                     <div
                                         class="flex items-center justify-center w-12 h-12 mx-auto mb-3 text-xl rounded-2xl bg-slate-100 text-slate-400">
                                         <i class="fa-solid fa-tags"></i>
@@ -150,7 +146,9 @@
             <form action="{{ route('categories.store') }}" method="POST" class="p-6 space-y-4 overflow-y-auto">
                 @csrf
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Category Name</label>
+                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                        Category Name <span class="text-rose-500">*</span>
+                    </label>
                     <input type="text" name="name" required placeholder="e.g. Mechanical Parts"
                         class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 font-medium">
                 </div>
@@ -166,7 +164,7 @@
                         class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">Discard</button>
                     <button type="submit"
                         class="px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-[0.98] transition-all">
-                        Save Category
+                        <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Save Category
                     </button>
                 </div>
             </form>
@@ -197,7 +195,9 @@
                 @csrf
                 @method('PUT')
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Category Name</label>
+                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                        Category Name <span class="text-rose-500">*</span>
+                    </label>
                     <input type="text" id="edit_category_name" name="name" required
                         class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 font-medium">
                 </div>
@@ -217,6 +217,38 @@
             </form>
         </div>
     </div>
+
+    {{-- MODAL DELETE CONFIRMATION --}}
+    <div id="modal-delete-category"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden p-4 transition-all bg-slate-900/60 backdrop-blur-xs">
+        <div class="relative w-full max-w-sm p-6 text-center bg-white border shadow-2xl border-slate-100 rounded-3xl">
+            <div class="flex justify-center mb-4">
+                <div
+                    class="flex items-center justify-center w-12 h-12 border rounded-2xl bg-rose-50 border-rose-100 text-rose-600">
+                    <i class="text-xl fa-solid fa-triangle-exclamation"></i>
+                </div>
+            </div>
+            <h3 class="mb-1 text-base font-extrabold text-slate-900">Confirm Deletion</h3>
+            <p class="mb-6 text-xs font-medium text-slate-500">
+                Are you sure you want to delete <strong id="delete-category-name" class="text-slate-900"></strong>?
+                <span class="block mt-1 font-semibold text-rose-600">This action cannot be undone.</span>
+            </p>
+            <form id="form-delete-category" method="POST">
+                @csrf
+                @method('DELETE')
+                <div class="flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeDeleteCategoryModal()"
+                        class="w-full py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="w-full py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 active:scale-[0.98] transition-all rounded-xl shadow-md shadow-rose-600/20">
+                        Yes, Delete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
@@ -225,12 +257,14 @@
             const m = document.getElementById('modal-create-category');
             m.classList.remove('hidden');
             m.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
         }
 
         function closeCreateCategoryModal() {
             const m = document.getElementById('modal-create-category');
             m.classList.add('hidden');
             m.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
         }
 
         function openEditCategoryModal(btn) {
@@ -241,17 +275,36 @@
             document.getElementById('edit_category_description').value = item.description || '';
             m.classList.remove('hidden');
             m.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
         }
 
         function closeEditCategoryModal() {
             const m = document.getElementById('modal-edit-category');
             m.classList.add('hidden');
             m.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        function openDeleteCategoryModal(url, name) {
+            const m = document.getElementById('modal-delete-category');
+            document.getElementById('form-delete-category').action = url;
+            document.getElementById('delete-category-name').innerText = name;
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeDeleteCategoryModal() {
+            const m = document.getElementById('modal-delete-category');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
         }
 
         window.onclick = function(event) {
             if (event.target === document.getElementById('modal-create-category')) closeCreateCategoryModal();
             if (event.target === document.getElementById('modal-edit-category')) closeEditCategoryModal();
+            if (event.target === document.getElementById('modal-delete-category')) closeDeleteCategoryModal();
         }
     </script>
 @endpush

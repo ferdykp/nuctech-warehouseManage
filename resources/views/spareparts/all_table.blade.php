@@ -18,11 +18,11 @@
                     <td class="px-6 py-4">
                         <div class="flex flex-col max-w-[240px] sm:max-w-[320px]">
                             <span
-                                class="text-sm font-bold leading-snug text-slate-900">{{ $stock->sparepart->item_name }}</span>
+                                class="text-sm font-bold leading-snug text-slate-900">{{ $stock->sparepart?->item_name ?? 'Unnamed Item' }}</span>
                             <span
                                 class="font-mono text-[11px] text-slate-400 mt-0.5 tracking-wide flex items-center gap-1">
                                 <i class="fa-solid fa-barcode text-[10px] text-slate-300"></i>
-                                {{ $stock->sparepart->serial_number ?? 'NO SERIAL' }}
+                                {{ $stock->sparepart?->serial_number ?? 'NO SERIAL' }}
                             </span>
                         </div>
                     </td>
@@ -35,9 +35,10 @@
                                 <i class="fa-solid fa-location-dot"></i>
                             </div>
                             <div class="flex flex-col min-w-0">
-                                <span class="font-bold truncate text-slate-800">{{ $stock->site->machine_name }}</span>
                                 <span
-                                    class="text-[10px] font-semibold text-slate-400 uppercase truncate mt-0.5">{{ $stock->site->branch->branch_name ?? 'Branch HQ' }}</span>
+                                    class="font-bold truncate text-slate-800">{{ $stock->site?->machine_name ?? 'Unassigned Site' }}</span>
+                                <span
+                                    class="text-[10px] font-semibold text-slate-400 uppercase truncate mt-0.5">{{ $stock->site?->branch?->branch_name ?? 'Branch HQ' }}</span>
                             </div>
                         </div>
                     </td>
@@ -48,7 +49,7 @@
                             class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-black rounded-xl text-slate-800 bg-slate-100 border border-slate-200/80">
                             {{ number_format($stock->qty) }}
                             <small
-                                class="font-extrabold text-[9px] text-slate-400 uppercase tracking-wider">{{ $stock->sparepart->uom }}</small>
+                                class="font-extrabold text-[9px] text-slate-400 uppercase tracking-wider">{{ $stock->sparepart?->uom ?? 'PCS' }}</small>
                         </span>
                     </td>
 
@@ -70,11 +71,15 @@
 
                     {{-- Action Button --}}
                     <td class="px-6 py-4 text-center">
-                        <a href="{{ route('sparepart.index', $stock->site->slug) }}"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-600 hover:text-white transition-all active:scale-95 shrink-0">
-                            <span>View Site</span>
-                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                        </a>
+                        @if ($stock->site?->slug)
+                            <a href="{{ route('sparepart.index', $stock->site->slug) }}"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-600 hover:text-white transition-all active:scale-95 shrink-0">
+                                <span>View Site</span>
+                                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                            </a>
+                        @else
+                            <span class="text-xs italic font-semibold text-slate-300">No Site</span>
+                        @endif
                     </td>
                 </tr>
             @empty

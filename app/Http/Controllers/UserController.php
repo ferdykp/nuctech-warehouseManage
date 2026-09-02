@@ -33,10 +33,7 @@ class UserController extends Controller
 
     public function create()
     {
-        if (auth()->user()->role !== 'superadmin') {
-            abort(403);
-        }
-
+        // Pastikan mengembalikan view profile.create
         $sites = Site::all();
         return view('profile.create', compact('sites'));
     }

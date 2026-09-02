@@ -6,13 +6,14 @@
     <title>{{ config('app.name', 'Workforce HRIS') }}</title>
     <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
 
-    <!-- Fonts: Inter for High Legibility -->
+    <!-- Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- FontAwesome 6.5.1 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <!-- Vite assets (app.css, app.js) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])

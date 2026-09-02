@@ -1,10 +1,12 @@
 @extends('layout.master')
 
+@section('title', 'Sign In - Workforce HRIS')
+
 @section('content')
     <section
         class="relative flex items-center justify-center w-screen h-screen min-h-screen p-4 overflow-hidden font-sans bg-slate-950 sm:p-6 lg:p-8">
 
-        {{-- Ambient Decorative Glows (radial-gradient, jauh lebih ringan dari filter:blur) --}}
+        {{-- Ambient Decorative Glows (Optimized Radial Gradients) --}}
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] pointer-events-none"
             style="background: radial-gradient(circle, rgba(37,99,235,0.14) 0%, transparent 70%);">
         </div>
@@ -18,22 +20,23 @@
 
             {{-- LEFT PANEL: Hero Showcase (Dark Theme) --}}
             <div
-                class="relative flex flex-col justify-between p-8 overflow-hidden border-b md:col-span-5 lg:p-10 md:border-b-0 md:border-r border-slate-800 bg-slate-950/60">
+                class="relative flex flex-col justify-between p-8 overflow-hidden border-b md:col-span-5 lg:p-10 md:border-b-0 md:border-r border-slate-800 bg-slate-950">
 
-                {{-- Background Image: opacity + gradient overlay saja, tanpa mix-blend-mode & transform scale --}}
-                <img src="{{ asset('img/nuctech-building.jpg') }}" alt="Building"
+                {{-- Background Image Showcase --}}
+                <img src="{{ asset('img/nuctech-building.jpg') }}" alt="Building Showcase"
                     class="absolute inset-0 object-cover w-full h-full opacity-25" loading="eager" decoding="async">
                 <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-slate-950/40"></div>
 
                 {{-- Top Branding --}}
                 <div class="relative z-10 flex items-center gap-3">
                     <div
-                        class="flex items-center justify-center w-10 h-10 text-xl font-black text-white bg-blue-600 border shadow-lg rounded-xl shadow-blue-600/30 border-blue-400/20">
+                        class="flex items-center justify-center w-10 h-10 text-xl font-black text-white bg-blue-600 border shadow-lg rounded-xl shadow-blue-600/30 border-blue-400/20 shrink-0">
                         W
                     </div>
                     <div>
                         <h2 class="text-base font-black leading-none tracking-tight text-white">WORKFORCE</h2>
-                        <span class="text-[10px] font-bold text-blue-400 tracking-widest uppercase">HRIS & Management</span>
+                        <span class="text-[10px] font-bold text-blue-400 tracking-widest uppercase block mt-0.5">HRIS &
+                            Management</span>
                     </div>
                 </div>
 
@@ -54,13 +57,12 @@
                 {{-- Bottom Status Badge --}}
                 <div class="relative z-10 flex items-center justify-between pt-4 border-t border-slate-800/80">
                     <div class="flex items-center gap-2 text-xs font-medium text-slate-400">
-                        {{-- animate-ping dihapus dari elemen dekat blur/gradient besar untuk kurangi repaint terus-menerus di Safari; cukup dot statis --}}
                         <span class="relative flex w-2 h-2">
                             <span
                                 class="absolute inline-flex w-full h-full rounded-full opacity-75 bg-emerald-400 animate-ping"></span>
                             <span class="relative inline-flex w-2 h-2 rounded-full bg-emerald-400"></span>
                         </span>
-                        <span>Status: <strong class="text-emerald-400">Operational</strong></span>
+                        <span>Status: <strong class="font-bold text-emerald-400">Operational</strong></span>
                     </div>
                     <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">v2.4 PRO</span>
                 </div>
@@ -82,54 +84,60 @@
                 </div>
 
                 {{-- Login Form --}}
-                <form action="{{ route('auth.login') }}" method="POST" up-target="false">
+                <form action="{{ route('auth.login') }}" method="POST">
                     @csrf
 
                     {{-- Username Input --}}
                     <div class="space-y-1.5">
                         <label for="username" class="block text-[11px] font-bold text-slate-700 tracking-wider uppercase">
-                            Username / Account ID
+                            Username / Account ID <span class="text-rose-500">*</span>
                         </label>
                         <div class="relative flex items-center">
                             <span
                                 class="absolute left-0 z-10 flex items-center justify-center w-10 pl-1 pointer-events-none text-slate-400">
-                                <i class="text-xs fa-solid fa-user text-slate-400"></i>
+                                <i class="text-xs fa-solid fa-user"></i>
                             </span>
                             <input type="text" id="username" name="username" value="{{ old('username') }}" required
-                                autofocus placeholder="e.g. admin_hris"
+                                autofocus placeholder="e.g. admin_hris" autocomplete="username"
                                 class="w-full py-3 pl-10 pr-4 text-sm font-semibold transition-all border text-slate-900 bg-slate-50 border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none placeholder:text-slate-400">
                         </div>
                         @error('username')
-                            <p class="text-[11px] font-semibold text-red-500 mt-1">{{ $message }}</p>
+                            <p class="text-[11px] font-bold text-rose-600 mt-1 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-exclamation"></i> {{ $message }}
+                            </p>
                         @enderror
                     </div>
 
-                    {{-- Password Input --}}
-                    <div class="space-y-1.5 mt-4">
+                    {{-- Password Input with Alpine.js Password Visibility Toggle --}}
+                    <div class="space-y-1.5 mt-4" x-data="{ showPass: false }">
                         <label for="password" class="block text-[11px] font-bold text-slate-700 tracking-wider uppercase">
-                            Password
+                            Password <span class="text-rose-500">*</span>
                         </label>
-                        <div class="relative flex items-center" x-data="{ showPass: false }" x-cloak>
+                        <div class="relative flex items-center">
                             <span
                                 class="absolute left-0 z-10 flex items-center justify-center w-10 pl-1 pointer-events-none text-slate-400">
-                                <i class="text-xs fa-solid fa-lock text-slate-400"></i>
+                                <i class="text-xs fa-solid fa-lock"></i>
                             </span>
                             <input :type="showPass ? 'text' : 'password'" id="password" name="password" required
-                                placeholder="••••••••"
+                                placeholder="••••••••" autocomplete="current-password"
                                 class="w-full py-3 pl-10 pr-10 text-sm font-semibold transition-all border text-slate-900 bg-slate-50 border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none placeholder:text-slate-400">
+
                             <button type="button" @click="showPass = !showPass"
-                                class="absolute right-0 z-10 flex items-center justify-center w-10 pr-1 text-slate-400 hover:text-slate-600 focus:outline-none">
+                                class="absolute right-0 z-10 flex items-center justify-center w-10 pr-1 text-slate-400 hover:text-slate-600 focus:outline-none"
+                                title="Toggle password visibility">
                                 <i class="text-xs fa-solid" :class="showPass ? 'fa-eye-slash' : 'fa-eye'"></i>
                             </button>
                         </div>
                         @error('password')
-                            <p class="text-[11px] font-semibold text-red-500 mt-1">{{ $message }}</p>
+                            <p class="text-[11px] font-bold text-rose-600 mt-1 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-exclamation"></i> {{ $message }}
+                            </p>
                         @enderror
                     </div>
 
                     {{-- Submit Button --}}
                     <button type="submit"
-                        class="w-full py-3.5 px-6 bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl shadow-lg shadow-slate-900/20 hover:shadow-blue-600/30 active:scale-[0.99] transition-all flex items-center justify-center gap-2 group mt-6">
+                        class="w-full py-3.5 px-6 bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl shadow-lg shadow-slate-900/20 hover:shadow-blue-600/30 active:scale-[0.99] transition-all flex items-center justify-center gap-2 group mt-6 cursor-pointer">
                         <span>Authenticate Account</span>
                         <i class="text-xs transition-transform fa-solid fa-arrow-right group-hover:translate-x-1"></i>
                     </button>

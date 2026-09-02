@@ -24,8 +24,8 @@
         <!-- TOAST NOTIFICATION CENTER -->
         @include('layout.notif')
 
-        <!-- MAIN CONTENT AREA (Kondisi khusus login disesuaikan) -->
-        <main id="main-content" up-main
+        <!-- MAIN CONTENT AREA -->
+        <main id="main-content"
             class="flex-1 w-full h-full min-w-0 {{ request()->routeIs(['login', 'register', 'password.*']) ? 'overflow-hidden p-0' : 'overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8' }}">
             @if (request()->routeIs(['login', 'register', 'password.*']))
                 @yield('content')

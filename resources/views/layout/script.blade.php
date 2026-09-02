@@ -1,60 +1,7 @@
-<!-- Third-party scripts: defer supaya tidak blocking render -->
-<script defer src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script defer src="https://unpkg.com/unpoly@3.8.0/unpoly.min.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/unpoly@3.8.0/unpoly.min.css">
+<!-- Third-party scripts: Load jQuery standar tanpa defer agar selalu siap di DOM -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
 <script>
-    // ============================================
-    // UNPOLY CONFIGURATION
-    // Aktif setelah unpoly.min.js selesai load (defer)
-    // ============================================
-    document.addEventListener('DOMContentLoaded', function() {
-        if (typeof up === 'undefined') {
-            console.warn('Unpoly belum ter-load, cek urutan script.');
-            return;
-        }
-
-        // Aktifkan Unpoly untuk semua link <a href> dan <form>
-        up.link.config.followSelectors.push('a[href]');
-        up.form.config.submitSelectors.push('form');
-
-        // 🔧 FIX: Route yang mengganti LAYOUT (guest <-> app) harus full reload,
-        // jangan di-intercept Unpoly sebagai fragment update.
-        // Ini mencegah sidebar/navbar lama "nyangkut" setelah logout,
-        // dan mencegah redirect POST/GET jadi salah kaprah lewat fetch.
-        up.link.config.noFollowSelectors.push(
-            'a[href*="/logout"]',
-            'a[href*="/login"]'
-        );
-        up.form.config.noSubmitSelectors.push(
-            'form[action*="/logout"]',
-            'form[action*="/login"]'
-        );
-
-        // Progress bar tipis di atas saat navigasi (UX terasa responsif)
-        up.network.config.progressBar = true;
-
-        // Target default kalau sebuah link tidak menentukan up-target
-        up.fragment.config.mainTargets.push('#main-content');
-
-        // Cache halaman yang sudah dikunjungi (durasi diperpendek dari 15 menit
-        // supaya tidak ada fragment lama nyangkut lintas sesi/user)
-        up.network.config.cacheExpireAge = 60 * 1000; // 1 menit
-    });
-
-    // Bersihkan cache Unpoly begitu ada submit logout,
-    // supaya tidak ada fragment halaman lama yang tersisa di cache
-    document.addEventListener('submit', function(e) {
-        if (e.target.matches && e.target.matches('form[action*="/logout"]')) {
-            if (typeof up !== 'undefined') {
-                up.cache.clear();
-            }
-        }
-    });
-
-    // ============================================
-    // KODE EXISTING (jQuery, AJAX search, dsb)
-    // ============================================
     $(document).ready(function() {
         const pathSegments = window.location.pathname.split('/');
         const site = pathSegments[1] || '';

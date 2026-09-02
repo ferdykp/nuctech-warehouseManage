@@ -328,6 +328,11 @@ class SalaryController extends Controller
      * CALCULATE SALARY DETAILS
      * ============================================================
      */
+    /**
+     * ============================================================
+     * CALCULATE SALARY DETAILS
+     * ============================================================
+     */
     private function calculateSalaryDetails($employeeId, $monthPeriod = null)
     {
         $monthPeriod = $monthPeriod ?? date('Y-m');
@@ -336,7 +341,21 @@ class SalaryController extends Controller
         $endOfMonth = Carbon::parse($monthPeriod . '-01')->endOfMonth();
         $daysInMonth = $startOfMonth->daysInMonth;
 
-        $nationalHolidays = $this->holidayService->getHolidaysForMonth($monthPeriod);
+        $rawHolidays = $this->holidayService->getHolidaysForMonth($monthPeriod);
+
+        // Standardisasi $nationalHolidays agar KEY-nya bertipe STRING ("Y-m-d")
+        $nationalHolidays = [];
+        if (!empty($rawHolidays)) {
+            foreach ($rawHolidays as $key => $val) {
+                // Jika key adalah Objek Carbon
+                if ($key instanceof Carbon) {
+                    $dateKey = $key->format('Y-m-d');
+                } else {
+                    $dateKey = (string) $key;
+                }
+                $nationalHolidays[$dateKey] = $val;
+            }
+        }
 
         $effectiveWorkingDays = 0;
         for ($d = 1; $d <= $daysInMonth; $d++) {
@@ -365,7 +384,11 @@ class SalaryController extends Controller
 
         foreach ($schedules as $sched) {
             if ($sched->shift && !$sched->shift->is_off) {
-                $dateStr = $sched->date;
+                // Pastikan $dateStr bertipe string "Y-m-d"
+                $dateStr = $sched->date instanceof Carbon
+                    ? $sched->date->format('Y-m-d')
+                    : (string) $sched->date;
+
                 $isNationalHoliday = isset($nationalHolidays[$dateStr]);
 
                 if ($isNationalHoliday) {
@@ -408,7 +431,6 @@ class SalaryController extends Controller
             'total_salary_to_pay'    => $totalSalaryToPay,
         ];
     }
-
     /**
      * ============================================================
      * GENERATE MONTHLY SALARIES

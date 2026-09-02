@@ -26,7 +26,7 @@ class EmployeesImport implements ToCollection
 
         $processedEmailsInSession = [];
 
-        // 1. CARI BARIS HEADER (JUDUL KOLOM)
+        // 1. CARI BARIS HEADER (JUDUL KOLOM) DENGAN KATA KUNCI TERMASUK SALARY / GAJI
         $headerRowIndex = null;
         $columnIndex = [
             'name'        => null,
@@ -34,6 +34,7 @@ class EmployeesImport implements ToCollection
             'phone'       => null,
             'email'       => null,
             'position'    => null,
+            'salary'      => null,
             'site'        => null,
             'designation' => null,
             'join_date'   => null,
@@ -62,6 +63,9 @@ class EmployeesImport implements ToCollection
                 }
                 if ($columnIndex['position'] === null && (str_contains($headerText, 'position') || str_contains($headerText, 'qualification') || str_contains($headerText, 'jabatan'))) {
                     $columnIndex['position'] = $cIdx;
+                }
+                if ($columnIndex['salary'] === null && (str_contains($headerText, 'salary') || str_contains($headerText, 'gaji') || str_contains($headerText, 'basic'))) {
+                    $columnIndex['salary'] = $cIdx;
                 }
                 if ($columnIndex['site'] === null && (str_contains($headerText, 'site') || str_contains($headerText, 'work site') || str_contains($headerText, 'location'))) {
                     $columnIndex['site'] = $cIdx;
@@ -123,6 +127,7 @@ class EmployeesImport implements ToCollection
             $phoneRaw    = isset($columnIndex['phone'], $row[$columnIndex['phone']]) ? trim((string)$row[$columnIndex['phone']]) : '-';
             $emailRaw    = isset($columnIndex['email'], $row[$columnIndex['email']]) ? trim((string)$row[$columnIndex['email']]) : null;
             $positionRaw = isset($columnIndex['position'], $row[$columnIndex['position']]) ? trim((string)$row[$columnIndex['position']]) : null;
+            $salaryRaw   = isset($columnIndex['salary'], $row[$columnIndex['salary']]) ? trim((string)$row[$columnIndex['salary']]) : null;
             $siteNameRaw = isset($columnIndex['site'], $row[$columnIndex['site']]) ? trim((string)$row[$columnIndex['site']]) : null;
             $designation = isset($columnIndex['designation'], $row[$columnIndex['designation']]) ? trim((string)$row[$columnIndex['designation']]) : null;
             $joinDateRaw = isset($columnIndex['join_date'], $row[$columnIndex['join_date']]) ? trim((string)$row[$columnIndex['join_date']]) : null;
@@ -141,7 +146,16 @@ class EmployeesImport implements ToCollection
                 }
             }
 
-            // 2. Smart Site Matching
+            // 2. Sanitisasi Salary / Gaji Pokok (Hapus Rp, titik, koma)
+            $basicSalary = 0;
+            if (!empty($salaryRaw)) {
+                $cleanedSalary = preg_replace('/[^0-9.]/', '', str_replace(',', '.', $salaryRaw));
+                if (is_numeric($cleanedSalary)) {
+                    $basicSalary = (float)$cleanedSalary;
+                }
+            }
+
+            // 3. Smart Site Matching
             $matchedSite = null;
             if ($siteNameRaw) {
                 $cleanSite = strtolower(str_replace(['/', '-', ' '], '', $siteNameRaw));
@@ -176,13 +190,13 @@ class EmployeesImport implements ToCollection
 
             $branchId = $matchedSite ? $matchedSite->branch_id : Branch::first()->id;
 
-            // 3. Match Karyawan Eksisting (Cari berdasarkan Nama atau NIK)
+            // 4. Match Karyawan Eksisting
             $employee = Employee::where('name', $nameRaw)->first();
             if (!$employee && $nik) {
                 $employee = Employee::where('nik', $nik)->first();
             }
 
-            // 4. Sanitisasi Email
+            // 5. Sanitisasi Email
             $email = null;
             if ($emailRaw && filter_var($emailRaw, FILTER_VALIDATE_EMAIL)) {
                 $candidateEmail = strtolower($emailRaw);
@@ -197,7 +211,7 @@ class EmployeesImport implements ToCollection
                 }
             }
 
-            // 5. Parse Join Date, Hitung Contract Start Date (+3 Bulan), dan Status
+            // 6. Parse Join Date, Contract Start Date (+3 Bulan), dan Status
             $joinDateCarbon = null;
             if ($joinDateRaw) {
                 try {
@@ -214,14 +228,12 @@ class EmployeesImport implements ToCollection
             }
 
             $joinDateFormatted = $joinDateCarbon->format('Y-m-d');
-
-            // OTOMATIS: contract_start_date = 3 bulan setelah join_date
             $contractStartDateFormatted = $joinDateCarbon->copy()->addMonths(3)->format('Y-m-d');
 
             $diffInMonths = $joinDateCarbon->diffInMonths(Carbon::now());
             $calculatedStatus = ($diffInMonths >= 3) ? 'Contract' : 'Probation';
 
-            // 6. Simpan / Update Karyawan
+            // 7. Simpan / Update Karyawan
             $payload = [
                 'site_id'             => $matchedSite->id,
                 'branch_id'           => $branchId,
@@ -231,11 +243,11 @@ class EmployeesImport implements ToCollection
                 'phone_number'        => $phoneRaw,
                 'position'            => is_numeric($positionRaw) ? null : $positionRaw,
                 'status'              => $calculatedStatus,
-                'basic_salary'        => 0,
+                'basic_salary'        => $basicSalary, // DISIMPAN DARI EXCEL
                 'mcu'                 => (str_contains($mcuRaw, 'yes') || str_contains($mcuRaw, 'ya')) ? 'yes' : 'no',
                 'tld'                 => (str_contains($tldRaw, 'yes') || str_contains($tldRaw, 'ya')) ? 'yes' : 'no',
                 'join_date'           => $joinDateFormatted,
-                'contract_start_date' => $contractStartDateFormatted, // PENAMBAHAN OTOMATIS CONTRACT START DATE
+                'contract_start_date' => $contractStartDateFormatted,
                 'is_active'           => true,
             ];
 

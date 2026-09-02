@@ -127,7 +127,7 @@
                         @php $activeSiteId = request('site_id', $siteId); @endphp
                         <a id="exportBtn"
                             href="{{ route('attendance.export', ['site_id' => $activeSiteId, 'month' => request('month', date('Y-m'))]) }}"
-                            title="Export to Excel"
+                            title="Export to Excel" up-follow="false" download
                             class="px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center transition-all active:scale-95 {{ empty($activeSiteId) ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed pointer-events-none' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20' }}">
                             <i class="mr-1 fa-solid fa-file-excel"></i> Export
                         </a>

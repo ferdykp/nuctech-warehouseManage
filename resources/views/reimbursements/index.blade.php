@@ -5,7 +5,7 @@
 @section('content')
     <div class="w-full space-y-6">
 
-        {{-- 1. HEADER CARD (TERPISAH) --}}
+        {{-- 1. HEADER CARD --}}
         <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -30,8 +30,8 @@
                     <div>
                         <span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider block">Total Approved
                             Funds</span>
-                        <span class="text-lg font-black sm:text-xl text-slate-900">
-                            Rp {{ number_format($totalApprovedAmount ?? 0, 0, ',', '.') }}
+                        <span id="totalApprovedAmountText" class="text-lg font-black sm:text-xl text-slate-900">
+                            Rp {{ number_format((float) ($totalApprovedAmount ?? 0), 0, ',', '.') }}
                         </span>
                     </div>
                 </div>
@@ -45,41 +45,50 @@
             <div
                 class="flex flex-col justify-between gap-4 p-5 border-b sm:p-6 lg:flex-row lg:items-center border-slate-100 bg-slate-50/30">
 
-                {{-- SEARCH & MONTH FILTER --}}
-                <div class="flex flex-col flex-1 gap-3 sm:flex-row sm:items-center">
-                    <div class="relative w-full sm:w-64">
+                {{-- SEARCH & MONTH FILTER FORM --}}
+                <form id="reimburseFilterForm" action="{{ route('reimbursements.index') }}" method="GET"
+                    onsubmit="return false;" class="flex flex-col flex-1 gap-3 sm:flex-row sm:items-center">
+
+                    {{-- SEARCH INPUT WITH ICON --}}
+                    <div class="relative w-full sm:w-72">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
                             <i class="text-xs fa-solid fa-magnifying-glass" id="searchIcon"></i>
                         </span>
-                        <input type="text" id="reimburseSearchInput" value="{{ request('search') }}"
-                            placeholder="Search staff, route, invoice..."
+                        <input type="text" id="reimburseSearchInput" name="search" value="{{ request('search') }}"
+                            placeholder="Search staff, route, invoice..." autocomplete="off"
                             class="w-full py-2.5 pl-10 pr-8 text-xs font-medium bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all shadow-2xs">
 
                         <button type="button" id="clearSearchBtn" onclick="clearSearch()"
-                            class="{{ request('search') ? '' : 'hidden' }} absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600">
+                            class="{{ request('search') ? '' : 'hidden' }} absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 cursor-pointer">
                             <i class="text-xs fa-solid fa-xmark"></i>
                         </button>
                     </div>
 
-                    {{-- MONTH FILTER --}}
+                    {{-- MONTH FILTER SELECT WITH ICON --}}
                     <div class="relative w-full sm:w-auto">
-                        <select id="reimburseMonthSelect"
-                            class="w-full sm:w-44 py-2.5 pl-3.5 pr-10 text-xs font-bold bg-amber-50/60 border border-amber-200/80 rounded-xl text-amber-900 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 appearance-none cursor-pointer transition-all">
-                            <option value="">📅 All Months</option>
-                            @foreach ([
-            '01' => 'January',
-            '02' => 'February',
-            '03' => 'March',
-            '04' => 'April',
-            '05' => 'May',
-            '06' => 'June',
-            '07' => 'July',
-            '08' => 'August',
-            '09' => 'September',
-            '10' => 'October',
-            '11' => 'November',
-            '12' => 'December',
-        ] as $value => $name)
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-amber-600">
+                            <i class="text-xs fa-solid fa-calendar-days"></i>
+                        </span>
+                        <select id="reimburseMonthSelect" name="month"
+                            class="w-full sm:w-48 py-2.5 pl-9 pr-10 text-xs font-bold bg-amber-50/60 border border-amber-200/80 rounded-xl text-amber-900 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 appearance-none cursor-pointer transition-all">
+                            <option value="">All Months</option>
+                            @php
+                                $months = [
+                                    '01' => 'January',
+                                    '02' => 'February',
+                                    '03' => 'March',
+                                    '04' => 'April',
+                                    '05' => 'May',
+                                    '06' => 'June',
+                                    '07' => 'July',
+                                    '08' => 'August',
+                                    '09' => 'September',
+                                    '10' => 'October',
+                                    '11' => 'November',
+                                    '12' => 'December',
+                                ];
+                            @endphp
+                            @foreach ($months as $value => $name)
                                 <option value="{{ $value }}" {{ request('month') == $value ? 'selected' : '' }}>
                                     {{ $name }}
                                 </option>
@@ -90,7 +99,8 @@
                             <i class="text-[10px] fa-solid fa-chevron-down"></i>
                         </span>
                     </div>
-                </div>
+
+                </form>
 
                 {{-- ACTION BUTTONS --}}
                 <div class="flex flex-wrap items-center gap-2.5">
@@ -100,18 +110,43 @@
                         <span>File New Claim</span>
                     </a>
                     <a href="{{ route('reimbursements.export_pdf', ['month' => request('month')]) }}" id="pdfExportLink"
+                        download
                         class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-600/20 active:scale-95">
-                        <i class="fas fa-file-pdf"></i> PDF Summary
+                        <i class="fa-solid fa-file-pdf"></i> PDF Summary
                     </a>
-                    <a href="javascript:void(0)" onclick="exportExcelReport()"
-                        class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95">
+                    <button type="button" onclick="exportExcelReport()"
+                        class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer">
                         <i class="fa-solid fa-file-excel"></i> Export Excel
-                    </a>
+                    </button>
                 </div>
             </div>
 
             {{-- DYNAMIC DATA CONTAINER (AJAX UPDATED) --}}
             <div id="reimbursementDataWrapper" class="transition-opacity duration-200">
+
+                {{-- SUB-HEADER TEXT SHOWING CURRENT FILTER STATE --}}
+                <div
+                    class="flex flex-col gap-2 px-6 py-4 border-b border-slate-100 bg-slate-50/50 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="flex items-center justify-center w-6 h-6 rounded-lg bg-amber-100 text-amber-700">
+                            <i class="text-xs fa-solid fa-filter"></i>
+                        </div>
+                        <h2 id="currentFilterLabel" class="text-xs font-extrabold tracking-wider uppercase text-slate-700">
+                            @if (request('month') && isset($months[request('month')]))
+                                Claim Records for {{ $months[request('month')] }}
+                            @else
+                                All Months Claim Records
+                            @endif
+                            @if (request('search'))
+                                <span class="ml-1 font-bold normal-case text-amber-600">(Filtered by:
+                                    "{{ request('search') }}")</span>
+                            @endif
+                        </h2>
+                    </div>
+                    <span class="text-[11px] font-semibold text-slate-400">
+                        Showing {{ $reimbursements->total() }} record(s)
+                    </span>
+                </div>
 
                 {{-- DESKTOP VIEW TABLE --}}
                 <div id="desktopTableContainer" class="hidden overflow-x-auto md:block">
@@ -153,7 +188,7 @@
                                     <td class="px-6 py-4">
                                         <span
                                             class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg uppercase tracking-wider
-                                            {{ $r->category == 'transportation' ? 'bg-blue-50 text-blue-700 border border-blue-200/60' : ($r->category == 'delivery' ? 'bg-purple-50 text-purple-700 border border-purple-200/60' : 'bg-slate-100 text-slate-700 border border-slate-200') }}">
+                                                {{ $r->category == 'transportation' ? 'bg-blue-50 text-blue-700 border border-blue-200/60' : ($r->category == 'delivery' ? 'bg-purple-50 text-purple-700 border border-purple-200/60' : 'bg-slate-100 text-slate-700 border border-slate-200') }}">
                                             {{ $r->category }}
                                         </span>
                                     </td>
@@ -171,7 +206,7 @@
                                     </td>
                                     <td class="px-6 py-4 text-center">
                                         <span class="text-xs font-black text-slate-900">
-                                            Rp {{ number_format($r->amount, 0, ',', '.') }}
+                                            Rp {{ number_format((float) ($r->amount ?? 0), 0, ',', '.') }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-center">
@@ -203,16 +238,16 @@
                                             </a>
 
                                             {{-- SINGLE PDF --}}
-                                            <a href="{{ route('reimbursements.export_single_pdf', $r->id) }}"
+                                            <a href="{{ route('reimbursements.export_single_pdf', $r->id) }}" download
                                                 class="flex items-center justify-center w-8 h-8 transition-all border rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
                                                 title="Download Invoice PDF">
-                                                <i class="text-xs fas fa-file-pdf"></i>
+                                                <i class="text-xs fa-solid fa-file-pdf"></i>
                                             </a>
 
                                             {{-- QUICK VIEW --}}
-                                            <button onclick="openDetailModal(this)"
-                                                data-reimbursement="{{ json_encode($r) }}"
-                                                class="flex items-center justify-center w-8 h-8 transition-all border rounded-xl text-slate-600 bg-slate-100 border-slate-200 hover:bg-slate-900 hover:text-white active:scale-95"
+                                            <button type="button" onclick="openDetailModal(this)"
+                                                data-reimbursement="{{ json_encode($r, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) }}"
+                                                class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-slate-600 bg-slate-100 border-slate-200 hover:bg-slate-900 hover:text-white active:scale-95"
                                                 title="Quick View Details">
                                                 <i class="text-xs fa-solid fa-receipt"></i>
                                             </button>
@@ -225,8 +260,8 @@
                                             </a>
 
                                             {{-- CANCEL / DELETE --}}
-                                            <button onclick="confirmCancel('{{ $r->id }}')"
-                                                class="flex items-center justify-center w-8 h-8 transition-all border rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
+                                            <button type="button" onclick="confirmCancel('{{ $r->id }}')"
+                                                class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
                                                 title="Cancel Claim">
                                                 <i class="text-xs fa-solid fa-ban"></i>
                                             </button>
@@ -290,7 +325,7 @@
                                 <div>
                                     <span class="block text-[10px] font-bold text-slate-400 uppercase">Amount</span>
                                     <span class="font-black text-slate-900 text-[11px]">Rp
-                                        {{ number_format($r->amount, 0, ',', '.') }}</span>
+                                        {{ number_format((float) ($r->amount ?? 0), 0, ',', '.') }}</span>
                                 </div>
                             </div>
 
@@ -300,8 +335,9 @@
                                     <i class="fa-solid fa-pen-to-square"></i> Edit
                                 </a>
 
-                                <button onclick="openDetailModal(this)" data-reimbursement="{{ json_encode($r) }}"
-                                    class="p-2 text-slate-700 bg-slate-100 border border-slate-200 hover:bg-slate-200 rounded-xl font-bold text-xs flex-1 text-center flex justify-center items-center gap-1.5 transition-colors">
+                                <button type="button" onclick="openDetailModal(this)"
+                                    data-reimbursement="{{ json_encode($r, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) }}"
+                                    class="p-2 text-slate-700 bg-slate-100 border border-slate-200 hover:bg-slate-200 rounded-xl font-bold text-xs flex-1 text-center flex justify-center items-center gap-1.5 transition-colors cursor-pointer">
                                     <i class="fa-solid fa-receipt"></i> Details
                                 </button>
 
@@ -376,7 +412,7 @@
     </div>
 
     {{-- MODAL 1: QUICK DETAIL PREVIEW --}}
-    <div id="detailModal"
+    <div id="detailModal" onclick="if(event.target===this) closeDetailModal()"
         class="fixed inset-0 z-50 flex items-center justify-center hidden p-4 transition-all duration-300 bg-slate-900/60 backdrop-blur-xs">
         <div
             class="relative w-full max-w-4xl bg-white border border-slate-100 shadow-2xl rounded-3xl flex flex-col max-h-[90vh] overflow-hidden">
@@ -387,7 +423,7 @@
                     <h3 class="text-base font-extrabold text-slate-900">Operational Claim Specification</h3>
                 </div>
                 <button onclick="closeDetailModal()" type="button"
-                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100">
+                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-slate-600 hover:bg-slate-100">
                     <i class="text-base fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -479,7 +515,7 @@
     </div>
 
     {{-- MODAL 2: CANCEL FORM MODAL --}}
-    <div id="cancelModal"
+    <div id="cancelModal" onclick="if(event.target===this) closeCancelModal()"
         class="fixed inset-0 z-50 flex items-center justify-center hidden p-4 transition-all duration-300 bg-slate-900/60 backdrop-blur-xs">
         <div class="relative w-full max-w-sm p-6 text-center bg-white border shadow-2xl border-slate-100 rounded-3xl">
             <div
@@ -492,11 +528,11 @@
             <form method="POST" action="" class="flex gap-3 mt-6">
                 @csrf @method('DELETE')
                 <button type="submit"
-                    class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all active:scale-[0.98] shadow-md shadow-rose-600/20">
+                    class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all active:scale-[0.98] shadow-md shadow-rose-600/20 cursor-pointer">
                     Yes, Delete
                 </button>
-                <button type="button" onclick="document.getElementById('cancelModal').classList.add('hidden')"
-                    class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs uppercase tracking-wider rounded-xl transition-colors">
+                <button type="button" onclick="closeCancelModal()"
+                    class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs uppercase tracking-wider rounded-xl transition-colors cursor-pointer">
                     Dismiss
                 </button>
             </form>
@@ -509,14 +545,18 @@
         let debounceTimer;
 
         function fetchReimbursementData(targetUrl = null) {
-            const searchIcon = document.getElementById('searchIcon');
             const wrapper = document.getElementById('reimbursementDataWrapper');
-            const searchValue = document.getElementById('reimburseSearchInput').value.trim();
-            const monthValue = document.getElementById('reimburseMonthSelect').value;
+            const searchInput = document.getElementById('reimburseSearchInput');
+            const monthSelect = document.getElementById('reimburseMonthSelect');
+
+            const searchValue = searchInput ? searchInput.value.trim() : '';
+            const monthValue = monthSelect ? monthSelect.value : '';
 
             if (wrapper) wrapper.style.opacity = '0.5';
 
-            let url = targetUrl ? new URL(targetUrl) : new URL("{{ route('reimbursements.index') }}");
+            let url = targetUrl ? new URL(targetUrl, window.location.origin) : new URL(
+                "{{ route('reimbursements.index') }}", window.location.origin);
+
             if (searchValue) url.searchParams.set('search', searchValue);
             else url.searchParams.delete('search');
 
@@ -530,7 +570,7 @@
 
             const pdfLink = document.getElementById('pdfExportLink');
             if (pdfLink) {
-                const pdfUrl = new URL("{{ route('reimbursements.export_pdf') }}");
+                const pdfUrl = new URL("{{ route('reimbursements.export_pdf') }}", window.location.origin);
                 if (monthValue) pdfUrl.searchParams.set('month', monthValue);
                 pdfLink.href = pdfUrl.href;
             }
@@ -550,27 +590,50 @@
                         wrapper.innerHTML = newContent.innerHTML;
                     }
 
+                    const newApprovedText = doc.getElementById('totalApprovedAmountText');
+                    const currentApprovedText = document.getElementById('totalApprovedAmountText');
+                    if (newApprovedText && currentApprovedText) {
+                        currentApprovedText.innerHTML = newApprovedText.innerHTML;
+                    }
+
                     if (wrapper) wrapper.style.opacity = '1';
 
                     window.history.pushState({}, '', url);
                     bindPaginationEvents();
                 })
                 .catch(error => {
-                    console.error('AJAX Error:', error);
+                    console.error('AJAX Fetch Error:', error);
                     if (wrapper) wrapper.style.opacity = '1';
                 });
         }
 
-        document.getElementById('reimburseSearchInput').addEventListener('input', function() {
+        function initReimbursementFilters() {
+            const searchInput = document.getElementById('reimburseSearchInput');
+            const monthSelect = document.getElementById('reimburseMonthSelect');
+
+            if (searchInput) {
+                searchInput.removeEventListener('input', handleSearchInput);
+                searchInput.addEventListener('input', handleSearchInput);
+            }
+
+            if (monthSelect) {
+                monthSelect.removeEventListener('change', handleMonthChange);
+                monthSelect.addEventListener('change', handleMonthChange);
+            }
+
+            bindPaginationEvents();
+        }
+
+        function handleSearchInput() {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
                 fetchReimbursementData();
             }, 400);
-        });
+        }
 
-        document.getElementById('reimburseMonthSelect').addEventListener('change', function() {
+        function handleMonthChange() {
             fetchReimbursementData();
-        });
+        }
 
         function clearSearch() {
             const input = document.getElementById('reimburseSearchInput');
@@ -591,11 +654,18 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            bindPaginationEvents();
+            initReimbursementFilters();
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeDetailModal();
+                    closeCancelModal();
+                }
+            });
         });
 
         function exportExcelReport() {
-            const url = new URL('{{ route('reimbursements.export_excel') }}');
+            const url = new URL('{{ route('reimbursements.export_excel') }}', window.location.origin);
             const urlParams = new URLSearchParams(window.location.search);
             const currentMonth = urlParams.get('month');
             const currentSearch = urlParams.get('search');
@@ -611,15 +681,23 @@
         }
 
         function openDetailModal(buttonElement) {
-            const data = JSON.parse(buttonElement.getAttribute('data-reimbursement'));
+            const rawData = buttonElement.getAttribute('data-reimbursement');
+            let data;
+            try {
+                data = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+            } catch (e) {
+                console.error("Failed to parse reimbursement json:", e);
+                alert("Gagal memuat detail data. Silakan coba kembali.");
+                return;
+            }
 
-            document.getElementById('modal-name').innerText = data.person_name;
-            document.getElementById('modal-category').innerText = data.category;
+            document.getElementById('modal-name').innerText = data.person_name || '-';
+            document.getElementById('modal-category').innerText = data.category || 'Claim';
             document.getElementById('modal-comment').innerText = data.comment ? `"${data.comment}"` :
                 "No description provided.";
 
             const dateObj = new Date(data.date);
-            document.getElementById('modal-date').innerText = dateObj.toLocaleDateString('en-US', {
+            document.getElementById('modal-date').innerText = isNaN(dateObj) ? '-' : dateObj.toLocaleDateString('en-US', {
                 day: '2-digit',
                 month: 'short',
                 year: 'numeric'
@@ -629,11 +707,11 @@
                 style: 'currency',
                 currency: 'IDR',
                 minimumFractionDigits: 0
-            }).format(data.amount);
+            }).format(data.amount || 0);
 
             if (data.category === 'transportation' || data.category === 'delivery') {
                 document.getElementById('modal-route').innerHTML =
-                    `<i class="mr-1 fa-solid fa-map-pin text-rose-500"></i> ${data.from_location} <i class="mx-1 fa-solid fa-arrow-right text-slate-300"></i> ${data.to_location}`;
+                    `<i class="mr-1 fa-solid fa-map-pin text-rose-500"></i> ${data.from_location || '-'} <i class="mx-1 fa-solid fa-arrow-right text-slate-300"></i> ${data.to_location || '-'}`;
             } else {
                 document.getElementById('modal-route').innerText = "Routing Exempted";
             }
@@ -643,6 +721,7 @@
                 try {
                     signatures = typeof data.signatures_json === 'string' ? JSON.parse(data.signatures_json) : data
                         .signatures_json;
+                    if (!Array.isArray(signatures)) signatures = [];
                 } catch (e) {
                     signatures = [];
                 }
@@ -650,6 +729,7 @@
 
             function renderSignBadge(elementId, isSigned, fallbackText = "Unsigned") {
                 const el = document.getElementById(elementId);
+                if (!el) return;
                 if (isSigned) {
                     el.innerText = "✓ Signed";
                     el.className =
@@ -661,13 +741,14 @@
                 }
             }
 
-            const hasStaff = signatures.some(s => s.role === 'admin_site' || s.level === 'admin_site') || !!data
+            const hasStaff = signatures.some(s => s && (s.role === 'admin_site' || s.level === 'admin_site')) || !!data
                 .person_name;
-            const hasLeader = signatures.some(s => s.role === 'leader' || s.level === 'leader') || (data.status !==
+            const hasLeader = signatures.some(s => s && (s.role === 'leader' || s.level === 'leader')) || (data.status !==
                 'pending' && data.status !== 'pending_leader');
-            const hasStation = signatures.some(s => s.role === 'station_master' || s.role === 'station') || (data.status ===
+            const hasStation = signatures.some(s => s && (s.role === 'station_master' || s.role === 'station')) || (data
+                .status ===
                 'approved' || data.status === 'pending_manager');
-            const hasManager = signatures.some(s => s.role === 'manager') || data.status === 'approved';
+            const hasManager = signatures.some(s => s && s.role === 'manager') || data.status === 'approved';
 
             renderSignBadge('sign-status-staff', hasStaff, "Pending Sign");
             renderSignBadge('sign-status-leader', hasLeader, "Pending Review");
@@ -700,15 +781,19 @@
             }
 
             const m = document.getElementById('detailModal');
-            m.classList.remove('hidden');
-            m.classList.add('flex');
+            if (m) {
+                m.classList.remove('hidden');
+                m.classList.add('flex');
+            }
             document.body.classList.add('overflow-hidden');
         }
 
         function closeDetailModal() {
             const m = document.getElementById('detailModal');
-            m.classList.add('hidden');
-            m.classList.remove('flex');
+            if (m) {
+                m.classList.add('hidden');
+                m.classList.remove('flex');
+            }
             document.body.classList.remove('overflow-hidden');
         }
 
@@ -720,6 +805,15 @@
             document.body.classList.add('overflow-hidden');
             const form = modal.querySelector('form');
             if (form) form.action = `/reimbursements/${id}`;
+        }
+
+        function closeCancelModal() {
+            const modal = document.getElementById('cancelModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            document.body.classList.remove('overflow-hidden');
         }
     </script>
 @endpush

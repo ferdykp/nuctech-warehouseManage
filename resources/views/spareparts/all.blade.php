@@ -20,26 +20,28 @@
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
-                <a href="javascript:void(0)" onclick="exportGlobalReport()"
-                    class="inline-flex items-center justify-center gap-2 px-5 py-3 text-xs sm:text-sm font-bold text-white transition-all bg-slate-900 shadow-md hover:bg-blue-600 rounded-xl active:scale-[0.98]">
+                <button type="button" onclick="exportGlobalReport()"
+                    class="inline-flex items-center justify-center gap-2 px-5 py-3 text-xs sm:text-sm font-bold text-white transition-all bg-slate-900 shadow-md hover:bg-blue-600 rounded-xl active:scale-[0.98] cursor-pointer">
                     <i class="text-xs fa-solid fa-file-export"></i>
                     <span>Export Global Report</span>
-                </a>
+                </button>
             </div>
         </div>
 
         {{-- QUICK STATS CARDS --}}
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             @php
-                $uniqueParts = \App\Models\Sparepart::count();
-                $totalUnits = \App\Models\SparepartStock::sum('qty');
-                $lowStock = \App\Models\SparepartStock::where('qty', '>', 0)->where('qty', '<=', 5)->count();
-                $damagedStock = \App\Models\SparepartStock::where('condition', 'damaged')->sum('qty');
+                $statsData = $stats ?? [
+                    'uniqueParts' => \App\Models\Sparepart::count(),
+                    'totalUnits' => \App\Models\SparepartStock::sum('qty'),
+                    'lowStock' => \App\Models\SparepartStock::where('qty', '>', 0)->where('qty', '<=', 5)->count(),
+                    'damagedStock' => \App\Models\SparepartStock::where('condition', 'damaged')->sum('qty'),
+                ];
 
                 $quickStats = [
                     [
                         'label' => 'Unique Parts',
-                        'value' => number_format($uniqueParts),
+                        'value' => number_format($statsData['uniqueParts'] ?? 0),
                         'icon' => 'fa-box-archive',
                         'bg' => 'bg-blue-50',
                         'text' => 'text-blue-600',
@@ -47,7 +49,7 @@
                     ],
                     [
                         'label' => 'Total Units',
-                        'value' => number_format($totalUnits),
+                        'value' => number_format($statsData['totalUnits'] ?? 0),
                         'icon' => 'fa-cubes',
                         'bg' => 'bg-emerald-50',
                         'text' => 'text-emerald-600',
@@ -55,7 +57,7 @@
                     ],
                     [
                         'label' => 'Low Stock Items',
-                        'value' => number_format($lowStock),
+                        'value' => number_format($statsData['lowStock'] ?? 0),
                         'icon' => 'fa-triangle-exclamation',
                         'bg' => 'bg-amber-50',
                         'text' => 'text-amber-600',
@@ -63,7 +65,7 @@
                     ],
                     [
                         'label' => 'Damaged Stock',
-                        'value' => number_format($damagedStock),
+                        'value' => number_format($statsData['damagedStock'] ?? 0),
                         'icon' => 'fa-heart-crack',
                         'bg' => 'bg-rose-50',
                         'text' => 'text-rose-600',
@@ -104,17 +106,22 @@
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none">
                         <i class="text-xs fa-solid fa-magnifying-glass"></i>
                     </span>
-                    <input type="text" id="global-search" value="{{ request('search') }}"
+                    <input type="text" id="global-search" value="{{ request('search') }}" autocomplete="off"
                         placeholder="Search SN, Part Name, or Site Location..."
                         class="w-full py-2.5 pl-10 pr-10 text-xs sm:text-sm font-medium text-slate-800 bg-white border border-slate-200 outline-none rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-2xs">
+
+                    <button type="button" id="clearSearchBtn" onclick="clearSearch()"
+                        class="{{ request('search') ? '' : 'hidden' }} absolute inset-y-0 right-3.5 flex items-center text-slate-400 hover:text-slate-600">
+                        <i class="text-xs fa-solid fa-xmark"></i>
+                    </button>
 
                     <div id="search-loader" class="absolute hidden right-3.5 top-3 text-blue-600 text-xs">
                         <i class="fa-solid fa-circle-notch fa-spin"></i>
                     </div>
                 </div>
 
-                <div class="flex items-center self-end gap-2 text-xs font-semibold text-slate-400 sm:self-center">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <div class="flex items-center self-end gap-2 text-xs font-semibold text-slate-500 sm:self-center">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span>Live Global Query</span>
                 </div>
             </div>
@@ -125,16 +132,19 @@
             </div>
         </div>
     </div>
+@endsection
 
-    {{-- JAVASCRIPT LOGIC --}}
+@push('scripts')
     <script>
         const searchInput = document.getElementById('global-search');
         const loader = document.getElementById('search-loader');
         const container = document.getElementById('table-container');
+        const clearBtn = document.getElementById('clearSearchBtn');
         let searchTimer;
 
         function fetchSpareparts(url) {
             if (loader) loader.classList.remove('hidden');
+            if (clearBtn) clearBtn.classList.add('hidden');
             container.classList.add('opacity-50');
 
             fetch(url, {
@@ -145,15 +155,15 @@
                 .then(response => response.text())
                 .then(html => {
                     container.innerHTML = html;
-                    initPagination();
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    console.error('Error fetching global inventory:', error);
                     container.innerHTML =
                         '<div class="p-12 text-xs font-bold text-center text-rose-500">Failed to load inventory data. Please try again.</div>';
                 })
                 .finally(() => {
                     if (loader) loader.classList.add('hidden');
+                    if (clearBtn && searchInput.value.trim()) clearBtn.classList.remove('hidden');
                     container.classList.remove('opacity-50');
                 });
         }
@@ -162,42 +172,49 @@
             searchInput.addEventListener('input', function() {
                 clearTimeout(searchTimer);
                 searchTimer = setTimeout(() => {
-                    const searchValue = this.value;
-                    const url = new URL('{{ route('sparepart.all') }}');
+                    const searchValue = this.value.trim();
+                    const url = new URL('{{ route('sparepart.all') }}', window.location.origin);
                     if (searchValue) url.searchParams.set('search', searchValue);
 
                     window.history.pushState({}, '', url);
-                    fetchSpareparts(url);
+                    fetchSpareparts(url.href);
                 }, 350);
             });
         }
 
-        function initPagination() {
-            const paginationLinks = document.querySelectorAll('#table-container .pagination a');
-            paginationLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const url = this.getAttribute('href');
-                    window.history.pushState({}, '', url);
-                    fetchSpareparts(url);
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                    });
-                });
-            });
+        function clearSearch() {
+            if (searchInput) {
+                searchInput.value = '';
+                const url = new URL('{{ route('sparepart.all') }}', window.location.origin);
+                window.history.pushState({}, '', url);
+                fetchSpareparts(url.href);
+            }
         }
 
+        // Global Event Delegation for Pagination
+        document.addEventListener('click', function(e) {
+            const paginationLink = e.target.closest('#table-container .pagination a');
+            if (paginationLink) {
+                e.preventDefault();
+                const url = paginationLink.getAttribute('href');
+                window.history.pushState({}, '', url);
+                fetchSpareparts(url);
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            }
+        });
+
         function exportGlobalReport() {
-            const search = document.getElementById('global-search').value;
-            const url = new URL('{{ route('report.export_all') }}');
+            const search = searchInput ? searchInput.value.trim() : '';
+            const url = new URL('{{ route('report.export_all') }}', window.location.origin);
             if (search) url.searchParams.set('search', search);
             window.location.href = url.href;
         }
 
-        document.addEventListener('DOMContentLoaded', initPagination);
         window.onpopstate = function() {
             fetchSpareparts(window.location.href);
         };
     </script>
-@endsection
+@endpush

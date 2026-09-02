@@ -7,8 +7,6 @@
 </div>
 
 <!-- SIDEBAR NAVIGATION -->
-<!-- SIDEBAR NAVIGATION -->
-{{-- PERBAIKAN: Hapus x-cloak pada <aside> agar langsung ter-render di desktop tanpa menunggu Alpine --}}
 <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
     class="fixed inset-y-0 left-0 z-50 flex flex-col justify-between w-64 transition-transform duration-300 ease-in-out border-r shadow-xl bg-slate-900 text-slate-300 lg:translate-x-0 lg:static lg:inset-0 shrink-0 border-slate-800">
 
@@ -23,7 +21,7 @@
                 <span class="text-base font-bold tracking-tight text-white">WORKFORCE <span
                         class="text-blue-500">HRIS</span></span>
             </div>
-            <button @click="sidebarOpen = false"
+            <button @click="sidebarOpen = false" type="button"
                 class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 lg:hidden">
                 <i class="text-lg fa-solid fa-xmark"></i>
             </button>
@@ -37,20 +35,18 @@
                     'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150';
                 $defaultClass = 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60';
                 $activeClass = 'bg-blue-600 text-white shadow-md shadow-blue-600/30';
-                // Target swap: konten utama + aside sendiri, supaya active-state menu selalu update
-                $upTarget = 'up-target="#main-content, aside"';
             @endphp
 
             <!-- MENU GROUP: GENERAL -->
             <div>
                 <p class="px-3 mb-2 text-[10px] font-bold tracking-wider uppercase text-slate-500">General</p>
                 <div class="space-y-1">
-                    <a href="{{ route('dashboard') }}" {!! $upTarget !!}
+                    <a href="{{ route('dashboard') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('dashboard') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-chart-pie"></i>
                         <span>Dashboard</span>
                     </a>
-                    <a href="{{ route('branches.index') }}" {!! $upTarget !!}
+                    <a href="{{ route('branches.index') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('branches.*') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-building"></i>
                         <span>Branches</span>
@@ -75,7 +71,7 @@
 
                     <div x-show="open" x-cloak x-collapse class="pl-3 mt-1 ml-4 space-y-1 border-l border-slate-800">
                         @foreach ($sidebarSites as $site)
-                            <a href="{{ route('sparepart.index', $site->slug) }}" {!! $upTarget !!}
+                            <a href="{{ route('sparepart.index', $site->slug) }}"
                                 class="block px-3 py-1.5 text-xs font-medium rounded-lg transition-colors truncate
                                 {{ request()->segment(2) == $site->slug ? 'text-blue-400 font-bold bg-blue-500/10' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40' }}">
                                 {{ $site->machine_name }}
@@ -97,22 +93,22 @@
                 <p class="px-3 mb-2 text-[10px] font-bold tracking-wider uppercase text-slate-500">Logistics & Support
                 </p>
                 <div class="space-y-1">
-                    <a href="{{ route('categories.index') }}" {!! $upTarget !!}
+                    <a href="{{ route('categories.index') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('categories.*') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-layer-group"></i>
                         <span>Categories</span>
                     </a>
-                    <a href="{{ route('site.index') }}" {!! $upTarget !!}
+                    <a href="{{ route('site.index') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('site.index') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-map-pin"></i>
                         <span>All Sites</span>
                     </a>
-                    <a href="{{ route('sparepart.all') }}" {!! $upTarget !!}
+                    <a href="{{ route('sparepart.all') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('sparepart.all') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-boxes-stacked"></i>
                         <span>Spareparts</span>
                     </a>
-                    <a href="{{ route('report.index') }}" {!! $upTarget !!}
+                    <a href="{{ route('report.index') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('report.*') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-triangle-exclamation"></i>
                         <span>Failure Reports</span>
@@ -124,7 +120,7 @@
             <div>
                 <p class="px-3 mb-2 text-[10px] font-bold tracking-wider uppercase text-slate-500">HR & Finance</p>
                 <div class="space-y-1">
-                    <a href="{{ route('reimbursements.index') }}" {!! $upTarget !!}
+                    <a href="{{ route('reimbursements.index') }}"
                         class="{{ $baseItemClass }} justify-between {{ request()->routeIs('reimbursements.*') ? $activeClass : $defaultClass }}">
                         <div class="flex items-center gap-3">
                             <i class="w-5 text-sm text-center fa-solid fa-receipt"></i>
@@ -140,28 +136,28 @@
                             @endif
                         @endif
                     </a>
-                    <a href="{{ route('employee.index') }}" {!! $upTarget !!}
-                        class="{{ $baseItemClass }} {{ request()->routeIs('employee.index') ? $activeClass : $defaultClass }}">
+                    <a href="{{ route('employee.index') }}"
+                        class="{{ $baseItemClass }} {{ request()->routeIs('employee.*') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-users"></i>
                         <span>Employees</span>
                     </a>
-                    <a href="{{ route('schedule.index') }}" {!! $upTarget !!}
-                        class="{{ $baseItemClass }} {{ request()->routeIs('schedule.index') ? $activeClass : $defaultClass }}">
+                    <a href="{{ route('schedule.index') }}"
+                        class="{{ $baseItemClass }} {{ request()->routeIs('schedule.*') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-calendar-days"></i>
                         <span>Schedules</span>
                     </a>
-                    <a href="{{ route('attendance.index') }}" {!! $upTarget !!}
-                        class="{{ $baseItemClass }} {{ request()->routeIs('attendance.index') ? $activeClass : $defaultClass }}">
+                    <a href="{{ route('attendance.index') }}"
+                        class="{{ $baseItemClass }} {{ request()->routeIs('attendance.*') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-user-check"></i>
                         <span>Attendance</span>
                     </a>
-                    <a href="{{ route('salary.index') }}" {!! $upTarget !!}
-                        class="{{ $baseItemClass }} {{ request()->routeIs('salary.index') ? $activeClass : $defaultClass }}">
+                    <a href="{{ route('salary.index') }}"
+                        class="{{ $baseItemClass }} {{ request()->routeIs('salary.*') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-wallet"></i>
                         <span>Payroll / Salary</span>
                     </a>
-                    <a href="{{ route('leave.index') }}" {!! $upTarget !!}
-                        class="{{ $baseItemClass }} {{ request()->routeIs('leave.index') ? $activeClass : $defaultClass }}">
+                    <a href="{{ route('leave.index') }}"
+                        class="{{ $baseItemClass }} {{ request()->routeIs('leave.*') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-person-walking-arrow-right"></i>
                         <span>Leave</span>
                     </a>
@@ -186,6 +182,7 @@
         </div>
     </div>
 </aside>
+
 <!-- MODAL ADD MACHINE -->
 <div x-data="{ show: false }" x-on:open-add-machine.window="show = true" x-show="show" x-cloak
     class="fixed inset-0 z-[70] flex items-center justify-center p-4">
@@ -201,7 +198,7 @@
                 <h3 class="text-base font-bold text-slate-800">New Machine Site</h3>
                 <p class="text-xs text-slate-500">Register a new unit to the tracking system.</p>
             </div>
-            <button @click="show = false"
+            <button @click="show = false" type="button"
                 class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100">
                 <i class="text-lg fa-solid fa-xmark"></i>
             </button>

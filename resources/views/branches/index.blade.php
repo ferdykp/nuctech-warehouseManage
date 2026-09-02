@@ -3,7 +3,7 @@
 @section('title', 'Branch Management')
 
 @section('content')
-    <div class="space-y-6">
+    <div class="w-full space-y-6">
 
         {{-- PAGE HEADER & STATS SUMMARY --}}
         <div
@@ -39,13 +39,18 @@
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none">
                             <i class="text-xs fa-solid fa-magnifying-glass"></i>
                         </span>
-                        <input type="text" name="search" id="search" placeholder="Search branch name or code..."
-                            value="{{ request('search') }}"
-                            class="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm font-medium text-slate-800 bg-white border border-slate-200 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none transition-all placeholder:text-slate-400 shadow-2xs">
+                        <input type="text" name="search" id="branchSearchInput"
+                            placeholder="Search branch name or code..." value="{{ request('search') }}" autocomplete="off"
+                            class="w-full pl-10 pr-8 py-2.5 text-xs sm:text-sm font-medium text-slate-800 bg-white border border-slate-200 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none transition-all placeholder:text-slate-400 shadow-2xs">
+
+                        <button type="button" id="clearSearchBtn" onclick="clearSearch()"
+                            class="{{ request('search') ? '' : 'hidden' }} absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600">
+                            <i class="text-xs fa-solid fa-xmark"></i>
+                        </button>
                     </div>
 
-                    <div class="flex items-center self-end gap-2 text-xs font-semibold text-slate-400 sm:self-center">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <div class="flex items-center self-end gap-2 text-xs font-semibold text-slate-500 sm:self-center">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                         <span>Live Data Sync</span>
                     </div>
                 </div>
@@ -85,25 +90,44 @@
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div class="space-y-1.5">
-                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Branch Name</label>
-                        <input type="text" name="branch_name" required
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-800 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none transition-all placeholder:text-slate-400"
-                            placeholder="e.g. Jakarta HQ">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Branch Name <span class="text-rose-500">*</span>
+                        </label>
+                        <div class="relative flex items-center">
+                            <span class="absolute left-3.5 text-slate-400 pointer-events-none text-xs">
+                                <i class="fa-solid fa-building"></i>
+                            </span>
+                            <input type="text" name="branch_name" required
+                                class="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-800 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none transition-all placeholder:text-slate-400"
+                                placeholder="e.g. Jakarta HQ">
+                        </div>
                     </div>
 
                     <div class="space-y-1.5">
-                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Branch Code</label>
-                        <input type="text" name="branch_code" required
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm uppercase font-bold text-slate-800 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none transition-all placeholder:text-slate-400"
-                            placeholder="e.g. JKT01">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Branch Code <span class="text-rose-500">*</span>
+                        </label>
+                        <div class="relative flex items-center">
+                            <span class="absolute left-3.5 text-slate-400 pointer-events-none text-xs">
+                                <i class="fa-solid fa-hashtag"></i>
+                            </span>
+                            <input type="text" name="branch_code" required
+                                class="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm uppercase font-bold text-slate-800 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none transition-all placeholder:text-slate-400"
+                                placeholder="e.g. JKT01">
+                        </div>
                     </div>
                 </div>
 
                 <div class="space-y-1.5">
                     <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Detailed Address</label>
-                    <textarea name="address" rows="3"
-                        class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-800 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none transition-all placeholder:text-slate-400"
-                        placeholder="Street name, Building, City..."></textarea>
+                    <div class="relative">
+                        <span class="absolute top-3 left-3.5 text-slate-400 pointer-events-none text-xs">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </span>
+                        <textarea name="branch_address" rows="3"
+                            class="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-800 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none transition-all placeholder:text-slate-400"
+                            placeholder="Street name, Building, City..."></textarea>
+                    </div>
                 </div>
 
                 {{-- MODAL FOOTER --}}
@@ -115,14 +139,17 @@
 
                     <button type="submit"
                         class="px-5 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition-all rounded-xl shadow-md shadow-blue-600/20">
-                        Confirm & Save
+                        <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Confirm & Save
                     </button>
                 </div>
             </form>
         </div>
     </div>
+@endsection
 
+@push('scripts')
     <script>
+        // Modal Handlers
         const modal = document.getElementById('modal');
         const modalBox = document.getElementById('modalBox');
         const openBtn = document.getElementById('openModal');
@@ -130,6 +157,7 @@
         const cancelBtn = document.getElementById('cancelModal');
 
         function openModal() {
+            if (!modal || !modalBox) return;
             modal.classList.remove('invisible');
             modal.classList.add('flex', 'opacity-100');
             setTimeout(() => {
@@ -140,6 +168,7 @@
         }
 
         function closeModal() {
+            if (!modal || !modalBox) return;
             modalBox.classList.add('scale-95', 'translate-y-4', 'opacity-0');
             modal.classList.remove('opacity-100');
             modal.classList.add('opacity-0');
@@ -154,43 +183,64 @@
             if (btn) btn.onclick = closeModal;
         });
 
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+        }
+
         document.addEventListener('keydown', (e) => {
             if (e.key === "Escape") closeModal();
         });
-    </script>
 
-    <script>
         // Live Search AJAX
-        const searchInput = document.getElementById('search');
+        const searchInput = document.getElementById('branchSearchInput');
         const tableContainer = document.getElementById('table-container');
         let delayTimer;
+
+        function fetchBranchData(targetUrl = null) {
+            if (!tableContainer) return;
+            const query = searchInput ? searchInput.value.trim() : '';
+            tableContainer.classList.add('opacity-50');
+
+            let url = targetUrl ? new URL(targetUrl, window.location.origin) : new URL("{{ route('branches.index') }}",
+                window.location.origin);
+            if (query) url.searchParams.set('search', query);
+
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if (clearBtn) clearBtn.classList.toggle('hidden', !query);
+
+            fetch(url.href, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    tableContainer.innerHTML = html;
+                    tableContainer.classList.remove('opacity-50');
+                    window.history.pushState({}, '', url.href);
+                })
+                .catch(error => {
+                    console.error('Error fetching branch search results:', error);
+                    tableContainer.classList.remove('opacity-50');
+                });
+        }
 
         if (searchInput) {
             searchInput.addEventListener('input', function() {
                 clearTimeout(delayTimer);
                 delayTimer = setTimeout(() => {
-                    const query = searchInput.value;
-                    tableContainer.classList.add('opacity-50');
-
-                    fetch(`{{ route('branches.index') }}?search=${encodeURIComponent(query)}`, {
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        })
-                        .then(response => response.text())
-                        .then(html => {
-                            tableContainer.innerHTML = html;
-                            tableContainer.classList.remove('opacity-50');
-                        })
-                        .catch(error => {
-                            console.error('Error fetching search results:', error);
-                            tableContainer.classList.remove('opacity-50');
-                        });
-                }, 300);
+                    fetchBranchData();
+                }, 350);
             });
         }
+
+        function clearSearch() {
+            if (searchInput) {
+                searchInput.value = '';
+                fetchBranchData();
+            }
+        }
     </script>
-@endsection
+@endpush

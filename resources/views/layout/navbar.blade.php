@@ -70,10 +70,13 @@
 
                     <div class="my-1 border-t border-slate-100"></div>
 
-                    <a href="{{ route('auth.logout') }}"
-                        class="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors">
-                        <i class="w-4 fa-solid fa-arrow-right-from-bracket"></i> Sign Out
-                    </a>
+                    <form method="POST" action="{{ route('auth.logout') }}">
+                        @csrf
+                        <button type="submit"
+                            class="flex items-center w-full gap-2.5 px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors text-left">
+                            <i class="w-4 fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

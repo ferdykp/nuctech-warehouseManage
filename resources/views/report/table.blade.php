@@ -4,7 +4,7 @@
         @if (Auth::user()?->role === 'superadmin')
             <td class="px-6 py-4 text-center">
                 <input type="checkbox" name="ids[]" value="{{ $item->id }}"
-                    class="w-4 h-4 rounded text-rose-600 sub_chk border-slate-300 focus:ring-rose-500">
+                    class="w-4 h-4 rounded cursor-pointer text-rose-600 sub_chk border-slate-300 focus:ring-rose-500">
             </td>
         @endif
 
@@ -51,17 +51,12 @@
                     </a>
 
                     {{-- Delete --}}
-                    <form action="{{ route($routePrefix . '.destroy', $item->id) }}" method="POST"
-                        onsubmit="return confirm('Are you sure you want to delete this failure report?');"
-                        class="inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit"
-                            class="flex items-center justify-center w-8 h-8 transition-all border rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
-                            title="Delete Report">
-                            <i class="text-xs fa-solid fa-trash-can"></i>
-                        </button>
-                    </form>
+                    <button type="button"
+                        onclick="openDeleteReportModal('{{ route($routePrefix . '.destroy', $item->id) }}', '#REP-{{ str_pad($item->id, 4, '0', STR_PAD_LEFT) }}')"
+                        class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
+                        title="Delete Report">
+                        <i class="text-xs fa-solid fa-trash-can"></i>
+                    </button>
                 </div>
             </td>
         @endif

@@ -3,9 +3,9 @@
 @section('title', 'Edit Reimbursement Claim')
 
 @section('content')
-    <div class="w-full max-w-3xl mx-auto space-y-6">
+    <div class="w-full space-y-6">
 
-        {{-- 1. HEADER CARD (TERPISAH) --}}
+        {{-- 1. HEADER CARD --}}
         <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
             <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
@@ -16,7 +16,7 @@
                         <span class="font-extrabold text-amber-600">Update Claim Record</span>
                     </nav>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                        Edit Claim Record
+                        Edit Claim Record #{{ $reimbursement->id }}
                     </h1>
                     <p class="mt-1 text-xs font-medium sm:text-sm text-slate-500">
                         Modify expense claim details or update receipt document proof.
@@ -33,31 +33,41 @@
         {{-- 2. FORM CARD --}}
         <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
             <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Claim Details</h2>
+                <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Claim Details & Allocation</h2>
             </div>
 
             <form action="{{ route('reimbursements.update', $reimbursement->id) }}" method="POST"
-                enctype="multipart/form-data" class="p-6 space-y-5 sm:p-8">
+                enctype="multipart/form-data" class="p-6 space-y-6 sm:p-8">
                 @csrf
                 @method('PUT')
 
-                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 
-                    {{-- REQUESTER NAME --}}
+                    {{-- REQUESTER STAFF NAME --}}
                     <div class="space-y-1.5 md:col-span-2">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Requester Staff Name <span class="text-rose-500">*</span>
                         </label>
-                        <select name="person_name" required
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
-                            <option value="">-- Select Requester --</option>
-                            @foreach ($employees as $emp)
-                                <option value="{{ $emp->name }}"
-                                    {{ old('person_name', $reimbursement->person_name) == $emp->name ? 'selected' : '' }}>
-                                    {{ $emp->name }} ({{ $emp->position ?? 'Staff' }})
-                                </option>
-                            @endforeach
-                        </select>
+                        <div class="relative flex items-center">
+                            <span
+                                class="absolute left-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
+                                <i class="text-xs fa-solid fa-user"></i>
+                            </span>
+                            <select name="person_name" required
+                                class="w-full py-2.5 pl-10 pr-10 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none appearance-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
+                                <option value="" disabled>-- Select Requester --</option>
+                                @foreach ($employees as $emp)
+                                    <option value="{{ $emp->name }}"
+                                        {{ old('person_name', $reimbursement->person_name) == $emp->name ? 'selected' : '' }}>
+                                        {{ $emp->name }} {{ $emp->position ? '(' . $emp->position . ')' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <span
+                                class="absolute right-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
+                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                            </span>
+                        </div>
                         @error('person_name')
                             <p class="mt-1 text-xs font-bold text-rose-600">{{ $message }}</p>
                         @enderror
@@ -68,69 +78,98 @@
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Date Filed <span class="text-rose-500">*</span>
                         </label>
-                        <input type="date" name="date" value="{{ old('date', $reimbursement->date) }}" required
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                        <div class="relative flex items-center">
+                            <span
+                                class="absolute left-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
+                                <i class="text-xs fa-solid fa-calendar-days"></i>
+                            </span>
+                            <input type="date" name="date" value="{{ old('date', $reimbursement->date) }}" required
+                                class="w-full py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                        </div>
                         @error('date')
                             <p class="mt-1 text-xs font-bold text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    {{-- CATEGORY --}}
+                    {{-- EXPENSE CATEGORY --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Expense Category <span class="text-rose-500">*</span>
                         </label>
-                        <select name="category" id="categorySelect" onchange="toggleRouteFields()" required
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
-                            <option value="transportation"
-                                {{ old('category', $reimbursement->category) == 'transportation' ? 'selected' : '' }}>
-                                Transportation</option>
-                            <option value="delivery"
-                                {{ old('category', $reimbursement->category) == 'delivery' ? 'selected' : '' }}>Delivery /
-                                Logistics</option>
-                            <option value="office"
-                                {{ old('category', $reimbursement->category) == 'office' ? 'selected' : '' }}>Office
-                                Supplies & Maintenance</option>
-                        </select>
+                        <div class="relative flex items-center">
+                            <span
+                                class="absolute left-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
+                                <i class="text-xs fa-solid fa-layer-group"></i>
+                            </span>
+                            <select name="category" id="categorySelect" onchange="toggleRouteFields()" required
+                                class="w-full py-2.5 pl-10 pr-10 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none appearance-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
+                                <option value="office"
+                                    {{ old('category', $reimbursement->category) == 'office' ? 'selected' : '' }}>
+                                    Office Supplies / Others</option>
+                                <option value="transportation"
+                                    {{ old('category', $reimbursement->category) == 'transportation' ? 'selected' : '' }}>
+                                    Transportation</option>
+                                <option value="delivery"
+                                    {{ old('category', $reimbursement->category) == 'delivery' ? 'selected' : '' }}>
+                                    Delivery /
+                                    Logistics</option>
+                            </select>
+                            <span
+                                class="absolute right-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
+                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                            </span>
+                        </div>
                         @error('category')
                             <p class="mt-1 text-xs font-bold text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
 
                     {{-- ROUTE FIELDS --}}
-                    <div id="routeFields" class="grid grid-cols-1 gap-5 md:grid-cols-2 md:col-span-2">
+                    <div id="routeFields" class="grid grid-cols-1 gap-6 md:grid-cols-2 md:col-span-2">
                         <div class="space-y-1.5">
                             <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                                From Location <span class="text-rose-500">*</span>
+                                From Location (Origin) <span class="text-rose-500">*</span>
                             </label>
-                            <input type="text" name="from_location"
-                                value="{{ old('from_location', $reimbursement->from_location) }}"
-                                placeholder="Origin location"
-                                class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                            <div class="relative flex items-center">
+                                <span
+                                    class="absolute left-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
+                                    <i class="fa-solid fa-circle-dot text-[11px] text-emerald-500"></i>
+                                </span>
+                                <input type="text" name="from_location" id="fromLocationInput"
+                                    value="{{ old('from_location', $reimbursement->from_location) }}"
+                                    placeholder="Origin location..."
+                                    class="w-full py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                            </div>
                         </div>
                         <div class="space-y-1.5">
                             <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                                To Location <span class="text-rose-500">*</span>
+                                To Location (Destination) <span class="text-rose-500">*</span>
                             </label>
-                            <input type="text" name="to_location"
-                                value="{{ old('to_location', $reimbursement->to_location) }}"
-                                placeholder="Destination location"
-                                class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                            <div class="relative flex items-center">
+                                <span
+                                    class="absolute left-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
+                                    <i class="fa-solid fa-location-dot text-[11px] text-rose-500"></i>
+                                </span>
+                                <input type="text" name="to_location" id="toLocationInput"
+                                    value="{{ old('to_location', $reimbursement->to_location) }}"
+                                    placeholder="Destination location..."
+                                    class="w-full py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+                            </div>
                         </div>
                     </div>
 
-                    {{-- AMOUNT --}}
+                    {{-- TOTAL CLAIM AMOUNT --}}
                     <div class="space-y-1.5 md:col-span-2">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Total Claim Amount (Rp) <span class="text-rose-500">*</span>
+                            Total Claim Amount (IDR) <span class="text-rose-500">*</span>
                         </label>
-                        <div class="relative">
+                        <div class="relative flex items-center">
                             <span
-                                class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-xs font-black text-slate-400">Rp</span>
+                                class="absolute left-3.5 z-10 flex items-center justify-center text-xs font-black text-slate-400 pointer-events-none">Rp</span>
 
                             <input type="text" id="amountDisplay"
-                                value="{{ number_format(old('amount', $reimbursement->amount), 0, ',', '.') }}" required
-                                placeholder="0" onkeyup="formatCurrency(this)"
+                                value="{{ number_format((float) old('amount', $reimbursement->amount), 0, ',', '.') }}"
+                                required placeholder="0" onkeyup="formatCurrency(this)"
                                 class="w-full py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-black border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
 
                             <input type="hidden" name="amount" id="amountRaw"
@@ -141,30 +180,37 @@
                         @enderror
                     </div>
 
-                    {{-- COMMENT --}}
+                    {{-- COMMENT / DESCRIPTION --}}
                     <div class="space-y-1.5 md:col-span-2">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Invoice No. / Description
                         </label>
-                        <textarea name="comment" rows="2" placeholder="e.g. INV-10293 or taxi fare description..."
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">{{ old('comment', $reimbursement->comment) }}</textarea>
+                        <div class="relative">
+                            <span
+                                class="absolute top-3 left-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
+                                <i class="text-xs fa-solid fa-receipt"></i>
+                            </span>
+                            <textarea name="comment" rows="2" placeholder="e.g. INV-10293 or taxi fare description..."
+                                class="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">{{ old('comment', $reimbursement->comment) }}</textarea>
+                        </div>
                     </div>
 
                     {{-- RECEIPT FILE ATTACHMENT --}}
                     <div class="space-y-1.5 md:col-span-2">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Update Receipt Attachment
-                            <span class="text-[10px] text-slate-400 font-normal lowercase">(Leave blank if unchanged)</span>
+                            <span class="text-[10px] text-slate-400 font-normal lowercase">(Leave blank if
+                                unchanged)</span>
                         </label>
 
                         @if ($reimbursement->receipt_attachment)
                             <div
                                 class="flex items-center gap-2.5 p-3 mb-2 border rounded-2xl bg-slate-50/50 border-slate-200/80">
-                                <i class="fa-solid fa-paperclip text-slate-400"></i>
+                                <i class="text-xs fa-solid fa-paperclip text-amber-600"></i>
                                 <span class="flex-1 text-xs font-semibold truncate text-slate-700">Current file:
                                     {{ basename($reimbursement->receipt_attachment) }}</span>
-                                <a href="/storage/{{ $reimbursement->receipt_attachment }}" target="_blank"
-                                    class="text-xs font-bold text-amber-700 hover:underline">View File</a>
+                                <a href="{{ asset('storage/' . $reimbursement->receipt_attachment) }}" target="_blank"
+                                    class="text-xs font-bold text-amber-700 hover:underline">View Document</a>
                             </div>
                         @endif
 
@@ -180,11 +226,11 @@
                 {{-- FORM ACTIONS --}}
                 <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
                     <a href="{{ route('reimbursements.index') }}"
-                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
+                        class="px-5 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
                         Cancel
                     </a>
                     <button type="submit"
-                        class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md shadow-amber-600/20 active:scale-[0.98]">
+                        class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md shadow-amber-600/20 active:scale-[0.98] cursor-pointer">
                         <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Save Changes
                     </button>
                 </div>
@@ -196,18 +242,30 @@
 @push('scripts')
     <script>
         function toggleRouteFields() {
-            const category = document.getElementById('categorySelect').value;
+            const categorySelect = document.getElementById('categorySelect');
+            if (!categorySelect) return;
+
+            const category = categorySelect.value;
             const routeFields = document.getElementById('routeFields');
+            const fromInput = document.getElementById('fromLocationInput');
+            const toInput = document.getElementById('toLocationInput');
+
             if (category === 'transportation' || category === 'delivery') {
-                routeFields.classList.remove('hidden');
+                routeFields?.classList.remove('hidden');
+                fromInput?.setAttribute('required', 'required');
+                toInput?.setAttribute('required', 'required');
             } else {
-                routeFields.classList.add('hidden');
+                routeFields?.classList.add('hidden');
+                fromInput?.removeAttribute('required');
+                toInput?.removeAttribute('required');
             }
         }
 
         function formatCurrency(input) {
             let rawValue = input.value.replace(/[^0-9]/g, '');
-            document.getElementById('amountRaw').value = rawValue;
+            const rawInput = document.getElementById('amountRaw');
+            if (rawInput) rawInput.value = rawValue;
+
             if (rawValue) {
                 input.value = new Intl.NumberFormat('id-ID').format(rawValue);
             } else {
@@ -215,8 +273,16 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
+        function initEditWorkspace() {
             toggleRouteFields();
-        });
+        }
+
+        document.addEventListener('DOMContentLoaded', initEditWorkspace);
+
+        if (window.up) {
+            up.compiler('#categorySelect', function() {
+                initEditWorkspace();
+            });
+        }
     </script>
 @endpush

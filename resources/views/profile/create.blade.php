@@ -88,7 +88,7 @@
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">User Role <span
                                 class="text-rose-500">*</span></label>
                         <select name="role" x-model="role"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 @error('role') border-rose-500 @enderror"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer @error('role') border-rose-500 @enderror"
                             required>
                             <option value="">-- Select Role --</option>
                             <option value="superadmin">Superadmin (Head Office)</option>
@@ -107,7 +107,7 @@
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Site Assignment <span
                                 class="text-rose-500">*</span></label>
                         <select name="site_id"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 @error('site_id') border-rose-500 @enderror">
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer @error('site_id') border-rose-500 @enderror">
                             <option value="">-- Select Site Location --</option>
                             @foreach ($sites as $site)
                                 <option value="{{ $site->id }}">{{ $site->machine_name }}</option>
@@ -125,7 +125,7 @@
                                 class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 @error('password') border-rose-500 @enderror"
                                 required>
                             <button type="button" @click="showPassword = !showPassword"
-                                class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600">
+                                class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer text-slate-400 hover:text-slate-600">
                                 <i class="fa-solid" :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                             </button>
                         </div>
@@ -147,7 +147,7 @@
                                     'border-rose-500 focus:ring-rose-200/50')"
                                 required>
                             <button type="button" @click="showConfirmPassword = !showConfirmPassword"
-                                class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600">
+                                class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer text-slate-400 hover:text-slate-600">
                                 <i class="fa-solid" :class="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                             </button>
                         </div>
@@ -172,7 +172,7 @@
                             Cancel
                         </a>
                         <button type="submit" :disabled="password !== password_confirm || password === ''"
-                            class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-600/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
+                            class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-600/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                             <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Save User
                         </button>
                     </div>
@@ -181,3 +181,13 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        if (window.up && window.Alpine) {
+            up.compiler('[x-data]', function(element) {
+                Alpine.initTree(element);
+            });
+        }
+    </script>
+@endpush

@@ -47,7 +47,7 @@
                         </div>
                     </td>
                     <td class="px-6 py-4 text-xs font-black text-emerald-600">
-                        Rp {{ number_format($employee->basic_salary ?? 0, 0, ',', '.') }}
+                        Rp {{ number_format((float) ($employee->basic_salary ?? 0), 0, ',', '.') }}
                     </td>
                     <td class="px-4 py-4 text-center">
                         @if ($employee->mcu === 'yes')
@@ -78,17 +78,17 @@
                         @endphp
                         <span
                             class="px-2.5 py-1 text-[10px] font-extrabold uppercase border rounded-full {{ $statusClasses }}">
-                            {{ $employee->status }}
+                            {{ $employee->status ?? 'Active' }}
                         </span>
                     </td>
                     <td class="px-6 py-4 font-semibold text-center text-slate-600">
-                        {{ \Carbon\Carbon::parse($employee->join_date)->format('d M Y') }}
+                        {{ $employee->join_date ? \Carbon\Carbon::parse($employee->join_date)->format('d M Y') : '-' }}
                     </td>
                     <td class="px-6 py-4 text-center">
                         <div class="flex items-center justify-center gap-1.5">
                             {{-- VIEW DETAIL --}}
                             <button type="button" onclick="showEmployeeDetail({{ $employee->id }})"
-                                class="flex items-center justify-center w-8 h-8 text-blue-600 transition-all border border-blue-100 rounded-xl bg-blue-50 hover:bg-blue-600 hover:text-white active:scale-95"
+                                class="flex items-center justify-center w-8 h-8 text-blue-600 transition-all border border-blue-100 cursor-pointer rounded-xl bg-blue-50 hover:bg-blue-600 hover:text-white active:scale-95"
                                 title="View Details">
                                 <i class="text-xs fa-solid fa-eye"></i>
                             </button>
@@ -106,7 +106,7 @@
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit"
-                                    class="flex items-center justify-center w-8 h-8 transition-all border rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
+                                    class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
                                     title="Delete Employee">
                                     <i class="text-xs fa-solid fa-trash-can"></i>
                                 </button>

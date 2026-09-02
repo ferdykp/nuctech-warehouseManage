@@ -37,8 +37,9 @@
         {{-- 2. METRIC CARDS --}}
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-            {{-- Card 1: Operational Sites --}}
-            <div class="p-5 transition-all bg-white border shadow-xs border-slate-200/80 rounded-3xl hover:border-blue-300">
+            {{-- Card 1: Operational Branches --}}
+            <div
+                class="p-5 transition-all bg-white border shadow-xs border-slate-200/80 rounded-3xl hover:border-blue-300 hover:shadow-md">
                 <div class="flex items-center justify-between mb-3">
                     <div
                         class="flex items-center justify-center w-10 h-10 text-base font-bold text-blue-600 rounded-2xl bg-blue-50">
@@ -49,13 +50,13 @@
                         Active
                     </span>
                 </div>
-                <p class="text-3xl font-black tracking-tight text-slate-900">{{ $totalBranch ?? 0 }}</p>
+                <p class="text-3xl font-black tracking-tight text-slate-900">{{ number_format($totalBranch ?? 0) }}</p>
                 <p class="mt-1 text-xs font-semibold text-slate-500">Operational Branches</p>
             </div>
 
             {{-- Card 2: Employees --}}
             <div
-                class="p-5 transition-all bg-white border shadow-xs border-slate-200/80 rounded-3xl hover:border-indigo-300">
+                class="p-5 transition-all bg-white border shadow-xs border-slate-200/80 rounded-3xl hover:border-indigo-300 hover:shadow-md">
                 <div class="flex items-center justify-between mb-3">
                     <div
                         class="flex items-center justify-center w-10 h-10 text-base font-bold text-indigo-600 rounded-2xl bg-indigo-50">
@@ -66,13 +67,13 @@
                         Personnel
                     </span>
                 </div>
-                <p class="text-3xl font-black tracking-tight text-slate-900">{{ $totalEmployee ?? 0 }}</p>
+                <p class="text-3xl font-black tracking-tight text-slate-900">{{ number_format($totalEmployee ?? 0) }}</p>
                 <p class="mt-1 text-xs font-semibold text-slate-500">Registered Personnel</p>
             </div>
 
-            {{-- Card 3: Spare parts --}}
+            {{-- Card 3: Spare Parts --}}
             <div
-                class="p-5 transition-all bg-white border shadow-xs border-slate-200/80 rounded-3xl hover:border-violet-300">
+                class="p-5 transition-all bg-white border shadow-xs border-slate-200/80 rounded-3xl hover:border-violet-300 hover:shadow-md">
                 <div class="flex items-center justify-between mb-3">
                     <div
                         class="flex items-center justify-center w-10 h-10 text-base font-bold rounded-2xl bg-violet-50 text-violet-600">
@@ -88,7 +89,8 @@
             </div>
 
             {{-- Card 4: Low Stock --}}
-            <div class="p-5 transition-all bg-white border shadow-xs border-slate-200/80 rounded-3xl hover:border-rose-300">
+            <div
+                class="p-5 transition-all bg-white border shadow-xs border-slate-200/80 rounded-3xl hover:border-rose-300 hover:shadow-md">
                 <div class="flex items-center justify-between mb-3">
                     <div
                         class="flex items-center justify-center w-10 h-10 text-base font-bold rounded-2xl bg-rose-50 text-rose-600">
@@ -99,13 +101,13 @@
                         Attention
                     </span>
                 </div>
-                <p class="text-3xl font-black tracking-tight text-slate-900">{{ $criticalStock ?? 0 }}</p>
+                <p class="text-3xl font-black tracking-tight text-slate-900">{{ number_format($criticalStock ?? 0) }}</p>
                 <p class="mt-1 text-xs font-semibold text-slate-500">Critical Stock Items</p>
             </div>
 
         </div>
 
-        {{-- 3. MAIN WORKSPACE GRID (2/3 Left, 1/3 Right) --}}
+        {{-- 3. MAIN WORKSPACE GRID --}}
         <div class="grid items-start grid-cols-1 gap-6 lg:grid-cols-3">
 
             {{-- LEFT COLUMN: TABLES & WIDGETS (Span 2) --}}
@@ -115,7 +117,9 @@
                 <div class="p-6 bg-white border shadow-xs border-slate-200/80 rounded-3xl">
                     <div class="flex flex-col justify-between gap-3 mb-5 sm:flex-row sm:items-center">
                         <div>
-                            <h3 class="text-base font-extrabold text-slate-800">Today's Active Shifts</h3>
+                            <h3 class="text-base font-extrabold text-slate-800">
+                                <i class="mr-1.5 fa-solid fa-calendar-day text-blue-600"></i> Today's Active Shifts
+                            </h3>
                             <p class="text-xs font-medium text-slate-500">Scheduled employee shifts for today.</p>
                         </div>
                         <a href="{{ route('schedule.index') }}"
@@ -143,31 +147,31 @@
                                             <div class="flex items-center gap-2.5">
                                                 <div
                                                     class="flex items-center justify-center text-xs font-bold text-white bg-blue-600 rounded-full w-7 h-7 shrink-0">
-                                                    {{ strtoupper(substr($sched->employee->name ?? 'E', 0, 1)) }}
+                                                    {{ strtoupper(substr($sched->employee?->name ?? 'E', 0, 1)) }}
                                                 </div>
                                                 <span
-                                                    class="font-bold text-slate-800">{{ $sched->employee->name ?? 'N/A' }}</span>
+                                                    class="font-bold text-slate-800">{{ $sched->employee?->name ?? 'N/A' }}</span>
                                             </div>
                                         </td>
                                         <td class="px-4 py-3">
                                             <span
                                                 class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold bg-slate-100 text-slate-600 rounded-lg">
                                                 <i class="fa-solid fa-location-dot text-slate-400"></i>
-                                                {{ $sched->employee->site->machine_name ?? 'Unassigned' }}
+                                                {{ $sched->employee?->site?->machine_name ?? 'Unassigned' }}
                                             </span>
                                         </td>
                                         <td class="px-4 py-3 text-center">
                                             <span
                                                 class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                 <i
-                                                    class="mr-1 fa-regular fa-clock"></i>{{ $sched->shift->shift_name ?? 'Standard' }}
+                                                    class="mr-1 fa-regular fa-clock"></i>{{ $sched->shift?->shift_name ?? 'Standard' }}
                                             </span>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
                                         <td colspan="3" class="px-4 py-8 text-center text-slate-400">
-                                            <i class="mb-2 text-2xl fa-solid fa-calendar-xmark text-slate-300"></i>
+                                            <i class="block mb-2 text-2xl fa-solid fa-calendar-xmark text-slate-300"></i>
                                             <p class="text-xs font-bold text-slate-500">No shifts scheduled for today.</p>
                                         </td>
                                     </tr>
@@ -181,7 +185,9 @@
                 <div class="p-6 bg-white border shadow-xs border-slate-200/80 rounded-3xl">
                     <div class="flex flex-col justify-between gap-3 mb-5 sm:flex-row sm:items-center">
                         <div>
-                            <h3 class="text-base font-extrabold text-slate-800">Machine Sites Directory</h3>
+                            <h3 class="text-base font-extrabold text-slate-800">
+                                <i class="mr-1.5 fa-solid fa-server text-indigo-600"></i> Machine Sites Directory
+                            </h3>
                             <p class="text-xs font-medium text-slate-500">Select a location to manage local spare parts.</p>
                         </div>
                         <a href="{{ route('sparepart.all') }}"
@@ -191,8 +197,13 @@
                         </a>
                     </div>
 
+                    @php
+                        // Gunakan data variabel $sites jika disuplai controller, atau jalankan fallback query
+                        $siteList = $sites ?? \App\Models\Site::with('branch')->get();
+                    @endphp
+
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[320px] overflow-y-auto pr-1">
-                        @foreach (\App\Models\Site::with('branch')->get() as $site)
+                        @forelse ($siteList as $site)
                             <a href="{{ route('sparepart.index', $site->slug) }}"
                                 class="p-3.5 rounded-2xl border border-slate-200/80 hover:border-blue-500 hover:bg-blue-50/40 transition-all flex items-center gap-3 group">
                                 <div
@@ -205,13 +216,19 @@
                                         {{ $site->machine_name }}
                                     </p>
                                     <p class="text-[10px] font-semibold text-slate-400 uppercase truncate mt-0.5">
-                                        {{ $site->branch->branch_name ?? 'Branch HQ' }}
+                                        {{ $site->branch?->branch_name ?? 'Branch HQ' }}
                                     </p>
                                 </div>
                                 <i
                                     class="text-xs transition-colors fa-solid fa-chevron-right text-slate-300 group-hover:text-blue-500"></i>
                             </a>
-                        @endforeach
+                        @empty
+                            <div
+                                class="col-span-2 p-6 text-xs font-semibold text-center text-slate-400 bg-slate-50 rounded-2xl">
+                                <i class="block mb-1 text-xl fa-solid fa-folder-open text-slate-300"></i>
+                                No machine sites registered yet.
+                            </div>
+                        @endforelse
                     </div>
                 </div>
 
@@ -229,20 +246,20 @@
 
                     <div class="space-y-2.5">
                         <a href="{{ route('sparepart.all') }}"
-                            class="w-full py-2.5 px-4 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md">
+                            class="w-full py-2.5 px-4 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98]">
                             <i class="fa-solid fa-file-excel"></i> Export Global Stock
                         </a>
                         <a href="{{ route('schedule.index') }}"
-                            class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md">
+                            class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98]">
                             <i class="fa-solid fa-calendar-plus"></i> Manage Schedules
                         </a>
                         <a href="{{ route('attendance.index') }}"
-                            class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md">
+                            class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98]">
                             <i class="fa-solid fa-clipboard-user"></i> Process Attendance
                         </a>
                         @if (auth()->user()?->role === 'superadmin')
                             <a href="{{ route('employee.index') }}"
-                                class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all">
+                                class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
                                 <i class="fa-solid fa-user-plus"></i> Register New Employee
                             </a>
                         @endif
@@ -251,7 +268,9 @@
 
                 {{-- SYSTEM ALERTS WIDGET --}}
                 <div class="p-6 bg-white border shadow-xs border-slate-200/80 rounded-3xl">
-                    <h3 class="mb-4 text-xs font-bold tracking-wider uppercase text-slate-400">System Notifications</h3>
+                    <h3 class="mb-4 text-xs font-bold tracking-wider uppercase text-slate-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-bell text-amber-500"></i> System Notifications
+                    </h3>
 
                     <div class="space-y-3">
                         @if (($criticalStock ?? 0) > 0)

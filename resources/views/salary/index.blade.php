@@ -5,7 +5,7 @@
 @section('content')
     <div class="w-full space-y-6">
 
-        {{-- 1. HEADER CARD (TERPISAH) --}}
+        {{-- 1. HEADER CARD --}}
         <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -23,13 +23,13 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2.5 shrink-0">
-                    <a href="javascript:void(0)" onclick="exportExcel()"
-                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 rounded-xl hover:bg-emerald-100 active:scale-95 transition-all shadow-2xs">
+                    <button type="button" onclick="exportExcel()"
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 rounded-xl hover:bg-emerald-100 active:scale-95 transition-all shadow-2xs cursor-pointer">
                         <i class="fa-solid fa-file-excel text-emerald-600"></i> Export Excel
-                    </a>
+                    </button>
 
                     <button type="button" onclick="openGenerateModal()"
-                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold text-white transition-all bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95">
+                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold text-white transition-all bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Payroll
                     </button>
 
@@ -83,7 +83,7 @@
                 <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
                     <div class="flex gap-2 md:col-span-4">
                         <select id="filter-month"
-                            class="w-3/5 px-3.5 py-2.5 text-xs font-bold transition-all bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 shadow-2xs">
+                            class="w-3/5 px-3.5 py-2.5 text-xs font-bold transition-all bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 shadow-2xs cursor-pointer">
                             @foreach ($monthList as $key => $val)
                                 <option value="{{ $key }}" {{ sprintf('%02d', $month) == $key ? 'selected' : '' }}>
                                     {{ $val }}</option>
@@ -91,7 +91,7 @@
                         </select>
 
                         <select id="filter-year"
-                            class="w-2/5 px-3.5 py-2.5 text-xs font-bold transition-all bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 shadow-2xs">
+                            class="w-2/5 px-3.5 py-2.5 text-xs font-bold transition-all bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 shadow-2xs cursor-pointer">
                             @for ($y = date('Y') - 2; $y <= date('Y') + 2; $y++)
                                 <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}
                                 </option>
@@ -114,7 +114,7 @@
                     <!-- Filter Branch -->
                     <div>
                         <select id="filter-branch"
-                            class="block w-full px-3.5 py-2 text-xs font-semibold transition-all bg-white border outline-none border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-700 shadow-2xs">
+                            class="block w-full px-3.5 py-2 text-xs font-semibold transition-all bg-white border outline-none border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-700 shadow-2xs cursor-pointer">
                             <option value="">All Branches</option>
                             @foreach ($branches as $br)
                                 <option value="{{ $br->id }}">{{ $br->branch_name }}</option>
@@ -125,7 +125,7 @@
                     <!-- Filter Information -->
                     <div>
                         <select id="filter-information"
-                            class="block w-full px-3.5 py-2 text-xs font-semibold transition-all bg-white border outline-none border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-700 shadow-2xs">
+                            class="block w-full px-3.5 py-2 text-xs font-semibold transition-all bg-white border outline-none border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-700 shadow-2xs cursor-pointer">
                             <option value="">All Salary Statuses</option>
                             <option value="1st probation">1st Probation</option>
                             <option value="2nd probation">2nd Probation</option>
@@ -137,7 +137,7 @@
                     <!-- Filter Bank -->
                     <div>
                         <select id="filter-bank"
-                            class="block w-full px-3.5 py-2 text-xs font-semibold transition-all bg-white border outline-none border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-700 shadow-2xs">
+                            class="block w-full px-3.5 py-2 text-xs font-semibold transition-all bg-white border outline-none border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-700 shadow-2xs cursor-pointer">
                             <option value="">All Banks</option>
                             @foreach ($banks as $b)
                                 <option value="{{ $b }}">{{ $b }}</option>
@@ -148,14 +148,14 @@
             </div>
 
             <!-- TABLE CONTAINER (LOADED VIA AJAX) -->
-            <div id="table-container">
+            <div id="table-container" class="transition-opacity duration-200">
                 @include('salary.table', ['salaries' => $salaries])
             </div>
         </div>
     </div>
 
     {{-- MODAL GENERATE GAJI BULANAN --}}
-    <div id="modalGenerateSalary"
+    <div id="modalGenerateSalary" onclick="if(event.target===this) closeGenerateModal()"
         class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs">
         <div class="flex flex-col w-full max-w-md overflow-hidden bg-white border shadow-2xl border-slate-100 rounded-3xl">
             <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50">
@@ -171,7 +171,7 @@
                     </div>
                 </div>
                 <button type="button" onclick="closeGenerateModal()"
-                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
+                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
             </div>
 
             <form action="{{ route('salary.generateMonthly') }}" method="POST" class="p-6 space-y-4">
@@ -181,7 +181,7 @@
                         <label
                             class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Month</label>
                         <select name="month" id="modal_gen_month"
-                            class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800">
+                            class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
                             @foreach ($monthList as $k => $v)
                                 <option value="{{ $k }}">{{ $v }}</option>
                             @endforeach
@@ -191,7 +191,7 @@
                         <label
                             class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Year</label>
                         <select name="year" id="modal_gen_year"
-                            class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800">
+                            class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
                             @for ($y = date('Y') - 2; $y <= date('Y') + 2; $y++)
                                 <option value="{{ $y }}">{{ $y }}</option>
                             @endfor
@@ -208,11 +208,11 @@
 
                 <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                     <button type="button" onclick="closeGenerateModal()"
-                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
+                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">
                         Cancel
                     </button>
                     <button type="submit"
-                        class="px-5 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95">
+                        class="px-5 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95 cursor-pointer">
                         <i class="mr-1.5 fa-solid fa-wand-magic-sparkles"></i> Process Generation
                     </button>
                 </div>
@@ -221,7 +221,7 @@
     </div>
 
     {{-- MODAL DETAIL GAJI --}}
-    <div id="salaryDetailModal"
+    <div id="salaryDetailModal" onclick="if(event.target===this) closeSalaryModal()"
         class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs">
         <div
             class="w-full max-w-2xl bg-white border border-slate-100 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
@@ -230,7 +230,7 @@
                     <i class="text-emerald-400 fa-solid fa-money-check-dollar"></i> Employee Salary Details
                 </h5>
                 <button type="button" onclick="closeSalaryModal()"
-                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700">&times;</button>
+                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700">&times;</button>
             </div>
 
             <div class="p-6 space-y-4 overflow-y-auto">
@@ -333,43 +333,54 @@
 
             <div class="flex justify-end px-6 py-4 border-t border-slate-100 bg-slate-50">
                 <button type="button" onclick="closeSalaryModal()"
-                    class="px-5 py-2.5 text-xs font-bold transition-colors bg-white border text-slate-600 border-slate-200 rounded-xl hover:bg-slate-100 active:scale-95 shadow-2xs">
+                    class="px-5 py-2.5 text-xs font-bold transition-colors bg-white border text-slate-600 border-slate-200 rounded-xl hover:bg-slate-100 active:scale-95 shadow-2xs cursor-pointer">
                     Close
                 </button>
             </div>
         </div>
     </div>
+@endsection
 
+@push('scripts')
     <script>
-        function openGenerateModal() {
-            const currentFilterMonth = document.getElementById('filter-month').value;
-            const currentFilterYear = document.getElementById('filter-year').value;
+        var debounceTimer = debounceTimer || null;
 
-            document.getElementById('modal_gen_month').value = currentFilterMonth;
-            document.getElementById('modal_gen_year').value = currentFilterYear;
+        function openGenerateModal() {
+            const monthEl = document.getElementById('filter-month');
+            const yearEl = document.getElementById('filter-year');
+
+            if (monthEl) document.getElementById('modal_gen_month').value = monthEl.value;
+            if (yearEl) document.getElementById('modal_gen_year').value = yearEl.value;
 
             let modal = document.getElementById('modalGenerateSalary');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.body.classList.add('overflow-hidden');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
+            }
         }
 
         function closeGenerateModal() {
             let modal = document.getElementById('modalGenerateSalary');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
             document.body.classList.remove('overflow-hidden');
         }
 
-        let debounceTimer;
-
         function fetchSalaries(targetUrl = null) {
-            const month = document.getElementById('filter-month').value;
-            const year = document.getElementById('filter-year').value;
-            const search = document.getElementById('filter-search').value;
-            const branchId = document.getElementById('filter-branch').value;
-            const information = document.getElementById('filter-information').value;
-            const bank = document.getElementById('filter-bank').value;
+            const tableContainer = document.getElementById('table-container');
+            if (!tableContainer) return;
+
+            tableContainer.style.opacity = '0.5';
+
+            const month = document.getElementById('filter-month')?.value || '';
+            const year = document.getElementById('filter-year')?.value || '';
+            const search = document.getElementById('filter-search')?.value || '';
+            const branchId = document.getElementById('filter-branch')?.value || '';
+            const information = document.getElementById('filter-information')?.value || '';
+            const bank = document.getElementById('filter-bank')?.value || '';
 
             const url = targetUrl ||
                 `{{ route('salary.index') }}?month=${month}&year=${year}&search=${encodeURIComponent(search)}&branch_id=${encodeURIComponent(branchId)}&information=${encodeURIComponent(information)}&bank=${encodeURIComponent(bank)}`;
@@ -381,37 +392,54 @@
                 })
                 .then(res => res.text())
                 .then(html => {
-                    document.getElementById('table-container').innerHTML = html;
+                    tableContainer.innerHTML = html;
+                    tableContainer.style.opacity = '1';
                 })
-                .catch(err => console.error('Error fetching salaries:', err));
+                .catch(err => {
+                    console.error('Error fetching salaries:', err);
+                    tableContainer.style.opacity = '1';
+                });
         }
 
-        document.getElementById('filter-month').addEventListener('change', () => fetchSalaries());
-        document.getElementById('filter-year').addEventListener('change', () => fetchSalaries());
-        document.getElementById('filter-branch').addEventListener('change', () => fetchSalaries());
-        document.getElementById('filter-information').addEventListener('change', () => fetchSalaries());
-        document.getElementById('filter-bank').addEventListener('change', () => fetchSalaries());
+        function initSalaryPageScripts() {
+            const filterMonth = document.getElementById('filter-month');
+            const filterYear = document.getElementById('filter-year');
+            const filterBranch = document.getElementById('filter-branch');
+            const filterInfo = document.getElementById('filter-information');
+            const filterBank = document.getElementById('filter-bank');
+            const filterSearch = document.getElementById('filter-search');
 
-        document.getElementById('filter-search').addEventListener('input', function() {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
-                fetchSalaries();
-            }, 300);
-        });
+            if (filterMonth) filterMonth.onchange = () => fetchSalaries();
+            if (filterYear) filterYear.onchange = () => fetchSalaries();
+            if (filterBranch) filterBranch.onchange = () => fetchSalaries();
+            if (filterInfo) filterInfo.onchange = () => fetchSalaries();
+            if (filterBank) filterBank.onchange = () => fetchSalaries();
 
-        document.getElementById('table-container').addEventListener('click', function(e) {
-            const pageLink = e.target.closest('a');
-
-            if (pageLink && pageLink.href && (pageLink.closest('nav') || pageLink.closest('.pagination') || pageLink
-                    .getAttribute('rel'))) {
-                e.preventDefault();
-                fetchSalaries(pageLink.href);
+            if (filterSearch) {
+                filterSearch.oninput = function() {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        fetchSalaries();
+                    }, 300);
+                };
             }
-        });
+
+            const container = document.getElementById('table-container');
+            if (container) {
+                container.onclick = function(e) {
+                    const pageLink = e.target.closest('a');
+                    if (pageLink && pageLink.href && (pageLink.closest('nav') || pageLink.closest('.pagination') ||
+                            pageLink.getAttribute('rel'))) {
+                        e.preventDefault();
+                        fetchSalaries(pageLink.href);
+                    }
+                };
+            }
+        }
 
         function showSalaryDetail(id) {
-            const month = document.getElementById('filter-month').value;
-            const year = document.getElementById('filter-year').value;
+            const month = document.getElementById('filter-month')?.value || '';
+            const year = document.getElementById('filter-year')?.value || '';
 
             fetch(`/salary/${id}?month=${month}&year=${year}`, {
                     headers: {
@@ -464,32 +492,53 @@
                         `<span class="${badgeClass}">${infoText}</span>`;
 
                     let modal = document.getElementById('salaryDetailModal');
-                    modal.classList.remove('hidden');
-                    modal.classList.add('flex');
-                    document.body.classList.add('overflow-hidden');
+                    if (modal) {
+                        modal.classList.remove('hidden');
+                        modal.classList.add('flex');
+                        document.body.classList.add('overflow-hidden');
+                    }
                 })
                 .catch(err => alert(err.message));
         }
 
         function closeSalaryModal() {
             let modal = document.getElementById('salaryDetailModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
             document.body.classList.remove('overflow-hidden');
         }
 
         function exportExcel() {
-            const month = document.getElementById('filter-month').value;
-            const year = document.getElementById('filter-year').value;
-            const search = document.getElementById('filter-search').value;
-            const branchId = document.getElementById('filter-branch').value;
-            const information = document.getElementById('filter-information').value;
-            const bank = document.getElementById('filter-bank').value;
+            const month = document.getElementById('filter-month')?.value || '';
+            const year = document.getElementById('filter-year')?.value || '';
+            const search = document.getElementById('filter-search')?.value || '';
+            const branchId = document.getElementById('filter-branch')?.value || '';
+            const information = document.getElementById('filter-information')?.value || '';
+            const bank = document.getElementById('filter-bank')?.value || '';
 
             const url =
                 `{{ route('salary.exportExcel') }}?month=${month}&year=${year}&search=${encodeURIComponent(search)}&branch_id=${encodeURIComponent(branchId)}&information=${encodeURIComponent(information)}&bank=${encodeURIComponent(bank)}`;
 
             window.location.href = url;
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initSalaryPageScripts();
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeGenerateModal();
+                    closeSalaryModal();
+                }
+            });
+        });
+
+        if (window.up) {
+            up.compiler('#table-container', function() {
+                initSalaryPageScripts();
+            });
+        }
     </script>
-@endsection
+@endpush

@@ -116,24 +116,28 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::get('/reimbursements/{id}/edit', [AdminReimbursementController::class, 'edit'])->name('reimbursements.edit');
         Route::put('/reimbursements/{id}', [AdminReimbursementController::class, 'update'])->name('reimbursements.update');
 
-        // PANDUAN PERBAIKAN: Rute-rute ini dimasukkan ke dalam auth grup agar aman
-        // Manajemen Profil
-        // Route::get('/profile/profile/{id}', [UserController::class, 'show'])->name('users.show');
-
-        // Route::put('profile/profileEdit/{id}', [UserController::class, 'update'])->name('users.update');
+        // Management Profil Mandiri (Semua Role Berwenang Bisa Mengakses Profil Sendiri)
         Route::get('/profile/profile', [UserController::class, 'index'])->name('profile.profile');
-        Route::get('/profile/create', [UserController::class, 'create'])->name('profile.create');
-        Route::post('/profile/store', [UserController::class, 'store'])->name('profile.store');
-
-        // 2. Rute Dinamis dengan Parameter {id} (Taruh di BAWAH)
         Route::get('/profile/profile/{id}', [UserController::class, 'show'])->name('profile.profileShow');
         Route::get('/profile/profileEdit/{id}', [UserController::class, 'edit'])->name('profile.profileEdit');
         Route::put('/profile/profileEdit/{id}', [UserController::class, 'update'])->name('profile.profileUpdate');
-        Route::delete('/profile/{id}', [UserController::class, 'delete'])->name('profile.destroy');
 
+        // Salary Management
         Route::post('/salary/generate-monthly', [SalaryController::class, 'generateMonthlySalaries'])->name('salary.generateMonthly');
         Route::get('/salary/export-excel', [SalaryController::class, 'exportExcel'])->name('salary.exportExcel');
         Route::resource('salary', SalaryController::class);
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Superadmin Only Routes (Khusus Manajemen Pengguna & Sistem)
+    |--------------------------------------------------------------------------
+    |*/
+    Route::middleware(['role:superadmin'])->group(function () {
+        Route::get('/profile/profileList', [UserController::class, 'profileList'])->name('profile.profileList');
+        Route::get('/profile/create', [UserController::class, 'create'])->name('profile.create');
+        Route::post('/profile/store', [UserController::class, 'store'])->name('profile.store');
+        Route::delete('/profile/{id}', [UserController::class, 'delete'])->name('profile.destroy');
     });
 
 
@@ -181,12 +185,12 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     | Superadmin Only Routes (Khusus Khusus Superadmin)
     |--------------------------------------------------------------------------
     |*/
-    Route::middleware(['role:superadmin'])->group(function () {
-        Route::get('profile/profileList', [UserController::class, 'profileList'])->name('profile.profileList');
-        // Route::resource('users', UserController::class);
-        // Route::get('/profile/store', [UserController::class, 'store'])->name('users.store');
-        // Route::get('/profile/create', [UserController::class, 'create'])->name('users.create');
-        // Route::get('/profile/edit', [UserController::class, 'edit'])->name('users.edit');
-        // Route::delete('/profile/{id}', [UserController::class, 'destroy'])->name('users.destroy');
-    });
+    // Route::middleware(['role:superadmin'])->group(function () {
+    //     Route::get('profile/profileList', [UserController::class, 'profileList'])->name('profile.profileList');
+    //     // Route::resource('users', UserController::class);
+    //     // Route::get('/profile/store', [UserController::class, 'store'])->name('users.store');
+    //     // Route::get('/profile/create', [UserController::class, 'create'])->name('users.create');
+    //     // Route::get('/profile/edit', [UserController::class, 'edit'])->name('users.edit');
+    //     // Route::delete('/profile/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+    // });
 });

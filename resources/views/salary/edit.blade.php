@@ -5,7 +5,7 @@
 @section('content')
     <div class="w-full max-w-3xl mx-auto space-y-6">
 
-        {{-- 1. HEADER CARD (TERPISAH) --}}
+        {{-- 1. HEADER CARD --}}
         <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
             <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
@@ -47,7 +47,7 @@
                         Associated Employee <span class="text-rose-500">*</span>
                     </label>
                     <select name="employee_id" id="employee_select"
-                        class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 font-medium"
+                        class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 font-medium cursor-pointer"
                         required onchange="autoFillSalaryDetails()">
                         @foreach ($employees as $emp)
                             @php
@@ -92,7 +92,7 @@
                             Bank Name <span class="text-rose-500">*</span>
                         </label>
                         <select name="bank" id="bank_input"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 font-medium"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 font-medium cursor-pointer"
                             required>
                             <option value="">-- Select Bank --</option>
                             @php
@@ -154,7 +154,7 @@
                             Salary Information Status <span class="text-rose-500">*</span>
                         </label>
                         <select name="information"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 font-medium"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 font-medium cursor-pointer"
                             required>
                             <option value="regular salary"
                                 {{ old('information', $salary->information) == 'regular salary' ? 'selected' : '' }}>
@@ -193,7 +193,7 @@
                         Discard
                     </a>
                     <button type="submit"
-                        class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95">
+                        class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer">
                         <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Update Salary Data
                     </button>
                 </div>
@@ -201,54 +201,76 @@
         </form>
     </div>
 
-    <script>
-        function formatRupiah(value) {
-            let number = value.toString().replace(/\D/g, '');
-            return number ? 'Rp ' + new Intl.NumberFormat('id-ID').format(number) : '';
-        }
-
-        function autoFillSalaryDetails() {
-            const select = document.getElementById('employee_select');
-            const opt = select.options[select.selectedIndex];
-
-            const position = opt.getAttribute('data-position') || '-';
-            const placement = opt.getAttribute('data-placement') || '-';
-            const bank = opt.getAttribute('data-bank') || '';
-            const account = opt.getAttribute('data-account') || '';
-            const basicSalary = opt.getAttribute('data-salary') || '0';
-
-            document.getElementById('position_display').value = position;
-            document.getElementById('placement_display').value = placement;
-            document.getElementById('bank_input').value = bank;
-            document.getElementById('account_no_input').value = account;
-
-            const amountDisplay = document.getElementById('amount_display');
-            const amountReal = document.getElementById('amount_real_input');
-
-            if (basicSalary && basicSalary !== '0') {
-                amountReal.value = basicSalary;
-                amountDisplay.value = formatRupiah(basicSalary);
-            } else {
-                amountReal.value = '';
-                amountDisplay.value = '';
+    @push('scripts')
+        <script>
+            function formatRupiah(value) {
+                let number = String(value).replace(/\D/g, '');
+                return number ? 'Rp ' + new Intl.NumberFormat('id-ID').format(number) : '';
             }
-        }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const amountDisplay = document.getElementById('amount_display');
-            const amountReal = document.getElementById('amount_real_input');
+            function autoFillSalaryDetails() {
+                const select = document.getElementById('employee_select');
+                if (!select || select.selectedIndex === -1) return;
 
-            if (amountDisplay && amountReal) {
-                if (amountReal.value && amountReal.value !== '0') {
-                    amountDisplay.value = formatRupiah(amountReal.value);
+                const opt = select.options[select.selectedIndex];
+
+                const position = opt.getAttribute('data-position') || '-';
+                const placement = opt.getAttribute('data-placement') || '-';
+                const bank = opt.getAttribute('data-bank') || '';
+                const account = opt.getAttribute('data-account') || '';
+                const basicSalary = opt.getAttribute('data-salary') || '0';
+
+                const posEl = document.getElementById('position_display');
+                const placeEl = document.getElementById('placement_display');
+                const bankEl = document.getElementById('bank_input');
+                const accEl = document.getElementById('account_no_input');
+
+                if (posEl) posEl.value = position;
+                if (placeEl) placeEl.value = placement;
+                if (bankEl) bankEl.value = bank;
+                if (accEl) accEl.value = account;
+
+                const amountDisplay = document.getElementById('amount_display');
+                const amountReal = document.getElementById('amount_real_input');
+
+                if (amountDisplay && amountReal) {
+                    if (basicSalary && basicSalary !== '0') {
+                        amountReal.value = basicSalary;
+                        amountDisplay.value = formatRupiah(basicSalary);
+                    } else {
+                        amountReal.value = '';
+                        amountDisplay.value = '';
+                    }
                 }
+            }
 
-                amountDisplay.addEventListener('input', function(e) {
-                    let rawValue = e.target.value.replace(/\D/g, '');
-                    amountReal.value = rawValue ? rawValue : '';
-                    e.target.value = formatRupiah(rawValue);
+            function initEditSalaryScripts() {
+                const amountDisplay = document.getElementById('amount_display');
+                const amountReal = document.getElementById('amount_real_input');
+
+                if (amountDisplay && amountReal) {
+                    if (amountReal.value && amountReal.value !== '0') {
+                        amountDisplay.value = formatRupiah(amountReal.value);
+                    }
+
+                    amountDisplay.replaceWith(amountDisplay.cloneNode(true));
+                    const newAmountDisplay = document.getElementById('amount_display');
+
+                    newAmountDisplay.addEventListener('input', function(e) {
+                        let rawValue = e.target.value.replace(/\D/g, '');
+                        amountReal.value = rawValue ? rawValue : '';
+                        e.target.value = formatRupiah(rawValue);
+                    });
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', initEditSalaryScripts);
+
+            if (window.up) {
+                up.on('up:fragment:inserted', function() {
+                    initEditSalaryScripts();
                 });
             }
-        });
-    </script>
+        </script>
+    @endpush
 @endsection

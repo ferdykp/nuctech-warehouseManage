@@ -36,8 +36,9 @@
                         <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Rotas
                     </button>
 
-                    <!-- EXPORT EXCEL BUTTON -->
+                    {{-- EXPORT EXCEL BUTTON --}}
                     <a href="{{ route('schedule.export', ['site_id' => $selectedSiteId ?? 'all', 'month' => sprintf('%02d', $month), 'year' => $year]) }}"
+                        up-follow="false" download
                         class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95"
                         title="Export schedule to Excel">
                         <i class="fa-solid fa-file-excel"></i> Export Excel

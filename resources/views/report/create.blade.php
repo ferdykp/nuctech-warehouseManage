@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Edit Failure Report')
+@section('title', 'Create Failure Report')
 
 @section('content')
     <div class="w-full max-w-3xl mx-auto space-y-6">
@@ -13,13 +13,13 @@
                         <a href="{{ route('report.index') }}" class="transition-colors hover:text-rose-600">Failure
                             Reports</a>
                         <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                        <span class="font-extrabold text-rose-600">Update Log Record</span>
+                        <span class="font-extrabold text-rose-600">Create Log Entry</span>
                     </nav>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                        Edit Failure Report
+                        Add Failure Report
                     </h1>
                     <p class="mt-1 text-xs font-medium sm:text-sm text-slate-500">
-                        Update component breakdown logs and field observations.
+                        Record component breakdown logs, field observations, and maintenance actions.
                     </p>
                 </div>
                 <a href="{{ route('report.index') }}"
@@ -36,21 +36,20 @@
                 <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Report Information</h2>
                 <span
                     class="px-3 py-1 text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200/60 rounded-xl uppercase">
-                    ID: #REP-{{ str_pad($report->id, 4, '0', STR_PAD_LEFT) }}
+                    New Entry
                 </span>
             </div>
 
-            <form action="{{ route('report.update', $report->id) }}" method="POST" enctype="multipart/form-data"
+            <form action="{{ route('report.store') }}" method="POST" enctype="multipart/form-data"
                 class="p-6 space-y-5 sm:p-8">
                 @csrf
-                @method('PUT')
 
                 {{-- ATTENDANT --}}
                 <div class="space-y-1.5">
                     <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                        Attendant / Reporter
+                        Attendant / Reporter <span class="text-rose-500">*</span>
                     </label>
-                    <input type="text" name="attendant" value="{{ old('attendant', $report->attendant) }}"
+                    <input type="text" name="attendant" value="{{ old('attendant', Auth::user()?->name) }}"
                         class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 @error('attendant') border-rose-500 @enderror"
                         required>
                     @error('attendant')
@@ -62,15 +61,15 @@
                     {{-- SITE MACHINE --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Site Machine
+                            Site Machine <span class="text-rose-500">*</span>
                         </label>
                         <select name="site_machine" id="site_machine"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 @error('site_machine') border-rose-500 @enderror"
                             required>
-                            <option value="" disabled>-- Select Site Machine --</option>
+                            <option value="" disabled selected>-- Select Site Machine --</option>
                             @foreach ($sites as $site)
                                 <option value="{{ $site->slug }}"
-                                    {{ old('site_machine', $report->site_machine) == $site->slug ? 'selected' : '' }}>
+                                    {{ old('site_machine', request('stock_site_slug')) == $site->slug ? 'selected' : '' }}>
                                     {{ $site->machine_name }}
                                 </option>
                             @endforeach
@@ -80,29 +79,13 @@
                     {{-- FAILURE DATE --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Failure Date
+                            Failure Date <span class="text-rose-500">*</span>
                         </label>
-                        <input type="date" name="failure_date"
-                            value="{{ old('failure_date', $report->failure_date ? \Carbon\Carbon::parse($report->failure_date)->format('Y-m-d') : '') }}"
+                        <input type="date" name="failure_date" value="{{ old('failure_date', date('Y-m-d')) }}"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"
                             required>
                     </div>
                 </div>
-
-                @php
-                    $subsystem = $report->failed_subsystem;
-                    $phenomenon = $report->failure_phenomenon;
-
-                    if (empty($subsystem) && !empty($report->failure_note)) {
-                        preg_match(
-                            '/Failed Sub-System:\n(.*?)\n\nFailure Phenomenon:\n(.*)/s',
-                            $report->failure_note,
-                            $matches,
-                        );
-                        $subsystem = $matches[1] ?? '';
-                        $phenomenon = $matches[2] ?? $report->failure_note;
-                    }
-                @endphp
 
                 <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
                     {{-- FAILED SUB SYSTEM --}}
@@ -110,8 +93,8 @@
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Failed Sub-System
                         </label>
-                        <textarea name="failed_subsystem" rows="3"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">{{ old('failed_subsystem', $subsystem) }}</textarea>
+                        <textarea name="failed_subsystem" rows="3" placeholder="e.g. Conveyor Motor / Sensor Array"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">{{ old('failed_subsystem') }}</textarea>
                     </div>
 
                     {{-- FAILURE PHENOMENON --}}
@@ -119,8 +102,8 @@
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Failure Phenomenon
                         </label>
-                        <textarea name="failure_phenomenon" rows="3"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">{{ old('failure_phenomenon', $phenomenon) }}</textarea>
+                        <textarea name="failure_phenomenon" rows="3" placeholder="Describe what happened..."
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">{{ old('failure_phenomenon') }}</textarea>
                     </div>
                 </div>
 
@@ -129,8 +112,8 @@
                     <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                         Troubleshoot Procedure
                     </label>
-                    <textarea name="ts_procedure" rows="3"
-                        class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">{{ old('ts_procedure', $report->ts_procedure) }}</textarea>
+                    <textarea name="ts_procedure" rows="3" placeholder="Steps taken to diagnose and resolve..."
+                        class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">{{ old('ts_procedure') }}</textarea>
                 </div>
 
                 {{-- IMAGE --}}
@@ -138,16 +121,8 @@
                     <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                         Image Evidence
                     </label>
-
-                    @if ($report->image)
-                        <div class="mb-2">
-                            <img src="{{ asset('storage/' . $report->image) }}"
-                                class="object-cover border w-28 h-28 border-slate-200 shadow-2xs rounded-2xl">
-                        </div>
-                    @endif
-
-                    <input type="file" name="image"
-                        class="block w-full text-xs transition-colors sm:text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100">
+                    <input type="file" name="image" accept="image/*"
+                        class="block w-full text-xs transition-colors sm:text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100 cursor-pointer">
                 </div>
 
                 {{-- ACTIONS --}}
@@ -157,8 +132,8 @@
                         Discard
                     </a>
                     <button type="submit"
-                        class="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-600/20 active:scale-[0.98] transition-all">
-                        Update Report
+                        class="px-6 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-md shadow-rose-600/20 active:scale-[0.98] transition-all cursor-pointer">
+                        <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Save Report
                     </button>
                 </div>
             </form>
