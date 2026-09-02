@@ -11,6 +11,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\SparepartController;
 use App\Http\Controllers\SparepartStockController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DailyReportController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\SalaryController;
@@ -179,6 +180,14 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/leave/{id}/edit', [LeaveRequestController::class, 'edit'])->name('leave.edit');
     Route::put('/leave/{id}', [LeaveRequestController::class, 'update'])->name('leave.update');
     Route::delete('/leave/{id}', [LeaveRequestController::class, 'destroy'])->name('leave.destroy');
+
+    Route::prefix('daily-reports')->name('daily_reports.')->group(function () {
+        Route::get('/', [DailyReportController::class, 'index'])->name('index');
+        Route::get('/create', [DailyReportController::class, 'create'])->name('create');
+        Route::post('/', [DailyReportController::class, 'store'])->name('store');
+        Route::get('/export-pdf', [DailyReportController::class, 'exportPdf'])->name('export_pdf');
+        Route::delete('/{id}', [DailyReportController::class, 'destroy'])->name('destroy');
+    });
 
     /*
     |--------------------------------------------------------------------------

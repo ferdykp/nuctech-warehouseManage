@@ -113,6 +113,11 @@
                         <i class="w-5 text-sm text-center fa-solid fa-triangle-exclamation"></i>
                         <span>Failure Reports</span>
                     </a>
+                    <a href="{{ route('daily_reports.index') }}"
+                        class="{{ $baseItemClass }} {{ request()->routeIs('daily-reports.*') ? $activeClass : $defaultClass }}">
+                        <i class="w-5 text-sm text-center fa-solid fa-calendar"></i>
+                        <span>Weekly Reports</span>
+                    </a>
                 </div>
             </div>
 
