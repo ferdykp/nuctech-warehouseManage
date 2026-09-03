@@ -264,7 +264,8 @@
                 <select x-model="branch_id" required
                     class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none transition-all cursor-pointer">
                     <option value="" disabled selected>Choose a branch...</option>
-                    @foreach ($globalBranches as $branch)
+                    {{-- Ambil data branch langsung secara fresh dari DB --}}
+                    @foreach (\App\Models\Branch::orderBy('branch_name', 'asc')->get() as $branch)
                         <option value="{{ $branch->id }}">{{ $branch->branch_name }}</option>
                     @endforeach
                 </select>
