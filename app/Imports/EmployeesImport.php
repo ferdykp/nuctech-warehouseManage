@@ -3,10 +3,12 @@
 namespace App\Imports;
 
 use App\Models\Employee;
+use App\Models\EmployeeSalaryHistory;
 use App\Models\Site;
 use App\Models\Branch;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\ToCollection;
 
 class EmployeesImport implements ToCollection
@@ -26,20 +28,23 @@ class EmployeesImport implements ToCollection
 
         $processedEmailsInSession = [];
 
-        // 1. CARI BARIS HEADER (JUDUL KOLOM) DENGAN KATA KUNCI TERMASUK SALARY / GAJI
+        // 1. CARI BARIS HEADER & INDEKS KOLOM
         $headerRowIndex = null;
         $columnIndex = [
-            'name'        => null,
-            'nik'         => null,
-            'phone'       => null,
-            'email'       => null,
-            'position'    => null,
-            'salary'      => null,
-            'site'        => null,
-            'designation' => null,
-            'join_date'   => null,
-            'mcu'         => null,
-            'tld'         => null,
+            'name'          => null,
+            'bank_name'     => null,
+            'bank_account'  => null,
+            'nik'           => null,
+            'phone'         => null,
+            'email'         => null,
+            'salary'        => null,
+            'position'      => null,
+            'site'          => null,
+            'designation'   => null,
+            'join_date'     => null,
+            'join_fallback' => null,
+            'mcu'           => null,
+            'tld'           => null,
         ];
 
         foreach ($rows as $rIdx => $row) {
@@ -48,32 +53,42 @@ class EmployeesImport implements ToCollection
 
                 $headerText = strtolower(trim((string) $cellValue));
 
-                if ($columnIndex['name'] === null && (str_contains($headerText, 'name') || str_contains($headerText, 'nama')) && !str_contains($headerText, 'list') && !str_contains($headerText, 'site')) {
+                if ($columnIndex['name'] === null && ($headerText === 'name' || $headerText === 'nama')) {
                     $columnIndex['name'] = $cIdx;
                     $headerRowIndex = $rIdx;
                 }
-                if ($columnIndex['nik'] === null && (str_contains($headerText, 'nik') || str_contains($headerText, 'national id') || str_contains($headerText, 'ktp'))) {
+                if ($columnIndex['bank_name'] === null && str_contains($headerText, 'bank name')) {
+                    $columnIndex['bank_name'] = $cIdx;
+                }
+                if ($columnIndex['bank_account'] === null && str_contains($headerText, 'bank account')) {
+                    $columnIndex['bank_account'] = $cIdx;
+                }
+                if ($columnIndex['nik'] === null && str_contains($headerText, 'nik')) {
                     $columnIndex['nik'] = $cIdx;
                 }
-                if ($columnIndex['phone'] === null && (str_contains($headerText, 'phone') || str_contains($headerText, 'telp') || str_contains($headerText, 'hp'))) {
+                if ($columnIndex['phone'] === null && (str_contains($headerText, 'phone') || str_contains($headerText, 'hp') || str_contains($headerText, 'telp'))) {
                     $columnIndex['phone'] = $cIdx;
                 }
                 if ($columnIndex['email'] === null && str_contains($headerText, 'email')) {
                     $columnIndex['email'] = $cIdx;
                 }
-                if ($columnIndex['position'] === null && (str_contains($headerText, 'position') || str_contains($headerText, 'qualification') || str_contains($headerText, 'jabatan'))) {
-                    $columnIndex['position'] = $cIdx;
-                }
-                if ($columnIndex['salary'] === null && (str_contains($headerText, 'salary') || str_contains($headerText, 'gaji') || str_contains($headerText, 'basic'))) {
+                if ($columnIndex['salary'] === null && (str_contains($headerText, 'salary') || str_contains($headerText, 'gaji'))) {
                     $columnIndex['salary'] = $cIdx;
                 }
-                if ($columnIndex['site'] === null && (str_contains($headerText, 'site') || str_contains($headerText, 'work site') || str_contains($headerText, 'location'))) {
+                if ($columnIndex['position'] === null && (str_contains($headerText, 'position') || str_contains($headerText, 'jabatan'))) {
+                    $columnIndex['position'] = $cIdx;
+                }
+                if ($columnIndex['site'] === null && str_contains($headerText, 'site')) {
                     $columnIndex['site'] = $cIdx;
                 }
-                if ($columnIndex['designation'] === null && (str_contains($headerText, 'designation') || str_contains($headerText, 'branch') || str_contains($headerText, 'cabang'))) {
+                if ($columnIndex['designation'] === null && (str_contains($headerText, 'designation') || str_contains($headerText, 'branch'))) {
                     $columnIndex['designation'] = $cIdx;
                 }
-                if ($columnIndex['join_date'] === null && (str_contains($headerText, 'join') || str_contains($headerText, 'masuk') || str_contains($headerText, 'start'))) {
+
+                if ($headerText === 'join') {
+                    $columnIndex['join_fallback'] = $cIdx;
+                }
+                if ($columnIndex['join_date'] === null && str_contains($headerText, 'join date')) {
                     $columnIndex['join_date'] = $cIdx;
                 }
                 if ($columnIndex['mcu'] === null && str_contains($headerText, 'mcu')) {
@@ -89,64 +104,82 @@ class EmployeesImport implements ToCollection
             }
         }
 
-        // Fallback jika tidak terdeteksi header secara otomatis
+        // Fallback jika header tidak terdeteksi otomatis
         if ($headerRowIndex === null) {
-            $headerRowIndex = 1;
+            $headerRowIndex = 0;
             $columnIndex = [
-                'name' => 1,
-                'nik' => 2,
-                'phone' => 3,
-                'email' => 4,
-                'position' => 5,
-                'site' => 6,
-                'designation' => 7,
-                'join_date' => 8,
-                'mcu' => 12,
-                'tld' => 13
+                'name'          => 1,
+                'bank_name'     => 2,
+                'bank_account'  => 3,
+                'nik'           => 4,
+                'phone'         => 5,
+                'email'         => 6,
+                'salary'        => 7,
+                'position'      => 8,
+                'site'          => 9,
+                'designation'   => 10,
+                'join_date'     => 11,
+                'join_fallback' => 12,
+                'mcu'           => 13,
+                'tld'           => 14,
             ];
         }
 
         $allSites = Site::with('branch')->get();
         $defaultSite = Site::first();
+        $user = Auth::user();
 
-        // 2. PROSES SEMUA BARIS KARYAWAN
+        // 2. BACA & SIMPAN DATA KARYAWAN
         foreach ($rows as $rIdx => $row) {
             if ($rIdx <= $headerRowIndex) {
-                continue; // Skip baris header
+                continue;
             }
 
             $nameRaw = isset($columnIndex['name'], $row[$columnIndex['name']]) ? trim((string)$row[$columnIndex['name']]) : null;
 
-            // Skip jika nama kosong, nomor saja, atau kata sampah
-            if (empty($nameRaw) || is_numeric($nameRaw) || str_contains(strtolower($nameRaw), 'updated') || str_contains(strtolower($nameRaw), 'by ') || str_contains($nameRaw, '=ROW') || $nameRaw === 'ID' || $nameRaw === 'Name') {
+            if (empty($nameRaw) || is_numeric($nameRaw) || str_contains(strtolower($nameRaw), 'updated') || str_contains($nameRaw, '=ROW') || $nameRaw === 'No.' || $nameRaw === 'Name') {
                 continue;
             }
 
-            // Ambil data mentah per baris
-            $nikRaw      = isset($columnIndex['nik'], $row[$columnIndex['nik']]) ? trim((string)$row[$columnIndex['nik']]) : null;
-            $phoneRaw    = isset($columnIndex['phone'], $row[$columnIndex['phone']]) ? trim((string)$row[$columnIndex['phone']]) : '-';
-            $emailRaw    = isset($columnIndex['email'], $row[$columnIndex['email']]) ? trim((string)$row[$columnIndex['email']]) : null;
-            $positionRaw = isset($columnIndex['position'], $row[$columnIndex['position']]) ? trim((string)$row[$columnIndex['position']]) : null;
-            $salaryRaw   = isset($columnIndex['salary'], $row[$columnIndex['salary']]) ? trim((string)$row[$columnIndex['salary']]) : null;
-            $siteNameRaw = isset($columnIndex['site'], $row[$columnIndex['site']]) ? trim((string)$row[$columnIndex['site']]) : null;
-            $designation = isset($columnIndex['designation'], $row[$columnIndex['designation']]) ? trim((string)$row[$columnIndex['designation']]) : null;
-            $joinDateRaw = isset($columnIndex['join_date'], $row[$columnIndex['join_date']]) ? trim((string)$row[$columnIndex['join_date']]) : null;
-            $mcuRaw      = isset($columnIndex['mcu'], $row[$columnIndex['mcu']]) ? strtolower(trim((string)$row[$columnIndex['mcu']])) : 'no';
-            $tldRaw      = isset($columnIndex['tld'], $row[$columnIndex['tld']]) ? strtolower(trim((string)$row[$columnIndex['tld']])) : 'no';
+            $bankNameRaw    = isset($columnIndex['bank_name'], $row[$columnIndex['bank_name']]) ? trim((string)$row[$columnIndex['bank_name']]) : null;
+            $bankAccountRaw = isset($columnIndex['bank_account'], $row[$columnIndex['bank_account']]) ? (string)$row[$columnIndex['bank_account']] : null;
+            $nikRaw         = isset($columnIndex['nik'], $row[$columnIndex['nik']]) ? (string)$row[$columnIndex['nik']] : null;
+            $phoneRaw       = isset($columnIndex['phone'], $row[$columnIndex['phone']]) ? trim((string)$row[$columnIndex['phone']]) : '-';
+            $emailRaw       = isset($columnIndex['email'], $row[$columnIndex['email']]) ? trim((string)$row[$columnIndex['email']]) : null;
+            $salaryRaw      = isset($columnIndex['salary'], $row[$columnIndex['salary']]) ? trim((string)$row[$columnIndex['salary']]) : null;
+            $positionRaw    = isset($columnIndex['position'], $row[$columnIndex['position']]) ? trim((string)$row[$columnIndex['position']]) : null;
+            $siteNameRaw    = isset($columnIndex['site'], $row[$columnIndex['site']]) ? trim((string)$row[$columnIndex['site']]) : null;
+            $designation    = isset($columnIndex['designation'], $row[$columnIndex['designation']]) ? trim((string)$row[$columnIndex['designation']]) : null;
 
-            // 1. Sanitisasi NIK
-            $nik = null;
-            if ($nikRaw) {
-                if (is_numeric($nikRaw)) {
-                    $nikRaw = sprintf('%.0f', (float)$nikRaw);
+            $joinDateRaw = null;
+            if (isset($columnIndex['join_fallback'], $row[$columnIndex['join_fallback']]) && !empty($row[$columnIndex['join_fallback']])) {
+                $joinDateRaw = trim((string)$row[$columnIndex['join_fallback']]);
+            } elseif (isset($columnIndex['join_date'], $row[$columnIndex['join_date']]) && !empty($row[$columnIndex['join_date']])) {
+                $joinDateRaw = trim((string)$row[$columnIndex['join_date']]);
+            }
+
+            $mcuRaw = isset($columnIndex['mcu'], $row[$columnIndex['mcu']]) ? strtolower(trim((string)$row[$columnIndex['mcu']])) : 'no';
+            $tldRaw = isset($columnIndex['tld'], $row[$columnIndex['tld']]) ? strtolower(trim((string)$row[$columnIndex['tld']])) : 'no';
+
+            // Sanitisasi Nomor Rekening Bank
+            $bankAccount = null;
+            if ($bankAccountRaw !== null && $bankAccountRaw !== '') {
+                $cleanedAcc = preg_replace('/[^0-9]/', '', trim($bankAccountRaw));
+                if (!empty($cleanedAcc)) {
+                    $bankAccount = $cleanedAcc;
                 }
-                $cleanedNik = preg_replace('/[^0-9]/', '', $nikRaw);
+            }
+
+            // Sanitisasi NIK
+            $nik = null;
+            if ($nikRaw !== null && $nikRaw !== '') {
+                $cleanedNik = preg_replace('/[^0-9]/', '', trim($nikRaw));
                 if (!empty($cleanedNik)) {
                     $nik = substr($cleanedNik, 0, 16);
                 }
             }
 
-            // 2. Sanitisasi Salary / Gaji Pokok (Hapus Rp, titik, koma)
+            // Sanitisasi Salary
             $basicSalary = 0;
             if (!empty($salaryRaw)) {
                 $cleanedSalary = preg_replace('/[^0-9.]/', '', str_replace(',', '.', $salaryRaw));
@@ -155,7 +188,7 @@ class EmployeesImport implements ToCollection
                 }
             }
 
-            // 3. Smart Site Matching
+            // Site Matching
             $matchedSite = null;
             if ($siteNameRaw) {
                 $cleanSite = strtolower(str_replace(['/', '-', ' '], '', $siteNameRaw));
@@ -190,13 +223,13 @@ class EmployeesImport implements ToCollection
 
             $branchId = $matchedSite ? $matchedSite->branch_id : Branch::first()->id;
 
-            // 4. Match Karyawan Eksisting
+            // Pencarian Karyawan Eksisting
             $employee = Employee::where('name', $nameRaw)->first();
             if (!$employee && $nik) {
                 $employee = Employee::where('nik', $nik)->first();
             }
 
-            // 5. Sanitisasi Email
+            // Sanitisasi Email
             $email = null;
             if ($emailRaw && filter_var($emailRaw, FILTER_VALIDATE_EMAIL)) {
                 $candidateEmail = strtolower($emailRaw);
@@ -211,12 +244,17 @@ class EmployeesImport implements ToCollection
                 }
             }
 
-            // 6. Parse Join Date, Contract Start Date (+3 Bulan), dan Status
+            // Parse Tanggal Bergabung
             $joinDateCarbon = null;
             if ($joinDateRaw) {
                 try {
                     if (is_numeric($joinDateRaw)) {
                         $joinDateCarbon = Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($joinDateRaw));
+                    } elseif (preg_match('/^\d{4}-\d{2}-\d{2}/', $joinDateRaw)) {
+                        $joinDateCarbon = Carbon::parse($joinDateRaw);
+                    } elseif (preg_match('/^\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{4}$/', $joinDateRaw)) {
+                        $delimiter = str_contains($joinDateRaw, '/') ? '/' : (str_contains($joinDateRaw, '.') ? '.' : '-');
+                        $joinDateCarbon = Carbon::createFromFormat("d{$delimiter}m{$delimiter}Y", $joinDateRaw);
                     } else {
                         $joinDateCarbon = Carbon::parse($joinDateRaw);
                     }
@@ -229,23 +267,23 @@ class EmployeesImport implements ToCollection
 
             $joinDateFormatted = $joinDateCarbon->format('Y-m-d');
             $contractStartDateFormatted = $joinDateCarbon->copy()->addMonths(3)->format('Y-m-d');
-
             $diffInMonths = $joinDateCarbon->diffInMonths(Carbon::now());
             $calculatedStatus = ($diffInMonths >= 3) ? 'Contract' : 'Probation';
 
-            // 7. Simpan / Update Karyawan
             $payload = [
                 'site_id'             => $matchedSite->id,
                 'branch_id'           => $branchId,
                 'name'                => $nameRaw,
+                'bank_name'           => $bankNameRaw ?: null,
+                'bank_account_number' => $bankAccount,
                 'nik'                 => $nik,
-                'email'               => $email,
                 'phone_number'        => $phoneRaw,
+                'email'               => $email,
+                'basic_salary'        => $basicSalary,
                 'position'            => is_numeric($positionRaw) ? null : $positionRaw,
                 'status'              => $calculatedStatus,
-                'basic_salary'        => $basicSalary, // DISIMPAN DARI EXCEL
-                'mcu'                 => (str_contains($mcuRaw, 'yes') || str_contains($mcuRaw, 'ya')) ? 'yes' : 'no',
-                'tld'                 => (str_contains($tldRaw, 'yes') || str_contains($tldRaw, 'ya')) ? 'yes' : 'no',
+                'mcu'                 => (str_contains($mcuRaw, 'yes') || str_contains($mcuRaw, 'ya') || str_contains($mcuRaw, 'done')) ? 'yes' : 'no',
+                'tld'                 => (str_contains($tldRaw, 'yes') || str_contains($tldRaw, 'ya') || str_contains($tldRaw, 'need')) ? 'yes' : 'no',
                 'join_date'           => $joinDateFormatted,
                 'contract_start_date' => $contractStartDateFormatted,
                 'is_active'           => true,
@@ -255,9 +293,33 @@ class EmployeesImport implements ToCollection
                 if (empty($payload['email']) && !empty($employee->email)) {
                     unset($payload['email']);
                 }
+
+                $oldSalary = $employee->basic_salary;
                 $employee->update($payload);
+
+                // Catat riwayat gaji jika ada kenaikan/perubahan dari Excel
+                if ((float)$oldSalary !== (float)$basicSalary) {
+                    EmployeeSalaryHistory::create([
+                        'employee_id' => $employee->id,
+                        'old_salary'  => $oldSalary ?? 0,
+                        'new_salary'  => $basicSalary,
+                        'reason'      => 'Penyesuaian Gaji via Import Excel',
+                        'updated_by'  => $user->name ?? 'System Import',
+                    ]);
+                }
             } else {
-                Employee::create($payload);
+                $newEmployee = Employee::create($payload);
+
+                // Catat gaji awal untuk karyawan baru
+                if ($basicSalary > 0) {
+                    EmployeeSalaryHistory::create([
+                        'employee_id' => $newEmployee->id,
+                        'old_salary'  => 0,
+                        'new_salary'  => $basicSalary,
+                        'reason'      => 'Gaji Awal Karyawan Baru (Import Excel)',
+                        'updated_by'  => $user->name ?? 'System Import',
+                    ]);
+                }
             }
         }
     }
