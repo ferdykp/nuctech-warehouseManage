@@ -20,7 +20,7 @@
                     <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
                         Monitor duty schedules, configure site work patterns, and generate team rotas automatically.
                     </p>
-                    @if (Auth::user()?->role === 'admin_site')
+                    @if (Auth::user()?->role === 'team_leader')
                         <p
                             class="mt-2 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200/80 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
                             <i class="fa-solid fa-building-user"></i> Access Mode: Site Admin
@@ -37,12 +37,22 @@
                     </button>
 
                     {{-- EXPORT EXCEL BUTTON --}}
-                    <a href="{{ route('schedule.export', ['site_id' => $selectedSiteId ?? 'all', 'month' => sprintf('%02d', $month), 'year' => $year]) }}"
-                        up-follow="false" download
-                        class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95"
-                        title="Export schedule to Excel">
-                        <i class="fa-solid fa-file-excel"></i> Export Excel
-                    </a>
+                    @if (Auth::user()?->role === 'superadmin')
+                        {{-- Jika Superadmin: Buka Modal Pilihan Export --}}
+                        <button type="button" onclick="openModal('modal-export-excel')"
+                            class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95"
+                            title="Export schedule options">
+                            <i class="fa-solid fa-file-excel"></i> Export Excel
+                        </button>
+                    @else
+                        {{-- Jika User Site (ebeam, team leader, dsb): Langsung Download Site Miliknya --}}
+                        <a href="{{ route('schedule.export', ['site_id' => Auth::user()->site_id, 'month' => sprintf('%02d', $month), 'year' => $year]) }}"
+                            up-follow="false" download
+                            class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95"
+                            title="Export schedule to Excel">
+                            <i class="fa-solid fa-file-excel"></i> Export Excel
+                        </a>
+                    @endif
 
                     <!-- RESET SCHEDULE BUTTON -->
                     <button type="button" onclick="openModal('modal-clear')"
@@ -74,6 +84,94 @@
                         <li>{{ $error }}</li>
                     @endforeach
                 </ul>
+            </div>
+        @endif
+
+        {{-- =========================================================== --}}
+        {{-- MODAL: EXPORT EXCEL OPTIONS (KHUSUS SUPERADMIN) --}}
+        {{-- =========================================================== --}}
+        @if (Auth::user()?->role === 'superadmin')
+            <div id="modal-export-excel"
+                class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs modal-overlay"
+                onclick="if(event.target===this) closeModal('modal-export-excel')">
+                <div class="w-full max-w-md overflow-hidden bg-white border shadow-2xl border-slate-100 rounded-3xl">
+                    {{-- Modal Header --}}
+                    <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="flex items-center justify-center w-10 h-10 border text-emerald-600 bg-emerald-50 border-emerald-100 rounded-2xl shrink-0">
+                                <i class="text-lg fa-solid fa-file-excel"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-extrabold text-slate-900">Export Schedule to Excel</h3>
+                                <p class="text-xs font-medium text-slate-500 mt-0.5">Pilih cakupan site dan periode jadwal
+                                    yang ingin diexport.</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="closeModal('modal-export-excel')"
+                            class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
+                    </div>
+
+                    {{-- Form Export --}}
+                    <form action="{{ route('schedule.export') }}" method="GET" class="p-6 space-y-4">
+                        {{-- Pilihan Site Location --}}
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                                Select Site Scope
+                            </label>
+                            <select name="site_id" id="export_site_id"
+                                class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all text-slate-800">
+                                <option value="all" {{ ($selectedSiteId ?? 'all') == 'all' ? 'selected' : '' }}>
+                                    🌐 All Sites (Semua Site)
+                                </option>
+                                @foreach ($sites as $st)
+                                    <option value="{{ $st->id }}"
+                                        {{ ($selectedSiteId ?? '') == $st->id ? 'selected' : '' }}>
+                                        📍 {{ $st->machine_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Pilihan Month & Year --}}
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Month</label>
+                                <select name="month"
+                                    class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all text-slate-800">
+                                    @for ($m = 1; $m <= 12; $m++)
+                                        <option value="{{ sprintf('%02d', $m) }}" {{ $month == $m ? 'selected' : '' }}>
+                                            {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                                        </option>
+                                    @endfor
+                                </select>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Year</label>
+                                <select name="year"
+                                    class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all text-slate-800">
+                                    @for ($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
+                                        <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>
+                                            {{ $y }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Action Buttons --}}
+                        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                            <button type="button" onclick="closeModal('modal-export-excel')"
+                                class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit" onclick="closeModal('modal-export-excel')"
+                                class="inline-flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-emerald-600/20 active:scale-95">
+                                <i class="fa-solid fa-download"></i> Download Excel
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         @endif
 
@@ -161,7 +259,7 @@
                 <div class="flex flex-col justify-between gap-3 px-5 pb-4 sm:px-6 lg:flex-row lg:items-center">
                     <div class="flex flex-wrap items-center gap-2">
                         <h3 class="text-sm font-extrabold text-slate-900 sm:text-base">Monthly Schedule Grid</h3>
-                        @if (Auth::user()?->role === 'admin_site')
+                        @if (Auth::user()?->role === 'team_leader')
                             <span
                                 class="px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200/80 rounded-md uppercase">
                                 Site: {{ Auth::user()->site->machine_name ?? 'Registered' }}
@@ -242,7 +340,7 @@
                         <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
                             @forelse($employees as $emp)
                                 @if (Auth::user()?->role === 'superadmin' ||
-                                        (Auth::user()?->role === 'admin_site' && Auth::user()->site_id === $emp->site_id))
+                                        (Auth::user()?->role === 'team_leader' && Auth::user()->site_id === $emp->site_id))
                                     <tr class="transition-colors hover:bg-slate-50/60">
                                         <td
                                             class="px-4 py-3 sticky left-0 bg-white font-extrabold text-slate-900 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
@@ -539,7 +637,7 @@
                                     class="grid flex-1 grid-cols-1 content-start sm:grid-cols-2 gap-2.5 p-3 bg-white border border-slate-200 rounded-2xl min-h-[220px] max-h-[340px] lg:max-h-none overflow-y-auto">
                                     @foreach ($employees as $emp)
                                         @if (Auth::user()?->role === 'superadmin' ||
-                                                (Auth::user()?->role === 'admin_site' && Auth::user()->site_id === $emp->site_id))
+                                                (Auth::user()?->role === 'team_leader' && Auth::user()->site_id === $emp->site_id))
                                             <label data-name="{{ strtolower($emp->name) }}"
                                                 data-site-id="{{ $emp->site_id }}"
                                                 class="flex items-center gap-2 p-2 text-xs font-medium border border-transparent cursor-pointer text-slate-700 rounded-xl employee-option hover:bg-slate-50 hover:border-slate-100">

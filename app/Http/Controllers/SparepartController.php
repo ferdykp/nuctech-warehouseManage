@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-// use App\Models\User;
 use App\Models\Site;
 use App\Models\Category;
 use App\Models\Sparepart;
 use App\Models\SparepartStock;
 use App\Models\SparepartHistory;
+use App\Models\SparepartTransfer; // <--- PASTIKAN MODEL INI DI-IMPORT
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -16,8 +16,6 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SparepartExport;
 use App\Imports\SparepartImport;
 
-// use Illuminate\Validation\ValidationException;
-
 class SparepartController extends Controller
 {
     private function getSite(string $slug): Site
@@ -25,9 +23,6 @@ class SparepartController extends Controller
         return Site::where('slug', $slug)->firstOrFail();
     }
 
-    /**
-     * Middleware manual untuk validasi akses site.
-     */
     private function authorizeSiteAccess(Site $siteData)
     {
         $user = Auth::user();
@@ -36,69 +31,13 @@ class SparepartController extends Controller
         }
     }
 
-    /**
-     * Menampilkan daftar sparepart dengan filter dan search.
-     */
-    // public function index(Request $request, string $slug)
-    // {
-    //     $siteData = $this->getSite($slug);
-
-    //     $search = $request->input('search');
-    //     $condition = $request->input('condition');
-
-    //     $query = Sparepart::query();
-
-    //     // Filter berdasarkan Site & Kondisi
-    //     $query->whereHas('stocks', function ($q) use ($siteData, $condition) {
-    //         $q->where('site_id', $siteData->id);
-    //         if ($condition) {
-    //             $q->where('condition', $condition);
-    //         }
-    //     });
-
-    //     // Fitur Search
-    //     $query->when($search, function ($q) use ($search) {
-    //         $q->where(function ($sub) use ($search) {
-    //             $sub->where('item_name', 'like', "%{$search}%")
-    //                 ->orWhere('serial_number', 'like', "%{$search}%")
-    //                 ->orWhere('type', 'like', "%{$search}%");
-    //         });
-    //     });
-
-    //     $data = $query->with(['stocks.site', 'histories.fromSite', 'histories.toSite'])
-    //         ->withSum(['stocks as total_qty' => function ($q) use ($siteData) {
-    //             $q->where('site_id', $siteData->id);
-    //         }], 'qty')
-    //         ->latest()
-    //         ->paginate(10)
-    //         ->withQueryString();
-
-    //     $all_sites = Site::with('branch')->where('id', '!=', $siteData->id)->get();
-    //     $sites = Site::all();
-    //     $categories = Category::all();
-
-    //     if ($request->ajax()) {
-    //         return response()->json([
-    //             'html' => view('spareparts.table', [
-    //                 'assets' => $data,
-    //                 'slug' => $slug,
-    //                 'siteData' => $siteData,
-    //                 'all_sites' => $all_sites,
-    //                 'sites' => $sites,
-    //                 'categories' => $categories
-    //             ])->render()
-    //         ]);
-    //     }
-
-    //     return view('spareparts.index', compact('data', 'slug', 'siteData', 'all_sites', 'sites', 'categories'));
-    // }
     public function index(Request $request, string $slug)
     {
         $siteData = $this->getSite($slug);
         $search = $request->input('search');
         $condition = $request->input('condition');
 
-        // Setup Query Utama
+        // Setup Query Utama Ketersediaan Stok
         $query = SparepartStock::with([
             'sparepart.category',
             'sparepart.stocks.site',
@@ -107,12 +46,10 @@ class SparepartController extends Controller
             'site'
         ])->where('site_id', $siteData->id);
 
-        // Filter berdasarkan kondisi jika ada
         if ($condition) {
             $query->where('condition', $condition);
         }
 
-        // Filter berdasarkan search input (Live Search AJAX)
         if ($search) {
             $query->whereHas('sparepart', function ($q) use ($search) {
                 $q->where('item_name', 'like', "%{$search}%")
@@ -121,35 +58,47 @@ class SparepartController extends Controller
             });
         }
 
-        // PENTING: Eksekusi data/paginasi sebelum pengecekan AJAX agar data search terisi
         $data = $query->latest()->paginate(10)->withQueryString();
 
-        // JIKA REQUEST ADALAH AJAX (Pencarian Sedang Berjalan)
+        // 1. Ambil Permintaan KELUAR yang butuh di-APPROVE oleh site asal ini
+        $pendingApprovals = SparepartTransfer::where('from_site_id', $siteData->id)
+            ->where('status', 'pending')
+            ->with(['sparepart', 'toSite'])
+            ->get();
+
+        // 2. Ambil Permintaan MASUK yang butuh di-CONFIRM RECEIPT oleh site tujuan ini
+        $pendingReceipts = SparepartTransfer::where('to_site_id', $siteData->id)
+            ->where('status', 'approved')
+            ->with(['sparepart', 'fromSite'])
+            ->get();
+
+        // Response AJAX Live Search
         if ($request->ajax()) {
-            // Kirim hasil pencarian ke partial view 'table' dengan nama variable 'assets'
             return view('spareparts.table', [
                 'assets' => $data,
                 'siteData' => $siteData,
-                'slug' => $slug, // <--- TAMBAHKAN INI AGAR TOMBOL DELETE TIDAK ERROR
-                'all_sites' => Site::with('branch')->where('id', '!=', $siteData->id)->get() // Diperlukan untuk modal detail di dalam table
+                'slug' => $slug,
+                'all_sites' => Site::with('branch')->where('id', '!=', $siteData->id)->get()
             ])->render();
         }
 
-        // JIKA REQUEST BIASA (Load Halaman Pertama Kali)
         $all_sites = Site::with('branch')->where('id', '!=', $siteData->id)->get();
         $sites = Site::all();
         $categories = Category::all();
 
         return view('spareparts.index', [
-            'data' => $data,
-            'assets' => $data, // Sinkron dengan looping @forelse ($assets as $item)
-            'slug' => $slug,
-            'siteData' => $siteData,
-            'all_sites' => $all_sites,
-            'sites' => $sites,
-            'categories' => $categories
+            'data'             => $data,
+            'assets'           => $data,
+            'slug'             => $slug,
+            'siteData'         => $siteData,
+            'all_sites'        => $all_sites,
+            'sites'            => $sites,
+            'categories'       => $categories,
+            'pendingApprovals' => $pendingApprovals, // <--- DIKIRIM KE VIEW
+            'pendingReceipts'  => $pendingReceipts,  // <--- DIKIRIM KE VIEW
         ]);
     }
+
 
     /**
      * Menyimpan data sparepart baru.

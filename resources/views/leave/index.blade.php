@@ -19,6 +19,7 @@
                     </h1>
                     <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
                         Manage employee leave requests, quota tracking, and approvals seamlessly.
+                        untuk notes saja, tidak masuk ke data integrasi
                     </p>
                 </div>
 

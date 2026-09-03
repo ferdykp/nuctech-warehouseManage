@@ -22,7 +22,7 @@ class AdminReimbursementController extends Controller
      */
     public function index(Request $request)
     {
-        $role = strtolower(auth()->user()->role ?? 'admin_site');
+        $role = strtolower(auth()->user()->role ?? 'employee_role');
         $pageTitle = 'Reimbursement Claims';
 
         $query = Reimbursement::with('user');
@@ -84,9 +84,10 @@ class AdminReimbursementController extends Controller
     public function create()
     {
         $user = auth()->user();
-        $employeesQuery = Employee::query();
+        $employeesQuery = Employee::with('site');
 
-        if ($user && $user->role === 'admin_site') {
+        // Jika BUKAN superadmin dan akun terikat pada site_id tertentu
+        if ($user && $user->role !== 'superadmin' && $user->site_id) {
             $employeesQuery->where('site_id', $user->site_id);
         }
 
@@ -152,7 +153,7 @@ class AdminReimbursementController extends Controller
             $path = $file->store('receipts', 'public');
         }
 
-        $userRole = strtolower(auth()->user()->role ?? 'admin_site');
+        $userRole = strtolower(auth()->user()->role ?? 'employee_role');
         $initialStatus = ($userRole === 'team_leader') ? 'pending_leader' : 'pending';
 
         Reimbursement::create([
@@ -174,10 +175,10 @@ class AdminReimbursementController extends Controller
     public function approval($id)
     {
         $reimbursement = Reimbursement::findOrFail($id);
-        $currentRole = strtolower(auth()->user()->role ?? 'admin_site');
+        $currentRole = strtolower(auth()->user()->role ?? 'employee_role');
         $myId = auth()->id();
 
-        if ($currentRole === 'admin_site' && $reimbursement->user_id !== $myId) {
+        if ($currentRole === 'employee_role' && $reimbursement->user_id !== $myId) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -366,11 +367,11 @@ class AdminReimbursementController extends Controller
             }
         }
 
-        $currentRole = strtolower($user->role ?? 'admin_site');
+        $currentRole = strtolower($user->role ?? 'employee_role');
         $nextStatus  = 'pending';
 
         switch ($currentRole) {
-            case 'admin_site':
+            case 'employee_role':
                 $nextStatus = 'pending_leader';
                 break;
             case 'team_leader':
@@ -854,7 +855,7 @@ class AdminReimbursementController extends Controller
         }
 
         $employeesQuery = Employee::query();
-        if ($user && $user->role === 'admin_site') {
+        if ($user && $user->role === 'employee_role') {
             $employeesQuery->where('site_id', $user->site_id);
         }
         $employees = $employeesQuery->orderBy('name', 'asc')->get();

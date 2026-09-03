@@ -45,8 +45,8 @@ class UserController extends Controller
             'username' => 'required|string|max:255|unique:users',
             'email'    => 'required|string|email|max:255|unique:users',
             'password' => 'required|min:6|confirmed',
-            'role'     => 'required|in:superadmin,admin_site,team_leader,station_master,manager',
-            'site_id'  => 'required_if:role,admin_site|nullable|exists:sites,id',
+            'role'     => 'required|in:superadmin,administration,employee,team_leader,station_master,manager',
+            'site_id'  => 'required_if:role,employee_role|nullable|exists:sites,id',
         ]);
 
         User::create([
@@ -103,8 +103,8 @@ class UserController extends Controller
 
         // Hanya validasi input role & site jika diubah oleh Superadmin
         if (auth()->user()->role === 'superadmin') {
-            $rules['role'] = 'required|in:superadmin,admin_site,team_leader,station_master,manager';
-            $rules['site_id'] = 'required_if:role,admin_site|nullable|exists:sites,id';
+            $rules['role'] = 'required|in:superadmin,administration,employee,team_leader,station_master,manager';
+            $rules['site_id'] = 'required_if:role,employee_role|nullable|exists:sites,id';
         }
 
         $validatedData = $request->validate($rules);

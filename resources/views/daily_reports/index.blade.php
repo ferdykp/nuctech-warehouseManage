@@ -228,18 +228,26 @@
                     </div>
                 </div>
 
+                {{-- KHUSUS SUPERADMIN: OPSIONAL PILIH ALL SITES ATAU SITE SPECIFIC --}}
                 @if (auth()->user()->role === 'superadmin')
                     <div>
-                        <label class="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">Machine
-                            Site</label>
+                        <label class="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                            Machine Site <span class="font-extrabold text-emerald-600">(Superadmin Access)</span>
+                        </label>
                         <select name="site_id"
                             class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none text-slate-800 cursor-pointer focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
-                            <option value="">Semua Site</option>
-                            @foreach ($sites as $s)
-                                <option value="{{ $s->id }}">{{ $s->machine_name }}</option>
-                            @endforeach
+                            <option value="all" class="font-bold text-emerald-700">🌐 All Machine Sites (Global Export)
+                            </option>
+                            <optgroup label="Specific Site">
+                                @foreach ($sites as $s)
+                                    <option value="{{ $s->id }}">{{ $s->machine_name }}</option>
+                                @endforeach
+                            </optgroup>
                         </select>
                     </div>
+                @else
+                    {{-- NON-SUPERADMIN: LOCKED KE SITE MASING-MASING --}}
+                    <input type="hidden" name="site_id" value="{{ auth()->user()->site_id }}">
                 @endif
 
                 <div class="grid grid-cols-2 gap-3">

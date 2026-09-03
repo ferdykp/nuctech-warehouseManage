@@ -36,7 +36,8 @@
 
                     {{-- Live Search Input --}}
                     <div class="relative w-full sm:w-80">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none">
+                        <span
+                            class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none z-10">
                             <i class="text-xs fa-solid fa-magnifying-glass"></i>
                         </span>
                         <input type="text" name="search" id="branchSearchInput"
@@ -44,7 +45,7 @@
                             class="w-full pl-10 pr-8 py-2.5 text-xs sm:text-sm font-medium text-slate-800 bg-white border border-slate-200 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none transition-all placeholder:text-slate-400 shadow-2xs">
 
                         <button type="button" id="clearSearchBtn" onclick="clearSearch()"
-                            class="{{ request('search') ? '' : 'hidden' }} absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600">
+                            class="{{ request('search') ? '' : 'hidden' }} absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 cursor-pointer z-10">
                             <i class="text-xs fa-solid fa-xmark"></i>
                         </button>
                     </div>
@@ -79,7 +80,7 @@
                     <p class="text-xs font-medium text-slate-500">Fill in the details to register a new location.</p>
                 </div>
                 <button id="closeModal" type="button"
-                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100">
+                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-slate-600 hover:bg-slate-100">
                     <i class="text-base fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -89,13 +90,15 @@
                 @csrf
 
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {{-- BRANCH NAME --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Branch Name <span class="text-rose-500">*</span>
                         </label>
                         <div class="relative flex items-center">
-                            <span class="absolute left-3.5 text-slate-400 pointer-events-none text-xs">
-                                <i class="fa-solid fa-building"></i>
+                            <span
+                                class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none z-10">
+                                <i class="text-xs fa-solid fa-building"></i>
                             </span>
                             <input type="text" name="branch_name" required
                                 class="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-800 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none transition-all placeholder:text-slate-400"
@@ -103,13 +106,15 @@
                         </div>
                     </div>
 
+                    {{-- BRANCH CODE --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Branch Code <span class="text-rose-500">*</span>
                         </label>
                         <div class="relative flex items-center">
-                            <span class="absolute left-3.5 text-slate-400 pointer-events-none text-xs">
-                                <i class="fa-solid fa-hashtag"></i>
+                            <span
+                                class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none z-10">
+                                <i class="text-xs fa-solid fa-hashtag"></i>
                             </span>
                             <input type="text" name="branch_code" required
                                 class="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm uppercase font-bold text-slate-800 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none transition-all placeholder:text-slate-400"
@@ -118,11 +123,12 @@
                     </div>
                 </div>
 
+                {{-- BRANCH ADDRESS --}}
                 <div class="space-y-1.5">
                     <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Detailed Address</label>
                     <div class="relative">
-                        <span class="absolute top-3 left-3.5 text-slate-400 pointer-events-none text-xs">
-                            <i class="fa-solid fa-location-dot"></i>
+                        <span class="absolute top-3 left-3.5 text-slate-400 pointer-events-none z-10">
+                            <i class="text-xs fa-solid fa-location-dot"></i>
                         </span>
                         <textarea name="branch_address" rows="3"
                             class="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-800 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none transition-all placeholder:text-slate-400"
@@ -133,12 +139,12 @@
                 {{-- MODAL FOOTER --}}
                 <div class="flex items-center justify-end gap-3 pt-4 mt-6 border-t border-slate-100">
                     <button type="button" id="cancelModal"
-                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
+                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">
                         Discard
                     </button>
 
                     <button type="submit"
-                        class="px-5 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition-all rounded-xl shadow-md shadow-blue-600/20">
+                        class="px-5 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition-all rounded-xl shadow-md shadow-blue-600/20 cursor-pointer">
                         <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Confirm & Save
                     </button>
                 </div>

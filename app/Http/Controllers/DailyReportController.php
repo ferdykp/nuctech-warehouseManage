@@ -101,7 +101,7 @@ class DailyReportController extends Controller
         $request->validate([
             'start_date' => 'required|date',
             'end_date'   => 'required|date|after_or_equal:start_date',
-            'site_id'    => 'nullable|exists:sites,id',
+            'site_id'    => 'nullable',
         ]);
 
         $user = auth()->user();
@@ -109,16 +109,20 @@ class DailyReportController extends Controller
             ->whereBetween('report_date', [$request->start_date, $request->end_date])
             ->orderBy('report_date', 'asc');
 
-        if ($user->role !== 'superadmin' && $user->site_id) {
-            $query->where('site_id', $user->site_id);
-            $site = Site::find($user->site_id);
-        } else {
-            if ($request->filled('site_id')) {
+        // Pengecekan Hak Akses Eksklusif Superadmin
+        if ($user->role === 'superadmin') {
+            // Jika Superadmin memilih 'all' atau mengosongkan site_id, tampilkan semua site
+            if ($request->filled('site_id') && $request->site_id !== 'all') {
                 $query->where('site_id', $request->site_id);
                 $site = Site::find($request->site_id);
             } else {
-                $site = null;
+                $site = null; // null menandakan "All Sites"
             }
+        } else {
+            // Pengguna Non-Superadmin dipaksa HANYA melihat site mereka sendiri
+            $userSiteId = $user->site_id;
+            $query->where('site_id', $userSiteId);
+            $site = Site::find($userSiteId);
         }
 
         $reports = $query->get();

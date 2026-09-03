@@ -52,7 +52,7 @@ class UserSeeder extends Seeder
                 'username' => 'sby_admin',
                 'name'     => 'Admin SBY',
                 'email'    => 'sby@nuctech.com',
-                'role'     => 'admin_site',
+                'role'     => 'employee_role',
                 'password' => Hash::make('password123'),
                 'site_id'  => $siteSby->id, // Gunakan ID hasil pencarian
             ]);

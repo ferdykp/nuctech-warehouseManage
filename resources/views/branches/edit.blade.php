@@ -18,7 +18,7 @@
                             class="text-slate-800">{{ $branch->branch_name }}</strong>.</p>
                 </div>
                 <a href="{{ route('branches.index') }}"
-                    class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 active:scale-[0.98] transition-all shrink-0 rounded-xl">
+                    class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 active:scale-[0.98] transition-all shrink-0 rounded-xl cursor-pointer">
                     <i class="text-xs fa-solid fa-arrow-left"></i>
                     <span>Back to List</span>
                 </a>
@@ -42,7 +42,8 @@
                             Branch Name <span class="text-rose-500">*</span>
                         </label>
                         <div class="relative flex items-center">
-                            <span class="absolute left-3.5 text-slate-400 pointer-events-none text-xs">
+                            <span
+                                class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none z-10 text-xs">
                                 <i class="fa-solid fa-building"></i>
                             </span>
                             <input type="text" name="branch_name" value="{{ old('branch_name', $branch->branch_name) }}"
@@ -60,7 +61,8 @@
                             Branch Code <span class="text-rose-500">*</span>
                         </label>
                         <div class="relative flex items-center">
-                            <span class="absolute left-3.5 text-slate-400 pointer-events-none text-xs">
+                            <span
+                                class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none z-10 text-xs">
                                 <i class="fa-solid fa-hashtag"></i>
                             </span>
                             <input type="text" name="branch_code" value="{{ old('branch_code', $branch->branch_code) }}"
@@ -77,7 +79,7 @@
                 <div class="space-y-1.5">
                     <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Detailed Address</label>
                     <div class="relative">
-                        <span class="absolute top-3 left-3.5 text-slate-400 pointer-events-none text-xs">
+                        <span class="absolute top-3 left-3.5 text-slate-400 pointer-events-none z-10 text-xs">
                             <i class="fa-solid fa-location-dot"></i>
                         </span>
                         <textarea name="branch_address" rows="3"
@@ -88,11 +90,11 @@
 
                 <div class="flex items-center justify-end gap-3 pt-5 border-t border-slate-100">
                     <a href="{{ route('branches.index') }}"
-                        class="px-5 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
+                        class="px-5 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">
                         Cancel
                     </a>
                     <button type="submit"
-                        class="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition-all rounded-xl shadow-md shadow-blue-600/20">
+                        class="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition-all rounded-xl shadow-md shadow-blue-600/20 cursor-pointer">
                         <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Save Changes
                     </button>
                 </div>

@@ -15,6 +15,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         crossorigin="anonymous" referrerpolicy="no-referrer" />
 
+    <!-- Alpine.js Collapse Plugin (Wajib dimuat sebelum Alpine Core / Vite) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+
     <!-- Vite assets (app.css, app.js) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 

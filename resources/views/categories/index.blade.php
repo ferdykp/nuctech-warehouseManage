@@ -21,7 +21,7 @@
                     </p>
                 </div>
 
-                @if (Auth::user()?->role === 'superadmin')
+                @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader']))
                     <button onclick="openCreateCategoryModal()" type="button"
                         class="inline-flex items-center justify-center gap-2 px-5 py-3 text-xs font-bold text-white transition-all shadow-md cursor-pointer sm:text-sm bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95 shrink-0">
                         <i class="text-xs fa-solid fa-plus"></i>
@@ -41,7 +41,7 @@
                             <th class="w-16 px-6 py-4 text-center">No</th>
                             <th class="px-6 py-4">Category Details</th>
                             <th class="px-6 py-4">Description</th>
-                            @if (Auth::user()?->role === 'superadmin')
+                            @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader']))
                                 <th class="px-6 py-4 text-right w-36">Actions</th>
                             @endif
                         </tr>
@@ -72,7 +72,7 @@
                                 </td>
 
                                 {{-- Actions --}}
-                                @if (Auth::user()?->role === 'superadmin')
+                                @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader']))
                                     <td class="px-6 py-4 text-right">
                                         <div class="flex items-center justify-end gap-1.5">
                                             {{-- EDIT --}}

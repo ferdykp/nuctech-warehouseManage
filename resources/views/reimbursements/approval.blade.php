@@ -5,7 +5,7 @@
 @section('content')
     @php
         $canSign = false;
-        $currentRole = strtolower(auth()->user()->role ?? 'admin_site');
+        $currentRole = strtolower(auth()->user()->role ?? 'employee_role');
         $myId = auth()->id();
 
         if ($reimbursement->status == 'pending' && $reimbursement->user_id == $myId) {

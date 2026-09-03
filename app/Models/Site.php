@@ -33,4 +33,8 @@ class Site extends Model
     {
         return $this->hasOne(SiteSchedule::class, 'site_id');
     }
+    public function sparepartStocks()
+    {
+        return $this->hasMany(SparepartStock::class, 'site_id');
+    }
 }

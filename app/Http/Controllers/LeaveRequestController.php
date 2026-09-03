@@ -22,7 +22,7 @@ class LeaveRequestController extends Controller
         $query = LeaveRequest::with(['employee.site.branch', 'employee.branch', 'leaveType', 'approver']);
 
         // Filter Role Admin Site
-        if ($user->role === 'admin_site') {
+        if ($user->role === 'employee_role') {
             $query->whereHas('employee', function ($q) use ($user) {
                 $q->where('site_id', $user->site_id);
             });
@@ -49,7 +49,7 @@ class LeaveRequestController extends Controller
         $user = Auth::user();
 
         $employeesQuery = Employee::where('is_active', true)->with(['site.branch', 'branch']);
-        if ($user->role === 'admin_site') {
+        if ($user->role === 'employee_role') {
             $employeesQuery->where('site_id', $user->site_id);
         }
         $employees = $employeesQuery->get();
@@ -205,7 +205,7 @@ class LeaveRequestController extends Controller
 
         $user = Auth::user();
         $employeesQuery = Employee::where('is_active', true)->with(['site.branch', 'branch']);
-        if ($user->role === 'admin_site') {
+        if ($user->role === 'employee_role') {
             $employeesQuery->where('site_id', $user->site_id);
         }
         $employees = $employeesQuery->get();

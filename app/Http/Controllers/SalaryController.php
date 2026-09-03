@@ -49,7 +49,7 @@ class SalaryController extends Controller
                 $endDate->format('Y-m-d H:i:s'),
             ]);
 
-        if ($user->role === 'admin_site') {
+        if ($user->role === 'employee_role') {
             $query->whereHas('employee', function ($q) use ($user) {
                 $q->where('site_id', $user->site_id);
             });
@@ -134,7 +134,7 @@ class SalaryController extends Controller
             'branch',
         ]);
 
-        if ($user->role === 'admin_site') {
+        if ($user->role === 'employee_role') {
             $employeesQuery->where('site_id', $user->site_id);
         }
 
@@ -253,7 +253,7 @@ class SalaryController extends Controller
             'branch',
         ]);
 
-        if ($user->role === 'admin_site') {
+        if ($user->role === 'employee_role') {
             $employeesQuery->where('site_id', $user->site_id);
         }
 
@@ -485,7 +485,7 @@ class SalaryController extends Controller
             'branch',
         ]);
 
-        if ($user->role === 'admin_site') {
+        if ($user->role === 'employee_role') {
             $query->where('site_id', $user->site_id);
         }
 

@@ -83,8 +83,9 @@
                     </div>
                 @endforeach
 
-                @if (Auth::user()?->role === 'superadmin' ||
-                        (Auth::user()?->role === 'admin_site' && Auth::user()?->site_id === $siteData->id))
+                {{-- @if (Auth::user()?->role === 'superadmin' || (Auth::user()?->role === 'team_leader' && Auth::user()?->site_id === $siteData->id)) --}}
+                @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader']))
+
                     @foreach ($pendingReceipts as $t)
                         <div
                             class="flex flex-col justify-between gap-4 p-4 border border-blue-200 bg-blue-50/60 rounded-2xl md:flex-row md:items-center">
@@ -126,7 +127,7 @@
                     {{-- Action Buttons --}}
                     <div class="flex flex-wrap items-center gap-2.5">
                         @if (Auth::user()?->role === 'superadmin' ||
-                                (Auth::user()?->role === 'admin_site' && Auth::user()?->site_id === $siteData->id))
+                                (Auth::user()?->role === 'team_leader' && Auth::user()?->site_id === $siteData->id))
                             <button onclick="openCreateModal()" type="button"
                                 class="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all bg-slate-900 hover:bg-blue-600 rounded-xl shadow-md active:scale-95 cursor-pointer">
                                 <i class="text-xs fa-solid fa-plus"></i> Add Sparepart

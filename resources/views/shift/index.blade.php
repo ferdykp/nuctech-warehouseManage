@@ -20,7 +20,7 @@
                     <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
                         Configure work hours, shift templates, and off-day rules used across all operational sites.
                     </p>
-                    @if (Auth::user()?->role === 'admin_site')
+                    @if (Auth::user()?->role === 'team_leader')
                         <p
                             class="mt-2 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
                             <i class="fa-solid fa-lock"></i> Access Mode: Read-only (Site Admin)

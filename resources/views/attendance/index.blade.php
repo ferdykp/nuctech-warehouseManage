@@ -20,7 +20,7 @@
                     <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
                         Manage and monitor employee attendance sessions per site location and operational period.
                     </p>
-                    @if (Auth::user()?->role === 'admin_site')
+                    @if (Auth::user()?->role === 'team_leader')
                         <p
                             class="mt-2 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200/80 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
                             <i class="fa-solid fa-building-user"></i> Site Admin:
@@ -332,7 +332,7 @@
                     <tbody id="recapTableBody" class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
                         @forelse($attendances as $row)
                             @if (Auth::user()?->role === 'superadmin' ||
-                                    (Auth::user()?->role === 'admin_site' && Auth::user()->site_id === $row->employee->site_id))
+                                    (Auth::user()?->role === 'team_leader' && Auth::user()->site_id === $row->employee->site_id))
                                 @php
                                     $percentage =
                                         $row->working_days > 0

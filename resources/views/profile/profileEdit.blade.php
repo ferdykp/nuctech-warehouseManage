@@ -97,13 +97,17 @@
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 @error('role') border-rose-500 @enderror {{ auth()->user()?->role !== 'superadmin' ? 'bg-slate-100 text-slate-500 cursor-not-allowed border-dashed' : 'cursor-pointer' }}">
                             <option value="superadmin" {{ $user->role === 'superadmin' ? 'selected' : '' }}>Superadmin
                                 (Head Office)</option>
-                            <option value="admin_site" {{ $user->role === 'admin_site' ? 'selected' : '' }}>Site Admin
+                            <option value="employee_role" {{ $user->role === 'employee_role' ? 'selected' : '' }}>Site
+                                Admin
                                 (Branch Location)</option>
                             <option value="team_leader" {{ $user->role === 'team_leader' ? 'selected' : '' }}>Team Leader
                             </option>
                             <option value="station_master" {{ $user->role === 'station_master' ? 'selected' : '' }}>Station
                                 Master</option>
                             <option value="manager" {{ $user->role === 'manager' ? 'selected' : '' }}>Manager</option>
+                            <option value="administration" {{ $user->role === 'administration' ? 'selected' : '' }}>
+                                Adminstration</option>
+
                         </select>
 
                         @if (auth()->user()?->role !== 'superadmin')
@@ -112,7 +116,7 @@
                     </div>
 
                     {{-- SITE ASSIGNMENT --}}
-                    <div x-show="role === 'admin_site'" x-transition class="space-y-1.5 md:col-span-2">
+                    <div x-show="role === 'team_leader'" x-transition class="space-y-1.5 md:col-span-2">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Site
                             Assignment</label>
                         <select name="site_id" {{ auth()->user()?->role !== 'superadmin' ? 'disabled' : '' }}

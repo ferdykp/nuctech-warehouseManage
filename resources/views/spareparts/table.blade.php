@@ -9,7 +9,7 @@
                 <th class="px-6 py-4 text-center">Quantity</th>
                 <th class="px-6 py-4 text-center">Condition</th>
                 @if (Auth::user()?->role === 'superadmin' ||
-                        (Auth::user()?->role === 'admin_site' && Auth::user()?->site_id === $siteData->id))
+                        (Auth::user()?->role === 'team_leader' && Auth::user()?->site_id === $siteData->id))
                     <th class="px-6 py-4 text-right w-52">Actions</th>
                 @endif
             </tr>
@@ -70,7 +70,7 @@
 
                     {{-- Actions --}}
                     @if (Auth::user()?->role === 'superadmin' ||
-                            (Auth::user()?->role === 'admin_site' && Auth::user()?->site_id === $siteData->id))
+                            (Auth::user()?->role === 'team_leader' && Auth::user()?->site_id === $siteData->id))
                         <td class="px-6 py-4 text-right">
                             <div class="flex justify-end items-center gap-1.5">
                                 {{-- ADJUST STOK --}}
@@ -117,7 +117,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="{{ Auth::user()?->role === 'superadmin' || (Auth::user()?->role === 'admin_site' && Auth::user()?->site_id === $siteData->id) ? 6 : 5 }}"
+                    <td colspan="{{ Auth::user()?->role === 'superadmin' || (Auth::user()?->role === 'team_leader' && Auth::user()?->site_id === $siteData->id) ? 6 : 5 }}"
                         class="p-12 text-center text-slate-400">
                         <div
                             class="flex items-center justify-center w-12 h-12 mx-auto mb-3 text-xl rounded-2xl bg-slate-100 text-slate-400">

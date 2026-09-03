@@ -22,7 +22,7 @@ class EmployeeController extends Controller
         $search = $request->input('search');
         $employeesQuery = Employee::with(['site.branch']);
 
-        if ($user->role === 'admin_site') {
+        if ($user->role === 'employee_role') {
             $employeesQuery->where('site_id', $user->site_id);
             $sites = Site::where('id', $user->site_id)->get();
         } else {
@@ -77,7 +77,7 @@ class EmployeeController extends Controller
             'contract_start_date' => 'nullable|date',
         ]);
 
-        $siteId = ($user->role === 'admin_site') ? $user->site_id : $validatedData['site_id'];
+        $siteId = ($user->role === 'employee_role') ? $user->site_id : $validatedData['site_id'];
         $site = Site::findOrFail($siteId);
 
         $basicSalary = $validatedData['basic_salary'] ?? 0;
@@ -110,7 +110,7 @@ class EmployeeController extends Controller
         $employeeId = is_object($id) ? $id->id : $id;
         $employee = Employee::findOrFail($employeeId);
 
-        if ($user->role === 'admin_site' && (int)$employee->site_id !== (int)$user->site_id) {
+        if ($user->role === 'employee_role' && (int)$employee->site_id !== (int)$user->site_id) {
             abort(403, 'Anda tidak memiliki akses mengubah karyawan di site ini.');
         }
 
@@ -144,7 +144,7 @@ class EmployeeController extends Controller
             ]);
         }
 
-        $siteId = ($user->role === 'admin_site') ? $user->site_id : $validatedData['site_id'];
+        $siteId = ($user->role === 'employee_role') ? $user->site_id : $validatedData['site_id'];
         $site = Site::findOrFail($siteId);
 
         $validatedData['site_id']   = $site->id;
@@ -165,7 +165,7 @@ class EmployeeController extends Controller
     //         $employeeId = is_object($id) ? $id->id : $id;
     //         $employee = Employee::with(['site.branch', 'salaryHistories'])->findOrFail($employeeId);
 
-    //         if ($user && $user->role === 'admin_site' && (int)$employee->site_id !== (int)$user->site_id) {
+    //         if ($user && $user->role === 'employee_role' && (int)$employee->site_id !== (int)$user->site_id) {
     //             return response()->json(['message' => 'Anda tidak memiliki akses ke data karyawan ini.'], 403);
     //         }
 
@@ -208,7 +208,7 @@ class EmployeeController extends Controller
 
             $employee = Employee::with(['site.branch', 'salaryHistories'])->findOrFail($employeeId);
 
-            if ($user && $user->role === 'admin_site' && (int)$employee->site_id !== (int)$user->site_id) {
+            if ($user && $user->role === 'employee_role' && (int)$employee->site_id !== (int)$user->site_id) {
                 return response()->json(['message' => 'Anda tidak memiliki akses ke data karyawan ini.'], 403);
             }
 
@@ -244,11 +244,11 @@ class EmployeeController extends Controller
         $employeeId = is_object($id) ? $id->id : $id;
         $employee = Employee::with('salaryHistories')->findOrFail($employeeId);
 
-        if ($user->role === 'admin_site' && (int)$employee->site_id !== (int)$user->site_id) {
+        if ($user->role === 'employee_role' && (int)$employee->site_id !== (int)$user->site_id) {
             abort(403, 'Anda tidak memiliki akses mengubah karyawan di site ini.');
         }
 
-        if ($user->role === 'admin_site') {
+        if ($user->role === 'employee_role') {
             $sites = Site::where('id', $user->site_id)->with('branch')->get();
         } else {
             $sites = Site::with('branch')->get();
@@ -265,7 +265,7 @@ class EmployeeController extends Controller
         try {
             $user = Auth::user();
 
-            if ($user && $user->role === 'admin_site' && (int)$user->site_id !== (int)$site_id) {
+            if ($user && $user->role === 'employee_role' && (int)$user->site_id !== (int)$site_id) {
                 return response()->json(['message' => 'Anda tidak memiliki akses ke site ini.'], 403);
             }
 
@@ -312,7 +312,7 @@ class EmployeeController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->role === 'admin_site') {
+        if ($user->role === 'employee_role') {
             $sites = Site::where('id', $user->site_id)->with('branch')->get();
         } else {
             $sites = Site::with('branch')->get();
@@ -328,7 +328,7 @@ class EmployeeController extends Controller
         $employeeId = is_object($id) ? $id->id : $id;
         $employee = Employee::findOrFail($employeeId);
 
-        if ($user->role === 'admin_site' && (int)$employee->site_id !== (int)$user->site_id) {
+        if ($user->role === 'employee_role' && (int)$employee->site_id !== (int)$user->site_id) {
             abort(403, 'Anda tidak memiliki akses menghapus karyawan di site ini.');
         }
 
@@ -346,7 +346,7 @@ class EmployeeController extends Controller
         $user = Auth::user();
         $siteId = $request->input('site_id');
 
-        if ($user && $user->role === 'admin_site') {
+        if ($user && $user->role === 'employee_role') {
             $siteId = $user->site_id;
         }
 
@@ -364,7 +364,7 @@ class EmployeeController extends Controller
         ]);
 
         $user = Auth::user();
-        $siteId = ($user->role === 'admin_site') ? $user->site_id : $request->input('site_id');
+        $siteId = ($user->role === 'employee_role') ? $user->site_id : $request->input('site_id');
 
         try {
             Excel::import(new EmployeesImport($siteId), $request->file('file'));

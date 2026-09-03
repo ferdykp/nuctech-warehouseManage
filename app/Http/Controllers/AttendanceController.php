@@ -25,9 +25,9 @@ class AttendanceController extends Controller
         $month = $this->sanitizeMonth($monthInput);
 
         // KONTROL AKSES SITE SESUAI LOGIN:
-        if ($user->role === 'admin_site') {
+        if ($user->role === 'employee_role') {
             $sites = Site::where('id', $user->site_id)->get();
-            $siteId = $user->site_id; // Paksa siteId ke site milik admin_site
+            $siteId = $user->site_id; // Paksa siteId ke site milik employee_role
         } else {
             $sites = Site::all();
             $siteId = $request->input('site_id'); // Bisa berupa ID site atau string 'all'
@@ -87,7 +87,7 @@ class AttendanceController extends Controller
             $user = Auth::user();
 
             // Hak akses multi-tenant
-            if ($user && $user->role === 'admin_site' && (int)$user->site_id !== (int)$siteId) {
+            if ($user && $user->role === 'employee_role' && (int)$user->site_id !== (int)$siteId) {
                 return response()->json(['message' => 'Akses ditolak untuk site ini.'], 403);
             }
 
@@ -132,8 +132,8 @@ class AttendanceController extends Controller
 
         $siteId = $request->site_id;
 
-        // Security check admin_site
-        if ($user->role === 'admin_site') {
+        // Security check employee_role
+        if ($user->role === 'employee_role') {
             $siteId = $user->site_id; // Paksa admin site hanya bisa ekspor site milik sendiri
         }
 
@@ -153,7 +153,7 @@ class AttendanceController extends Controller
         $month = $this->sanitizeMonth($request->input('month'));
         $siteId = $request->input('site_id');
 
-        if ($user->role === 'admin_site' && (int)$user->site_id !== (int)$siteId) {
+        if ($user->role === 'employee_role' && (int)$user->site_id !== (int)$siteId) {
             abort(403, 'Anda tidak memiliki akses menyimpan absensi di site ini.');
         }
 
@@ -168,7 +168,7 @@ class AttendanceController extends Controller
                 continue;
             }
 
-            if ($user->role === 'admin_site') {
+            if ($user->role === 'employee_role') {
                 $isMyEmployee = Employee::where('id', $employeeId)->where('site_id', $user->site_id)->exists();
                 if (!$isMyEmployee) continue;
             }
@@ -250,7 +250,7 @@ class AttendanceController extends Controller
         $attendance = Attendance::findOrFail($id);
         $user = Auth::user();
 
-        if ($user->role === 'admin_site' && (int)$attendance->employee->site_id !== (int)$user->site_id) {
+        if ($user->role === 'employee_role' && (int)$attendance->employee->site_id !== (int)$user->site_id) {
             abort(403, 'Anda tidak memiliki akses untuk menghapus data rekap absensi site ini.');
         }
 

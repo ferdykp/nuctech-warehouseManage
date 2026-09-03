@@ -36,7 +36,7 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
                 $endDate->format('Y-m-d H:i:s'),
             ]);
 
-        if ($this->user && $this->user->role === 'admin_site') {
+        if ($this->user && $this->user->role === 'employee_role') {
             $query->whereHas('employee', function ($q) {
                 $q->where('site_id', $this->user->site_id);
             });
@@ -59,7 +59,41 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
             $query->where('bank', $this->bank);
         }
 
-        return $query->latest('created_at')->get();
+        // 1. Tentukan urutan id_site persis sama dengan AttendanceDetailSheet
+        $customSiteOrder = [
+            1 => 7,
+            2 => 6,
+            3 => 8,
+            4 => 9,
+            5 => 1,
+            7 => 4,
+            8 => 4,
+            9 => 4,
+            13 => 3,
+            14 => 5,
+        ];
+
+        // 2. Ambil data & urutkan berdasarkan customSiteOrder dan Nama Karyawan
+        $salaries = $query->get()->sort(function ($a, $b) use ($customSiteOrder) {
+            $siteIdA = $a->employee->site_id ?? 0;
+            $siteIdB = $b->employee->site_id ?? 0;
+
+            $orderA = $customSiteOrder[$siteIdA] ?? 999;
+            $orderB = $customSiteOrder[$siteIdB] ?? 999;
+
+            // Bandingkan berdasarkan urutan Site
+            if ($orderA !== $orderB) {
+                return $orderA <=> $orderB;
+            }
+
+            // Jika Site sama, urutkan berdasarkan Nama Karyawan (Alfabet)
+            $nameA = $a->name ?? ($a->employee->name ?? '');
+            $nameB = $b->name ?? ($b->employee->name ?? '');
+
+            return strcasecmp($nameA, $nameB);
+        });
+
+        return $salaries;
     }
 
     public function headings(): array
@@ -122,9 +156,8 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
             $projectTeamName,
             $salary->name,
             $salary->bank,
-            // "'" . $salary->account_no, // Kutip tunggal agar no rek di Excel tidak terpotong
-            $salary->account_no, // Kutip tunggal agar no rek di Excel tidak terpotong
-            $formattedAmount, // <-- Menggunakan format Rp
+            $salary->account_no, // No. Rekening
+            $formattedAmount, // Format Rp
             $salary->information,
             $beforeAfter,
             $salary->more_information ?? '-',

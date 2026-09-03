@@ -741,7 +741,8 @@
                 }
             }
 
-            const hasStaff = signatures.some(s => s && (s.role === 'admin_site' || s.level === 'admin_site')) || !!data
+            const hasStaff = signatures.some(s => s && (s.role === 'employee_role' || s.level === 'employee_role')) || !!
+                data
                 .person_name;
             const hasLeader = signatures.some(s => s && (s.role === 'leader' || s.level === 'leader')) || (data.status !==
                 'pending' && data.status !== 'pending_leader');

@@ -7,10 +7,16 @@
 
         {{-- 1. HEADER CARD --}}
         <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex flex-col gap-5 space-x-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
+                    <a href="{{ route('profile.profile') }}"
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all rounded-xl active:scale-95 shrink-0">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>Back</span>
+                    </a>
+
                     <div
-                        class="inline-flex items-center gap-2 px-3 py-1 mb-2 text-xs font-bold text-blue-700 border border-blue-100 rounded-full bg-blue-50">
+                        class="inline-flex items-center gap-2 px-3 py-2.5 mb-2 text-xs font-bold text-blue-700 border border-blue-100 rounded-full bg-blue-50">
                         <i class="fa-solid fa-users-gear text-[10px]"></i> Access Control
                     </div>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">

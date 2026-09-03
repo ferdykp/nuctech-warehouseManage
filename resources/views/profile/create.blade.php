@@ -92,10 +92,11 @@
                             required>
                             <option value="">-- Select Role --</option>
                             <option value="superadmin">Superadmin (Head Office)</option>
-                            <option value="admin_site">Site Admin (Branch Location)</option>
-                            <option value="team_leader">Team Leader</option>
-                            <option value="station_master">Station Master</option>
                             <option value="manager">Manager</option>
+                            <option value="station_master">Station Master</option>
+                            <option value="team_leader">Team Leader</option>
+                            <option value="administration">Administration</option>
+                            <option value="employee_role">Employee</option>
                         </select>
                         @error('role')
                             <p class="mt-1 text-xs font-bold text-rose-600">{{ $message }}</p>
@@ -103,7 +104,7 @@
                     </div>
 
                     {{-- SITE ASSIGNMENT --}}
-                    <div x-show="role === 'admin_site'" x-transition class="space-y-1.5 md:col-span-2">
+                    <div x-show="role === 'team_leader'" x-transition class="space-y-1.5 md:col-span-2">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Site Assignment <span
                                 class="text-rose-500">*</span></label>
                         <select name="site_id"

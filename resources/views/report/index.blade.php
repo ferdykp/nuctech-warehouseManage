@@ -74,7 +74,7 @@
                                             class="text-[10px] font-bold text-slate-400 uppercase">{{ $item->sparepart?->uom ?? 'PCS' }}</span>
                                     </td>
                                     <td class="px-6 py-3.5 text-center">
-                                        @if (Auth::user()?->role === 'superadmin')
+                                        @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader']))
                                             <a href="{{ route('report.create', ['stock_id' => $item->id]) }}"
                                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs transition-all active:scale-95">
                                                 <i class="fa-solid fa-file-pen"></i> Process Log
@@ -107,7 +107,7 @@
 
                     {{-- Action Buttons --}}
                     <div class="flex flex-wrap items-center gap-2.5">
-                        @if (Auth::user()?->role === 'superadmin')
+                        @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader']))
                             <a href="{{ route('report.create') }}"
                                 class="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all bg-rose-600 hover:bg-rose-700 rounded-xl shadow-md shadow-rose-600/20 active:scale-95">
                                 <i class="text-xs fa-solid fa-plus"></i> Add Manual Entry

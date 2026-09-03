@@ -34,7 +34,7 @@ class ScheduleController extends Controller
             }
         }
 
-        if ($user->role === 'admin_site') {
+        if ($user->role === 'employee_role') {
             $selectedSiteId = $user->site_id;
         } else {
             $selectedSiteId = $request->input('site_id', 'all');
@@ -59,7 +59,7 @@ class ScheduleController extends Controller
 
         $employees = $employeesQuery->get();
 
-        if ($user->role === 'admin_site') {
+        if ($user->role === 'employee_role') {
             $sites = Site::where('id', $user->site_id)->with('schedulePattern')->get();
         } else {
             $sites = Site::with('schedulePattern')->get();
@@ -78,7 +78,7 @@ class ScheduleController extends Controller
 
         $site = Site::findOrFail($siteId);
 
-        if ($user->role === 'admin_site' && (int) $user->site_id !== (int) $site->id) {
+        if ($user->role === 'employee_role' && (int) $user->site_id !== (int) $site->id) {
             abort(403, 'Anda tidak memiliki akses untuk mengubah pola site ini.');
         }
 
@@ -122,7 +122,7 @@ class ScheduleController extends Controller
 
         $site = Site::findOrFail($request->input('target_site_id'));
 
-        if ($user->role === 'admin_site' && (int) $user->site_id !== (int) $site->id) {
+        if ($user->role === 'employee_role' && (int) $user->site_id !== (int) $site->id) {
             abort(403, 'Anda tidak memiliki akses untuk site ini.');
         }
 
@@ -177,7 +177,7 @@ class ScheduleController extends Controller
         // Batasi hanya karyawan milik target_site_id — mencegah kebocoran data lintas-site
         $employeesQuery = Employee::whereIn('id', $selectedEmployeeIds)->where('site_id', $site->id);
 
-        if ($user->role === 'admin_site') {
+        if ($user->role === 'employee_role') {
             $employeesQuery->where('site_id', $user->site_id);
         }
 
@@ -253,7 +253,7 @@ class ScheduleController extends Controller
 
         $employee = Employee::findOrFail($request->employee_id);
 
-        if ($user->role === 'admin_site' && (int)$user->site_id !== (int)$employee->site_id) {
+        if ($user->role === 'employee_role' && (int)$user->site_id !== (int)$employee->site_id) {
             return response()->json(['success' => false, 'message' => 'Akses ditolak.'], 403);
         }
 
@@ -279,7 +279,7 @@ class ScheduleController extends Controller
         $month = sprintf('%02d', $request->month);
         $year = $request->year;
 
-        if ($user->role === 'admin_site' && (int)$user->site_id !== (int)$siteId) {
+        if ($user->role === 'employee_role' && (int)$user->site_id !== (int)$siteId) {
             return redirect()->back()->withErrors(['error' => 'Akses ditolak untuk site ini.']);
         }
 
@@ -289,7 +289,7 @@ class ScheduleController extends Controller
         $employeeQuery = Employee::query();
         if ($siteId !== 'all') {
             $employeeQuery->where('site_id', $siteId);
-        } elseif ($user->role === 'admin_site') {
+        } elseif ($user->role === 'employee_role') {
             $employeeQuery->where('site_id', $user->site_id);
         }
 
@@ -306,13 +306,16 @@ class ScheduleController extends Controller
     {
         $user = Auth::user();
 
-        $month = $request->input('month', date('m'));
+        $month = sprintf('%02d', $request->input('month', date('m')));
         $year = $request->input('year', date('Y'));
 
-        if ($user->role === 'admin_site') {
-            $siteId = $user->site_id;
-        } else {
+        // PENGAMANAN ROLE SITES
+        if ($user->role === 'superadmin') {
+            // Superadmin bisa memilih site tertentu atau 'all'
             $siteId = $request->input('site_id', 'all');
+        } else {
+            // Selain Superadmin (misal team_leader / ebeam), PAKSA menggunakan site_id milik akun yang login
+            $siteId = $user->site_id;
         }
 
         $siteName = 'Semua_Site';

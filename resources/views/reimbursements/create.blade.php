@@ -80,6 +80,9 @@
                                                 {{ old('person_name') == $employee->name ? 'selected' : '' }}>
                                                 {{ $employee->name }}
                                                 {{ $employee->position ? '(' . $employee->position . ')' : '' }}
+                                                @if (auth()->user()?->role === 'superadmin' && $employee->site)
+                                                    - [{{ $employee->site->machine_name }}]
+                                                @endif
                                             </option>
                                         @endforeach
                                     </select>
@@ -89,7 +92,6 @@
                                     </span>
                                 </div>
                             </div>
-
                             <div class="space-y-1.5">
                                 <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Date of
                                     Expense <span class="text-rose-500">*</span></label>

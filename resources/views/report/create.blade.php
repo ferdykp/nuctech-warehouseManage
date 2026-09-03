@@ -23,7 +23,7 @@
                     </p>
                 </div>
                 <a href="{{ route('report.index') }}"
-                    class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all rounded-xl active:scale-95 shrink-0">
+                    class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all rounded-xl active:scale-95 shrink-0 cursor-pointer">
                     <i class="fa-solid fa-arrow-left"></i>
                     <span>Back</span>
                 </a>
@@ -43,6 +43,11 @@
             <form action="{{ route('report.store') }}" method="POST" enctype="multipart/form-data"
                 class="p-6 space-y-5 sm:p-8">
                 @csrf
+
+                {{-- SIMPAN HIDDEN STOCK_ID JIKA DIAKSES DARI QUEUE --}}
+                @if (request('stock_id'))
+                    <input type="hidden" name="stock_id" value="{{ request('stock_id') }}">
+                @endif
 
                 {{-- ATTENDANT --}}
                 <div class="space-y-1.5">
@@ -66,14 +71,19 @@
                         <select name="site_machine" id="site_machine"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 @error('site_machine') border-rose-500 @enderror"
                             required>
-                            <option value="" disabled selected>-- Select Site Machine --</option>
+                            <option value="" disabled
+                                {{ !old('site_machine', $selectedSiteSlug ?? request('stock_site_slug')) ? 'selected' : '' }}>
+                                -- Select Site Machine --</option>
                             @foreach ($sites as $site)
                                 <option value="{{ $site->slug }}"
-                                    {{ old('site_machine', request('stock_site_slug')) == $site->slug ? 'selected' : '' }}>
+                                    {{ old('site_machine', $selectedSiteSlug ?? request('stock_site_slug')) == $site->slug ? 'selected' : '' }}>
                                     {{ $site->machine_name }}
                                 </option>
                             @endforeach
                         </select>
+                        @error('site_machine')
+                            <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     {{-- FAILURE DATE --}}
@@ -94,7 +104,7 @@
                             Failed Sub-System
                         </label>
                         <textarea name="failed_subsystem" rows="3" placeholder="e.g. Conveyor Motor / Sensor Array"
-                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">{{ old('failed_subsystem') }}</textarea>
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">{{ old('failed_subsystem', $selectedSubsystem ?? '') }}</textarea>
                     </div>
 
                     {{-- FAILURE PHENOMENON --}}
@@ -128,7 +138,7 @@
                 {{-- ACTIONS --}}
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                     <a href="{{ route('report.index') }}"
-                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
+                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">
                         Discard
                     </a>
                     <button type="submit"
