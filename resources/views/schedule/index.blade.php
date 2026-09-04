@@ -183,7 +183,7 @@
                 <form action="{{ route('schedule.index') }}" method="GET" id="mainFilterForm"
                     class="flex flex-wrap items-end gap-3.5">
 
-                    @if (Auth::user()?->role === 'superadmin')
+                    @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader', 'administration']))
                         <div class="w-full sm:w-56">
                             <label
                                 class="block mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Site
