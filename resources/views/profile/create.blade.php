@@ -104,14 +104,18 @@
                     </div>
 
                     {{-- SITE ASSIGNMENT --}}
-                    <div x-show="role === 'team_leader'" x-transition class="space-y-1.5 md:col-span-2">
-                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Site Assignment <span
-                                class="text-rose-500">*</span></label>
+                    <div x-show="['team_leader', 'administration'].includes(role)" x-transition
+                        class="space-y-1.5 md:col-span-2">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                            Site Assignment <span class="text-rose-500">*</span>
+                        </label>
                         <select name="site_id"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer @error('site_id') border-rose-500 @enderror">
                             <option value="">-- Select Site Location --</option>
                             @foreach ($sites as $site)
-                                <option value="{{ $site->id }}">{{ $site->machine_name }}</option>
+                                <option value="{{ $site->id }}" {{ old('site_id') == $site->id ? 'selected' : '' }}>
+                                    {{ $site->machine_name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
