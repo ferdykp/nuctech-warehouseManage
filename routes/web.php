@@ -45,9 +45,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::resource('sites', SiteController::class);
         Route::resource('site', SiteController::class);
 
-        Route::prefix('api')->name('api.')->group(function () {
-            Route::get('/branches/{site_id}/employees', [EmployeeController::class, 'getEmployeesByBranch'])->name('employees.by-branch');
-        });
 
 
 
@@ -142,6 +139,13 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::get('/leave/{id}/edit', [LeaveRequestController::class, 'edit'])->name('leave.edit');
         Route::put('/leave/{id}', [LeaveRequestController::class, 'update'])->name('leave.update');
         Route::delete('/leave/{id}', [LeaveRequestController::class, 'destroy'])->name('leave.destroy');
+
+        // Route::prefix('api')->name('api.')->group(function () {
+        //     Route::get('/branches/{site_id}/employees', [EmployeeController::class, 'getEmployeesByBranch'])->name('employees.by-branch');
+        // });
+        Route::prefix('api')->name('api.')->group(function () {
+            Route::get('/branches/{site_id}/employees', [AttendanceController::class, 'getEmployeesByBranch'])->name('employees.by-branch');
+        });
     });
 
 

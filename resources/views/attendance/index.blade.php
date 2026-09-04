@@ -20,7 +20,7 @@
                     <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
                         Manage and monitor employee attendance sessions per site location and operational period.
                     </p>
-                    @if (Auth::user()?->role === 'team_leader')
+                    @if (in_array(Auth::user()?->role, ['team_leader', 'administration']))
                         <p
                             class="mt-2 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200/80 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
                             <i class="fa-solid fa-building-user"></i> Site Admin:
@@ -51,7 +51,7 @@
                             Target Site Location / Branch
                         </label>
 
-                        @if (Auth::user()?->role === 'superadmin')
+                        @if (in_array(Auth::user()?->role, ['superadmin', 'administration']))
                             <select name="site_id" id="main_branch_select"
                                 class="w-full p-2.5 text-xs sm:text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-slate-800 outline-none transition-all"
                                 required onchange="handleFilterChange()">
@@ -331,7 +331,7 @@
                     </thead>
                     <tbody id="recapTableBody" class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
                         @forelse($attendances as $row)
-                            @if (Auth::user()?->role === 'superadmin' ||
+                            @if (in_array(Auth::user()?->role, ['superadmin', 'administration']) ||
                                     (Auth::user()?->role === 'team_leader' && Auth::user()->site_id === $row->employee->site_id))
                                 @php
                                     $percentage =
@@ -435,447 +435,444 @@
         </div>
     </div>
 
-    {{-- ============================================================ --}}
-    {{-- SCRIPT JAVASCRIPT KHUSUS ATTENDANCE (SAFE FOR UNPOLY AJAX)   --}}
-    {{-- ============================================================ --}}
-<script>
-    // Gunakan var atau window object agar tidak crash saat Unpoly re-eval skrip
-    var attendanceState = attendanceState || {};
-    var currentActiveEmployeeId = currentActiveEmployeeId || null;
-    var employeeSchedulesState = employeeSchedulesState || {};
-    var indonesianHolidays = @json($holidays ?? []);
+    {{-- JavaScript --}}
+    <script>
+        var attendanceState = attendanceState || {};
+        var currentActiveEmployeeId = currentActiveEmployeeId || null;
+        var employeeSchedulesState = employeeSchedulesState || {};
+        var indonesianHolidays = @json($holidays ?? []);
 
-    function getFormattedMonth() {
-        let bulan = document.getElementById('filter_bulan') ? document.getElementById('filter_bulan').value : '01';
-        let tahun = document.getElementById('filter_tahun') ? document.getElementById('filter_tahun').value : new Date()
-            .getFullYear();
-        return tahun + '-' + String(bulan).padStart(2, '0');
-    }
-
-    function updateHiddenMonth() {
-        let monthVal = getFormattedMonth();
-        let hiddenInput = document.getElementById('main_month_hidden');
-        let formHiddenInput = document.getElementById('form_month_hidden');
-        if (hiddenInput) hiddenInput.value = monthVal;
-        if (formHiddenInput) formHiddenInput.value = monthVal;
-
-        let activeSiteSelect = document.getElementById('main_branch_select');
-        let activeSiteId = activeSiteSelect ? activeSiteSelect.value : null;
-        let exportBtn = document.getElementById('exportBtn');
-        if (exportBtn && activeSiteId) {
-            exportBtn.href = `/attendance/export?site_id=${activeSiteId}&month=${monthVal}`;
+        function getFormattedMonth() {
+            let bulan = document.getElementById('filter_bulan') ? document.getElementById('filter_bulan').value : '01';
+            let tahun = document.getElementById('filter_tahun') ? document.getElementById('filter_tahun').value : new Date()
+                .getFullYear();
+            return tahun + '-' + String(bulan).padStart(2, '0');
         }
-    }
 
-    function handleFilterChange() {
-        updateHiddenMonth();
-    }
+        function updateHiddenMonth() {
+            let monthVal = getFormattedMonth();
+            let hiddenInput = document.getElementById('main_month_hidden');
+            let formHiddenInput = document.getElementById('form_month_hidden');
+            if (hiddenInput) hiddenInput.value = monthVal;
+            if (formHiddenInput) formHiddenInput.value = monthVal;
 
-    function openModal(modalId) {
-        let el = document.getElementById(modalId);
-        if (!el) return;
-        el.classList.remove('hidden');
-        el.classList.add('flex');
-        document.body.classList.add('overflow-hidden');
-    }
-
-    function closeModal(modalId) {
-        let el = document.getElementById(modalId);
-        if (!el) return;
-        el.classList.add('hidden');
-        el.classList.remove('flex');
-        document.body.classList.remove('overflow-hidden');
-    }
-
-    function parseMonthRaw() {
-        let monthRaw = getFormattedMonth();
-        let parts = (monthRaw || '').split('-').map(Number);
-        let year = parts[0] || new Date().getFullYear();
-        let month = parts[1] || (new Date().getMonth() + 1);
-        let days = new Date(year, month, 0).getDate();
-        return {
-            year,
-            month,
-            days
-        };
-    }
-
-    function getDaysInMonth() {
-        return parseMonthRaw().days;
-    }
-
-    function isWeekendDay(day) {
-        let {
-            year,
-            month
-        } = parseMonthRaw();
-        let dow = new Date(year, month - 1, day).getDay();
-        return dow === 0 || dow === 6;
-    }
-
-    function getHolidayName(day) {
-        let {
-            year,
-            month
-        } = parseMonthRaw();
-        let dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        return indonesianHolidays.hasOwnProperty(dateStr) ? indonesianHolidays[dateStr] : null;
-    }
-
-    function isHoliday(day) {
-        return !!getHolidayName(day);
-    }
-
-    function initAttendancePage() {
-        updateHiddenMonth();
-        let activeSiteSelect = document.getElementById('main_branch_select');
-        let activeSiteId = activeSiteSelect ? activeSiteSelect.value : null;
-        if (activeSiteId) {
-            fetchEmployees(activeSiteId);
-        }
-        filterRecapTable();
-    }
-
-    function setLoading(isLoading) {
-        let loadingEl = document.getElementById('employee_loading');
-        let fieldContainer = document.getElementById('employee_fields');
-        if (!loadingEl || !fieldContainer) return;
-        loadingEl.classList.toggle('hidden', !isLoading);
-        fieldContainer.classList.toggle('hidden', isLoading);
-    }
-
-    function toggleManualInput(isChecked) {
-        document.getElementById('auto_full_hidden').value = isChecked ? 'true' : 'false';
-        let totalDays = getDaysInMonth();
-        let {
-            year,
-            month
-        } = parseMonthRaw();
-
-        Object.keys(attendanceState).forEach(empId => {
-            let schedules = employeeSchedulesState[empId] || [];
-
-            for (let d = 1; d <= totalDays; d++) {
-                let dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                let sched = schedules.find(s => s.date === dateStr);
-
-                if (isChecked) {
-                    if (sched && sched.shift) {
-                        let shiftName = (sched.shift.shift_name || '').toLowerCase();
-                        let isOff = sched.shift.is_off;
-
-                        if (isOff) {
-                            attendanceState[empId].shifts[d] = {
-                                s1: 0,
-                                s2: 0,
-                                s3: 0
-                            };
-                        } else if (shiftName.includes('2')) {
-                            attendanceState[empId].shifts[d] = {
-                                s1: 0,
-                                s2: 1,
-                                s3: 0
-                            };
-                        } else if (shiftName.includes('3')) {
-                            attendanceState[empId].shifts[d] = {
-                                s1: 0,
-                                s2: 0,
-                                s3: 1
-                            };
-                        } else {
-                            attendanceState[empId].shifts[d] = {
-                                s1: 1,
-                                s2: 0,
-                                s3: 0
-                            };
-                        }
-                    } else {
-                        let shouldBeOff = isWeekendDay(d) || isHoliday(d);
-                        attendanceState[empId].shifts[d] = {
-                            s1: shouldBeOff ? 0 : 1,
-                            s2: 0,
-                            s3: 0
-                        };
-                    }
-                } else {
-                    attendanceState[empId].shifts[d] = {
-                        s1: 0,
-                        s2: 0,
-                        s3: 0
-                    };
-                }
+            let activeSiteSelect = document.getElementById('main_branch_select');
+            let activeSiteId = activeSiteSelect ? activeSiteSelect.value : null;
+            let exportBtn = document.getElementById('exportBtn');
+            if (exportBtn && activeSiteId) {
+                exportBtn.href = `/attendance/export?site_id=${activeSiteId}&month=${monthVal}`;
             }
-            updateLiveCounters(empId);
-            syncCalendarCheckboxesIfOpen(empId);
-        });
-    }
+        }
 
-    function fetchEmployees(siteId) {
-        let fieldContainer = document.getElementById('employee_fields');
-        if (!fieldContainer) return;
+        function handleFilterChange() {
+            updateHiddenMonth();
+        }
 
-        updateHiddenMonth();
-        let monthVal = getFormattedMonth();
-        let totalDays = getDaysInMonth();
-        let {
-            year,
-            month
-        } = parseMonthRaw();
-        let countLabel = document.getElementById('employeeCountLabel');
+        function openModal(modalId) {
+            let el = document.getElementById(modalId);
+            if (!el) return;
+            el.classList.remove('hidden');
+            el.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+        }
 
-        setLoading(true);
+        function closeModal(modalId) {
+            let el = document.getElementById(modalId);
+            if (!el) return;
+            el.classList.add('hidden');
+            el.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+        }
 
-        fetch('/api/branches/' + siteId + '/employees?month=' + monthVal)
-            .then(async response => {
-                if (!response.ok) {
-                    let errText = 'Failed to load employee data (' + response.status + ')';
-                    try {
-                        let errJson = await response.json();
-                        if (errJson.message) errText = errJson.message;
-                    } catch (e) {}
-                    throw new Error(errText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                fieldContainer.innerHTML = '';
-                attendanceState = {};
-                employeeSchedulesState = {};
+        function parseMonthRaw() {
+            let monthRaw = getFormattedMonth();
+            let parts = (monthRaw || '').split('-').map(Number);
+            let year = parts[0] || new Date().getFullYear();
+            let month = parts[1] || (new Date().getMonth() + 1);
+            let days = new Date(year, month, 0).getDate();
+            return {
+                year,
+                month,
+                days
+            };
+        }
 
-                if (!data || data.length === 0) {
-                    fieldContainer.innerHTML = `
-                        <div class="py-12 text-center text-slate-400">
-                            <i class="block mb-2 text-3xl opacity-50 fa-solid fa-user-xmark"></i>
-                            <span class="text-xs font-bold sm:text-sm text-slate-700">No employees registered yet.</span>
-                        </div>`;
-                    if (countLabel) countLabel.innerText = '';
-                    return;
-                }
+        function getDaysInMonth() {
+            return parseMonthRaw().days;
+        }
 
-                let isAutoFull = document.getElementById('autoFullAttendance') ?
-                    document.getElementById('autoFullAttendance').checked : false;
+        function isWeekendDay(day) {
+            let {
+                year,
+                month
+            } = parseMonthRaw();
+            let dow = new Date(year, month - 1, day).getDay();
+            return dow === 0 || dow === 6;
+        }
 
-                data.forEach(emp => {
-                    employeeSchedulesState[emp.id] = emp.schedules || [];
+        function getHolidayName(day) {
+            let {
+                year,
+                month
+            } = parseMonthRaw();
+            let dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            return indonesianHolidays.hasOwnProperty(dateStr) ? indonesianHolidays[dateStr] : null;
+        }
 
-                    let hasSavedData = emp.attendances && emp.attendances.length > 0 && emp.attendances[0]
-                        .matrix_details;
-                    let savedShifts = null;
+        function isHoliday(day) {
+            return !!getHolidayName(day);
+        }
 
-                    if (hasSavedData) {
-                        try {
-                            savedShifts = typeof emp.attendances[0].matrix_details === 'string' ?
-                                JSON.parse(emp.attendances[0].matrix_details) :
-                                emp.attendances[0].matrix_details;
-                        } catch (e) {
-                            savedShifts = null;
-                        }
-                    }
+        function initAttendancePage() {
+            updateHiddenMonth();
+            let activeSiteSelect = document.getElementById('main_branch_select');
+            let activeSiteId = activeSiteSelect ? activeSiteSelect.value : null;
+            if (activeSiteId) {
+                fetchEmployees(activeSiteId);
+            }
+            filterRecapTable();
+        }
 
-                    attendanceState[emp.id] = {
-                        name: emp.name,
-                        shifts: {}
-                    };
+        function setLoading(isLoading) {
+            let loadingEl = document.getElementById('employee_loading');
+            let fieldContainer = document.getElementById('employee_fields');
+            if (!loadingEl || !fieldContainer) return;
+            loadingEl.classList.toggle('hidden', !isLoading);
+            fieldContainer.classList.toggle('hidden', isLoading);
+        }
 
-                    for (let d = 1; d <= totalDays; d++) {
-                        if (savedShifts && savedShifts[d] !== undefined) {
-                            attendanceState[emp.id].shifts[d] = {
-                                s1: savedShifts[d].s1 !== undefined ? parseInt(savedShifts[d].s1) : 0,
-                                s2: savedShifts[d].s2 !== undefined ? parseInt(savedShifts[d].s2) : 0,
-                                s3: savedShifts[d].s3 !== undefined ? parseInt(savedShifts[d].s3) : 0
-                            };
-                        } else if (isAutoFull) {
-                            let dateStr =
-                                `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                            let sched = (emp.schedules || []).find(s => s.date === dateStr);
+        function toggleManualInput(isChecked) {
+            document.getElementById('auto_full_hidden').value = isChecked ? 'true' : 'false';
+            let totalDays = getDaysInMonth();
+            let {
+                year,
+                month
+            } = parseMonthRaw();
 
-                            if (sched && sched.shift) {
-                                let shiftName = (sched.shift.shift_name || '').toLowerCase();
-                                let isOff = sched.shift.is_off;
+            Object.keys(attendanceState).forEach(empId => {
+                let schedules = employeeSchedulesState[empId] || [];
 
-                                if (isOff) {
-                                    attendanceState[emp.id].shifts[d] = {
-                                        s1: 0,
-                                        s2: 0,
-                                        s3: 0
-                                    };
-                                } else if (shiftName.includes('2')) {
-                                    attendanceState[emp.id].shifts[d] = {
-                                        s1: 0,
-                                        s2: 1,
-                                        s3: 0
-                                    };
-                                } else if (shiftName.includes('3')) {
-                                    attendanceState[emp.id].shifts[d] = {
-                                        s1: 0,
-                                        s2: 0,
-                                        s3: 1
-                                    };
-                                } else {
-                                    attendanceState[emp.id].shifts[d] = {
-                                        s1: 1,
-                                        s2: 0,
-                                        s3: 0
-                                    };
-                                }
+                for (let d = 1; d <= totalDays; d++) {
+                    let dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    let sched = schedules.find(s => s.date === dateStr);
+
+                    if (isChecked) {
+                        if (sched && sched.shift) {
+                            let shiftName = (sched.shift.shift_name || '').toLowerCase();
+                            let isOff = sched.shift.is_off;
+
+                            if (isOff) {
+                                attendanceState[empId].shifts[d] = {
+                                    s1: 0,
+                                    s2: 0,
+                                    s3: 0
+                                };
+                            } else if (shiftName.includes('2')) {
+                                attendanceState[empId].shifts[d] = {
+                                    s1: 0,
+                                    s2: 1,
+                                    s3: 0
+                                };
+                            } else if (shiftName.includes('3')) {
+                                attendanceState[empId].shifts[d] = {
+                                    s1: 0,
+                                    s2: 0,
+                                    s3: 1
+                                };
                             } else {
-                                let shouldBeOff = isWeekendDay(d) || isHoliday(d);
-                                attendanceState[emp.id].shifts[d] = {
-                                    s1: shouldBeOff ? 0 : 1,
+                                attendanceState[empId].shifts[d] = {
+                                    s1: 1,
                                     s2: 0,
                                     s3: 0
                                 };
                             }
                         } else {
-                            attendanceState[emp.id].shifts[d] = {
-                                s1: 0,
+                            let shouldBeOff = isWeekendDay(d) || isHoliday(d);
+                            attendanceState[empId].shifts[d] = {
+                                s1: shouldBeOff ? 0 : 1,
                                 s2: 0,
                                 s3: 0
                             };
                         }
+                    } else {
+                        attendanceState[empId].shifts[d] = {
+                            s1: 0,
+                            s2: 0,
+                            s3: 0
+                        };
+                    }
+                }
+                updateLiveCounters(empId);
+                syncCalendarCheckboxesIfOpen(empId);
+            });
+        }
+
+        function fetchEmployees(siteId) {
+            let fieldContainer = document.getElementById('employee_fields');
+            if (!fieldContainer) return;
+
+            updateHiddenMonth();
+            let monthVal = getFormattedMonth();
+            let totalDays = getDaysInMonth();
+            let {
+                year,
+                month
+            } = parseMonthRaw();
+            let countLabel = document.getElementById('employeeCountLabel');
+
+            setLoading(true);
+
+            fetch('/api/branches/' + siteId + '/employees?month=' + monthVal)
+                .then(async response => {
+                    if (!response.ok) {
+                        let errText = 'Failed to load employee data (' + response.status + ')';
+                        try {
+                            let errJson = await response.json();
+                            if (errJson.message) errText = errJson.message;
+                        } catch (e) {}
+                        throw new Error(errText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    fieldContainer.innerHTML = '';
+                    attendanceState = {};
+                    employeeSchedulesState = {};
+
+                    if (!data || data.length === 0) {
+                        fieldContainer.innerHTML = `
+                            <div class="py-12 text-center text-slate-400">
+                                <i class="block mb-2 text-3xl opacity-50 fa-solid fa-user-xmark"></i>
+                                <span class="text-xs font-bold sm:text-sm text-slate-700">No employees registered yet.</span>
+                            </div>`;
+                        if (countLabel) countLabel.innerText = '';
+                        return;
                     }
 
-                    let siteBadge = emp.site ?
-                        `<span class="px-2 py-0.5 text-[10px] font-extrabold bg-slate-100 text-slate-700 rounded-md border border-slate-200 me-2">${emp.site.machine_name}</span>` :
-                        '';
+                    let isAutoFull = document.getElementById('autoFullAttendance') ?
+                        document.getElementById('autoFullAttendance').checked : false;
 
-                    fieldContainer.insertAdjacentHTML('beforeend', `
-                        <div class="grid items-center grid-cols-1 gap-3 p-4 transition-all border border-slate-200/80 rounded-2xl md:grid-cols-12 hover:border-slate-300 bg-slate-50/50">
-                            <div class="md:col-span-4">
-                                <span class="flex items-center gap-2 text-xs font-extrabold truncate text-slate-900 sm:text-sm" title="${emp.name}">
-                                    <i class="text-sm text-slate-400 fa-solid fa-circle-user"></i>${siteBadge}${emp.name}
-                                </span>
-                            </div>
-                            <div class="grid items-center grid-cols-4 gap-2 md:col-span-8">
-                                <div class="flex overflow-hidden border rounded-xl shadow-2xs border-slate-200">
-                                    <span class="flex items-center px-2 text-xs font-black border-r text-slate-500 bg-slate-100 border-slate-200">S1</span>
-                                    <input type="text" id="counter_s1_${emp.id}" class="w-full py-1 text-xs font-bold text-center text-blue-600 bg-white focus:outline-none" readonly>
+                    data.forEach(emp => {
+                        employeeSchedulesState[emp.id] = emp.schedules || [];
+
+                        let hasSavedData = emp.attendances && emp.attendances.length > 0 && emp.attendances[0]
+                            .matrix_details;
+                        let savedShifts = null;
+
+                        if (hasSavedData) {
+                            try {
+                                savedShifts = typeof emp.attendances[0].matrix_details === 'string' ?
+                                    JSON.parse(emp.attendances[0].matrix_details) :
+                                    emp.attendances[0].matrix_details;
+                            } catch (e) {
+                                savedShifts = null;
+                            }
+                        }
+
+                        attendanceState[emp.id] = {
+                            name: emp.name,
+                            shifts: {}
+                        };
+
+                        for (let d = 1; d <= totalDays; d++) {
+                            if (savedShifts && savedShifts[d] !== undefined) {
+                                attendanceState[emp.id].shifts[d] = {
+                                    s1: savedShifts[d].s1 !== undefined ? parseInt(savedShifts[d].s1) : 0,
+                                    s2: savedShifts[d].s2 !== undefined ? parseInt(savedShifts[d].s2) : 0,
+                                    s3: savedShifts[d].s3 !== undefined ? parseInt(savedShifts[d].s3) : 0
+                                };
+                            } else if (isAutoFull) {
+                                let dateStr =
+                                    `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                                let sched = (emp.schedules || []).find(s => s.date === dateStr);
+
+                                if (sched && sched.shift) {
+                                    let shiftName = (sched.shift.shift_name || '').toLowerCase();
+                                    let isOff = sched.shift.is_off;
+
+                                    if (isOff) {
+                                        attendanceState[emp.id].shifts[d] = {
+                                            s1: 0,
+                                            s2: 0,
+                                            s3: 0
+                                        };
+                                    } else if (shiftName.includes('2')) {
+                                        attendanceState[emp.id].shifts[d] = {
+                                            s1: 0,
+                                            s2: 1,
+                                            s3: 0
+                                        };
+                                    } else if (shiftName.includes('3')) {
+                                        attendanceState[emp.id].shifts[d] = {
+                                            s1: 0,
+                                            s2: 0,
+                                            s3: 1
+                                        };
+                                    } else {
+                                        attendanceState[emp.id].shifts[d] = {
+                                            s1: 1,
+                                            s2: 0,
+                                            s3: 0
+                                        };
+                                    }
+                                } else {
+                                    let shouldBeOff = isWeekendDay(d) || isHoliday(d);
+                                    attendanceState[emp.id].shifts[d] = {
+                                        s1: shouldBeOff ? 0 : 1,
+                                        s2: 0,
+                                        s3: 0
+                                    };
+                                }
+                            } else {
+                                attendanceState[emp.id].shifts[d] = {
+                                    s1: 0,
+                                    s2: 0,
+                                    s3: 0
+                                };
+                            }
+                        }
+
+                        let siteBadge = emp.site ?
+                            `<span class="px-2 py-0.5 text-[10px] font-extrabold bg-slate-100 text-slate-700 rounded-md border border-slate-200 me-2">${emp.site.machine_name}</span>` :
+                            '';
+
+                        fieldContainer.insertAdjacentHTML('beforeend', `
+                            <div class="grid items-center grid-cols-1 gap-3 p-4 transition-all border border-slate-200/80 rounded-2xl md:grid-cols-12 hover:border-slate-300 bg-slate-50/50">
+                                <div class="md:col-span-4">
+                                    <span class="flex items-center gap-2 text-xs font-extrabold truncate text-slate-900 sm:text-sm" title="${emp.name}">
+                                        <i class="text-sm text-slate-400 fa-solid fa-circle-user"></i>${siteBadge}${emp.name}
+                                    </span>
                                 </div>
-                                <div class="flex overflow-hidden border rounded-xl shadow-2xs border-slate-200">
-                                    <span class="flex items-center px-2 text-xs font-black border-r text-slate-500 bg-slate-100 border-slate-200">S2</span>
-                                    <input type="text" id="counter_s2_${emp.id}" class="w-full py-1 text-xs font-bold text-center bg-white text-amber-600 focus:outline-none" readonly>
+                                <div class="grid items-center grid-cols-4 gap-2 md:col-span-8">
+                                    <div class="flex overflow-hidden border rounded-xl shadow-2xs border-slate-200">
+                                        <span class="flex items-center px-2 text-xs font-black border-r text-slate-500 bg-slate-100 border-slate-200">S1</span>
+                                        <input type="text" id="counter_s1_${emp.id}" class="w-full py-1 text-xs font-bold text-center text-blue-600 bg-white focus:outline-none" readonly>
+                                    </div>
+                                    <div class="flex overflow-hidden border rounded-xl shadow-2xs border-slate-200">
+                                        <span class="flex items-center px-2 text-xs font-black border-r text-slate-500 bg-slate-100 border-slate-200">S2</span>
+                                        <input type="text" id="counter_s2_${emp.id}" class="w-full py-1 text-xs font-bold text-center bg-white text-amber-600 focus:outline-none" readonly>
+                                    </div>
+                                    <div class="flex overflow-hidden border rounded-xl shadow-2xs border-slate-200">
+                                        <span class="flex items-center px-2 text-xs font-black border-r text-slate-500 bg-slate-100 border-slate-200">S3</span>
+                                        <input type="text" id="counter_s3_${emp.id}" class="w-full py-1 text-xs font-bold text-center bg-white text-rose-600 focus:outline-none" readonly>
+                                    </div>
+                                    <button type="button" class="w-full px-2 py-2 text-xs font-bold text-blue-600 transition-colors border bg-blue-50 border-blue-200/80 rounded-xl hover:bg-blue-600 hover:text-white" onclick="openPlotCalendar(${emp.id})">
+                                        <i class="fa-solid fa-pen-to-square"></i> Plot / Edit
+                                    </button>
                                 </div>
-                                <div class="flex overflow-hidden border rounded-xl shadow-2xs border-slate-200">
-                                    <span class="flex items-center px-2 text-xs font-black border-r text-slate-500 bg-slate-100 border-slate-200">S3</span>
-                                    <input type="text" id="counter_s3_${emp.id}" class="w-full py-1 text-xs font-bold text-center bg-white text-rose-600 focus:outline-none" readonly>
-                                </div>
-                                <button type="button" class="w-full px-2 py-2 text-xs font-bold text-blue-600 transition-colors border bg-blue-50 border-blue-200/80 rounded-xl hover:bg-blue-600 hover:text-white" onclick="openPlotCalendar(${emp.id})">
-                                    <i class="fa-solid fa-pen-to-square"></i> Plot / Edit
-                                </button>
-                            </div>
-                            <input type="hidden" name="calendar_raw_data[${emp.id}]" id="raw_data_${emp.id}">
-                        </div>`);
+                                <input type="hidden" name="calendar_raw_data[${emp.id}]" id="raw_data_${emp.id}">
+                            </div>`);
 
-                    updateLiveCounters(emp.id);
-                });
+                        updateLiveCounters(emp.id);
+                    });
 
-                if (countLabel) countLabel.innerText = data.length + ' employee(s) loaded';
-            })
-            .catch(err => {
-                fieldContainer.innerHTML = `
-                    <div class="flex items-center gap-2.5 p-4 text-xs sm:text-sm font-semibold text-rose-800 border border-rose-200 bg-rose-50 rounded-2xl">
-                        <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> ${err.message || 'Failed to load employee records.'}
-                    </div>`;
-            })
-            .finally(() => setLoading(false));
-    }
-
-    function updateLiveCounters(employeeId) {
-        let empData = attendanceState[employeeId];
-        if (!empData) return;
-        let totalDays = getDaysInMonth();
-        let s1 = 0,
-            s2 = 0,
-            s3 = 0;
-        for (let d = 1; d <= totalDays; d++) {
-            if (empData.shifts[d].s1 === 1) s1++;
-            if (empData.shifts[d].s2 === 1) s2++;
-            if (empData.shifts[d].s3 === 1) s3++;
+                    if (countLabel) countLabel.innerText = data.length + ' employee(s) loaded';
+                })
+                .catch(err => {
+                    fieldContainer.innerHTML = `
+                        <div class="flex items-center gap-2.5 p-4 text-xs sm:text-sm font-semibold text-rose-800 border border-rose-200 bg-rose-50 rounded-2xl">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> ${err.message || 'Failed to load employee records.'}
+                        </div>`;
+                })
+                .finally(() => setLoading(false));
         }
-        let s1El = document.getElementById('counter_s1_' + employeeId);
-        let s2El = document.getElementById('counter_s2_' + employeeId);
-        let s3El = document.getElementById('counter_s3_' + employeeId);
-        let rawEl = document.getElementById('raw_data_' + employeeId);
-        if (s1El) s1El.value = s1;
-        if (s2El) s2El.value = s2;
-        if (s3El) s3El.value = s3;
-        if (rawEl) rawEl.value = JSON.stringify(empData.shifts);
-    }
 
-    function toggleDateShift(day, shiftKey, isChecked) {
-        if (currentActiveEmployeeId && attendanceState[currentActiveEmployeeId]) {
-            attendanceState[currentActiveEmployeeId].shifts[day][shiftKey] = isChecked ? 1 : 0;
-            updateLiveCounters(currentActiveEmployeeId);
-        }
-    }
-
-    function syncCalendarCheckboxesIfOpen(employeeId) {
-        if (currentActiveEmployeeId !== employeeId) return;
-        let modalEl = document.getElementById('plotCalendarModal');
-        if (!modalEl || modalEl.classList.contains('hidden')) return;
-        openPlotCalendar(employeeId);
-    }
-
-    function openPlotCalendar(employeeId) {
-        if (!attendanceState[employeeId]) return;
-        currentActiveEmployeeId = employeeId;
-        document.getElementById('modalEmployeeName').innerText = attendanceState[employeeId].name;
-        let gridBody = document.getElementById('calendarGridBody');
-        gridBody.innerHTML = '';
-        let totalDays = getDaysInMonth();
-        let rows = '';
-        for (let d = 1; d <= totalDays; d++) {
-            let dayData = attendanceState[employeeId].shifts[d];
-            let holidayName = getHolidayName(d);
-            let isOff = isWeekendDay(d) || holidayName;
-            let weekendBadge = isOff ?
-                `<span class="ml-1 text-[10px] text-rose-500 font-bold">(Off${holidayName ? ' - ' + holidayName : ''})</span>` :
-                '';
-            rows += `
-                <tr class="border-b border-slate-100 hover:bg-slate-50">
-                    <td class="px-4 py-2.5 text-xs font-bold text-left text-slate-700">Date ${d}${weekendBadge}</td>
-                    <td class="px-3 py-2.5"><input type="checkbox" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500" onchange="toggleDateShift(${d}, 's1', this.checked)" ${dayData.s1 ? 'checked' : ''}></td>
-                    <td class="px-3 py-2.5"><input type="checkbox" class="w-4 h-4 rounded text-amber-600 border-slate-300 focus:ring-amber-500" onchange="toggleDateShift(${d}, 's2', this.checked)" ${dayData.s2 ? 'checked' : ''}></td>
-                    <td class="px-3 py-2.5"><input type="checkbox" class="w-4 h-4 rounded text-rose-600 border-slate-300 focus:ring-rose-500" onchange="toggleDateShift(${d}, 's3', this.checked)" ${dayData.s3 ? 'checked' : ''}></td>
-                </tr>`;
-        }
-        gridBody.innerHTML = rows;
-        openModal('plotCalendarModal');
-    }
-
-    function filterRecapTable() {
-        const selectedMonth = document.getElementById('recapMonthFilter') ? document.getElementById('recapMonthFilter')
-            .value : 'all';
-        const rows = document.querySelectorAll('.recap-row');
-        const noFilteredRow = document.getElementById('noFilteredRecapRow');
-        const countBadge = document.getElementById('recapCountBadge');
-
-        let visibleCount = 0;
-
-        rows.forEach(row => {
-            const rowMonth = row.getAttribute('data-month');
-
-            if (selectedMonth === 'all' || rowMonth === selectedMonth) {
-                row.classList.remove('hidden');
-                visibleCount++;
-            } else {
-                row.classList.add('hidden');
+        function updateLiveCounters(employeeId) {
+            let empData = attendanceState[employeeId];
+            if (!empData) return;
+            let totalDays = getDaysInMonth();
+            let s1 = 0,
+                s2 = 0,
+                s3 = 0;
+            for (let d = 1; d <= totalDays; d++) {
+                if (empData.shifts[d].s1 === 1) s1++;
+                if (empData.shifts[d].s2 === 1) s2++;
+                if (empData.shifts[d].s3 === 1) s3++;
             }
-        });
+            let s1El = document.getElementById('counter_s1_' + employeeId);
+            let s2El = document.getElementById('counter_s2_' + employeeId);
+            let s3El = document.getElementById('counter_s3_' + employeeId);
+            let rawEl = document.getElementById('raw_data_' + employeeId);
+            if (s1El) s1El.value = s1;
+            if (s2El) s2El.value = s2;
+            if (s3El) s3El.value = s3;
+            if (rawEl) rawEl.value = JSON.stringify(empData.shifts);
+        }
 
-        if (noFilteredRow) {
-            if (visibleCount === 0 && rows.length > 0) {
-                noFilteredRow.classList.remove('hidden');
-            } else {
-                noFilteredRow.classList.add('hidden');
+        function toggleDateShift(day, shiftKey, isChecked) {
+            if (currentActiveEmployeeId && attendanceState[currentActiveEmployeeId]) {
+                attendanceState[currentActiveEmployeeId].shifts[day][shiftKey] = isChecked ? 1 : 0;
+                updateLiveCounters(currentActiveEmployeeId);
             }
         }
 
-        if (countBadge) {
-            countBadge.textContent = `${visibleCount} Records Displayed`;
+        function syncCalendarCheckboxesIfOpen(employeeId) {
+            if (currentActiveEmployeeId !== employeeId) return;
+            let modalEl = document.getElementById('plotCalendarModal');
+            if (!modalEl || modalEl.classList.contains('hidden')) return;
+            openPlotCalendar(employeeId);
         }
-    }
 
-    // Jalankan inisialisasi awal
-    initAttendancePage();
-</script>@endsection
+        function openPlotCalendar(employeeId) {
+            if (!attendanceState[employeeId]) return;
+            currentActiveEmployeeId = employeeId;
+            document.getElementById('modalEmployeeName').innerText = attendanceState[employeeId].name;
+            let gridBody = document.getElementById('calendarGridBody');
+            gridBody.innerHTML = '';
+            let totalDays = getDaysInMonth();
+            let rows = '';
+            for (let d = 1; d <= totalDays; d++) {
+                let dayData = attendanceState[employeeId].shifts[d];
+                let holidayName = getHolidayName(d);
+                let isOff = isWeekendDay(d) || holidayName;
+                let weekendBadge = isOff ?
+                    `<span class="ml-1 text-[10px] text-rose-500 font-bold">(Off${holidayName ? ' - ' + holidayName : ''})</span>` :
+                    '';
+                rows += `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                        <td class="px-4 py-2.5 text-xs font-bold text-left text-slate-700">Date ${d}${weekendBadge}</td>
+                        <td class="px-3 py-2.5"><input type="checkbox" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500" onchange="toggleDateShift(${d}, 's1', this.checked)" ${dayData.s1 ? 'checked' : ''}></td>
+                        <td class="px-3 py-2.5"><input type="checkbox" class="w-4 h-4 rounded text-amber-600 border-slate-300 focus:ring-amber-500" onchange="toggleDateShift(${d}, 's2', this.checked)" ${dayData.s2 ? 'checked' : ''}></td>
+                        <td class="px-3 py-2.5"><input type="checkbox" class="w-4 h-4 rounded text-rose-600 border-slate-300 focus:ring-rose-500" onchange="toggleDateShift(${d}, 's3', this.checked)" ${dayData.s3 ? 'checked' : ''}></td>
+                    </tr>`;
+            }
+            gridBody.innerHTML = rows;
+            openModal('plotCalendarModal');
+        }
+
+        function filterRecapTable() {
+            const selectedMonth = document.getElementById('recapMonthFilter') ? document.getElementById('recapMonthFilter')
+                .value : 'all';
+            const rows = document.querySelectorAll('.recap-row');
+            const noFilteredRow = document.getElementById('noFilteredRecapRow');
+            const countBadge = document.getElementById('recapCountBadge');
+
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const rowMonth = row.getAttribute('data-month');
+
+                if (selectedMonth === 'all' || rowMonth === selectedMonth) {
+                    row.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+
+            if (noFilteredRow) {
+                if (visibleCount === 0 && rows.length > 0) {
+                    noFilteredRow.classList.remove('hidden');
+                } else {
+                    noFilteredRow.classList.add('hidden');
+                }
+            }
+
+            if (countBadge) {
+                countBadge.textContent = `${visibleCount} Records Displayed`;
+            }
+        }
+
+        initAttendancePage();
+    </script>
+@endsection

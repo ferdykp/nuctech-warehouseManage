@@ -290,4 +290,51 @@ class EmployeeController extends Controller
             return redirect()->back()->with('error', 'Failed to import employee data: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Endpoint API Fetch Employees per Branch / Site Location
+     */
+    public function getEmployeesByBranch(Request $request, $siteId)
+    {
+        try {
+            $user = Auth::user();
+
+            // Hak akses multi-tenant
+            if ($user && $user->role === 'employee_role' && (int)$user->site_id !== (int)$siteId) {
+                return response()->json(['message' => 'Akses ditolak untuk site ini.'], 403);
+            }
+
+            // Format bulan (YYYY-MM)
+            $monthInput = $request->input('month');
+            $month = (!empty($monthInput) && $monthInput !== '-')
+                ? Carbon::parse($monthInput . '-01')->format('Y-m')
+                : date('Y-m');
+
+            $startDate = Carbon::parse($month . '-01')->startOfMonth()->format('Y-m-d');
+            $endDate = Carbon::parse($month . '-01')->endOfMonth()->format('Y-m-d');
+
+            $employeesQuery = Employee::with([
+                'site',
+                'attendances' => function ($q) use ($month) {
+                    $q->where('month', $month);
+                },
+                'schedules' => function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween('date', [$startDate, $endDate])->with('shift');
+                }
+            ]);
+
+            // Filter site hanya jika siteId bukan 'all'
+            if ($siteId !== 'all') {
+                $employeesQuery->where('site_id', $siteId);
+            }
+
+            $employees = $employeesQuery->get();
+
+            return response()->json($employees);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Gagal memuat data karyawan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
