@@ -293,11 +293,19 @@
                             class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Status</span>
                         <span id="detail_status_badge">-</span>
                     </div>
+
+                    {{-- FITUR GAJI DENGAN TOGGLE EYE --}}
                     <div class="p-3.5 border border-emerald-200/80 rounded-2xl bg-emerald-50/40 col-span-2 md:col-span-1">
-                        <span class="block mb-1 font-bold text-emerald-600 uppercase text-[10px] tracking-wider">Gaji
-                            Pokok</span>
-                        <strong class="text-sm font-black text-emerald-700" id="detail_basic_salary">Rp 0</strong>
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-emerald-600 uppercase text-[10px] tracking-wider">Gaji Pokok</span>
+                            <button type="button" onclick="toggleSalaryVisibility()" title="Toggle Privasi Gaji"
+                                class="transition-colors text-emerald-700 hover:text-emerald-900 focus:outline-none">
+                                <i id="salary_toggle_icon" class="text-xs fa-solid fa-eye-slash"></i>
+                            </button>
+                        </div>
+                        <strong class="text-sm font-black text-emerald-700" id="detail_basic_salary">••••••••</strong>
                     </div>
+
                     <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
                         <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Bank
                             Account</span>
@@ -361,6 +369,10 @@
 
 {{-- SCRIPT DIJALANKAN LANGSUNG TANPA DEPENDENCY --}}
 <script>
+    // State Global Privasi Gaji
+    let isSalaryVisible = false;
+    let currentEmployeeData = null;
+
     (function() {
         let debounceTimer = null;
 
@@ -472,7 +484,57 @@
         document.body.classList.remove('overflow-hidden');
     }
 
+    function toggleSalaryVisibility() {
+        isSalaryVisible = !isSalaryVisible;
+        const icon = document.getElementById('salary_toggle_icon');
+        if (icon) {
+            icon.className = isSalaryVisible ? 'fa-solid fa-eye text-xs' : 'fa-solid fa-eye-slash text-xs';
+        }
+        renderSalaryInfo();
+    }
+
+    function renderSalaryInfo() {
+        if (!currentEmployeeData) return;
+
+        // Render Basic Salary
+        const basicSalaryElem = document.getElementById('detail_basic_salary');
+        if (basicSalaryElem) {
+            basicSalaryElem.innerText = isSalaryVisible ?
+                (currentEmployeeData.basic_salary_formatted || 'Rp 0') :
+                '••••••••';
+        }
+
+        // Render Salary History Table
+        let historyBody = document.getElementById('detail_salary_history_body');
+        if (currentEmployeeData.salary_histories && currentEmployeeData.salary_histories.length > 0) {
+            let rows = '';
+            currentEmployeeData.salary_histories.forEach(h => {
+                let dt = new Date(h.created_at).toLocaleDateString('id-ID');
+                let oldSal = isSalaryVisible ? ('Rp ' + new Intl.NumberFormat('id-ID').format(h.old_salary ||
+                    0)) : '••••••••';
+                let newSal = isSalaryVisible ? ('Rp ' + new Intl.NumberFormat('id-ID').format(h.new_salary ||
+                    0)) : '••••••••';
+
+                rows += `<tr>
+                    <td class="p-3">${dt}</td>
+                    <td class="p-3 font-semibold text-slate-400">${oldSal}</td>
+                    <td class="p-3 font-bold text-emerald-600">${newSal}</td>
+                    <td class="p-3">${h.reason || '-'}</td>
+                </tr>`;
+            });
+            historyBody.innerHTML = rows;
+        } else {
+            historyBody.innerHTML =
+                '<tr><td colspan="4" class="p-4 text-center text-slate-400">Belum ada riwayat perubahan gaji.</td></tr>';
+        }
+    }
+
     function showEmployeeDetail(id) {
+        // Reset state visibilitas gaji setiap kali membuka modal baru
+        isSalaryVisible = false;
+        const icon = document.getElementById('salary_toggle_icon');
+        if (icon) icon.className = 'fa-solid fa-eye-slash text-xs';
+
         fetch(`/employee/${id}`, {
                 headers: {
                     'Accept': 'application/json',
@@ -481,6 +543,8 @@
             })
             .then(res => res.json())
             .then(data => {
+                currentEmployeeData = data;
+
                 document.getElementById('detail_name').innerText = data.name || '-';
                 document.getElementById('detail_nik').innerText = data.nik || '-';
                 document.getElementById('detail_email').innerText = data.email || '-';
@@ -491,7 +555,6 @@
                     .branch.branch_name : '-';
                 document.getElementById('detail_tenure').innerText = data.tenure_formatted || '-';
                 document.getElementById('detail_join_date').innerText = data.join_date_formatted || '-';
-                document.getElementById('detail_basic_salary').innerText = data.basic_salary_formatted || 'Rp 0';
                 document.getElementById('detail_bank').innerText = (data.bank_name && data.bank_account_number) ?
                     `${data.bank_name} - ${data.bank_account_number}` : (data.bank_account_number || '-');
 
@@ -504,25 +567,7 @@
                     `<span class="px-2 py-0.5 text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-200 rounded-md">YES</span>` :
                     `<span class="px-2 py-0.5 text-[10px] font-black text-slate-500 bg-slate-100 border border-slate-200 rounded-md">NO</span>`;
 
-                let historyBody = document.getElementById('detail_salary_history_body');
-                if (data.salary_histories && data.salary_histories.length > 0) {
-                    let rows = '';
-                    data.salary_histories.forEach(h => {
-                        let dt = new Date(h.created_at).toLocaleDateString('id-ID');
-                        let oldSal = 'Rp ' + new Intl.NumberFormat('id-ID').format(h.old_salary || 0);
-                        let newSal = 'Rp ' + new Intl.NumberFormat('id-ID').format(h.new_salary || 0);
-                        rows += `<tr>
-                        <td class="p-3">${dt}</td>
-                        <td class="p-3 font-semibold text-slate-400">${oldSal}</td>
-                        <td class="p-3 font-bold text-emerald-600">${newSal}</td>
-                        <td class="p-3">${h.reason || '-'}</td>
-                    </tr>`;
-                    });
-                    historyBody.innerHTML = rows;
-                } else {
-                    historyBody.innerHTML =
-                        '<tr><td colspan="4" class="p-4 text-center text-slate-400">Belum ada riwayat perubahan gaji.</td></tr>';
-                }
+                renderSalaryInfo();
 
                 let modal = document.getElementById('employeeDetailModal');
                 if (modal) {
