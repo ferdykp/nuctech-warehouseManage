@@ -37,7 +37,7 @@
                     </button>
 
                     {{-- EXPORT EXCEL BUTTON --}}
-                    @if (Auth::user()?->role === 'superadmin')
+                    @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader', 'administration']))
                         {{-- Jika Superadmin: Buka Modal Pilihan Export --}}
                         <button type="button" onclick="openModal('modal-export-excel')"
                             class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95"
@@ -90,7 +90,7 @@
         {{-- =========================================================== --}}
         {{-- MODAL: EXPORT EXCEL OPTIONS (KHUSUS SUPERADMIN) --}}
         {{-- =========================================================== --}}
-        @if (Auth::user()?->role === 'superadmin')
+        @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader', 'administration']))
             <div id="modal-export-excel"
                 class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs modal-overlay"
                 onclick="if(event.target===this) closeModal('modal-export-excel')">
@@ -339,8 +339,8 @@
                         </thead>
                         <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
                             @forelse($employees as $emp)
-                                @if (Auth::user()?->role === 'superadmin' ||
-                                        (Auth::user()?->role === 'team_leader' && Auth::user()->site_id === $emp->site_id))
+                                {{-- @if (Auth::user()?->role === 'superadmin' || (Auth::user()?->role === 'team_leader' && Auth::user()->site_id === $emp->site_id)) --}}
+                                @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader', 'administration']))
                                     <tr class="transition-colors hover:bg-slate-50/60">
                                         <td
                                             class="px-4 py-3 sticky left-0 bg-white font-extrabold text-slate-900 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
@@ -485,7 +485,7 @@
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4">
-                                    @if (Auth::user()?->role === 'superadmin')
+                                    @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader', 'administration']))
                                         <div class="col-span-2 sm:col-span-2">
                                             <label
                                                 class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Target
@@ -636,8 +636,8 @@
                                 <div
                                     class="grid flex-1 grid-cols-1 content-start sm:grid-cols-2 gap-2.5 p-3 bg-white border border-slate-200 rounded-2xl min-h-[220px] max-h-[340px] lg:max-h-none overflow-y-auto">
                                     @foreach ($employees as $emp)
-                                        @if (Auth::user()?->role === 'superadmin' ||
-                                                (Auth::user()?->role === 'team_leader' && Auth::user()->site_id === $emp->site_id))
+                                        {{-- @if (Auth::user()?->role === 'superadmin' || (Auth::user()?->role === 'team_leader' && Auth::user()->site_id === $emp->site_id)) --}}
+                                        @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader', 'administration']))
                                             <label data-name="{{ strtolower($emp->name) }}"
                                                 data-site-id="{{ $emp->site_id }}"
                                                 class="flex items-center gap-2 p-2 text-xs font-medium border border-transparent cursor-pointer text-slate-700 rounded-xl employee-option hover:bg-slate-50 hover:border-slate-100">
