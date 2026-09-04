@@ -299,7 +299,7 @@
                         <div class="flex items-center justify-between mb-1">
                             <span class="font-bold text-emerald-600 uppercase text-[10px] tracking-wider">Gaji Pokok</span>
                             <button type="button" onclick="toggleSalaryVisibility()" title="Toggle Privasi Gaji"
-                                class="transition-colors text-emerald-700 hover:text-emerald-900 focus:outline-none">
+                                class="transition-colors cursor-pointer text-emerald-700 hover:text-emerald-900 focus:outline-none">
                                 <i id="salary_toggle_icon" class="text-xs fa-solid fa-eye-slash"></i>
                             </button>
                         </div>
@@ -370,6 +370,7 @@
 {{-- SCRIPT DIJALANKAN LANGSUNG TANPA DEPENDENCY --}}
 <script>
     // State Global Privasi Gaji
+    let isTableSalaryVisible = false;
     let isSalaryVisible = false;
     let currentEmployeeData = null;
 
@@ -414,6 +415,9 @@
                     tableContainer.innerHTML = html;
                     tableContainer.style.opacity = '1';
                     window.history.pushState({}, '', fetchUrl);
+
+                    // Pertahankan status toggle gaji tabel saat pagination/filter
+                    updateTableSalaryUI();
                 })
                 .catch(err => {
                     console.error('AJAX Filter Error:', err);
@@ -458,6 +462,25 @@
         });
     })();
 
+    // TOGGLE PRIVASI GAJI PADA TABEL UTAMA
+    function toggleTableSalaryVisibility() {
+        isTableSalaryVisible = !isTableSalaryVisible;
+        updateTableSalaryUI();
+    }
+
+    function updateTableSalaryUI() {
+        const icon = document.getElementById('table_salary_toggle_icon');
+        if (icon) {
+            icon.className = isTableSalaryVisible ? 'text-xs fa-solid fa-eye' : 'text-xs fa-solid fa-eye-slash';
+        }
+
+        const salaryElements = document.querySelectorAll('.table-salary-text');
+        salaryElements.forEach(el => {
+            const actualSalary = el.getAttribute('data-salary');
+            el.innerText = isTableSalaryVisible ? actualSalary : '••••••••';
+        });
+    }
+
     function clearSearchInput() {
         const searchInput = document.getElementById('search');
         if (searchInput) {
@@ -484,6 +507,7 @@
         document.body.classList.remove('overflow-hidden');
     }
 
+    // TOGGLE PRIVASI GAJI PADA MODAL DETAIL
     function toggleSalaryVisibility() {
         isSalaryVisible = !isSalaryVisible;
         const icon = document.getElementById('salary_toggle_icon');
@@ -525,7 +549,7 @@
             historyBody.innerHTML = rows;
         } else {
             historyBody.innerHTML =
-                '<tr><td colspan="4" class="p-4 text-center text-slate-400">Belum ada riwayat perubahan gaji.</td></tr>';
+                '<tr><td colspan="4" class="p-4 text-center text-slate-400">Belum ada riwayat perubahan.</td></tr>';
         }
     }
 
