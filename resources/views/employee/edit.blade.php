@@ -88,7 +88,7 @@
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Site Placement <span class="text-rose-500">*</span>
                         </label>
-                        @if (Auth::user()?->role === 'superadmin')
+                        @if (Auth::user()?->role === 'superadmin' || Auth::user()?->role === 'admin')
                             <select name="site_id"
                                 class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer"
                                 required>
@@ -101,15 +101,15 @@
                                 @endforeach
                             </select>
                         @else
-                            <input type="hidden" name="site_id" value="{{ Auth::user()->site_id }}">
+                            {{-- Fallback jika user login tidak memiliki site_id, gunakan site_id milik data employee yang sedang diedit --}}
+                            <input type="hidden" name="site_id"
+                                value="{{ old('site_id', Auth::user()->site_id ?? $employee->site_id) }}">
                             <input type="text"
-                                value="{{ Auth::user()->site->machine_name ?? 'Registered Site' }} (Branch: {{ Auth::user()->site->branch->branch_name ?? '-' }})"
+                                value="{{ $employee->site->machine_name ?? (Auth::user()->site->machine_name ?? 'Registered Site') }} (Branch: {{ $employee->site->branch->branch_name ?? (Auth::user()->site->branch->branch_name ?? '-') }})"
                                 class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-600 bg-slate-100 border border-slate-200 rounded-xl cursor-not-allowed"
                                 readonly>
                         @endif
-                    </div>
-
-                    {{-- STATUS --}}
+                    </div> {{-- STATUS --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Employment Status
