@@ -7,7 +7,15 @@
                 <th scope="col" class="px-6 py-4">Employee Identity</th>
                 <th scope="col" class="px-6 py-4">Position</th>
                 <th scope="col" class="px-6 py-4">Site & Branch</th>
-                <th scope="col" class="px-6 py-4 text-emerald-700">Gaji Pokok</th>
+                <th scope="col" class="px-6 py-4 text-emerald-700">
+                    <div class="flex items-center gap-2">
+                        <span>Gaji Pokok</span>
+                        <button type="button" onclick="toggleTableSalaryVisibility()" title="Toggle Privasi Gaji Tabel"
+                            class="transition-colors cursor-pointer text-emerald-700 hover:text-emerald-900 focus:outline-none">
+                            <i id="table_salary_toggle_icon" class="text-xs fa-solid fa-eye-slash"></i>
+                        </button>
+                    </div>
+                </th>
                 <th scope="col" class="px-4 py-4 text-center">MCU</th>
                 <th scope="col" class="px-4 py-4 text-center">TLD</th>
                 <th scope="col" class="px-6 py-4 text-center">Status</th>
@@ -47,7 +55,8 @@
                         </div>
                     </td>
                     <td class="px-6 py-4 text-xs font-black text-emerald-600">
-                        Rp {{ number_format((float) ($employee->basic_salary ?? 0), 0, ',', '.') }}
+                        <span class="table-salary-text"
+                            data-salary="Rp {{ number_format((float) ($employee->basic_salary ?? 0), 0, ',', '.') }}">••••••••</span>
                     </td>
                     <td class="px-4 py-4 text-center">
                         @if ($employee->mcu === 'yes')
