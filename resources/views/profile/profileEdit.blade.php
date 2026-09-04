@@ -116,7 +116,8 @@
                     </div>
 
                     {{-- SITE ASSIGNMENT --}}
-                    <div x-show="role === 'team_leader'" x-transition class="space-y-1.5 md:col-span-2">
+                    <div x-show="['team_leader', 'administration'].includes(role)" x-transition
+                        class="space-y-1.5 md:col-span-2">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Site
                             Assignment</label>
                         <select name="site_id" {{ auth()->user()?->role !== 'superadmin' ? 'disabled' : '' }}
