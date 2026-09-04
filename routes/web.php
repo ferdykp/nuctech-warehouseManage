@@ -146,6 +146,12 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::prefix('api')->name('api.')->group(function () {
             Route::get('/branches/{site_id}/employees', [AttendanceController::class, 'getEmployeesByBranch'])->name('employees.by-branch');
         });
+
+        // Management Profil Mandiri (Semua Role Berwenang Bisa Mengakses Profil Sendiri)
+        Route::get('/profile/profile', [UserController::class, 'index'])->name('profile.profile');
+        Route::get('/profile/profile/{id}', [UserController::class, 'show'])->name('profile.profileShow');
+        Route::get('/profile/profileEdit/{id}', [UserController::class, 'edit'])->name('profile.profileEdit');
+        Route::put('/profile/profileEdit/{id}', [UserController::class, 'update'])->name('profile.profileUpdate');
     });
 
 
@@ -156,12 +162,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::delete('/reimbursements/{id}', [AdminReimbursementController::class, 'destroy'])->name('reimbursements.destroy');
         Route::get('/reimbursements/{id}/edit', [AdminReimbursementController::class, 'edit'])->name('reimbursements.edit');
         Route::put('/reimbursements/{id}', [AdminReimbursementController::class, 'update'])->name('reimbursements.update');
-
-        // Management Profil Mandiri (Semua Role Berwenang Bisa Mengakses Profil Sendiri)
-        Route::get('/profile/profile', [UserController::class, 'index'])->name('profile.profile');
-        Route::get('/profile/profile/{id}', [UserController::class, 'show'])->name('profile.profileShow');
-        Route::get('/profile/profileEdit/{id}', [UserController::class, 'edit'])->name('profile.profileEdit');
-        Route::put('/profile/profileEdit/{id}', [UserController::class, 'update'])->name('profile.profileUpdate');
     });
 
     /*
