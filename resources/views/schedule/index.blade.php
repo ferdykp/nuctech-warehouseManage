@@ -5,7 +5,7 @@
 @section('content')
     <div class="w-full space-y-6">
 
-        {{-- 1. HEADER CARD (TERPISAH) --}}
+        {{-- 1. HEADER CARD --}}
         <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -20,11 +20,24 @@
                     <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
                         Monitor duty schedules, configure site work patterns, and generate team rotas automatically.
                     </p>
-                    @if (Auth::user()?->role === 'team_leader')
+
+                    {{-- ACCESS MODE BADGE --}}
+                    @if (in_array(Auth::user()?->role, ['superadmin', 'administration']))
+                        <p
+                            class="mt-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+                            <i class="fa-solid fa-shield-halved"></i> Access Mode: System Administrator (All Sites Access)
+                        </p>
+                    @elseif (Auth::user()?->role === 'team_leader')
                         <p
                             class="mt-2 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200/80 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
-                            <i class="fa-solid fa-building-user"></i> Access Mode: Site Admin
+                            <i class="fa-solid fa-user-gear"></i> Access Mode: Team Leader
                             ({{ Auth::user()->site->machine_name ?? 'Registered Site' }})
+                        </p>
+                    @else
+                        <p
+                            class="mt-2 text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200/80 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+                            <i class="fa-solid fa-location-dot"></i> Site:
+                            {{ Auth::user()->site->machine_name ?? 'Registered Site' }}
                         </p>
                     @endif
                 </div>
@@ -32,20 +45,18 @@
                 {{-- ACTION BUTTONS TOOLBAR --}}
                 <div class="flex flex-wrap items-center gap-2.5 shrink-0">
                     <button type="button" onclick="openGenerateModal()"
-                        class="inline-flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-amber-600 hover:bg-amber-700 rounded-xl shadow-amber-600/20 active:scale-95">
+                        class="inline-flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-amber-600 hover:bg-amber-700 rounded-xl shadow-amber-600/20 active:scale-95 cursor-pointer">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Rotas
                     </button>
 
                     {{-- EXPORT EXCEL BUTTON --}}
-                    @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader', 'administration']))
-                        {{-- Jika Superadmin: Buka Modal Pilihan Export --}}
+                    @if (in_array(Auth::user()?->role, ['superadmin', 'administration']))
                         <button type="button" onclick="openModal('modal-export-excel')"
-                            class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95"
+                            class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95 cursor-pointer"
                             title="Export schedule options">
                             <i class="fa-solid fa-file-excel"></i> Export Excel
                         </button>
                     @else
-                        {{-- Jika User Site (ebeam, team leader, dsb): Langsung Download Site Miliknya --}}
                         <a href="{{ route('schedule.export', ['site_id' => Auth::user()->site_id, 'month' => sprintf('%02d', $month), 'year' => $year]) }}"
                             up-follow="false" download
                             class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95"
@@ -56,7 +67,7 @@
 
                     <!-- RESET SCHEDULE BUTTON -->
                     <button type="button" onclick="openModal('modal-clear')"
-                        class="inline-flex items-center gap-2 px-3.5 py-2.5 text-xs font-bold text-rose-600 transition-all border border-rose-200/80 bg-rose-50 hover:bg-rose-100 rounded-xl active:scale-95">
+                        class="inline-flex items-center gap-2 px-3.5 py-2.5 text-xs font-bold text-rose-600 transition-all border border-rose-200/80 bg-rose-50 hover:bg-rose-100 rounded-xl active:scale-95 cursor-pointer">
                         <i class="fa-solid fa-trash-can"></i> Reset Schedule
                     </button>
                 </div>
@@ -87,15 +98,12 @@
             </div>
         @endif
 
-        {{-- =========================================================== --}}
-        {{-- MODAL: EXPORT EXCEL OPTIONS (KHUSUS SUPERADMIN) --}}
-        {{-- =========================================================== --}}
-        @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader', 'administration']))
+        {{-- MODAL EXPORT EXCEL --}}
+        @if (in_array(Auth::user()?->role, ['superadmin', 'administration']))
             <div id="modal-export-excel"
                 class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs modal-overlay"
                 onclick="if(event.target===this) closeModal('modal-export-excel')">
                 <div class="w-full max-w-md overflow-hidden bg-white border shadow-2xl border-slate-100 rounded-3xl">
-                    {{-- Modal Header --}}
                     <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50">
                         <div class="flex items-center gap-3">
                             <div
@@ -109,18 +117,15 @@
                             </div>
                         </div>
                         <button type="button" onclick="closeModal('modal-export-excel')"
-                            class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
+                            class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
                     </div>
 
-                    {{-- Form Export --}}
                     <form action="{{ route('schedule.export') }}" method="GET" class="p-6 space-y-4">
-                        {{-- Pilihan Site Location --}}
                         <div class="space-y-1.5">
-                            <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                                Select Site Scope
-                            </label>
+                            <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Select Site
+                                Scope</label>
                             <select name="site_id" id="export_site_id"
-                                class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all text-slate-800">
+                                class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all text-slate-800 cursor-pointer">
                                 <option value="all" {{ ($selectedSiteId ?? 'all') == 'all' ? 'selected' : '' }}>
                                     🌐 All Sites (Semua Site)
                                 </option>
@@ -133,12 +138,11 @@
                             </select>
                         </div>
 
-                        {{-- Pilihan Month & Year --}}
                         <div class="grid grid-cols-2 gap-3">
                             <div class="space-y-1.5">
                                 <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Month</label>
                                 <select name="month"
-                                    class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all text-slate-800">
+                                    class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all text-slate-800 cursor-pointer">
                                     @for ($m = 1; $m <= 12; $m++)
                                         <option value="{{ sprintf('%02d', $m) }}" {{ $month == $m ? 'selected' : '' }}>
                                             {{ date('F', mktime(0, 0, 0, $m, 1)) }}
@@ -150,7 +154,7 @@
                             <div class="space-y-1.5">
                                 <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Year</label>
                                 <select name="year"
-                                    class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all text-slate-800">
+                                    class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all text-slate-800 cursor-pointer">
                                     @for ($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
                                         <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>
                                             {{ $y }}</option>
@@ -159,14 +163,11 @@
                             </div>
                         </div>
 
-                        {{-- Action Buttons --}}
                         <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                             <button type="button" onclick="closeModal('modal-export-excel')"
-                                class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
-                                Cancel
-                            </button>
+                                class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">Cancel</button>
                             <button type="submit" onclick="closeModal('modal-export-excel')"
-                                class="inline-flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-emerald-600/20 active:scale-95">
+                                class="inline-flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-emerald-600/20 active:scale-95 cursor-pointer">
                                 <i class="fa-solid fa-download"></i> Download Excel
                             </button>
                         </div>
@@ -183,13 +184,14 @@
                 <form action="{{ route('schedule.index') }}" method="GET" id="mainFilterForm"
                     class="flex flex-wrap items-end gap-3.5">
 
-                    @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader', 'administration']))
-                        <div class="w-full sm:w-56">
-                            <label
-                                class="block mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Site
-                                Location</label>
+                    {{-- FILTER SITE LOCATIONsesuai Role --}}
+                    <div class="w-full sm:w-64">
+                        <label class="block mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                            Site Location
+                        </label>
+                        @if (in_array(Auth::user()?->role, ['superadmin', 'administration']))
                             <select name="site_id" id="main_site_select"
-                                class="w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all outline-none">
+                                class="w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all outline-none cursor-pointer">
                                 <option value="all" {{ ($selectedSiteId ?? 'all') == 'all' ? 'selected' : '' }}>-- All
                                     Sites --</option>
                                 @foreach ($sites as $st)
@@ -199,16 +201,23 @@
                                     </option>
                                 @endforeach
                             </select>
-                        </div>
-                    @else
-                        <input type="hidden" id="main_site_select" value="{{ Auth::user()->site_id }}">
-                    @endif
+                        @else
+                            {{-- Team Leader & Employee Site locked to their own site --}}
+                            <input type="hidden" name="site_id" id="main_site_select" value="{{ Auth::user()->site_id }}">
+                            <div
+                                class="w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold bg-slate-100 border border-slate-200 rounded-xl text-slate-600 flex items-center justify-between">
+                                <span>{{ Auth::user()->site->machine_name ?? 'Registered Site' }}</span>
+                                <span
+                                    class="text-[10px] font-extrabold text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded-md">Fixed</span>
+                            </div>
+                        @endif
+                    </div>
 
                     <div class="w-1/2 sm:w-44">
                         <label
                             class="block mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Month</label>
                         <select name="month" id="main_month_select"
-                            class="w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all outline-none">
+                            class="w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all outline-none cursor-pointer">
                             @for ($m = 1; $m <= 12; $m++)
                                 <option value="{{ sprintf('%02d', $m) }}" {{ $month == $m ? 'selected' : '' }}>
                                     {{ date('F', mktime(0, 0, 0, $m, 1)) }}
@@ -221,7 +230,7 @@
                         <label
                             class="block mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Year</label>
                         <select name="year" id="main_year_select"
-                            class="w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all outline-none">
+                            class="w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all outline-none cursor-pointer">
                             @for ($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
                                 <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>
                                     {{ $y }}</option>
@@ -230,7 +239,7 @@
                     </div>
 
                     <button type="submit"
-                        class="px-5 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95">
+                        class="px-5 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95 cursor-pointer">
                         <i class="mr-1.5 fa-solid fa-filter"></i> Apply Filter
                     </button>
                 </form>
@@ -262,7 +271,7 @@
                         @if (Auth::user()?->role === 'team_leader')
                             <span
                                 class="px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200/80 rounded-md uppercase">
-                                Site: {{ Auth::user()->site->machine_name ?? 'Registered' }}
+                                Team Leader: {{ Auth::user()->site->machine_name ?? 'Registered' }}
                             </span>
                         @endif
                         <span
@@ -339,82 +348,76 @@
                         </thead>
                         <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
                             @forelse($employees as $emp)
-                                {{-- @if (Auth::user()?->role === 'superadmin' || (Auth::user()?->role === 'team_leader' && Auth::user()->site_id === $emp->site_id)) --}}
-                                @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader', 'administration']))
-                                    <tr class="transition-colors hover:bg-slate-50/60">
-                                        <td
-                                            class="px-4 py-3 sticky left-0 bg-white font-extrabold text-slate-900 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
-                                            <div class="text-xs truncate">{{ $emp->name }}</div>
-                                            <div class="text-[10px] font-semibold text-slate-400 truncate mt-0.5">
-                                                {{ $emp->site->machine_name ?? '-' }}
-                                            </div>
-                                        </td>
+                                <tr class="transition-colors hover:bg-slate-50/60">
+                                    <td
+                                        class="px-4 py-3 sticky left-0 bg-white font-extrabold text-slate-900 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                                        <div class="text-xs truncate">{{ $emp->name }}</div>
+                                        <div class="text-[10px] font-semibold text-slate-400 truncate mt-0.5">
+                                            {{ $emp->site->machine_name ?? '-' }}
+                                        </div>
+                                    </td>
 
+                                    @php
+                                        $totalWorkCount = 0;
+                                        $totalOffCount = 0;
+                                        $schedulesByDate = $emp->schedules->keyBy(fn($s) => $s->date->format('Y-m-d'));
+                                    @endphp
+
+                                    @foreach ($datesInMonth as $date)
                                         @php
-                                            $totalWorkCount = 0;
-                                            $totalOffCount = 0;
-                                            $schedulesByDate = $emp->schedules->keyBy(
-                                                fn($s) => $s->date->format('Y-m-d'),
-                                            );
-                                        @endphp
+                                            $schedule = $schedulesByDate->get($date->format('Y-m-d'));
+                                            $shiftName = $schedule?->shift?->shift_name;
 
-                                        @foreach ($datesInMonth as $date)
-                                            @php
-                                                $schedule = $schedulesByDate->get($date->format('Y-m-d'));
-                                                $shiftName = $schedule?->shift?->shift_name;
+                                            $badgeColor = 'bg-white text-slate-300 border-slate-200';
+                                            $label = '-';
 
-                                                $badgeColor = 'bg-white text-slate-300 border-slate-200';
-                                                $label = '-';
+                                            if ($schedule && $schedule->shift) {
+                                                if ($schedule->shift->is_off) {
+                                                    $badgeColor = 'bg-rose-50 text-rose-800 border-rose-200';
+                                                    $label = 'OFF';
+                                                    $totalOffCount++;
+                                                } else {
+                                                    $totalWorkCount++;
+                                                    $label = '';
+                                                    foreach (explode(' ', $shiftName) as $word) {
+                                                        $label .= strtoupper(substr($word, 0, 1));
+                                                    }
 
-                                                if ($schedule && $schedule->shift) {
-                                                    if ($schedule->shift->is_off) {
-                                                        $badgeColor = 'bg-rose-50 text-rose-800 border-rose-200';
-                                                        $label = 'OFF';
-                                                        $totalOffCount++;
+                                                    if (
+                                                        str_contains(strtolower($shiftName), '1') ||
+                                                        str_contains(strtolower($shiftName), 'hour')
+                                                    ) {
+                                                        $badgeColor = 'bg-blue-50 text-blue-800 border-blue-200';
+                                                    } elseif (str_contains(strtolower($shiftName), '2')) {
+                                                        $badgeColor = 'bg-amber-50 text-amber-800 border-amber-200';
+                                                    } elseif (str_contains(strtolower($shiftName), '3')) {
+                                                        $badgeColor = 'bg-purple-50 text-purple-800 border-purple-200';
                                                     } else {
-                                                        $totalWorkCount++;
-                                                        $label = '';
-                                                        foreach (explode(' ', $shiftName) as $word) {
-                                                            $label .= strtoupper(substr($word, 0, 1));
-                                                        }
-
-                                                        if (
-                                                            str_contains(strtolower($shiftName), '1') ||
-                                                            str_contains(strtolower($shiftName), 'hour')
-                                                        ) {
-                                                            $badgeColor = 'bg-blue-50 text-blue-800 border-blue-200';
-                                                        } elseif (str_contains(strtolower($shiftName), '2')) {
-                                                            $badgeColor = 'bg-amber-50 text-amber-800 border-amber-200';
-                                                        } elseif (str_contains(strtolower($shiftName), '3')) {
-                                                            $badgeColor =
-                                                                'bg-purple-50 text-purple-800 border-purple-200';
-                                                        } else {
-                                                            $badgeColor =
-                                                                'bg-emerald-50 text-emerald-800 border-emerald-200';
-                                                        }
+                                                        $badgeColor =
+                                                            'bg-emerald-50 text-emerald-800 border-emerald-200';
                                                     }
                                                 }
-                                            @endphp
-                                            <td class="p-1 text-center border-l border-slate-100">
-                                                <button type="button"
-                                                    onclick="openEditShiftModal({{ $emp->id }}, '{{ addslashes($emp->name) }}', '{{ $date->format('Y-m-d') }}', '{{ $schedule?->shift_id ?? '' }}')"
-                                                    class="w-full py-1 text-[9px] font-black border rounded-md transition-transform active:scale-95 cursor-pointer {{ $badgeColor }}"
-                                                    title="Click to edit shift ({{ $shiftName ?? 'Unassigned' }})">
-                                                    {{ $label }}
-                                                </button>
-                                            </td>
-                                        @endforeach
+                                            }
+                                        @endphp
+                                        <td class="p-1 text-center border-l border-slate-100">
+                                            <button type="button"
+                                                onclick="openEditShiftModal({{ $emp->id }}, '{{ addslashes($emp->name) }}', '{{ $date->format('Y-m-d') }}', '{{ $schedule?->shift_id ?? '' }}')"
+                                                class="w-full py-1 text-[9px] font-black border rounded-md transition-transform active:scale-95 cursor-pointer {{ $badgeColor }}"
+                                                title="Click to edit shift ({{ $shiftName ?? 'Unassigned' }})">
+                                                {{ $label }}
+                                            </button>
+                                        </td>
+                                    @endforeach
 
-                                        <td
-                                            class="px-2 py-3 font-black text-center text-blue-800 border-l border-slate-100 bg-blue-50/30">
-                                            {{ $totalWorkCount }}
-                                        </td>
-                                        <td
-                                            class="px-2 py-3 font-black text-center border-l text-rose-800 border-slate-100 bg-rose-50/30">
-                                            {{ $totalOffCount }}
-                                        </td>
-                                    </tr>
-                                @endif
+                                    <td
+                                        class="px-2 py-3 font-black text-center text-blue-800 border-l border-slate-100 bg-blue-50/30">
+                                        {{ $totalWorkCount }}
+                                    </td>
+                                    <td
+                                        class="px-2 py-3 font-black text-center border-l text-rose-800 border-slate-100 bg-rose-50/30">
+                                        {{ $totalOffCount }}
+                                    </td>
+                                </tr>
                             @empty
                                 <tr>
                                     <td colspan="{{ count($datesInMonth) + 3 }}" class="p-12 text-center text-slate-400">
@@ -426,7 +429,7 @@
                                         <p class="mt-1 text-xs text-slate-400">No rotas generated for this site & period.
                                         </p>
                                         <button type="button" onclick="openGenerateModal()"
-                                            class="inline-flex items-center gap-1 mt-3 text-xs font-bold text-amber-600 hover:underline">
+                                            class="inline-flex items-center gap-1 mt-3 text-xs font-bold cursor-pointer text-amber-600 hover:underline">
                                             Generate rotas now &rarr;
                                         </button>
                                     </td>
@@ -439,38 +442,30 @@
         </div>
     </div>
 
-    {{-- =========================================================== --}}
-    {{-- MODAL: GENERATE TEAM ROTAS (site pattern + generate, 1 alur) --}}
-    {{-- =========================================================== --}}
+    {{-- MODAL GENERATE TEAM ROTAS --}}
     <div id="modal-generate"
         class="fixed inset-0 z-50 items-center justify-center hidden p-3 transition-all duration-200 sm:p-6 bg-slate-900/60 backdrop-blur-xs modal-overlay"
         onclick="if(event.target===this) closeModal('modal-generate')">
         <div
             class="w-full max-w-6xl bg-white border border-slate-100 shadow-2xl rounded-3xl overflow-hidden max-h-[94vh] flex flex-col">
 
-            {{-- MODAL HEADER --}}
             <div
                 class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50 shrink-0 sm:px-8">
                 <div>
                     <h3 class="text-lg font-extrabold text-slate-900">Generate Team Rota Schedule</h3>
-                    <p class="mt-1 text-xs font-medium sm:text-sm text-slate-500">Atur pola kerja site dan generate
-                        jadwal dalam satu alur — tidak perlu pindah menu.</p>
+                    <p class="mt-1 text-xs font-medium sm:text-sm text-slate-500">Atur pola kerja site dan generate jadwal
+                        dalam satu alur — tidak perlu pindah menu.</p>
                 </div>
                 <button type="button" onclick="closeModal('modal-generate')"
-                    class="flex items-center justify-center transition-colors rounded-lg w-9 h-9 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 shrink-0">&times;</button>
+                    class="flex items-center justify-center transition-colors rounded-lg cursor-pointer w-9 h-9 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 shrink-0">&times;</button>
             </div>
 
             <form action="{{ route('schedule.generate') }}" method="POST" id="generateForm"
                 class="flex flex-col flex-1 overflow-hidden">
                 @csrf
 
-                {{-- SCROLLABLE BODY --}}
                 <div class="flex-1 px-6 py-6 space-y-6 overflow-y-auto sm:px-8">
-
-                    {{-- ROW 1: STEP 1 + STEP 2 (left) / STEP 3 (right) --}}
                     <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
-
-                        {{-- LEFT COLUMN --}}
                         <div class="space-y-6 lg:col-span-7">
 
                             {{-- STEP 1: SITE & PERIOD --}}
@@ -479,20 +474,19 @@
                                     <span
                                         class="flex items-center justify-center w-6 h-6 text-xs font-black text-white bg-teal-500 rounded-full shrink-0">1</span>
                                     <span
-                                        class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">
-                                        Site & Target Periode
-                                    </span>
+                                        class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">Site
+                                        & Target Periode</span>
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4">
-                                    @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader', 'administration']))
+                                    @if (in_array(Auth::user()?->role, ['superadmin', 'administration']))
                                         <div class="col-span-2 sm:col-span-2">
                                             <label
                                                 class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Target
                                                 Site</label>
                                             <select name="target_site_id" id="gen_target_site"
                                                 onchange="onGenSiteChange()"
-                                                class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all"
+                                                class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all cursor-pointer"
                                                 required>
                                                 <option value="">-- Pilih Site --</option>
                                                 @foreach ($sites as $st)
@@ -533,7 +527,7 @@
                                         <label
                                             class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Month</label>
                                         <select name="month" id="gen_month"
-                                            class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all">
+                                            class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all cursor-pointer">
                                             @for ($m = 1; $m <= 12; $m++)
                                                 <option value="{{ sprintf('%02d', $m) }}"
                                                     {{ sprintf('%02d', $month) == sprintf('%02d', $m) ? 'selected' : '' }}>
@@ -546,7 +540,7 @@
                                         <label
                                             class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Year</label>
                                         <select name="year" id="gen_year"
-                                            class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all">
+                                            class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all cursor-pointer">
                                             @for ($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
                                                 <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>
                                                     {{ $y }}</option>
@@ -556,19 +550,17 @@
                                 </div>
                             </div>
 
-                            {{-- STEP 2: SITE WORK PATTERN --}}
+                            {{-- STEP 2: POLA KERJA SITE --}}
                             <div class="p-5 border border-amber-200/80 bg-amber-50/40 rounded-2xl sm:p-6">
                                 <div class="flex items-center gap-2.5 mb-1.5">
                                     <span
                                         class="flex items-center justify-center w-6 h-6 text-xs font-black text-white rounded-full bg-amber-500 shrink-0">2</span>
                                     <span
-                                        class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">
-                                        Pola Kerja Site
-                                    </span>
+                                        class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">Pola
+                                        Kerja Site</span>
                                 </div>
                                 <p class="mb-4 text-[10px] font-medium leading-relaxed text-slate-500 ml-[34px]">
-                                    Pola ini akan otomatis disimpan untuk site yang dipilih saat Anda menekan Generate —
-                                    tidak perlu disimpan terpisah.
+                                    Pola ini akan otomatis disimpan untuk site yang dipilih saat Anda menekan Generate.
                                 </p>
 
                                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -578,7 +570,7 @@
                                             Type</label>
                                         <select name="schedule_type" id="gen_schedule_type"
                                             onchange="onScheduleTypeChange()"
-                                            class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all">
+                                            class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all cursor-pointer">
                                             <option value="office_hour">Office Hours (Mon - Fri)</option>
                                             <option value="shift_rotation">Dynamic Shift Rotation</option>
                                         </select>
@@ -603,7 +595,7 @@
                             </div>
                         </div>
 
-                        {{-- RIGHT COLUMN: STEP 3 --}}
+                        {{-- STEP 3: SELECT STAFF --}}
                         <div class="lg:col-span-5">
                             <div
                                 class="flex flex-col h-full p-5 border border-blue-200/80 bg-blue-50/40 rounded-2xl sm:p-6">
@@ -612,14 +604,13 @@
                                         <span
                                             class="flex items-center justify-center w-6 h-6 text-xs font-black text-white bg-blue-500 rounded-full shrink-0">3</span>
                                         <span
-                                            class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">
-                                            Select Staff
-                                        </span>
+                                            class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">Select
+                                            Staff</span>
                                     </div>
                                     <label
                                         class="flex items-center gap-1.5 text-xs font-bold text-slate-600 cursor-pointer">
                                         <input type="checkbox" onchange="toggleAllEmployees(this.checked)"
-                                            class="w-3.5 h-3.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
+                                            class="w-3.5 h-3.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
                                         Select All
                                     </label>
                                 </div>
@@ -636,29 +627,26 @@
                                 <div
                                     class="grid flex-1 grid-cols-1 content-start sm:grid-cols-2 gap-2.5 p-3 bg-white border border-slate-200 rounded-2xl min-h-[220px] max-h-[340px] lg:max-h-none overflow-y-auto">
                                     @foreach ($employees as $emp)
-                                        {{-- @if (Auth::user()?->role === 'superadmin' || (Auth::user()?->role === 'team_leader' && Auth::user()->site_id === $emp->site_id)) --}}
-                                        @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader', 'administration']))
-                                            <label data-name="{{ strtolower($emp->name) }}"
-                                                data-site-id="{{ $emp->site_id }}"
-                                                class="flex items-center gap-2 p-2 text-xs font-medium border border-transparent cursor-pointer text-slate-700 rounded-xl employee-option hover:bg-slate-50 hover:border-slate-100">
-                                                <input type="checkbox" name="employee_ids[]" value="{{ $emp->id }}"
-                                                    class="w-4 h-4 text-blue-600 rounded border-slate-300 employee-checkbox focus:ring-blue-500 shrink-0"
-                                                    {{ in_array($emp->id, old('employee_ids', [])) ? 'checked' : '' }}>
-                                                <div class="truncate">
-                                                    <span
-                                                        class="block text-xs font-bold text-slate-800">{{ $emp->name }}</span>
-                                                    <span class="text-[10px] block text-slate-400 font-semibold">Site:
-                                                        {{ $emp->site->machine_name ?? '-' }}</span>
-                                                </div>
-                                            </label>
-                                        @endif
+                                        <label data-name="{{ strtolower($emp->name) }}"
+                                            data-site-id="{{ $emp->site_id }}"
+                                            class="flex items-center gap-2 p-2 text-xs font-medium border border-transparent cursor-pointer text-slate-700 rounded-xl employee-option hover:bg-slate-50 hover:border-slate-100">
+                                            <input type="checkbox" name="employee_ids[]" value="{{ $emp->id }}"
+                                                class="w-4 h-4 text-blue-600 rounded cursor-pointer border-slate-300 employee-checkbox focus:ring-blue-500 shrink-0"
+                                                {{ in_array($emp->id, old('employee_ids', [])) ? 'checked' : '' }}>
+                                            <div class="truncate">
+                                                <span
+                                                    class="block text-xs font-bold text-slate-800">{{ $emp->name }}</span>
+                                                <span class="text-[10px] block text-slate-400 font-semibold">Site:
+                                                    {{ $emp->site->machine_name ?? '-' }}</span>
+                                            </div>
+                                        </label>
                                     @endforeach
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- STEP 4: SHIFT ROTATION & SEQUENCE (FULL WIDTH) --}}
+                    {{-- STEP 4: SHIFT ROTATION & SEQUENCE --}}
                     <div id="gen_step4" class="p-5 border border-purple-200/80 bg-purple-50/40 rounded-2xl sm:p-6">
                         <div class="flex items-center gap-2.5 mb-4">
                             <span
@@ -676,16 +664,13 @@
                         </div>
 
                         <div class="grid grid-cols-1 gap-5 lg:grid-cols-12">
-
-                            {{-- ACTIVE SHIFT SEQUENCE (now also defines the starting shift — top of list) --}}
                             <div class="lg:col-span-8">
                                 <div class="flex items-center justify-between mb-2">
                                     <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Active
                                         Shift Sequence</label>
                                     <span class="text-[10px] text-slate-400 font-medium">Use <i
                                             class="fa-solid fa-arrow-up text-slate-500"></i> <i
-                                            class="fa-solid fa-arrow-down text-slate-500"></i> to reorder — top item
-                                        starts the rotation</span>
+                                            class="fa-solid fa-arrow-down text-slate-500"></i> to reorder</span>
                                 </div>
 
                                 <div id="shift-sequence-container"
@@ -706,7 +691,7 @@
                                                 class="flex items-center gap-2 text-xs font-bold cursor-pointer text-slate-700">
                                                 <input type="checkbox" name="active_shifts[]"
                                                     value="{{ $sf->id }}" onchange="updateStartingShift()"
-                                                    class="w-4 h-4 text-purple-600 rounded active-shift-checkbox focus:ring-purple-500"
+                                                    class="w-4 h-4 text-purple-600 rounded cursor-pointer active-shift-checkbox focus:ring-purple-500"
                                                     {{ old('active_shifts') ? (in_array($sf->id, old('active_shifts')) ? 'checked' : '') : 'checked' }}>
                                                 <span>{{ $sf->shift_name }}</span>
                                                 <span
@@ -717,12 +702,12 @@
 
                                             <div class="flex items-center gap-1">
                                                 <button type="button" onclick="moveShiftItem(this, 'up')"
-                                                    class="p-1.5 transition-colors rounded-lg text-slate-400 hover:text-purple-600 hover:bg-slate-200"
+                                                    class="p-1.5 transition-colors rounded-lg text-slate-400 hover:text-purple-600 hover:bg-slate-200 cursor-pointer"
                                                     title="Move Up">
                                                     <i class="text-xs fa-solid fa-arrow-up"></i>
                                                 </button>
                                                 <button type="button" onclick="moveShiftItem(this, 'down')"
-                                                    class="p-1.5 transition-colors rounded-lg text-slate-400 hover:text-purple-600 hover:bg-slate-200"
+                                                    class="p-1.5 transition-colors rounded-lg text-slate-400 hover:text-purple-600 hover:bg-slate-200 cursor-pointer"
                                                     title="Move Down">
                                                     <i class="text-xs fa-solid fa-arrow-down"></i>
                                                 </button>
@@ -732,14 +717,11 @@
                                 </div>
                             </div>
 
-                            {{-- RIGHT SIDE: derived starting shift readout + shift duration --}}
                             <div class="flex flex-col gap-5 lg:col-span-4">
-
-                                {{-- STARTING SHIFT (read-only, auto-derived from the list above) --}}
                                 <div>
-                                    <label class="block mb-2 text-xs font-bold tracking-wider uppercase text-slate-700">
-                                        Rotation Starts With
-                                    </label>
+                                    <label
+                                        class="block mb-2 text-xs font-bold tracking-wider uppercase text-slate-700">Rotation
+                                        Starts With</label>
                                     <input type="hidden" name="start_shift_id" id="gen_start_shift_id">
                                     <div id="start_shift_display"
                                         class="flex items-center gap-2 w-full p-2.5 text-xs font-bold bg-purple-50 border border-purple-200 rounded-xl text-purple-800 transition-colors">
@@ -747,11 +729,10 @@
                                         <span id="start_shift_display_text">—</span>
                                     </div>
                                     <p class="mt-2.5 text-[10px] text-slate-400 leading-relaxed font-medium">
-                                        Follows the top item of Active Shift Sequence. Reorder the list to change it.
+                                        Follows the top item of Active Shift Sequence.
                                     </p>
                                 </div>
 
-                                {{-- SHIFT DURATION --}}
                                 <div id="gen_shift_duration_wrapper">
                                     <label
                                         class="block mb-2 text-xs font-bold tracking-wider uppercase text-slate-700">Shift
@@ -773,11 +754,9 @@
                     <p id="employee-count" class="text-xs font-bold text-slate-500">No employees selected</p>
                     <div class="flex items-center gap-3">
                         <button type="button" onclick="closeModal('modal-generate')"
-                            class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
-                            Cancel
-                        </button>
+                            class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">Cancel</button>
                         <button type="submit" id="btn-submit-generate"
-                            class="px-6 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-amber-600 hover:bg-amber-700 rounded-xl shadow-amber-600/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                            class="px-6 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-amber-600 hover:bg-amber-700 rounded-xl shadow-amber-600/20 active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                             <i class="mr-1.5 fa-solid fa-wand-magic-sparkles"></i> Save Pattern & Generate Schedules
                         </button>
                     </div>
@@ -786,9 +765,7 @@
         </div>
     </div>
 
-    {{-- =========================================================== --}}
-    {{-- MODAL: EDIT INDIVIDUAL SHIFT BY DATE --}}
-    {{-- =========================================================== --}}
+    {{-- MODAL EDIT INDIVIDUAL SHIFT --}}
     <div id="modal-edit-shift"
         class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs modal-overlay"
         onclick="if(event.target===this) closeModal('modal-edit-shift')">
@@ -799,7 +776,7 @@
                     <p id="edit-shift-subtitle" class="text-xs font-medium text-slate-500 mt-0.5"></p>
                 </div>
                 <button type="button" onclick="closeModal('modal-edit-shift')"
-                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
+                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
             </div>
 
             <form id="form-quick-edit-shift" onsubmit="submitQuickEditShift(event)" class="p-6 space-y-4">
@@ -810,7 +787,7 @@
                 <div class="space-y-1.5">
                     <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Select Shift</label>
                     <select id="edit_shift_id" name="shift_id"
-                        class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-slate-800"
+                        class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-slate-800 cursor-pointer"
                         required>
                         @foreach (App\Models\Shift::orderBy('start_time', 'asc')->get() as $sf)
                             <option value="{{ $sf->id }}">
@@ -822,18 +799,16 @@
 
                 <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                     <button type="button" onclick="closeModal('modal-edit-shift')"
-                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">Cancel</button>
+                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">Cancel</button>
                     <button type="submit"
-                        class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 shadow-md rounded-xl hover:bg-blue-700 shadow-blue-600/20 active:scale-95">Save
+                        class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 shadow-md rounded-xl hover:bg-blue-700 shadow-blue-600/20 active:scale-95 cursor-pointer">Save
                         Shift</button>
                 </div>
             </form>
         </div>
     </div>
 
-    {{-- =========================================================== --}}
-    {{-- MODAL: RESET / CLEAR PERIOD SCHEDULE --}}
-    {{-- =========================================================== --}}
+    {{-- MODAL RESET / CLEAR SCHEDULE --}}
     <div id="modal-clear"
         class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs modal-overlay"
         onclick="if(event.target===this) closeModal('modal-clear')">
@@ -851,7 +826,7 @@
                     </div>
                 </div>
                 <button type="button" onclick="closeModal('modal-clear')"
-                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
+                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
             </div>
 
             <form action="{{ route('schedule.clear') }}" method="POST" class="space-y-4">
@@ -870,9 +845,9 @@
 
                 <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                     <button type="button" onclick="closeModal('modal-clear')"
-                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">Cancel</button>
+                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">Cancel</button>
                     <button type="submit"
-                        class="px-6 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-rose-600 rounded-xl hover:bg-rose-700 shadow-rose-600/20 active:scale-95">Yes,
+                        class="px-6 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-rose-600 rounded-xl hover:bg-rose-700 shadow-rose-600/20 active:scale-95 cursor-pointer">Yes,
                         Delete Schedule</button>
                 </div>
             </form>
@@ -917,8 +892,6 @@
             }
         });
 
-        // Smooth reorder (FLIP technique): capture positions before the DOM move,
-        // then animate every row from its old position to its new one.
         function moveShiftItem(button, direction) {
             const row = button.closest('.shift-item-row');
             if (!row) return;
@@ -926,11 +899,9 @@
             const container = document.getElementById('shift-sequence-container');
             const rows = Array.from(container.children);
 
-            // FIRST: record current position of every row
             const firstRects = new Map();
             rows.forEach(r => firstRects.set(r, r.getBoundingClientRect()));
 
-            // move the DOM node
             if (direction === 'up' && row.previousElementSibling) {
                 container.insertBefore(row, row.previousElementSibling);
             } else if (direction === 'down' && row.nextElementSibling) {
@@ -940,7 +911,6 @@
                 return;
             }
 
-            // LAST + INVERT + PLAY: animate from old position to new position
             rows.forEach(r => {
                 const first = firstRects.get(r);
                 const last = r.getBoundingClientRect();
@@ -956,15 +926,12 @@
                 }
             });
 
-            // brief highlight on the row that actually moved
             row.classList.add('ring-2', 'ring-purple-400', 'ring-offset-1');
             setTimeout(() => row.classList.remove('ring-2', 'ring-purple-400', 'ring-offset-1'), 260);
 
             updateStartingShift();
         }
 
-        // The starting shift is simply the first visible, checked row in the
-        // Active Shift Sequence list — no separate dropdown needed.
         function updateStartingShift() {
             const startShiftInput = document.getElementById('gen_start_shift_id');
             const startShiftDisplayText = document.getElementById('start_shift_display_text');
@@ -996,7 +963,6 @@
             }
         }
 
-        // Step 2: toggle work/off days input berdasarkan pattern type
         function onScheduleTypeChange() {
             const type = document.getElementById('gen_schedule_type').value;
             const workWrap = document.getElementById('gen_work_days_wrapper');
@@ -1018,7 +984,6 @@
                 durationInput.setAttribute('required', 'required');
             }
 
-            // Step 4: filter shift aktif sesuai office_hour vs shift_rotation
             document.querySelectorAll('.shift-item-row').forEach(row => {
                 const isOh = row.getAttribute('data-is-oh') === 'true';
                 const cb = row.querySelector('.active-shift-checkbox');
@@ -1030,9 +995,9 @@
             updateStartingShift();
         }
 
-        // Step 1: site berubah -> filter staff (Step 3) + prefill pattern (Step 2)
         function onGenSiteChange() {
-            const siteId = document.getElementById('gen_target_site').value;
+            const siteInput = document.getElementById('gen_target_site');
+            const siteId = siteInput ? siteInput.value : '';
 
             document.querySelectorAll('.employee-option').forEach(el => {
                 const empSiteId = el.getAttribute('data-site-id');
@@ -1062,7 +1027,8 @@
 
         function filterEmployees() {
             const q = document.getElementById('employee-search').value.toLowerCase();
-            const siteId = document.getElementById('gen_target_site').value;
+            const siteInput = document.getElementById('gen_target_site');
+            const siteId = siteInput ? siteInput.value : '';
 
             document.querySelectorAll('.employee-option').forEach(function(el) {
                 const empSiteId = el.getAttribute('data-site-id');
@@ -1114,7 +1080,6 @@
                 document.getElementById('gen_year').value = mainYear.value;
             }
 
-            // Jika superadmin dan filter utama sedang menunjuk 1 site spesifik, auto-pilih di modal
             if (targetSelect && targetSelect.tagName === 'SELECT' && mainSiteSelect && mainSiteSelect.value !== 'all') {
                 targetSelect.value = mainSiteSelect.value;
             }
@@ -1126,19 +1091,6 @@
         document.addEventListener('DOMContentLoaded', function() {
             updateEmployeeCount();
             onGenSiteChange();
-
-            @if (
-                $errors->has('employee_ids') ||
-                    $errors->has('start_shift_id') ||
-                    $errors->has('active_shifts') ||
-                    $errors->has('start_day') ||
-                    $errors->has('shift_duration') ||
-                    $errors->has('schedule_type') ||
-                    $errors->has('work_days') ||
-                    $errors->has('off_days') ||
-                    $errors->has('target_site_id'))
-                openGenerateModal();
-            @endif
         });
 
         function openEditShiftModal(empId, empName, dateStr, currentShiftId) {
