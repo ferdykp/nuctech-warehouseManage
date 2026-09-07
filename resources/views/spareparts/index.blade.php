@@ -83,9 +83,7 @@
                     </div>
                 @endforeach
 
-                {{-- @if (Auth::user()?->role === 'superadmin' || (Auth::user()?->role === 'team_leader' && Auth::user()?->site_id === $siteData->id)) --}}
                 @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader']))
-
                     @foreach ($pendingReceipts as $t)
                         <div
                             class="flex flex-col justify-between gap-4 p-4 border border-blue-200 bg-blue-50/60 rounded-2xl md:flex-row md:items-center">
@@ -323,14 +321,15 @@
             <form id="form-import" action="{{ route('sparepart.import', $slug) }}" method="POST"
                 enctype="multipart/form-data">
                 @csrf
-                <div id="import-dropzone"
+                <div id="import-dropzone" onclick="document.getElementById('import-file-input').click()"
                     class="flex flex-col items-center justify-center w-full transition-all border-2 border-dashed cursor-pointer h-36 border-slate-200 rounded-2xl hover:border-blue-500 hover:bg-blue-50/50">
                     <i id="dropzone-icon" class="mb-2 text-3xl text-slate-400 fa-solid fa-cloud-arrow-up"></i>
-                    <span id="dropzone-text" class="text-xs font-bold text-slate-700">Click or drag Excel file here</span>
+                    <span id="dropzone-text" class="px-4 text-xs font-bold text-center text-slate-700">Click or drag Excel
+                        file here</span>
                     <span id="dropzone-hint" class="mt-1 text-[10px] text-slate-400">.xlsx / .xls / .csv &bull; Max
                         10MB</span>
-                    <input type="file" id="import-file-input" name="file" class="hidden"
-                        accept=".xlsx,.xls,.csv">
+                    <input type="file" id="import-file-input" name="file" class="hidden" accept=".xlsx,.xls,.csv"
+                        required onchange="handleImportFileSelect(this)">
                 </div>
                 <button type="submit" id="btn-submit-import"
                     class="hidden w-full px-5 py-3 mt-4 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-600/20 active:scale-[0.98] transition-all">
@@ -710,6 +709,94 @@
 
 @push('scripts')
     <script>
+        // Import Excel Drag & Drop and File Selection Handler
+        function handleImportFileSelect(input) {
+            const btnSubmit = document.getElementById('btn-submit-import');
+            const dropzoneText = document.getElementById('dropzone-text');
+            const dropzoneIcon = document.getElementById('dropzone-icon');
+            const dropzone = document.getElementById('import-dropzone');
+
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                dropzoneText.innerText = "Selected: " + file.name;
+                dropzoneIcon.className = "mb-2 text-3xl text-emerald-500 fa-solid fa-file-excel";
+                dropzone.classList.add('border-emerald-500', 'bg-emerald-50/50');
+                btnSubmit.classList.remove('hidden');
+            } else {
+                resetImportDropzone();
+            }
+        }
+
+        function resetImportDropzone() {
+            const fileInput = document.getElementById('import-file-input');
+            const btnSubmit = document.getElementById('btn-submit-import');
+            const dropzoneText = document.getElementById('dropzone-text');
+            const dropzoneIcon = document.getElementById('dropzone-icon');
+            const dropzone = document.getElementById('import-dropzone');
+
+            if (fileInput) fileInput.value = '';
+            if (dropzoneText) dropzoneText.innerText = "Click or drag Excel file here";
+            if (dropzoneIcon) dropzoneIcon.className = "mb-2 text-3xl text-slate-400 fa-solid fa-cloud-arrow-up";
+            if (dropzone) {
+                dropzone.classList.remove('border-emerald-500', 'bg-emerald-50/50');
+            }
+            if (btnSubmit) btnSubmit.classList.add('hidden');
+        }
+
+        // Setup Drag & Drop Events for Import
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropzone = document.getElementById('import-dropzone');
+            const fileInput = document.getElementById('import-file-input');
+
+            if (dropzone && fileInput) {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, preventDefaults, false);
+                });
+
+                function preventDefaults(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, () => {
+                        dropzone.classList.add('border-blue-500', 'bg-blue-50/50');
+                    }, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, () => {
+                        dropzone.classList.remove('border-blue-500', 'bg-blue-50/50');
+                    }, false);
+                });
+
+                dropzone.addEventListener('drop', (e) => {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    if (files.length > 0) {
+                        fileInput.files = files;
+                        handleImportFileSelect(fileInput);
+                    }
+                }, false);
+            }
+        });
+
+        function openImportModal() {
+            resetImportDropzone();
+            const modal = document.getElementById('modal-import');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeImportModal() {
+            const modal = document.getElementById('modal-import');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+            resetImportDropzone();
+        }
+
         // Modal Handlers
         function openEditModal(btn) {
             const item = JSON.parse(btn.getAttribute('data-item'));
@@ -810,20 +897,6 @@
             m.classList.remove('flex');
             document.body.classList.remove('overflow-hidden');
             resetImage();
-        }
-
-        function openImportModal() {
-            const modal = document.getElementById('modal-import');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.body.classList.add('overflow-hidden');
-        }
-
-        function closeImportModal() {
-            const modal = document.getElementById('modal-import');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            document.body.classList.remove('overflow-hidden');
         }
 
         let maxAvailableStock = 0;

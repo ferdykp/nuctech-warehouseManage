@@ -229,7 +229,7 @@
                 </div>
 
                 {{-- KHUSUS SUPERADMIN: OPSIONAL PILIH ALL SITES ATAU SITE SPECIFIC --}}
-                @if (auth()->user()->role === 'superadmin')
+                @if (in_array(auth()->user()->role, ['superadmin', 'administration']))
                     <div>
                         <label class="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
                             Machine Site <span class="font-extrabold text-emerald-600">(Superadmin Access)</span>
