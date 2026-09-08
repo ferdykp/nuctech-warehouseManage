@@ -73,7 +73,7 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
             14 => 5,
         ];
 
-        // 2. Ambil data & urutkan berdasarkan customSiteOrder dan Nama Karyawan
+        // 2. Ambil data & urutkan berdasarkan customSiteOrder dan Nama Karyawan (Alfabet)
         $salaries = $query->get()->sort(function ($a, $b) use ($customSiteOrder) {
             $siteIdA = $a->employee->site_id ?? 0;
             $siteIdB = $b->employee->site_id ?? 0;
