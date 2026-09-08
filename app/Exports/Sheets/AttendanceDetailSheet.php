@@ -178,38 +178,89 @@ class AttendanceDetailSheet implements FromCollection, WithTitle, WithHeadings, 
             $employeesQuery->where('site_id', $this->siteId);
         }
 
-        // 1. PEMETAAN URUTAN & FORMAT DARI GAMBAR TARGET 2
-        $siteMap = [
-            5  => ['order' => 1, 'label' => '1_Office/Jakarta'],
-            12 => ['order' => 3, 'label' => '3_E-Beam'],
-            15 => ['order' => 4, 'label' => '4_CTMIC2100-YW/Bali'],
-            16 => ['order' => 4, 'label' => '4_CTMIC2100-YW/Banyuwangi'],
-            8  => ['order' => 4, 'label' => '4_CTMIC2100-YW/Batam'],
-            7  => ['order' => 4, 'label' => '4_CTMIC2100-YW/Lampung'],
-            6  => ['order' => 4, 'label' => '4_CTMIC2100-YW/Surabaya'],
-            13 => ['order' => 5, 'label' => '5_Airport SOETTA'],
-            2  => ['order' => 6, 'label' => '6_FS6000LC/Jakarta'],
-            1  => ['order' => 7, 'label' => '7_FS6000LC/Semarang'],
-            3  => ['order' => 8, 'label' => '8_FS6000LC/Surabaya'],
-            4  => ['order' => 9, 'label' => '9_FS6000LC/Teluk Lamong'],
-        ];
+        $employees = $employeesQuery->get();
 
-        // 2. URUTKAN BERDASARKAN ORDER KUSTOM, LALU FORMAT LABEL SITE, LALU NAMA KARYAWAN
-        $employees = $employeesQuery->get()->sort(function ($a, $b) use ($siteMap) {
-            $infoA = $siteMap[$a->site_id] ?? ['order' => 999, 'label' => ''];
-            $infoB = $siteMap[$b->site_id] ?? ['order' => 999, 'label' => ''];
+        // LOGIKA PENENTUAN URUTAN & FORMAT NAMA SITE SESUAI TARGET GAMBAR 2
+        $formattedEmployees = $employees->map(function ($employee) {
+            $machineName = strtolower(trim($employee->site->machine_name ?? ''));
+            $branchName = strtolower(trim($employee->site->branch->branch_name ?? ''));
 
-            // Bandingkan berdasarkan nomor urut (1, 3, 4, 5, 6, 7, 8, 9)
-            if ($infoA['order'] !== $infoB['order']) {
-                return $infoA['order'] <=> $infoB['order'];
+            // Default
+            $order = 99;
+            $siteLabel = $employee->site ? $employee->site->machine_name : '-';
+
+            // 1_Office/Jakarta
+            if (str_contains($machineName, 'office')) {
+                $order = 1;
+                $siteLabel = '1_Office/Jakarta';
+            }
+            // 3_E-Beam
+            elseif (str_contains($machineName, 'e-beam') || str_contains($machineName, 'ebeam')) {
+                $order = 3;
+                $siteLabel = '3_E-Beam';
+            }
+            // 4_CTMIC2100-YW/[Lokasi]
+            elseif (str_contains($machineName, 'ctmic2100')) {
+                $order = 4;
+                if (str_contains($machineName, 'bali') || str_contains($branchName, 'bali')) {
+                    $siteLabel = '4_CTMIC2100-YW/Bali';
+                } elseif (str_contains($machineName, 'banyuwangi') || str_contains($branchName, 'banyuwangi')) {
+                    $siteLabel = '4_CTMIC2100-YW/Banyuwangi';
+                } elseif (str_contains($machineName, 'batam') || str_contains($branchName, 'batam')) {
+                    $siteLabel = '4_CTMIC2100-YW/Batam';
+                } elseif (str_contains($machineName, 'lampung') || str_contains($branchName, 'lampung')) {
+                    $siteLabel = '4_CTMIC2100-YW/Lampung';
+                } elseif (str_contains($machineName, 'surabaya') || str_contains($branchName, 'surabaya')) {
+                    $siteLabel = '4_CTMIC2100-YW/Surabaya';
+                } else {
+                    $siteLabel = '4_CTMIC2100-YW';
+                }
+            }
+            // 5_Airport SOETTA
+            elseif (str_contains($machineName, 'airport') || str_contains($machineName, 'soetta')) {
+                $order = 5;
+                $siteLabel = '5_Airport SOETTA';
+            }
+            // 6_FS6000LC/Jakarta
+            elseif (str_contains($machineName, 'fs6000') && (str_contains($machineName, 'jakarta') || str_contains($branchName, 'jakarta'))) {
+                $order = 6;
+                $siteLabel = '6_FS6000LC/Jakarta';
+            }
+            // 7_FS6000LC/Semarang
+            elseif (str_contains($machineName, 'fs6000') && (str_contains($machineName, 'semarang') || str_contains($branchName, 'semarang'))) {
+                $order = 7;
+                $siteLabel = '7_FS6000LC/Semarang';
+            }
+            // 8_FS6000LC/Surabaya
+            elseif (str_contains($machineName, 'fs6000') && (str_contains($machineName, 'surabaya') || str_contains($branchName, 'surabaya')) && !str_contains($machineName, 'teluk')) {
+                $order = 8;
+                $siteLabel = '8_FS6000LC/Surabaya';
+            }
+            // 9_FS6000LC/Teluk Lamong
+            elseif (str_contains($machineName, 'fs6000') && str_contains($machineName, 'teluk')) {
+                $order = 9;
+                $siteLabel = '9_FS6000LC/Teluk Lamong';
             }
 
-            // Jika dalam grup order yang sama (misal grup 4 CTMIC2100-YW), urutkan berdasarkan label
-            if ($infoA['label'] !== $infoB['label']) {
-                return strcasecmp($infoA['label'], $infoB['label']);
+            $employee->computed_order = $order;
+            $employee->computed_site_label = $siteLabel;
+
+            return $employee;
+        });
+
+        // PENGURUTAN MULTI-LEVEL YANG DIJAMIN PRESISI
+        $sortedEmployees = $formattedEmployees->sort(function ($a, $b) {
+            // Level 1: Urutkan berdasar Angka Order (1, 3, 4, 5, 6, 7, 8, 9)
+            if ($a->computed_order !== $b->computed_order) {
+                return $a->computed_order <=> $b->computed_order;
             }
 
-            // Terakhir urutkan nama karyawan secara alfabetis (A-Z)
+            // Level 2: Urutkan berdasar Nama Site Label (misal di grup 4: Bali, Banyuwangi, Batam...)
+            if ($a->computed_site_label !== $b->computed_site_label) {
+                return strcasecmp($a->computed_site_label, $b->computed_site_label);
+            }
+
+            // Level 3: Urutkan berdasar Nama Karyawan (A-Z)
             return strcasecmp($a->name, $b->name);
         });
 
@@ -219,16 +270,12 @@ class AttendanceDetailSheet implements FromCollection, WithTitle, WithHeadings, 
         $carbonMonth = Carbon::parse($this->month . '-01');
         $daysInMonth = $carbonMonth->daysInMonth;
 
-        foreach ($employees as $employee) {
+        foreach ($sortedEmployees as $employee) {
             $attendance = $employee->attendances->first();
-
-            // Label sesuai dengan mapping gambar target 2
-            $siteLabel = $siteMap[$employee->site_id]['label']
-                ?? ($employee->site ? $employee->site->machine_name : '-');
 
             $row = [
                 $sn++,
-                $siteLabel,
+                $employee->computed_site_label,
                 $employee->name
             ];
 
