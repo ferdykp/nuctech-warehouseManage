@@ -20,12 +20,40 @@ class EmployeesExport implements FromCollection, WithHeadings, WithMapping, With
 
     public function collection()
     {
-        // Mengambil SELURUH data karyawan aktif/terdaftar tanpa filter pencarian atau pagination
-        $employees = Employee::with(['site.branch', 'branch'])->latest()->get();
+        // 1. Tentukan urutan id_site disesuaikan persis dengan AttendanceDetailSheet
+        $customSiteOrder = [
+            1 => 7,
+            2 => 6,
+            3 => 8,
+            4 => 9,
+            5 => 1,
+            7 => 4,
+            8 => 4,
+            9 => 4,
+            13 => 3,
+            14 => 5,
+        ];
 
-        $this->totalCount = $employees->count();
+        // 2. Ambil data karyawan beserta relasinya
+        $employees = Employee::with(['site.branch', 'branch'])->get();
 
-        return $employees;
+        // 3. Urutkan karyawan berdasarkan custom site order & nama karyawan (alfabet)
+        $sortedEmployees = $employees->sort(function ($a, $b) use ($customSiteOrder) {
+            $orderA = $customSiteOrder[$a->site_id] ?? 999;
+            $orderB = $customSiteOrder[$b->site_id] ?? 999;
+
+            // Bandingkan berdasarkan Custom Order Site
+            if ($orderA !== $orderB) {
+                return $orderA <=> $orderB;
+            }
+
+            // Jika urutan site sama, urutkan berdasarkan Nama Karyawan (Alfabet)
+            return strcasecmp($a->name, $b->name);
+        });
+
+        $this->totalCount = $sortedEmployees->count();
+
+        return $sortedEmployees;
     }
 
     public function startCell(): string
