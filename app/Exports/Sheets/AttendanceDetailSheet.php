@@ -192,7 +192,7 @@ class AttendanceDetailSheet implements FromCollection, WithTitle, WithHeadings, 
             13 => 8,
             2 => 9,
             1 => 10,
-            6 => 11,
+            3 => 11,
             4 => 12
             // site_id lainnya akan otomatis ditempatkan di akhir (default 999)
         ];
