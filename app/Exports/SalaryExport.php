@@ -10,9 +10,12 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
-class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize, WithStyles
+class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize, WithStyles, WithColumnFormatting
 {
     private $rowNumber = 0;
 
@@ -59,7 +62,6 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
             $query->where('bank', $this->bank);
         }
 
-        // 1. Tentukan urutan id_site persis sama dengan AttendanceDetailSheet
         $customSiteOrder = [
             1 => 7,
             2 => 6,
@@ -73,27 +75,22 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
             14 => 5,
         ];
 
-        // 2. Ambil data & urutkan berdasarkan customSiteOrder dan Nama Karyawan (Alfabet)
-        $salaries = $query->get()->sort(function ($a, $b) use ($customSiteOrder) {
+        return $query->get()->sort(function ($a, $b) use ($customSiteOrder) {
             $siteIdA = $a->employee->site_id ?? 0;
             $siteIdB = $b->employee->site_id ?? 0;
 
             $orderA = $customSiteOrder[$siteIdA] ?? 999;
             $orderB = $customSiteOrder[$siteIdB] ?? 999;
 
-            // Bandingkan berdasarkan urutan Site
             if ($orderA !== $orderB) {
                 return $orderA <=> $orderB;
             }
 
-            // Jika Site sama, urutkan berdasarkan Nama Karyawan (Alfabet)
             $nameA = $a->name ?? ($a->employee->name ?? '');
             $nameB = $b->name ?? ($b->employee->name ?? '');
 
             return strcasecmp($nameA, $nameB);
         });
-
-        return $salaries;
     }
 
     public function headings(): array
@@ -117,32 +114,18 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
     {
         $this->rowNumber++;
 
-        // Project Team Name isinya posisi
         $projectTeamName = $salary->position ?? ($salary->employee->position ?? '-');
-
-        // Placement isinya branch
         $placement = $salary->placement
             ?? $salary->employee->branch->branch_name
             ?? ($salary->employee->site->branch->branch_name ?? '-');
 
-        /*
-        |--------------------------------------------------------------------------
-        | Format Nominal Rp untuk Kolom Amount
-        |--------------------------------------------------------------------------
-        */
-        $formattedAmount = 'Rp ' . number_format($salary->amount ?? 0, 0, ',', '.');
+        // Nilai nominal murni (float/int) agar bisa di-SUM oleh Excel
+        $numericAmount = (float) ($salary->amount ?? 0);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Hitung Ulang Kalkulasi Lembur Tanggal Merah untuk Kolom Before/After
-        |--------------------------------------------------------------------------
-        */
         $monthPeriod = sprintf('%04d-%02d', $this->year, (int)$this->month);
         $holidayService = app(IndonesianHolidayService::class);
-
         $calc = $this->calculateSalaryDetails($salary->employee_id, $monthPeriod, $holidayService, $salary->amount);
 
-        // Jika ada lemburan tanggal merah, tampilkan "Gaji Pokok / Total Gaji"
         if ($calc['holiday_overtime_days'] > 0) {
             $beforeAfter = 'Rp ' . number_format($salary->amount, 0, ',', '.') .
                 ' / Rp ' . number_format($calc['total_salary_to_pay'], 0, ',', '.') .
@@ -156,8 +139,8 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
             $projectTeamName,
             $salary->name,
             $salary->bank,
-            $salary->account_no, // No. Rekening
-            $formattedAmount, // Format Rp
+            (string) $salary->account_no, // Murni teks
+            $numericAmount,              // Angka numerik murni
             $salary->information,
             $beforeAfter,
             $salary->more_information ?? '-',
@@ -166,17 +149,38 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
         ];
     }
 
-    public function styles(Worksheet $sheet)
+    /**
+     * Format kolom khusus di Excel
+     */
+    public function columnFormats(): array
     {
         return [
-            // Bold header baris pertama
+            'A' => NumberFormat::FORMAT_NUMBER,               // No
+            'E' => NumberFormat::FORMAT_TEXT,                 // Account No (No Rekening)
+            'F' => '"Rp "#,##0',                              // Amount (Rupiah Format Excel)
+        ];
+    }
+
+    public function styles(Worksheet $sheet)
+    {
+        $highestRow = $sheet->getHighestRow();
+
+        // Rata kanan untuk kolom Amount (F)
+        if ($highestRow >= 2) {
+            $sheet->getStyle("F2:F{$highestRow}")
+                ->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+
+            $sheet->getStyle("A2:A{$highestRow}")
+                ->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        }
+
+        return [
             1 => ['font' => ['bold' => true]],
         ];
     }
 
-    /**
-     * Method pembantu hitung kalkulasi lembur khusus export
-     */
     private function calculateSalaryDetails($employeeId, $monthPeriod, $holidayService, $monthlySalary)
     {
         $startOfMonth = Carbon::parse($monthPeriod . '-01')->startOfMonth();
@@ -185,15 +189,10 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
 
         $rawHolidays = $holidayService->getHolidaysForMonth($monthPeriod);
 
-        // Standardisasi key array agar selalu berupa string "Y-m-d"
         $nationalHolidays = [];
         if (!empty($rawHolidays)) {
             foreach ($rawHolidays as $key => $val) {
-                if ($key instanceof Carbon) {
-                    $dateKey = $key->format('Y-m-d');
-                } else {
-                    $dateKey = (string) $key;
-                }
+                $dateKey = ($key instanceof Carbon) ? $key->format('Y-m-d') : (string) $key;
                 $nationalHolidays[$dateKey] = $val;
             }
         }
@@ -203,10 +202,7 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
             $date = Carbon::parse(sprintf('%s-%02d', $monthPeriod, $d));
             $dateStr = $date->format('Y-m-d');
 
-            $isWeekend = $date->isWeekend();
-            $isNationalHoliday = isset($nationalHolidays[$dateStr]);
-
-            if (!$isWeekend && !$isNationalHoliday) {
+            if (!$date->isWeekend() && !isset($nationalHolidays[$dateStr])) {
                 $effectiveWorkingDays++;
             }
         }
@@ -220,7 +216,6 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
 
         foreach ($schedules as $sched) {
             if ($sched->shift && !$sched->shift->is_off) {
-                // Pastikan $dateStr berupa string murni
                 $dateStr = $sched->date instanceof Carbon
                     ? $sched->date->format('Y-m-d')
                     : (string) $sched->date;
