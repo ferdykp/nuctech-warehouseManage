@@ -177,13 +177,32 @@ class AttendanceFix implements FromCollection, WithTitle, WithHeadings, WithColu
             $employeesQuery->where('site_id', $this->siteId);
         }
 
-        // URUTKAN BERDASARKAN ID SITE, KEMUDIAN BERDASARKAN NAMA KARYAWAN (ALFABET)
-        $employees = $employeesQuery->get()->sort(function ($a, $b) {
-            $siteCompare = ($a->site_id ?? 0) <=> ($b->site_id ?? 0);
-            if ($siteCompare === 0) {
-                return strcasecmp($a->name, $b->name);
+        // 1. Tentukan urutan id_site disesuaikan persis dengan AttendanceDetailSheet
+        $customSiteOrder = [
+            1 => 7,
+            2 => 6,
+            3 => 8,
+            4 => 9,
+            5 => 1,
+            7 => 4,
+            8 => 4,
+            9 => 4,
+            13 => 3,
+            14 => 5,
+        ];
+
+        // 2. URUTKAN KARYAWAN BERDASARKAN CUSTOM ORDER & NAMA
+        $employees = $employeesQuery->get()->sort(function ($a, $b) use ($customSiteOrder) {
+            $orderA = $customSiteOrder[$a->site_id] ?? 999;
+            $orderB = $customSiteOrder[$b->site_id] ?? 999;
+
+            // Bandingkan berdasarkan Custom Order
+            if ($orderA !== $orderB) {
+                return $orderA <=> $orderB;
             }
-            return $siteCompare;
+
+            // Jika urutan site sama, urutkan berdasarkan Nama Karyawan (Alfabet)
+            return strcasecmp($a->name, $b->name);
         });
 
         $collection = collect();
