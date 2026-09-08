@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\DailyReport;
 use App\Models\DailyReportPhoto;
 use App\Models\Site;
@@ -14,32 +15,51 @@ class DailyReportController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $query = DailyReport::with(['site', 'user', 'photos'])->latest('report_date');
+        $query = DailyReport::with(['site.branch', 'user', 'photos'])->latest('report_date');
 
+        // Filter Hak Akses User biasa vs Admin
         if (!in_array($user->role, ['superadmin', 'administration']) && $user->site_id) {
             $query->where('site_id', $user->site_id);
-        } elseif ($request->filled('site_id')) {
-            $query->where('site_id', $request->site_id);
+        } else {
+            // Filter Branch (Khusus Superadmin/Admin)
+            if ($request->filled('branch_id')) {
+                $query->whereHas('site', function ($q) use ($request) {
+                    $q->where('branch_id', $request->branch_id);
+                });
+            }
+
+            // Filter Site Spesifik
+            if ($request->filled('site_id')) {
+                $query->where('site_id', $request->site_id);
+            }
         }
+
+        // Filter Pencarian Teks Notes
         if ($request->filled('search')) {
             $query->where('description', 'like', '%' . $request->search . '%');
         }
 
-        if ($request->filled('date')) {
-            $query->whereDate('report_date', $request->date);
+        // Filter Rentang Tanggal (Start Date - End Date)
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('report_date', [$request->start_date, $request->end_date]);
+        } elseif ($request->filled('start_date')) {
+            $query->whereDate('report_date', '>=', $request->start_date);
+        } elseif ($request->filled('end_date')) {
+            $query->whereDate('report_date', '<=', $request->end_date);
         }
 
         $reports = $query->paginate(10)->withQueryString();
-        $sites = Site::all();
+        $branches = Branch::all();
+        $sites = Site::with('branch')->get();
 
-        return view('daily_reports.index', compact('reports', 'sites'));
+        return view('daily_reports.index', compact('reports', 'sites', 'branches'));
     }
 
     public function create()
     {
         $user = auth()->user();
         $sites = in_array($user->role, ['superadmin', 'administration'])
-            ? Site::all()
+            ? Site::with('branch')->get()
             : Site::where('id', $user->site_id)->get();
 
         return view('daily_reports.create', compact('sites'));
@@ -103,16 +123,22 @@ class DailyReportController extends Controller
             'start_date' => 'required|date',
             'end_date'   => 'required|date|after_or_equal:start_date',
             'site_id'    => 'nullable',
+            'branch_id'  => 'nullable',
         ]);
 
         $user = auth()->user();
-        $query = DailyReport::with(['site', 'user', 'photos'])
+        $query = DailyReport::with(['site.branch', 'user', 'photos'])
             ->whereBetween('report_date', [$request->start_date, $request->end_date])
             ->orderBy('report_date', 'asc');
 
         // Pengecekan Hak Akses Eksklusif Superadmin
         if (in_array($user->role, ['superadmin', 'administration'])) {
-            // Jika Superadmin / Administration memilih 'all' atau mengosongkan site_id, tampilkan semua site
+            if ($request->filled('branch_id') && $request->branch_id !== 'all') {
+                $query->whereHas('site', function ($q) use ($request) {
+                    $q->where('branch_id', $request->branch_id);
+                });
+            }
+
             if ($request->filled('site_id') && $request->site_id !== 'all') {
                 $query->where('site_id', $request->site_id);
                 $site = Site::find($request->site_id);
@@ -125,6 +151,7 @@ class DailyReportController extends Controller
             $query->where('site_id', $userSiteId);
             $site = Site::find($userSiteId);
         }
+
         $reports = $query->get();
         $startDate = $request->start_date;
         $endDate = $request->end_date;

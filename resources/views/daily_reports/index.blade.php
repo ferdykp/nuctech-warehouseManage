@@ -45,23 +45,99 @@
 
         {{-- 2. TABLE CARD CONTAINER --}}
         <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
-            <!-- FILTER TOOLBAR -->
+
+            {{-- ADVANCED FILTER TOOLBAR --}}
             <div class="p-5 border-b sm:p-6 border-slate-100 bg-slate-50/50">
-                <form action="{{ route('daily_reports.index') }}" method="GET"
-                    class="grid grid-cols-1 gap-3 sm:grid-cols-12">
-                    <div class="relative sm:col-span-5">
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search notes..."
-                            class="block w-full py-2.5 px-3.5 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-slate-800">
+                <form action="{{ route('daily_reports.index') }}" method="GET" class="space-y-4">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12">
+
+                        {{-- SEARCH --}}
+                        <div class="lg:col-span-3">
+                            <label
+                                class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Search
+                                Notes</label>
+                            <div class="relative">
+                                <input type="text" name="search" value="{{ request('search') }}"
+                                    placeholder="Search description..."
+                                    class="block w-full py-2.5 pl-9 pr-3.5 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-slate-800">
+                                <i class="absolute text-xs fa-solid fa-magnifying-glass left-3 top-3 text-slate-400"></i>
+                            </div>
+                        </div>
+
+                        {{-- BRANCH FILTER (HANYA UNTUK SUPERADMIN / ADMIN) --}}
+                        @if (in_array(auth()->user()->role, ['superadmin', 'administration']))
+                            <div class="lg:col-span-2">
+                                <label
+                                    class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Branch</label>
+                                <select name="branch_id" id="filter_branch_id" onchange="filterSitesByBranch()"
+                                    class="block w-full py-2.5 px-3 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-slate-800 cursor-pointer">
+                                    <option value="">All Branches</option>
+                                    @foreach ($branches as $b)
+                                        <option value="{{ $b->id }}"
+                                            {{ request('branch_id') == $b->id ? 'selected' : '' }}>
+                                            {{ $b->branch_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="lg:col-span-3">
+                                <label
+                                    class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Site
+                                    Location</label>
+                                <select name="site_id" id="filter_site_id"
+                                    class="block w-full py-2.5 px-3 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-slate-800 cursor-pointer">
+                                    <option value="">All Machine Sites</option>
+                                    @foreach ($sites as $s)
+                                        <option value="{{ $s->id }}" data-branch="{{ $s->branch_id }}"
+                                            {{ request('site_id') == $s->id ? 'selected' : '' }}>
+                                            {{ $s->machine_name }} ({{ $s->branch->branch_name ?? '-' }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @else
+                            {{-- NON-SUPERADMIN VIEW --}}
+                            <div class="lg:col-span-5">
+                                <label
+                                    class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Site
+                                    Location</label>
+                                <input type="text" disabled
+                                    value="{{ auth()->user()->site->machine_name ?? 'Your Assigned Site' }}"
+                                    class="block w-full py-2.5 px-3.5 text-xs font-semibold bg-slate-100 border border-slate-200 rounded-xl text-slate-500 cursor-not-allowed">
+                            </div>
+                        @endif
+
+                        {{-- START DATE --}}
+                        <div
+                            class="{{ in_array(auth()->user()->role, ['superadmin', 'administration']) ? 'lg:col-span-2' : 'lg:col-span-2' }}">
+                            <label
+                                class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Start
+                                Date</label>
+                            <input type="date" name="start_date" value="{{ request('start_date') }}"
+                                class="block w-full py-2.5 px-3 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-slate-800 cursor-pointer">
+                        </div>
+
+                        {{-- END DATE --}}
+                        <div
+                            class="{{ in_array(auth()->user()->role, ['superadmin', 'administration']) ? 'lg:col-span-2' : 'lg:col-span-2' }}">
+                            <label class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">End
+                                Date</label>
+                            <input type="date" name="end_date" value="{{ request('end_date') }}"
+                                class="block w-full py-2.5 px-3 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-slate-800 cursor-pointer">
+                        </div>
                     </div>
-                    <div class="sm:col-span-4">
-                        <input type="date" name="date" value="{{ request('date') }}"
-                            class="block w-full py-2.5 px-3.5 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-slate-800 cursor-pointer">
-                    </div>
-                    <div class="flex gap-2 sm:col-span-3">
-                        <button type="submit"
-                            class="px-4 py-2.5 text-xs font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-colors cursor-pointer">Filter</button>
+
+                    {{-- FILTER BUTTONS --}}
+                    <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200/60">
                         <a href="{{ route('daily_reports.index') }}"
-                            class="px-4 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">Reset</a>
+                            class="px-4 py-2 text-xs font-bold transition-colors bg-white border text-slate-600 border-slate-200 rounded-xl hover:bg-slate-50">
+                            Reset Filters
+                        </a>
+                        <button type="submit"
+                            class="px-5 py-2 text-xs font-bold text-white transition-colors shadow-xs cursor-pointer bg-emerald-600 rounded-xl hover:bg-emerald-700">
+                            <i class="fa-solid fa-filter mr-1.5"></i> Apply Filter
+                        </button>
                     </div>
                 </form>
             </div>
@@ -85,7 +161,9 @@
                                     <span
                                         class="block text-xs font-extrabold text-slate-900">{{ $report->report_date->format('d M Y') }}</span>
                                     <span
-                                        class="block text-[11px] text-slate-400 font-semibold mt-0.5">{{ $report->site->machine_name ?? '-' }}</span>
+                                        class="block text-[11px] text-slate-400 font-semibold mt-0.5">{{ $report->site->machine_name ?? '-' }}
+                                        ({{ $report->site->branch->branch_name ?? '-' }})
+                                    </span>
                                 </td>
                                 <td class="px-6 py-4 font-bold text-slate-800">
                                     {{ $report->user->name ?? '-' }}
@@ -103,7 +181,7 @@
                                     <div class="flex items-center justify-center gap-1.5">
                                         {{-- TOMBOL SHOW DETAIL MODAL --}}
                                         <button type="button"
-                                            onclick="showDetailModal({{ json_encode($report->load(['site', 'user', 'photos'])) }})"
+                                            onclick="showDetailModal({{ json_encode($report->load(['site.branch', 'user', 'photos'])) }})"
                                             class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-emerald-600 bg-emerald-50 border-emerald-100 hover:bg-emerald-600 hover:text-white active:scale-95"
                                             title="View Details">
                                             <i class="text-xs fa-solid fa-eye"></i>
@@ -127,6 +205,8 @@
                             <tr>
                                 <td colspan="5" class="p-12 text-center text-slate-400">
                                     <p class="text-sm font-bold text-slate-800">Belum ada laporan harian</p>
+                                    <p class="text-xs text-slate-400 mt-0.5">Coba ubah kata kunci atau rentang tanggal
+                                        filter Anda.</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -232,17 +312,29 @@
                 @if (in_array(auth()->user()->role, ['superadmin', 'administration']))
                     <div>
                         <label class="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                            Branch Location
+                        </label>
+                        <select name="branch_id" id="export_branch_id" onchange="filterExportSitesByBranch()"
+                            class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none text-slate-800 cursor-pointer focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
+                            <option value="all">🌐 All Branches</option>
+                            @foreach ($branches as $b)
+                                <option value="{{ $b->id }}">{{ $b->branch_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
                             Machine Site <span class="font-extrabold text-emerald-600">(Superadmin Access)</span>
                         </label>
-                        <select name="site_id"
+                        <select name="site_id" id="export_site_id"
                             class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none text-slate-800 cursor-pointer focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
                             <option value="all" class="font-bold text-emerald-700">🌐 All Machine Sites (Global Export)
                             </option>
-                            <optgroup label="Specific Site">
-                                @foreach ($sites as $s)
-                                    <option value="{{ $s->id }}">{{ $s->machine_name }}</option>
-                                @endforeach
-                            </optgroup>
+                            @foreach ($sites as $s)
+                                <option value="{{ $s->id }}" data-branch="{{ $s->branch_id }}">
+                                    {{ $s->machine_name }}</option>
+                            @endforeach
                         </select>
                     </div>
                 @else
@@ -281,9 +373,60 @@
 
 @push('scripts')
     <script>
+        function filterSitesByBranch() {
+            const branchId = document.getElementById('filter_branch_id').value;
+            const siteSelect = document.getElementById('filter_site_id');
+            const options = siteSelect.querySelectorAll('option');
+
+            options.forEach(option => {
+                if (!option.value) return; // Skip "All Machine Sites"
+                const optionBranch = option.getAttribute('data-branch');
+                if (!branchId || optionBranch === branchId) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+
+            // Reset site selection if hidden
+            const currentSelected = siteSelect.options[siteSelect.selectedIndex];
+            if (currentSelected && currentSelected.style.display === 'none') {
+                siteSelect.value = '';
+            }
+        }
+
+        function filterExportSitesByBranch() {
+            const branchId = document.getElementById('export_branch_id').value;
+            const siteSelect = document.getElementById('export_site_id');
+            const options = siteSelect.querySelectorAll('option');
+
+            options.forEach(option => {
+                if (option.value === 'all') return;
+                const optionBranch = option.getAttribute('data-branch');
+                if (branchId === 'all' || optionBranch === branchId) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+
+            const currentSelected = siteSelect.options[siteSelect.selectedIndex];
+            if (currentSelected && currentSelected.style.display === 'none') {
+                siteSelect.value = 'all';
+            }
+        }
+
         function showDetailModal(report) {
-            document.getElementById('detail_meta').innerText =
-                `${report.site ? report.site.machine_name : '-'} • ${report.user ? report.user.name : '-'} • ${new Date(report.report_date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+            const branchName = report.site && report.site.branch ? report.site.branch.branch_name : '-';
+            const siteName = report.site ? report.site.machine_name : '-';
+            const userName = report.user ? report.user.name : '-';
+            const reportDate = new Date(report.report_date).toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+
+            document.getElementById('detail_meta').innerText = `${siteName} (${branchName}) • ${userName} • ${reportDate}`;
             document.getElementById('detail_description').innerText = report.description || '-';
 
             const photosContainer = document.getElementById('detail_photos_container');
@@ -437,6 +580,10 @@
 
             updatePresetBtnStyles(matchedPreset);
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            filterSitesByBranch();
+        });
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
