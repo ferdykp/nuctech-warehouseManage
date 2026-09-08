@@ -11,11 +11,16 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use Maatwebsite\Excel\Concerns\WithCustomValueBinder;
+use PhpOffice\PhpSpreadsheet\Cell\DefaultValueBinder;
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 
-class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize, WithStyles, WithColumnFormatting
+class SalaryExport extends DefaultValueBinder implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize, WithStyles, WithColumnFormatting, WithCustomValueBinder
 {
     private $rowNumber = 0;
 
@@ -27,6 +32,21 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
         protected ?string $bank = null,
         protected ?object $user = null
     ) {}
+
+    /**
+     * Memaksa Kolom E (Account No) menjadi String Teks murni agar tidak E+15
+     */
+    public function bindValue(Cell $cell, $value)
+    {
+        $column = $cell->getColumn();
+
+        if ($column === 'E' && $cell->getRow() > 1) {
+            $cell->setValueExplicit((string)$value, DataType::TYPE_STRING);
+            return true;
+        }
+
+        return parent::bindValue($cell, $value);
+    }
 
     public function collection()
     {
@@ -64,7 +84,6 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
 
         $salaries = $query->get();
 
-        // 1. PENENTUAN URUTAN UNTUK SALARY EXPORT
         $formattedSalaries = $salaries->map(function ($salary) {
             $machineName = strtolower(trim($salary->employee->site->machine_name ?? ''));
             $branchName = strtolower(trim($salary->employee->site->branch->branch_name ?? ''));
@@ -116,7 +135,6 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
             return $salary;
         });
 
-        // 2. MULTI-LEVEL SORTING
         return $formattedSalaries->sort(function ($a, $b) {
             if ($a->computed_order !== $b->computed_order) {
                 return $a->computed_order <=> $b->computed_order;
@@ -159,18 +177,20 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
             ?? $salary->employee->branch->branch_name
             ?? ($salary->employee->site->branch->branch_name ?? '-');
 
+        // Nilai nominal murni (float/int) agar bisa disum di Excel
         $numericAmount = (float) ($salary->amount ?? 0);
 
         $monthPeriod = sprintf('%04d-%02d', $this->year, (int)$this->month);
         $holidayService = app(IndonesianHolidayService::class);
         $calc = $this->calculateSalaryDetails($salary->employee_id, $monthPeriod, $holidayService, $salary->amount);
 
+        // Format kolom Before/After berisi nominal Rupiah yang presisi
         if ($calc['holiday_overtime_days'] > 0) {
             $beforeAfter = 'Rp ' . number_format($salary->amount, 0, ',', '.') .
                 ' / Rp ' . number_format($calc['total_salary_to_pay'], 0, ',', '.') .
                 ' (+Lembur ' . $calc['holiday_overtime_days'] . ' Hr Tgl Merah)';
         } else {
-            $beforeAfter = $salary->before_after ?? 'Rp ' . number_format($salary->amount, 0, ',', '.');
+            $beforeAfter = 'Rp ' . number_format($salary->amount ?? 0, 0, ',', '.');
         }
 
         return [
@@ -178,9 +198,9 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
             $projectTeamName,
             $salary->name,
             $salary->bank,
-            (string) $salary->account_no,
-            $numericAmount,
-            $salary->information,
+            (string) $salary->account_no, // Dikirim string murni
+            $numericAmount,              // Numerik murni
+            $salary->information ?? '-',
             $beforeAfter,
             $salary->more_information ?? '-',
             $placement,
@@ -192,8 +212,8 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
     {
         return [
             'A' => NumberFormat::FORMAT_NUMBER,
-            'E' => NumberFormat::FORMAT_TEXT,
-            'F' => '"Rp "#,##0',
+            'E' => NumberFormat::FORMAT_TEXT,      // Account No
+            'F' => '"Rp "#,##0',                   // Amount Rupiah Format
         ];
     }
 
@@ -202,17 +222,34 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
         $highestRow = $sheet->getHighestRow();
 
         if ($highestRow >= 2) {
-            $sheet->getStyle("F2:F{$highestRow}")
-                ->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+            // Border untuk seluruh tabel
+            $sheet->getStyle("A1:K{$highestRow}")
+                ->getBorders()
+                ->getAllBorders()
+                ->setBorderStyle(Border::BORDER_THIN);
 
+            // Alignment
             $sheet->getStyle("A2:A{$highestRow}")
                 ->getAlignment()
                 ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+            $sheet->getStyle("E2:E{$highestRow}")
+                ->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+            $sheet->getStyle("F2:F{$highestRow}")
+                ->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
         }
 
         return [
-            1 => ['font' => ['bold' => true]],
+            1 => [
+                'font' => ['bold' => true],
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_CENTER,
+                    'vertical' => Alignment::VERTICAL_CENTER,
+                ],
+            ],
         ];
     }
 

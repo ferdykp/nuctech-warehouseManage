@@ -10,21 +10,40 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithCustomStartCell;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use Maatwebsite\Excel\Concerns\WithCustomValueBinder;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use PhpOffice\PhpSpreadsheet\Cell\DefaultValueBinder;
+use PhpOffice\PhpSpreadsheet\Cell\Cell;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class EmployeesExport implements FromCollection, WithHeadings, WithMapping, WithCustomStartCell, WithStyles, WithColumnFormatting, ShouldAutoSize
+class EmployeesExport extends DefaultValueBinder implements FromCollection, WithHeadings, WithMapping, WithCustomStartCell, WithStyles, WithColumnFormatting, WithCustomValueBinder, ShouldAutoSize
 {
     protected $totalCount = 0;
+
+    /**
+     * Memaksa kolom NIK dan Phone menjadi STRING murni di level sel Excel
+     */
+    public function bindValue(Cell $cell, $value)
+    {
+        $column = $cell->getColumn();
+
+        // Kolom C (NIK) dan D (Phone) dipaksa sebagai TYPE_STRING murni
+        if (in_array($column, ['C', 'D']) && $cell->getRow() > 2) {
+            $cell->setValueExplicit((string)$value, DataType::TYPE_STRING);
+            return true;
+        }
+
+        return parent::bindValue($cell, $value);
+    }
 
     public function collection()
     {
         $employees = Employee::with(['site.branch', 'branch'])->get();
 
-        // 1. PENENTUAN URUTAN
         $formattedEmployees = $employees->map(function ($employee) {
             $machineName = strtolower(trim($employee->site->machine_name ?? ''));
             $branchName = strtolower(trim($employee->site->branch->branch_name ?? ''));
@@ -76,7 +95,6 @@ class EmployeesExport implements FromCollection, WithHeadings, WithMapping, With
             return $employee;
         });
 
-        // 2. MULTI-LEVEL SORTING
         $sortedEmployees = $formattedEmployees->sort(function ($a, $b) {
             if ($a->computed_order !== $b->computed_order) {
                 return $a->computed_order <=> $b->computed_order;
@@ -199,8 +217,9 @@ class EmployeesExport implements FromCollection, WithHeadings, WithMapping, With
         if ($highestRow >= 2) {
             $sheet->getStyle('A1:N' . $highestRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
 
+            // Alignment
             $sheet->getStyle('A3:A' . $highestRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('C3:C' . $highestRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('C3:D' . $highestRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             $sheet->getStyle('I3:N' . $highestRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         }
 
