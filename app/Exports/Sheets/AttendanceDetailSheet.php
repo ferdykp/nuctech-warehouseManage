@@ -178,36 +178,36 @@ class AttendanceDetailSheet implements FromCollection, WithTitle, WithHeadings, 
             $employeesQuery->where('site_id', $this->siteId);
         }
 
-        // 1. Tentukan urutan id_site sesuai keinginan Anda di sini [site_id => urutan_tampilan]
-        // Contoh: ID 5 (ebeam) kita beri bobot urutan 3
+        // 1. PEMETAAN URUTAN KUSTOM LENGKAP (DB site_id => Urutan Tampilan)
+        // Memastikan Site ID 5 (Office) mendapat nomor urut 1 (1_Office)
         $customSiteOrder = [
-            // id_site => urutan
-            5 => 1, // Site office (ID 5 di DB) dipaksa urutan ke-3
-            12 => 2,
-            15 => 3,
-            16 => 4,
-            8 => 5,
-            7 => 6,
-            6 => 7,
-            13 => 8,
-            2 => 9,
-            1 => 10,
-            3 => 11,
-            4 => 12
-            // site_id lainnya akan otomatis ditempatkan di akhir (default 999)
+            5  => 1,  // Office (Di DB id=5) -> Tampil sebagai 1_Office
+            1  => 2,  // FS6000 Semarang
+            2  => 3,  // FS6000 Jakarta
+            3  => 4,  // FS6000 Surabaya
+            4  => 5,  // FS6000 Teluk Lamong
+            6  => 6,  // CTMIC2100YW Surabaya
+            7  => 7,  // CTMIC2100YW Lampung
+            8  => 8,  // CTMIC2100YW Batam
+            9  => 9,  // E-dog Bali
+            10 => 10, // E-dog Jakarta
+            11 => 11, // E-dog Medan
+            12 => 12, // E-Beam IS1020
+            13 => 13, // Airport Soetta
+            14 => 14, // Software Division
+            15 => 15, // CTMIC2100-YW Bali
+            16 => 16, // CTMIC2100-YW Banyuwangi
         ];
 
-        // 2. URUTKAN KARYAWAN BERDASARKAN CUSTOM ORDER & NAMA
+        // 2. URUTKAN KARYAWAN BERDASARKAN URUTAN KUSTOM DAHULU, BARU DENGAN NAMA (A-Z)
         $employees = $employeesQuery->get()->sort(function ($a, $b) use ($customSiteOrder) {
             $orderA = $customSiteOrder[$a->site_id] ?? 999;
             $orderB = $customSiteOrder[$b->site_id] ?? 999;
 
-            // Bandingkan berdasarkan Custom Order
             if ($orderA !== $orderB) {
                 return $orderA <=> $orderB;
             }
 
-            // Jika urutan site sama, urutkan berdasarkan Nama Karyawan (Alfabet)
             return strcasecmp($a->name, $b->name);
         });
 
@@ -220,7 +220,7 @@ class AttendanceDetailSheet implements FromCollection, WithTitle, WithHeadings, 
         foreach ($employees as $employee) {
             $attendance = $employee->attendances->first();
 
-            // 3. Tampilkan label Site sesuai urutan kustomnya di Excel (Misal: 3_Office)
+            // MENGAMBIL NOMOR URUT KUSTOM (Misal ID 5 mendapat angka 1 -> "1_Office")
             $customOrderNumber = $customSiteOrder[$employee->site_id] ?? ($employee->site->id ?? 0);
             $siteName = $employee->site ? ($customOrderNumber . '_' . $employee->site->machine_name) : '-';
 
