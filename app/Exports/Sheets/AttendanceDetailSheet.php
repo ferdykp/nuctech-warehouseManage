@@ -73,7 +73,7 @@ class AttendanceDetailSheet implements FromCollection, WithTitle, WithHeadings, 
 
         $widths = [
             'A' => 5.7,   // SN
-            'B' => 28.1,  // Site
+            'B' => 32.0,  // Site
             'C' => 30.7,  // Name
         ];
 
@@ -165,7 +165,7 @@ class AttendanceDetailSheet implements FromCollection, WithTitle, WithHeadings, 
         $endDate = Carbon::parse($this->month . '-01')->endOfMonth()->format('Y-m-d');
 
         $employeesQuery = Employee::with([
-            'site',
+            'site.branch',
             'attendances' => function ($q) {
                 $q->where('month', $this->month);
             },
@@ -178,36 +178,38 @@ class AttendanceDetailSheet implements FromCollection, WithTitle, WithHeadings, 
             $employeesQuery->where('site_id', $this->siteId);
         }
 
-        // 1. PEMETAAN URUTAN KUSTOM LENGKAP (DB site_id => Urutan Tampilan)
-        // Memastikan Site ID 5 (Office) mendapat nomor urut 1 (1_Office)
-        $customSiteOrder = [
-            5  => 1,  // Office (Di DB id=5) -> Tampil sebagai 1_Office
-            1  => 2,  // FS6000 Semarang
-            2  => 3,  // FS6000 Jakarta
-            3  => 4,  // FS6000 Surabaya
-            4  => 5,  // FS6000 Teluk Lamong
-            6  => 6,  // CTMIC2100YW Surabaya
-            7  => 7,  // CTMIC2100YW Lampung
-            8  => 8,  // CTMIC2100YW Batam
-            9  => 9,  // E-dog Bali
-            10 => 10, // E-dog Jakarta
-            11 => 11, // E-dog Medan
-            12 => 12, // E-Beam IS1020
-            13 => 13, // Airport Soetta
-            14 => 14, // Software Division
-            15 => 15, // CTMIC2100-YW Bali
-            16 => 16, // CTMIC2100-YW Banyuwangi
+        // 1. PEMETAAN URUTAN & FORMAT DARI GAMBAR TARGET 2
+        $siteMap = [
+            5  => ['order' => 1, 'label' => '1_Office/Jakarta'],
+            12 => ['order' => 3, 'label' => '3_E-Beam'],
+            15 => ['order' => 4, 'label' => '4_CTMIC2100-YW/Bali'],
+            16 => ['order' => 4, 'label' => '4_CTMIC2100-YW/Banyuwangi'],
+            8  => ['order' => 4, 'label' => '4_CTMIC2100-YW/Batam'],
+            7  => ['order' => 4, 'label' => '4_CTMIC2100-YW/Lampung'],
+            6  => ['order' => 4, 'label' => '4_CTMIC2100-YW/Surabaya'],
+            13 => ['order' => 5, 'label' => '5_Airport SOETTA'],
+            2  => ['order' => 6, 'label' => '6_FS6000LC/Jakarta'],
+            1  => ['order' => 7, 'label' => '7_FS6000LC/Semarang'],
+            3  => ['order' => 8, 'label' => '8_FS6000LC/Surabaya'],
+            4  => ['order' => 9, 'label' => '9_FS6000LC/Teluk Lamong'],
         ];
 
-        // 2. URUTKAN KARYAWAN BERDASARKAN URUTAN KUSTOM DAHULU, BARU DENGAN NAMA (A-Z)
-        $employees = $employeesQuery->get()->sort(function ($a, $b) use ($customSiteOrder) {
-            $orderA = $customSiteOrder[$a->site_id] ?? 999;
-            $orderB = $customSiteOrder[$b->site_id] ?? 999;
+        // 2. URUTKAN BERDASARKAN ORDER KUSTOM, LALU FORMAT LABEL SITE, LALU NAMA KARYAWAN
+        $employees = $employeesQuery->get()->sort(function ($a, $b) use ($siteMap) {
+            $infoA = $siteMap[$a->site_id] ?? ['order' => 999, 'label' => ''];
+            $infoB = $siteMap[$b->site_id] ?? ['order' => 999, 'label' => ''];
 
-            if ($orderA !== $orderB) {
-                return $orderA <=> $orderB;
+            // Bandingkan berdasarkan nomor urut (1, 3, 4, 5, 6, 7, 8, 9)
+            if ($infoA['order'] !== $infoB['order']) {
+                return $infoA['order'] <=> $infoB['order'];
             }
 
+            // Jika dalam grup order yang sama (misal grup 4 CTMIC2100-YW), urutkan berdasarkan label
+            if ($infoA['label'] !== $infoB['label']) {
+                return strcasecmp($infoA['label'], $infoB['label']);
+            }
+
+            // Terakhir urutkan nama karyawan secara alfabetis (A-Z)
             return strcasecmp($a->name, $b->name);
         });
 
@@ -220,13 +222,13 @@ class AttendanceDetailSheet implements FromCollection, WithTitle, WithHeadings, 
         foreach ($employees as $employee) {
             $attendance = $employee->attendances->first();
 
-            // MENGAMBIL NOMOR URUT KUSTOM (Misal ID 5 mendapat angka 1 -> "1_Office")
-            $customOrderNumber = $customSiteOrder[$employee->site_id] ?? ($employee->site->id ?? 0);
-            $siteName = $employee->site ? ($customOrderNumber . '_' . $employee->site->machine_name) : '-';
+            // Label sesuai dengan mapping gambar target 2
+            $siteLabel = $siteMap[$employee->site_id]['label']
+                ?? ($employee->site ? $employee->site->machine_name : '-');
 
             $row = [
                 $sn++,
-                $siteName,
+                $siteLabel,
                 $employee->name
             ];
 
