@@ -179,16 +179,20 @@ class AttendanceFix implements FromCollection, WithTitle, WithHeadings, WithColu
 
         // 1. Tentukan urutan id_site disesuaikan persis dengan AttendanceDetailSheet
         $customSiteOrder = [
-            1 => 7,
-            2 => 6,
-            3 => 8,
-            4 => 9,
-            5 => 1,
-            7 => 4,
-            8 => 4,
-            9 => 4,
-            13 => 3,
-            14 => 5,
+            // id_site => urutan
+            5 => 1, // Site office (ID 5 di DB) dipaksa urutan ke-3
+            12 => 2,
+            15 => 3,
+            16 => 4,
+            8 => 5,
+            7 => 6,
+            6 => 7,
+            13 => 8,
+            2 => 9,
+            1 => 10,
+            6 => 11,
+            4 => 12
+            // site_id lainnya akan otomatis ditempatkan di akhir (default 999)
         ];
 
         // 2. URUTKAN KARYAWAN BERDASARKAN CUSTOM ORDER & NAMA
