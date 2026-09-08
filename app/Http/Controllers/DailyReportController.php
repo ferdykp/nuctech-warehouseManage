@@ -16,12 +16,11 @@ class DailyReportController extends Controller
         $user = auth()->user();
         $query = DailyReport::with(['site', 'user', 'photos'])->latest('report_date');
 
-        if ($user->role !== 'superadmin' && $user->site_id) {
+        if (!in_array($user->role, ['superadmin', 'administration']) && $user->site_id) {
             $query->where('site_id', $user->site_id);
         } elseif ($request->filled('site_id')) {
             $query->where('site_id', $request->site_id);
         }
-
         if ($request->filled('search')) {
             $query->where('description', 'like', '%' . $request->search . '%');
         }
@@ -39,7 +38,9 @@ class DailyReportController extends Controller
     public function create()
     {
         $user = auth()->user();
-        $sites = ($user->role === 'superadmin') ? Site::all() : Site::where('id', $user->site_id)->get();
+        $sites = in_array($user->role, ['superadmin', 'administration'])
+            ? Site::all()
+            : Site::where('id', $user->site_id)->get();
 
         return view('daily_reports.create', compact('sites'));
     }
@@ -110,8 +111,8 @@ class DailyReportController extends Controller
             ->orderBy('report_date', 'asc');
 
         // Pengecekan Hak Akses Eksklusif Superadmin
-        if ($user->role === 'superadmin') {
-            // Jika Superadmin memilih 'all' atau mengosongkan site_id, tampilkan semua site
+        if (in_array($user->role, ['superadmin', 'administration'])) {
+            // Jika Superadmin / Administration memilih 'all' atau mengosongkan site_id, tampilkan semua site
             if ($request->filled('site_id') && $request->site_id !== 'all') {
                 $query->where('site_id', $request->site_id);
                 $site = Site::find($request->site_id);
@@ -119,12 +120,11 @@ class DailyReportController extends Controller
                 $site = null; // null menandakan "All Sites"
             }
         } else {
-            // Pengguna Non-Superadmin dipaksa HANYA melihat site mereka sendiri
+            // Pengguna Non-Admin dipaksa HANYA melihat site mereka sendiri
             $userSiteId = $user->site_id;
             $query->where('site_id', $userSiteId);
             $site = Site::find($userSiteId);
         }
-
         $reports = $query->get();
         $startDate = $request->start_date;
         $endDate = $request->end_date;
