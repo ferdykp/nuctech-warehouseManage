@@ -5,7 +5,15 @@
                 class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
                 <th scope="col" class="px-6 py-4">Employee</th>
                 <th scope="col" class="px-6 py-4">Bank Account</th>
-                <th scope="col" class="px-6 py-4">Basic Salary</th>
+                <th scope="col" class="px-6 py-4">
+                    <div class="flex items-center gap-2">
+                        <span>Basic Salary</span>
+                        <button type="button" onclick="toggleTableSalaryVisibility()" title="Toggle Privasi Gaji Tabel"
+                            class="transition-colors cursor-pointer text-emerald-700 hover:text-emerald-900 focus:outline-none">
+                            <i id="table_salary_toggle_icon" class="text-xs fa-solid fa-eye-slash"></i>
+                        </button>
+                    </div>
+                </th>
                 <th scope="col" class="px-6 py-4">Status</th>
                 <th scope="col" class="px-6 py-4">Adjustment (Overtime)</th>
                 <th scope="col" class="px-6 py-4 text-center w-28">Actions</th>
@@ -32,7 +40,10 @@
 
                     {{-- Basic Salary --}}
                     <td class="px-6 py-4 text-sm font-black text-emerald-700 whitespace-nowrap">
-                        Rp {{ number_format((float) ($item->amount ?? 0), 0, ',', '.') }}
+                        <span class="salary-amount"
+                            data-salary="Rp {{ number_format((float) ($item->amount ?? 0), 0, ',', '.') }}">
+                            Rp {{ number_format((float) ($item->amount ?? 0), 0, ',', '.') }}
+                        </span>
                     </td>
 
                     {{-- Information Badge --}}

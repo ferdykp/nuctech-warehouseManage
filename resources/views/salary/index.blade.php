@@ -540,5 +540,87 @@
                 initSalaryPageScripts();
             });
         }
+
+        // Variable state untuk menyimpan status visibilitas gaji (secara default disembunyikan/true)
+        let isSalaryHidden = localStorage.getItem('isSalaryHidden') !== 'false';
+
+        // Fungsi untuk mengganti (toggle) visibilitas gaji pada tabel
+        function toggleTableSalaryVisibility() {
+            isSalaryHidden = !isSalaryHidden;
+            localStorage.setItem('isSalaryHidden', isSalaryHidden);
+            applySalaryVisibility();
+        }
+
+        // Fungsi untuk menerapkan status visibilitas ke tampilan tabel dan ikon
+        function applySalaryVisibility() {
+            const icon = document.getElementById('table_salary_toggle_icon');
+            const salaryElements = document.querySelectorAll('.salary-amount');
+
+            if (icon) {
+                if (isSalaryHidden) {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            }
+
+            salaryElements.forEach(el => {
+                const originalSalary = el.getAttribute('data-salary');
+                if (isSalaryHidden) {
+                    el.innerText = '••••••••';
+                } else {
+                    el.innerText = originalSalary;
+                }
+            });
+        }
+
+        // Integrasikan pemicu update setiap kali data tabel selesai di-fetch via AJAX
+        function fetchSalaries(targetUrl = null) {
+            const tableContainer = document.getElementById('table-container');
+            if (!tableContainer) return;
+
+            tableContainer.style.opacity = '0.5';
+
+            const month = document.getElementById('filter-month')?.value || '';
+            const year = document.getElementById('filter-year')?.value || '';
+            const search = document.getElementById('filter-search')?.value || '';
+            const branchId = document.getElementById('filter-branch')?.value || '';
+            const information = document.getElementById('filter-information')?.value || '';
+            const bank = document.getElementById('filter-bank')?.value || '';
+
+            const url = targetUrl ||
+                `{{ route('salary.index') }}?month=${month}&year=${year}&search=${encodeURIComponent(search)}&branch_id=${encodeURIComponent(branchId)}&information=${encodeURIComponent(information)}&bank=${encodeURIComponent(bank)}`;
+
+            fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.text())
+                .then(html => {
+                    tableContainer.innerHTML = html;
+                    tableContainer.style.opacity = '1';
+                    applySalaryVisibility(); // Terapkan status visibilitas gaji pada data baru
+                })
+                .catch(err => {
+                    console.error('Error fetching salaries:', err);
+                    tableContainer.style.opacity = '1';
+                });
+        }
+
+        // Terapkan visibilitas gaji saat dokumen pertama kali dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            initSalaryPageScripts();
+            applySalaryVisibility();
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeGenerateModal();
+                    closeSalaryModal();
+                }
+            });
+        });
     </script>
 @endpush
