@@ -22,31 +22,68 @@ class EmployeesExport implements FromCollection, WithHeadings, WithMapping, With
 
     public function collection()
     {
-        $customSiteOrder = [
-            // id_site => urutan
-            5 => 1, // Site office (ID 5 di DB) dipaksa urutan ke-3
-            12 => 2,
-            15 => 3,
-            16 => 4,
-            8 => 5,
-            7 => 6,
-            6 => 7,
-            13 => 8,
-            2 => 9,
-            1 => 10,
-            3 => 11,
-            4 => 12
-            // site_id lainnya akan otomatis ditempatkan di akhir (default 999)
-        ];
-
         $employees = Employee::with(['site.branch', 'branch'])->get();
 
-        $sortedEmployees = $employees->sort(function ($a, $b) use ($customSiteOrder) {
-            $orderA = $customSiteOrder[$a->site_id] ?? 999;
-            $orderB = $customSiteOrder[$b->site_id] ?? 999;
+        // 1. PENENTUAN URUTAN
+        $formattedEmployees = $employees->map(function ($employee) {
+            $machineName = strtolower(trim($employee->site->machine_name ?? ''));
+            $branchName = strtolower(trim($employee->site->branch->branch_name ?? ''));
 
-            if ($orderA !== $orderB) {
-                return $orderA <=> $orderB;
+            $order = 99;
+            $siteLabel = $employee->site ? $employee->site->machine_name : '-';
+
+            if (str_contains($machineName, 'office')) {
+                $order = 1;
+                $siteLabel = '1_Office/Jakarta';
+            } elseif (str_contains($machineName, 'e-beam') || str_contains($machineName, 'ebeam')) {
+                $order = 3;
+                $siteLabel = '3_E-Beam';
+            } elseif (str_contains($machineName, 'ctmic2100')) {
+                $order = 4;
+                if (str_contains($machineName, 'bali') || str_contains($branchName, 'bali')) {
+                    $siteLabel = '4_CTMIC2100-YW/Bali';
+                } elseif (str_contains($machineName, 'banyuwangi') || str_contains($branchName, 'banyuwangi')) {
+                    $siteLabel = '4_CTMIC2100-YW/Banyuwangi';
+                } elseif (str_contains($machineName, 'batam') || str_contains($branchName, 'batam')) {
+                    $siteLabel = '4_CTMIC2100-YW/Batam';
+                } elseif (str_contains($machineName, 'lampung') || str_contains($branchName, 'lampung')) {
+                    $siteLabel = '4_CTMIC2100-YW/Lampung';
+                } elseif (str_contains($machineName, 'surabaya') || str_contains($branchName, 'surabaya')) {
+                    $siteLabel = '4_CTMIC2100-YW/Surabaya';
+                } else {
+                    $siteLabel = '4_CTMIC2100-YW';
+                }
+            } elseif (str_contains($machineName, 'airport') || str_contains($machineName, 'soetta')) {
+                $order = 5;
+                $siteLabel = '5_Airport SOETTA';
+            } elseif (str_contains($machineName, 'fs6000') && (str_contains($machineName, 'jakarta') || str_contains($branchName, 'jakarta'))) {
+                $order = 6;
+                $siteLabel = '6_FS6000LC/Jakarta';
+            } elseif (str_contains($machineName, 'fs6000') && (str_contains($machineName, 'semarang') || str_contains($branchName, 'semarang'))) {
+                $order = 7;
+                $siteLabel = '7_FS6000LC/Semarang';
+            } elseif (str_contains($machineName, 'fs6000') && (str_contains($machineName, 'surabaya') || str_contains($branchName, 'surabaya')) && !str_contains($machineName, 'teluk')) {
+                $order = 8;
+                $siteLabel = '8_FS6000LC/Surabaya';
+            } elseif (str_contains($machineName, 'fs6000') && str_contains($machineName, 'teluk')) {
+                $order = 9;
+                $siteLabel = '9_FS6000LC/Teluk Lamong';
+            }
+
+            $employee->computed_order = $order;
+            $employee->computed_site_label = $siteLabel;
+
+            return $employee;
+        });
+
+        // 2. MULTI-LEVEL SORTING
+        $sortedEmployees = $formattedEmployees->sort(function ($a, $b) {
+            if ($a->computed_order !== $b->computed_order) {
+                return $a->computed_order <=> $b->computed_order;
+            }
+
+            if ($a->computed_site_label !== $b->computed_site_label) {
+                return strcasecmp($a->computed_site_label, $b->computed_site_label);
             }
 
             return strcasecmp($a->name, $b->name);
@@ -123,7 +160,7 @@ class EmployeesExport implements FromCollection, WithHeadings, WithMapping, With
         return [
             $no,
             $employee->name,
-            (string) ($employee->nik ?? '-'),          // Menggunakan string murni tanpa "'"
+            (string) ($employee->nik ?? '-'),
             (string) ($employee->phone_number ?? '-'),
             $employee->email ?? '-',
             $employee->position ?? '-',
@@ -142,8 +179,8 @@ class EmployeesExport implements FromCollection, WithHeadings, WithMapping, With
     {
         return [
             'A' => NumberFormat::FORMAT_NUMBER,
-            'C' => NumberFormat::FORMAT_TEXT, // NIK selalu dibaca Teks murni
-            'D' => NumberFormat::FORMAT_TEXT, // Nomor HP dibaca Teks murni
+            'C' => NumberFormat::FORMAT_TEXT,
+            'D' => NumberFormat::FORMAT_TEXT,
             'I' => NumberFormat::FORMAT_DATE_YYYYMMDD,
             'J' => NumberFormat::FORMAT_DATE_YYYYMMDD,
         ];

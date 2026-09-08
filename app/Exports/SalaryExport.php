@@ -62,28 +62,68 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
             $query->where('bank', $this->bank);
         }
 
-        $customSiteOrder = [
-            1 => 7,
-            2 => 6,
-            3 => 8,
-            4 => 9,
-            5 => 1,
-            7 => 4,
-            8 => 4,
-            9 => 4,
-            13 => 3,
-            14 => 5,
-        ];
+        $salaries = $query->get();
 
-        return $query->get()->sort(function ($a, $b) use ($customSiteOrder) {
-            $siteIdA = $a->employee->site_id ?? 0;
-            $siteIdB = $b->employee->site_id ?? 0;
+        // 1. PENENTUAN URUTAN UNTUK SALARY EXPORT
+        $formattedSalaries = $salaries->map(function ($salary) {
+            $machineName = strtolower(trim($salary->employee->site->machine_name ?? ''));
+            $branchName = strtolower(trim($salary->employee->site->branch->branch_name ?? ''));
 
-            $orderA = $customSiteOrder[$siteIdA] ?? 999;
-            $orderB = $customSiteOrder[$siteIdB] ?? 999;
+            $order = 99;
+            $siteLabel = $salary->employee->site ? $salary->employee->site->machine_name : '-';
 
-            if ($orderA !== $orderB) {
-                return $orderA <=> $orderB;
+            if (str_contains($machineName, 'office')) {
+                $order = 1;
+                $siteLabel = '1_Office/Jakarta';
+            } elseif (str_contains($machineName, 'e-beam') || str_contains($machineName, 'ebeam')) {
+                $order = 3;
+                $siteLabel = '3_E-Beam';
+            } elseif (str_contains($machineName, 'ctmic2100')) {
+                $order = 4;
+                if (str_contains($machineName, 'bali') || str_contains($branchName, 'bali')) {
+                    $siteLabel = '4_CTMIC2100-YW/Bali';
+                } elseif (str_contains($machineName, 'banyuwangi') || str_contains($branchName, 'banyuwangi')) {
+                    $siteLabel = '4_CTMIC2100-YW/Banyuwangi';
+                } elseif (str_contains($machineName, 'batam') || str_contains($branchName, 'batam')) {
+                    $siteLabel = '4_CTMIC2100-YW/Batam';
+                } elseif (str_contains($machineName, 'lampung') || str_contains($branchName, 'lampung')) {
+                    $siteLabel = '4_CTMIC2100-YW/Lampung';
+                } elseif (str_contains($machineName, 'surabaya') || str_contains($branchName, 'surabaya')) {
+                    $siteLabel = '4_CTMIC2100-YW/Surabaya';
+                } else {
+                    $siteLabel = '4_CTMIC2100-YW';
+                }
+            } elseif (str_contains($machineName, 'airport') || str_contains($machineName, 'soetta')) {
+                $order = 5;
+                $siteLabel = '5_Airport SOETTA';
+            } elseif (str_contains($machineName, 'fs6000') && (str_contains($machineName, 'jakarta') || str_contains($branchName, 'jakarta'))) {
+                $order = 6;
+                $siteLabel = '6_FS6000LC/Jakarta';
+            } elseif (str_contains($machineName, 'fs6000') && (str_contains($machineName, 'semarang') || str_contains($branchName, 'semarang'))) {
+                $order = 7;
+                $siteLabel = '7_FS6000LC/Semarang';
+            } elseif (str_contains($machineName, 'fs6000') && (str_contains($machineName, 'surabaya') || str_contains($branchName, 'surabaya')) && !str_contains($machineName, 'teluk')) {
+                $order = 8;
+                $siteLabel = '8_FS6000LC/Surabaya';
+            } elseif (str_contains($machineName, 'fs6000') && str_contains($machineName, 'teluk')) {
+                $order = 9;
+                $siteLabel = '9_FS6000LC/Teluk Lamong';
+            }
+
+            $salary->computed_order = $order;
+            $salary->computed_site_label = $siteLabel;
+
+            return $salary;
+        });
+
+        // 2. MULTI-LEVEL SORTING
+        return $formattedSalaries->sort(function ($a, $b) {
+            if ($a->computed_order !== $b->computed_order) {
+                return $a->computed_order <=> $b->computed_order;
+            }
+
+            if ($a->computed_site_label !== $b->computed_site_label) {
+                return strcasecmp($a->computed_site_label, $b->computed_site_label);
             }
 
             $nameA = $a->name ?? ($a->employee->name ?? '');
@@ -119,7 +159,6 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
             ?? $salary->employee->branch->branch_name
             ?? ($salary->employee->site->branch->branch_name ?? '-');
 
-        // Nilai nominal murni (float/int) agar bisa di-SUM oleh Excel
         $numericAmount = (float) ($salary->amount ?? 0);
 
         $monthPeriod = sprintf('%04d-%02d', $this->year, (int)$this->month);
@@ -139,8 +178,8 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
             $projectTeamName,
             $salary->name,
             $salary->bank,
-            (string) $salary->account_no, // Murni teks
-            $numericAmount,              // Angka numerik murni
+            (string) $salary->account_no,
+            $numericAmount,
             $salary->information,
             $beforeAfter,
             $salary->more_information ?? '-',
@@ -149,15 +188,12 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
         ];
     }
 
-    /**
-     * Format kolom khusus di Excel
-     */
     public function columnFormats(): array
     {
         return [
-            'A' => NumberFormat::FORMAT_NUMBER,               // No
-            'E' => NumberFormat::FORMAT_TEXT,                 // Account No (No Rekening)
-            'F' => '"Rp "#,##0',                              // Amount (Rupiah Format Excel)
+            'A' => NumberFormat::FORMAT_NUMBER,
+            'E' => NumberFormat::FORMAT_TEXT,
+            'F' => '"Rp "#,##0',
         ];
     }
 
@@ -165,7 +201,6 @@ class SalaryExport implements FromCollection, WithHeadings, WithMapping, ShouldA
     {
         $highestRow = $sheet->getHighestRow();
 
-        // Rata kanan untuk kolom Amount (F)
         if ($highestRow >= 2) {
             $sheet->getStyle("F2:F{$highestRow}")
                 ->getAlignment()
