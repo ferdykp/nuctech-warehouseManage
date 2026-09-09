@@ -27,6 +27,7 @@ class Employee extends Model
         'join_date',
         'contract_start_date',
         'is_active',
+        'more_information', //from salary
     ];
 
     public function site()

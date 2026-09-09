@@ -101,6 +101,7 @@ class EmployeeController extends Controller
             'tld'                 => 'nullable|in:yes,no',
             'join_date'           => 'required|date',
             'contract_start_date' => 'nullable|date',
+            'more_information', // <--- Tambahkan ini
         ]);
 
         $siteId = ($user->role === 'employee_role') ? $user->site_id : $validatedData['site_id'];

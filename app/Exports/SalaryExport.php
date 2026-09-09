@@ -184,14 +184,43 @@ class SalaryExport extends DefaultValueBinder implements FromCollection, WithHea
         $holidayService = app(IndonesianHolidayService::class);
         $calc = $this->calculateSalaryDetails($salary->employee_id, $monthPeriod, $holidayService, $salary->amount);
 
-        // Format kolom Before/After berisi nominal Rupiah yang presisi
+        // PENYESUAIAN KOLOM BEFORE/AFTER
         if ($calc['holiday_overtime_days'] > 0) {
             $beforeAfter = 'Rp ' . number_format($salary->amount, 0, ',', '.') .
                 ' / Rp ' . number_format($calc['total_salary_to_pay'], 0, ',', '.') .
                 ' (+Lembur ' . $calc['holiday_overtime_days'] . ' Hr Tgl Merah)';
+        } elseif (!empty($salary->before_after) && $salary->before_after !== 'Rp ' . number_format($salary->amount ?? 0, 0, ',', '.')) {
+            $beforeAfter = $salary->before_after;
         } else {
-            $beforeAfter = 'Rp ' . number_format($salary->amount ?? 0, 0, ',', '.');
+            $beforeAfter = ''; // Kosongkan jika tidak ada penyesuaian gaji
         }
+
+        // PENYESUAIAN KOLOM MORE INFORMATION (BERDASARKAN TANGGAL JOIN KARYAWAN)
+        $employeeJoinDate = $salary->employee->join_date ?? null;
+        $infoStatus = strtolower($salary->information ?? '');
+
+        if ($employeeJoinDate) {
+            $formattedDate = Carbon::parse($employeeJoinDate)->format('Y-m-d');
+
+            // Cek apakah masih dalam tahap probation
+            if (str_contains($infoStatus, 'probation')) {
+                $moreInformation = "Start Join {$formattedDate}";
+            } else {
+                $moreInformation = "Start Contract {$formattedDate}";
+            }
+        } else {
+            $moreInformation = $salary->more_information ?? ($salary->employee->more_information ?? '-');
+        }
+
+        // PENYESUAIAN KOLOM GET INFORMATION
+        // Mengecek dari tabel salaries first, lalu fallback ke employee->get_information, lalu ke more_information bawaan
+        $getInformation = !empty($salary->get_information)
+            ? $salary->get_information
+            : (!empty($salary->employee->get_information)
+                ? $salary->employee->get_information
+                : (!empty($salary->more_information)
+                    ? $salary->more_information
+                    : ($salary->employee->more_information ?? '-')));
 
         return [
             $this->rowNumber,
@@ -202,9 +231,9 @@ class SalaryExport extends DefaultValueBinder implements FromCollection, WithHea
             $numericAmount,              // Numerik murni
             $salary->information ?? '-',
             $beforeAfter,
-            $salary->more_information ?? '-',
+            $moreInformation,            // Start Join / Start Contract YYYY-MM-DD
             $placement,
-            $salary->get_information ?? '-',
+            $getInformation,             // Terisi otomatis dari catatan manual/catatan karyawan
         ];
     }
 

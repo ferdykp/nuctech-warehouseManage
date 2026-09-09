@@ -236,6 +236,7 @@
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
                     </div>
                 </div>
+
             </div>
 
             <div class="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
