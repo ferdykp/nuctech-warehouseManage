@@ -158,4 +158,91 @@ class DailyReportController extends Controller
 
         return view('daily_reports.export_pdf', compact('reports', 'startDate', 'endDate', 'site'));
     }
+    public function edit($id)
+    {
+        $user = auth()->user();
+        $report = DailyReport::with(['site.branch', 'photos'])->findOrFail($id);
+
+        if (!in_array($user->role, ['superadmin', 'administration']) && $user->site_id !== $report->site_id) {
+            abort(403, 'Anda tidak memiliki akses untuk mengubah laporan ini.');
+        }
+
+        $sites = in_array($user->role, ['superadmin', 'administration'])
+            ? Site::with('branch')->get()
+            : Site::where('id', $user->site_id)->get();
+
+        return view('daily_reports.edit', compact('report', 'sites'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $user = auth()->user();
+        $report = DailyReport::findOrFail($id);
+
+        if (!in_array($user->role, ['superadmin', 'administration']) && $user->site_id !== $report->site_id) {
+            abort(403, 'Anda tidak memiliki akses untuk mengubah laporan ini.');
+        }
+
+        $request->validate([
+            'site_id'            => 'required|exists:sites,id',
+            'report_date'        => 'required|date',
+            'description'        => 'required|string',
+            'photos.*'           => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'captions.*'         => 'nullable|string|max:255',
+            'existing_captions.*' => 'nullable|string|max:255',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $report->update([
+                'site_id'     => $request->site_id,
+                'report_date' => $request->report_date,
+                'description' => $request->description,
+            ]);
+
+            // Update caption foto lama
+            if ($request->has('existing_captions')) {
+                foreach ($request->existing_captions as $photoId => $caption) {
+                    DailyReportPhoto::where('id', $photoId)
+                        ->where('daily_report_id', $report->id)
+                        ->update(['caption' => $caption]);
+                }
+            }
+
+            // Upload foto baru jika ada
+            if ($request->hasFile('photos')) {
+                foreach ($request->file('photos') as $index => $photoFile) {
+                    $path = $photoFile->store('daily_reports', 'public');
+                    $caption = $request->captions[$index] ?? null;
+
+                    DailyReportPhoto::create([
+                        'daily_report_id' => $report->id,
+                        'photo_path'      => $path,
+                        'caption'         => $caption,
+                    ]);
+                }
+            }
+
+            DB::commit();
+            return redirect()->route('daily_reports.index')->with('success', 'Catatan laporan harian berhasil diperbarui.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->with('error', 'Gagal memperbarui laporan: ' . $e->getMessage());
+        }
+    }
+
+    public function destroyPhoto($id)
+    {
+        $photo = DailyReportPhoto::findOrFail($id);
+        $user = auth()->user();
+
+        if (!in_array($user->role, ['superadmin', 'administration']) && $user->site_id !== $photo->dailyReport->site_id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        Storage::disk('public')->delete($photo->photo_path);
+        $photo->delete();
+
+        return response()->json(['message' => 'Foto berhasil dihapus.']);
+    }
 }

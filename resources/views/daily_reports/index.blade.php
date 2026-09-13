@@ -187,6 +187,13 @@
                                             <i class="text-xs fa-solid fa-eye"></i>
                                         </button>
 
+                                        {{-- TOMBOL EDIT --}}
+                                        <a href="{{ route('daily_reports.edit', $report->id) }}"
+                                            class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-amber-600 bg-amber-50 border-amber-100 hover:bg-amber-600 hover:text-white active:scale-95"
+                                            title="Edit Report">
+                                            <i class="text-xs fa-solid fa-pen-to-square"></i>
+                                        </a>
+
                                         {{-- TOMBOL DELETE --}}
                                         <form action="{{ route('daily_reports.destroy', $report->id) }}" method="POST"
                                             onsubmit="return confirm('Hapus laporan ini?')">

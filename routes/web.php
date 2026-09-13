@@ -115,6 +115,9 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::get('/create', [DailyReportController::class, 'create'])->name('create');
             Route::post('/', [DailyReportController::class, 'store'])->name('store');
             Route::get('/export-pdf', [DailyReportController::class, 'exportPdf'])->name('export_pdf');
+            Route::get('/{id}/edit', [DailyReportController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [DailyReportController::class, 'update'])->name('update');
+            Route::delete('/photos/{photo}', [DailyReportController::class, 'destroyPhoto'])->name('photos.destroy');
             Route::delete('/{id}', [DailyReportController::class, 'destroy'])->name('destroy');
         });
 
