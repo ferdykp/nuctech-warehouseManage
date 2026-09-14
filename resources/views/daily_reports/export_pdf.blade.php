@@ -5,12 +5,23 @@
     <meta charset="UTF-8">
     <title>Daily Activity Report Log</title>
     <style>
+        /* TRUK UNTUK MENYEMBUNYIKAN FOOTER URL BROWSER:
+       Mengeset margin-bottom ke 0 pada @page akan mematikan footer URL browser,
+       sedangkan margin-top tetap diberi nilai agar header browser (tanggal/judul) tetap muncul. */
+        @page {
+            margin-top: 10mm;
+            margin-bottom: 0;
+            margin-left: 10mm;
+            margin-right: 10mm;
+        }
+
         body {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 9.5px;
             color: #1e293b;
             margin: 0;
-            padding: 12px;
+            padding: 12px 0 24px 0;
+            /* Memberikan ruang bawah pengganti margin agar tidak menempel */
             background-color: #ffffff;
             line-height: 1.35;
         }
@@ -147,7 +158,7 @@
             background: #0f172a;
             color: white;
             padding: 8px 14px;
-            margin: -12px -12px 12px -12px;
+            margin: -12px 0 12px 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
