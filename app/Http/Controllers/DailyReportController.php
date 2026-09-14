@@ -9,6 +9,7 @@ use App\Models\Site;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class DailyReportController extends Controller
 {
@@ -162,6 +163,51 @@ class DailyReportController extends Controller
         return redirect()->route('daily_reports.index')->with('success', 'Laporan berhasil dihapus.');
     }
 
+    // public function exportPdf(Request $request)
+    // {
+    //     $request->validate([
+    //         'start_date' => 'required|date',
+    //         'end_date'   => 'required|date|after_or_equal:start_date',
+    //         'site_id'    => 'nullable',
+    //         'branch_id'  => 'nullable',
+    //     ]);
+
+    //     $user = auth()->user();
+    //     $query = DailyReport::with(['site.branch', 'user', 'photos'])
+    //         ->whereBetween('report_date', [$request->start_date, $request->end_date])
+    //         ->orderBy('site_id', 'asc')
+    //         ->orderBy('report_date', 'asc');
+
+    //     if (in_array($user->role, ['superadmin', 'administration'])) {
+    //         if ($request->filled('branch_id') && $request->branch_id !== 'all') {
+    //             $query->whereHas('site', function ($q) use ($request) {
+    //                 $q->where('branch_id', $request->branch_id);
+    //             });
+    //         }
+
+    //         if ($request->filled('site_id') && $request->site_id !== 'all') {
+    //             $query->where('site_id', $request->site_id);
+    //             $site = Site::find($request->site_id);
+    //         } else {
+    //             $site = null;
+    //         }
+    //     } else {
+    //         $userSiteId = $user->site_id;
+    //         $query->where('site_id', $userSiteId);
+    //         $site = Site::find($userSiteId);
+    //     }
+
+    //     $reports = $query->get();
+
+    //     // Kelompokkan laporan berdasarkan Site
+    //     $groupedReports = $reports->groupBy('site_id');
+
+    //     $startDate = $request->start_date;
+    //     $endDate = $request->end_date;
+
+    //     return view('daily_reports.export_pdf', compact('groupedReports', 'startDate', 'endDate', 'site'));
+    // }
+
     public function exportPdf(Request $request)
     {
         $request->validate([
@@ -172,8 +218,12 @@ class DailyReportController extends Controller
         ]);
 
         $user = auth()->user();
+
         $query = DailyReport::with(['site.branch', 'user', 'photos'])
-            ->whereBetween('report_date', [$request->start_date, $request->end_date])
+            ->whereBetween('report_date', [
+                $request->start_date,
+                $request->end_date
+            ])
             ->orderBy('site_id', 'asc')
             ->orderBy('report_date', 'asc');
 
@@ -197,15 +247,31 @@ class DailyReportController extends Controller
         }
 
         $reports = $query->get();
-
-        // Kelompokkan laporan berdasarkan Site
         $groupedReports = $reports->groupBy('site_id');
 
         $startDate = $request->start_date;
         $endDate = $request->end_date;
 
-        return view('daily_reports.export_pdf', compact('groupedReports', 'startDate', 'endDate', 'site'));
+        /*
+        |--------------------------------------------------------------------------
+        | Generate PDF Menggunakan DomPDF
+        |--------------------------------------------------------------------------
+        */
+        $pdf = Pdf::loadView('daily_reports.export_pdf', compact(
+            'groupedReports',
+            'startDate',
+            'endDate',
+            'site'
+        ));
+
+        $pdf->setPaper('a4', 'portrait');
+        $pdf->setOption(['isRemoteEnabled' => true, 'isHtml5ParserEnabled' => true]);
+
+        $fileName = 'Daily-Activity-Report-' . $startDate . '-to-' . $endDate . '.pdf';
+
+        return $pdf->download($fileName);
     }
+
     public function edit($id)
     {
         $user = auth()->user();

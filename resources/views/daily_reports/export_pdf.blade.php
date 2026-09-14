@@ -5,89 +5,88 @@
     <meta charset="UTF-8">
     <title>Daily Activity Report Log</title>
     <style>
-        /* TRUK UNTUK MENYEMBUNYIKAN FOOTER URL BROWSER:
-       Mengeset margin-bottom ke 0 pada @page akan mematikan footer URL browser,
-       sedangkan margin-top tetap diberi nilai agar header browser (tanggal/judul) tetap muncul. */
         @page {
-            margin-top: 10mm;
-            margin-bottom: 0;
-            margin-left: 10mm;
-            margin-right: 10mm;
+            size: a4 portrait;
+            margin: 12mm 10mm 12mm 10mm;
         }
 
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 9.5px;
+            font-size: 9pt;
             color: #1e293b;
             margin: 0;
-            padding: 12px 0 24px 0;
-            /* Memberikan ruang bawah pengganti margin agar tidak menempel */
-            background-color: #ffffff;
+            padding: 0;
             line-height: 1.35;
         }
 
+        /* HEADER DOKUMEN */
         .header {
             text-align: center;
             border-bottom: 1.5px solid #10b981;
-            padding-bottom: 6px;
-            margin-bottom: 10px;
+            padding-bottom: 4px;
+            margin-bottom: 12px;
         }
 
         .header h2 {
             margin: 0;
-            font-size: 14px;
+            font-size: 13pt;
             text-transform: uppercase;
             color: #0f172a;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.5px;
         }
 
         .header p {
-            margin: 2px 0 0;
-            font-size: 9.5px;
+            margin: 3px 0 0 0;
+            font-size: 8.5pt;
             color: #64748b;
-            font-weight: 600;
+            font-weight: bold;
         }
 
+        /* SITE CARD (CONTINUE LAYOUT) */
         .site-block {
-            margin-bottom: 12px;
-            page-break-inside: avoid;
+            margin-bottom: 14px;
+            width: 100%;
         }
 
-        .site-header {
+        /* CONTAINER SITE HEADER (ABU-ABU) */
+        .site-header-table {
+            width: 100%;
+            border-collapse: collapse;
             background-color: #e2e8f0;
             border: 1px solid #cbd5e1;
-            border-radius: 6px 6px 0 0;
-            padding: 6px 10px;
-            font-size: 10.5px;
-            font-weight: 800;
-            color: #0f172a;
-            letter-spacing: 0.2px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
         }
 
-        .site-header span.badge {
+        .site-header-table td {
+            padding: 5px 8px;
+            font-size: 9.5pt;
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        .badge {
             background-color: #10b981;
             color: #ffffff;
-            font-size: 8.5px;
-            font-weight: 700;
-            padding: 1.5px 7px;
-            border-radius: 10px;
+            font-size: 7.5pt;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 8px;
+            display: inline-block;
         }
 
+        /* CONTAINER ISI LOG ACTIVITY (KARTU PUTIH) */
         .site-body {
             border: 1px solid #cbd5e1;
             border-top: none;
-            border-radius: 0 0 6px 6px;
-            padding: 8px 10px;
+            padding: 8px;
             background-color: #ffffff;
         }
 
         .log-entry {
-            border-bottom: 1px dashed #e2e8f0;
+            border-bottom: 1px dashed #cbd5e1;
             padding-bottom: 8px;
             margin-bottom: 8px;
+            page-break-inside: avoid;
+            /* Menjaga agar 1 log entry tidak terpotong di tengah halaman */
         }
 
         .log-entry:last-child {
@@ -96,104 +95,65 @@
             margin-bottom: 0;
         }
 
-        .log-date {
-            display: inline-block;
+        .log-date-box {
             background-color: #f1f5f9;
             color: #0f172a;
-            font-weight: 700;
-            font-size: 9px;
-            padding: 2px 7px;
-            border-radius: 4px;
+            font-weight: bold;
+            font-size: 8.5pt;
+            padding: 2px 6px;
             border: 1px solid #cbd5e1;
+            display: inline-block;
             margin-bottom: 4px;
         }
 
         .description {
-            font-size: 9.5px;
-            line-height: 1.4;
-            white-space: pre-line;
+            font-size: 8.5pt;
+            line-height: 1.35;
             color: #334155;
-            margin-top: 2px;
+            margin-top: 3px;
         }
 
-        .photo-grid {
-            margin-top: 6px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .photo-item {
+        /* TANYA & TAMPILKAN FOTO MENGGUNAKAN TABLE BROWSER DOMPDF */
+        .photo-table {
             width: 100%;
-            max-width: 320px;
-            box-sizing: border-box;
-            text-align: center;
-            background-color: #f8fafc;
-            padding: 4px;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
+            margin-top: 6px;
+            border-collapse: collapse;
         }
 
-        .photo-item img {
+        .photo-td {
+            width: 50%;
+            padding: 3px;
+            vertical-align: top;
+            box-sizing: border-box;
+        }
+
+        .photo-box {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 4px;
+            text-align: center;
+        }
+
+        .photo-box img {
             max-width: 100%;
-            max-height: 220px;
+            max-height: 180px;
             height: auto;
-            width: auto;
-            object-fit: contain;
-            border-radius: 3px;
-            border: 1px solid #cbd5e1;
             display: block;
             margin: 0 auto;
+            border: 1px solid #cbd5e1;
         }
 
         .caption {
-            font-size: 8px;
+            font-size: 7.5pt;
             color: #475569;
             font-style: italic;
             margin-top: 3px;
-            font-weight: 600;
-        }
-
-        .no-print-bar {
-            background: #0f172a;
-            color: white;
-            padding: 8px 14px;
-            margin: -12px 0 12px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 10px;
-        }
-
-        .btn-print {
-            background-color: #10b981;
-            color: white;
-            border: none;
-            padding: 4px 12px;
-            font-size: 10px;
             font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        @media print {
-            body {
-                padding: 0;
-            }
-
-            .no-print-bar {
-                display: none !important;
-            }
         }
     </style>
 </head>
 
 <body>
-
-    <div class="no-print-bar">
-        <span>📄 Daily Activity Report - PDF Mode</span>
-        <button onclick="window.print()" class="btn-print">🖨️ Cetak / Save PDF</button>
-    </div>
 
     <div class="header">
         <h2>Daily Activity Report Log</h2>
@@ -209,26 +169,32 @@
         @endphp
 
         <div class="site-block">
-            <div class="site-header">
-                <div>
-                    📍 SITE: {{ strtoupper($siteName) }} (BRANCH: {{ strtoupper($branchName) }})
-                </div>
-                <span class="badge">{{ $reports->count() }} Report(s)</span>
-            </div>
+            {{-- HEADER WARNA ABU-ABU --}}
+            <table class="site-header-table">
+                <tr>
+                    <td style="text-align: left;">
+                        SITE: {{ strtoupper($siteName) }} (BRANCH: {{ strtoupper($branchName) }})
+                    </td>
+                    <td style="text-align: right; width: 100px;">
+                        <span class="badge">{{ $reports->count() }} Report(s)</span>
+                    </td>
+                </tr>
+            </table>
 
+            {{-- ISI CARD KARTU PUTIH (CONTINUE) --}}
             <div class="site-body">
                 @foreach ($reports as $report)
                     <div class="log-entry">
-                        <div class="log-date">
-                            📅 {{ $report->report_date->format('l, d F Y') }}
+                        <div class="log-date-box">
+                            {{ $report->report_date->format('l, d F Y') }}
                         </div>
 
                         <div class="description">
                             <strong>Log Note:</strong><br>
-                            {{ $report->description }}
+                            {!! nl2br(e($report->description)) !!}
                         </div>
 
-                        {{-- FILTER APABILA FILE GAMBAR AKTUAL BENAR-BENAR ADA --}}
+                        {{-- FILTER APABILA FILE GAMBAR FISIK AKTUAL ADA --}}
                         @php
                             $validPhotos = $report->photos->filter(function ($photo) {
                                 return !empty($photo->photo_path) &&
@@ -237,35 +203,38 @@
                         @endphp
 
                         @if ($validPhotos->count() > 0)
-                            <div class="photo-grid">
-                                @foreach ($validPhotos as $photo)
-                                    <div class="photo-item">
-                                        <img src="{{ asset('storage/' . $photo->photo_path) }}"
-                                            alt="Photo Documentation">
-                                        @if ($photo->caption)
-                                            <div class="caption">{{ $photo->caption }}</div>
-                                        @endif
-                                    </div>
-                                @endforeach
-                            </div>
+                            <table class="photo-table">
+                                <tr>
+                                    @foreach ($validPhotos as $index => $photo)
+                                        @if ($index > 0 && $index % 2 == 0)
+                                </tr>
+                                <tr>
                         @endif
-                    </div>
+                        <td class="photo-td">
+                            <div class="photo-box">
+                                <img src="{{ public_path('storage/' . $photo->photo_path) }}" alt="Photo Documentation">
+                                @if ($photo->caption)
+                                    <div class="caption">{{ $photo->caption }}</div>
+                                @endif
+                            </div>
+                        </td>
                 @endforeach
-            </div>
-        </div>
-    @empty
-        <p style="text-align: center; color: #94a3b8; padding: 20px; font-weight: bold;">
-            Tidak ada catatan kegiatan harian untuk rentang tanggal ini.
-        </p>
+                @if ($validPhotos->count() % 2 != 0)
+                    <td class="photo-td"></td>
+                @endif
+                </tr>
+                </table>
+    @endif
+    </div>
+    @endforeach
+    </div>
+    </div>
+@empty
+    <p style="text-align: center; color: #94a3b8; padding: 20px; font-weight: bold;">
+        Tidak ada catatan kegiatan harian untuk rentang tanggal ini.
+    </p>
     @endforelse
 
-    <script>
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                window.print();
-            }, 500);
-        });
-    </script>
 </body>
 
 </html>
