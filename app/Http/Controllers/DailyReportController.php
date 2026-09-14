@@ -164,17 +164,6 @@ class DailyReportController extends Controller
 
     public function exportPdf(Request $request)
     {
-        // $request->validate([
-        //     'start_date' => 'required|date',
-        //     'end_date'   => 'required|date|after_or_equal:start_date',
-        //     'site_id'    => 'nullable',
-        //     'branch_id'  => 'nullable',
-        // ]);
-
-        // $user = auth()->user();
-        // $query = DailyReport::with(['site.branch', 'user', 'photos'])
-        //     ->whereBetween('report_date', [$request->start_date, $request->end_date])
-        //     ->orderBy('report_date', 'asc');
         $request->validate([
             'start_date' => 'required|date',
             'end_date'   => 'required|date|after_or_equal:start_date',
@@ -185,10 +174,9 @@ class DailyReportController extends Controller
         $user = auth()->user();
         $query = DailyReport::with(['site.branch', 'user', 'photos'])
             ->whereBetween('report_date', [$request->start_date, $request->end_date])
-            ->orderBy('site_id', 'asc')         // Mengurutkan urut ID Site
+            ->orderBy('site_id', 'asc')
             ->orderBy('report_date', 'asc');
 
-        // Pengecekan Hak Akses Eksklusif Superadmin
         if (in_array($user->role, ['superadmin', 'administration'])) {
             if ($request->filled('branch_id') && $request->branch_id !== 'all') {
                 $query->whereHas('site', function ($q) use ($request) {
@@ -200,20 +188,23 @@ class DailyReportController extends Controller
                 $query->where('site_id', $request->site_id);
                 $site = Site::find($request->site_id);
             } else {
-                $site = null; // null menandakan "All Sites"
+                $site = null;
             }
         } else {
-            // Pengguna Non-Admin dipaksa HANYA melihat site mereka sendiri
             $userSiteId = $user->site_id;
             $query->where('site_id', $userSiteId);
             $site = Site::find($userSiteId);
         }
 
         $reports = $query->get();
+
+        // Kelompokkan laporan berdasarkan Site
+        $groupedReports = $reports->groupBy('site_id');
+
         $startDate = $request->start_date;
         $endDate = $request->end_date;
 
-        return view('daily_reports.export_pdf', compact('reports', 'startDate', 'endDate', 'site'));
+        return view('daily_reports.export_pdf', compact('groupedReports', 'startDate', 'endDate', 'site'));
     }
     public function edit($id)
     {

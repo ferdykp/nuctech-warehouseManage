@@ -36,70 +36,102 @@
             font-weight: 600;
         }
 
-        .meta-table {
-            width: 100%;
-            margin-bottom: 20px;
-            border-collapse: collapse;
+        .site-block {
+            margin-bottom: 30px;
+            page-break-after: always;
+            /* Tiap site otomatis beda halaman ketika dicetak */
         }
 
-        .meta-table td {
-            padding: 6px 10px;
-            font-size: 11px;
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
+        .site-block:last-child {
+            page-break-after: auto;
         }
 
-        .report-card {
+        /* HEADER KETERANGAN SITE (WARNA ABU-ABU) */
+        .site-header {
+            background-color: #e2e8f0;
             border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            padding: 14px;
-            page-break-inside: avoid;
+            border-radius: 10px 10px 0 0;
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .site-header span.badge {
+            background-color: #10b981;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+        }
+
+        /* CONTAINER KARTU PUTIH UNTUK TANGGAL & LOG NOTE */
+        .site-body {
+            border: 1px solid #cbd5e1;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            padding: 16px;
             background-color: #ffffff;
         }
 
-        .report-header {
+        .log-entry {
+            border-bottom: 1px dashed #e2e8f0;
+            padding-bottom: 16px;
+            margin-bottom: 16px;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+
+        .log-date {
+            display: inline-block;
             background-color: #f1f5f9;
-            padding: 8px 12px;
-            font-weight: bold;
-            font-size: 11px;
-            border-bottom: 1px solid #cbd5e1;
-            margin: -14px -14px 12px -14px;
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
             color: #0f172a;
+            font-weight: 700;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            margin-bottom: 8px;
         }
 
         .description {
             font-size: 11px;
-            line-height: 1.5;
+            line-height: 1.6;
             white-space: pre-line;
-            margin-bottom: 12px;
             color: #334155;
+            margin-top: 4px;
         }
 
         .photo-grid {
-            margin-top: 12px;
+            margin-top: 10px;
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
         }
 
         .photo-item {
             width: 100%;
-            max-width: 450px;
-            margin: 0 auto 10px auto;
+            max-width: 400px;
             box-sizing: border-box;
             text-align: center;
             background-color: #f8fafc;
-            padding: 8px;
+            padding: 6px;
             border: 1px solid #e2e8f0;
             border-radius: 6px;
         }
 
         .photo-item img {
             max-width: 100%;
-            max-height: 350px;
+            max-height: 300px;
             height: auto;
             width: auto;
             object-fit: contain;
@@ -113,7 +145,7 @@
             font-size: 9px;
             color: #475569;
             font-style: italic;
-            margin-top: 6px;
+            margin-top: 4px;
             font-weight: 600;
         }
 
@@ -123,7 +155,7 @@
             padding: 10px 20px;
             margin: -20px -20px 20px -20px;
             display: flex;
-            justify: space-between;
+            justify-content: space-between;
             align-items: center;
         }
 
@@ -142,10 +174,6 @@
                 padding: 0;
             }
 
-            .report-card {
-                page-break-inside: avoid;
-            }
-
             .no-print-bar {
                 display: none !important;
             }
@@ -155,50 +183,62 @@
 
 <body>
 
-    {{-- TOMBOL FALLBACK CETAK JIKA DI-BLOCK POPUP --}}
     <div class="no-print-bar">
         <span>📄 Daily Activity Report - PDF Mode</span>
         <button onclick="window.print()" class="btn-print">🖨️ Cetak / Save PDF</button>
     </div>
 
     <div class="header">
-        <h2>Daily Activity Report</h2>
+        <h2>Daily Activity Report Log</h2>
         <p>Period: {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} -
             {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}</p>
     </div>
 
-    <table class="meta-table">
-        <tr>
-            <td><strong>Site Location:</strong> {{ $site ? $site->machine_name : 'All Registered Sites' }}</td>
-            <td style="text-align: right;"><strong>Total Entries:</strong> {{ $reports->count() }} Record(s)</td>
-        </tr>
-    </table>
+    @forelse($groupedReports as $siteId => $reports)
+        @php
+            $firstReport = $reports->first();
+            $siteName = $firstReport->site->machine_name ?? 'Unknown Site';
+            $branchName = $firstReport->site->branch->branch_name ?? '-';
+        @endphp
 
-    @forelse($reports as $report)
-        <div class="report-card">
-            <div class="report-header">
-                📅 {{ $report->report_date->format('l, d F Y') }}
-                &bull; Site: {{ $report->site->machine_name ?? '-' }}
-                &bull; Reporter: {{ $report->user->name ?? '-' }}
-            </div>
-
-            <div class="description">
-                <strong>Log Note:</strong><br>
-                {{ $report->description }}
-            </div>
-
-            @if ($report->photos->count() > 0)
-                <div class="photo-grid">
-                    @foreach ($report->photos as $photo)
-                        <div class="photo-item">
-                            <img src="{{ asset('storage/' . $photo->photo_path) }}" alt="Photo Documentation">
-                            @if ($photo->caption)
-                                <div class="caption">{{ $photo->caption }}</div>
-                            @endif
-                        </div>
-                    @endforeach
+        <div class="site-block">
+            {{-- HEADER WARNA ABU-ABU: HANYA MENAMPILKAN KETERANGAN SITE --}}
+            <div class="site-header">
+                <div>
+                    📍 SITE: {{ strtoupper($siteName) }} (BRANCH: {{ strtoupper($branchName) }})
                 </div>
-            @endif
+                <span class="badge">{{ $reports->count() }} Report(s)</span>
+            </div>
+
+            {{-- ISINYA BERWARNA PUTIH: TANGGAL & LOG NOTE --}}
+            <div class="site-body">
+                @foreach ($reports as $report)
+                    <div class="log-entry">
+                        <div class="log-date">
+                            📅 {{ $report->report_date->format('l, d F Y') }}
+                        </div>
+
+                        <div class="description">
+                            <strong>Log Note:</strong><br>
+                            {{ $report->description }}
+                        </div>
+
+                        @if ($report->photos->count() > 0)
+                            <div class="photo-grid">
+                                @foreach ($report->photos as $photo)
+                                    <div class="photo-item">
+                                        <img src="{{ asset('storage/' . $photo->photo_path) }}"
+                                            alt="Photo Documentation">
+                                        @if ($photo->caption)
+                                            <div class="caption">{{ $photo->caption }}</div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
         </div>
     @empty
         <p style="text-align: center; color: #94a3b8; padding: 30px; font-weight: bold;">
@@ -207,7 +247,6 @@
     @endforelse
 
     <script>
-        // Memastikan seluruh halaman & foto selesai di-load sebelum pencetakan
         window.addEventListener('load', function() {
             setTimeout(function() {
                 window.print();
