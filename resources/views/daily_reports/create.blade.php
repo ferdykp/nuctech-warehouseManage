@@ -30,6 +30,21 @@
             </div>
         </div>
 
+        {{-- ALERT ERROR VALIDASI SERVER-SIDE --}}
+        @if ($errors->any())
+            <div class="p-4 space-y-1 text-xs font-semibold border bg-rose-50 border-rose-200/80 rounded-2xl text-rose-800">
+                <div class="flex items-center gap-2 font-bold text-rose-900">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span>Terjadi kesalahan saat mengunggah form:</span>
+                </div>
+                <ul class="list-disc list-inside pl-1 space-y-0.5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         {{-- 2. FORM CARD (FULL WIDTH) --}}
         <form action="{{ route('daily_reports.store') }}" method="POST" enctype="multipart/form-data"
             class="w-full overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
@@ -75,7 +90,7 @@
                         </label>
                         <textarea name="description" rows="6" required
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
-                            placeholder="Tuliskan catatan kegiatan harian di lapangan..."></textarea>
+                            placeholder="Tuliskan catatan kegiatan harian di lapangan...">{{ old('description') }}</textarea>
                     </div>
                 </div>
 
@@ -94,12 +109,21 @@
                         </button>
                     </div>
 
+                    {{-- WARNING BANNER UKURAN MAKSIMAL --}}
+                    <div
+                        class="p-3 border rounded-2xl bg-amber-50/70 border-amber-200/80 flex items-center gap-2.5 text-amber-800 text-xs font-semibold">
+                        <i class="text-sm fa-solid fa-triangle-exclamation text-amber-600"></i>
+                        <span>Ukuran file maksimal per foto adalah <strong>5 MB</strong>. Format yang diizinkan: JPG, JPEG,
+                            PNG, WEBP.</span>
+                    </div>
+
                     <div class="space-y-3">
                         <template x-for="(row, index) in photos" :key="index">
                             <div
                                 class="flex flex-col items-start w-full gap-4 p-4 border border-slate-200/80 rounded-2xl bg-slate-50/50 sm:flex-row sm:items-center">
                                 <div class="w-full space-y-1 sm:w-1/3">
                                     <input type="file" name="photos[]" accept="image/*"
+                                        @change="validateFileSize($event)"
                                         class="block w-full text-xs bg-white border cursor-pointer text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 border-slate-200 rounded-xl">
                                 </div>
                                 <div class="flex items-center w-full gap-2 sm:w-2/3">
@@ -152,6 +176,16 @@
                 removePhotoRow(index) {
                     if (this.photos.length > 1) {
                         this.photos.splice(index, 1);
+                    }
+                },
+                validateFileSize(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const maxSizeInBytes = 5 * 1024 * 1024; // 5 MB dalam Bytes
+                        if (file.size > maxSizeInBytes) {
+                            alert('Ukuran foto melebihi 5 MB! Harap pilih gambar dengan ukuran yang lebih kecil.');
+                            event.target.value = ''; // Reset input gambar
+                        }
                     }
                 }
             }
