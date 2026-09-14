@@ -7,55 +7,50 @@
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 11px;
+            font-size: 9.5px;
             color: #1e293b;
             margin: 0;
-            padding: 20px;
+            padding: 12px;
             background-color: #ffffff;
+            line-height: 1.35;
         }
 
         .header {
             text-align: center;
-            border-bottom: 2px solid #10b981;
-            padding-bottom: 12px;
-            margin-bottom: 20px;
+            border-bottom: 1.5px solid #10b981;
+            padding-bottom: 6px;
+            margin-bottom: 10px;
         }
 
         .header h2 {
             margin: 0;
-            font-size: 18px;
+            font-size: 14px;
             text-transform: uppercase;
             color: #0f172a;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
         }
 
         .header p {
-            margin: 5px 0 0;
-            font-size: 11px;
+            margin: 2px 0 0;
+            font-size: 9.5px;
             color: #64748b;
             font-weight: 600;
         }
 
         .site-block {
-            margin-bottom: 30px;
-            page-break-after: always;
-            /* Tiap site otomatis beda halaman ketika dicetak */
+            margin-bottom: 12px;
+            page-break-inside: avoid;
         }
 
-        .site-block:last-child {
-            page-break-after: auto;
-        }
-
-        /* HEADER KETERANGAN SITE (WARNA ABU-ABU) */
         .site-header {
             background-color: #e2e8f0;
             border: 1px solid #cbd5e1;
-            border-radius: 10px 10px 0 0;
-            padding: 12px 16px;
-            font-size: 13px;
+            border-radius: 6px 6px 0 0;
+            padding: 6px 10px;
+            font-size: 10.5px;
             font-weight: 800;
             color: #0f172a;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.2px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -64,25 +59,24 @@
         .site-header span.badge {
             background-color: #10b981;
             color: #ffffff;
-            font-size: 10px;
+            font-size: 8.5px;
             font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 12px;
+            padding: 1.5px 7px;
+            border-radius: 10px;
         }
 
-        /* CONTAINER KARTU PUTIH UNTUK TANGGAL & LOG NOTE */
         .site-body {
             border: 1px solid #cbd5e1;
             border-top: none;
-            border-radius: 0 0 10px 10px;
-            padding: 16px;
+            border-radius: 0 0 6px 6px;
+            padding: 8px 10px;
             background-color: #ffffff;
         }
 
         .log-entry {
             border-bottom: 1px dashed #e2e8f0;
-            padding-bottom: 16px;
-            margin-bottom: 16px;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
         }
 
         .log-entry:last-child {
@@ -96,76 +90,78 @@
             background-color: #f1f5f9;
             color: #0f172a;
             font-weight: 700;
-            font-size: 11px;
-            padding: 4px 10px;
-            border-radius: 6px;
+            font-size: 9px;
+            padding: 2px 7px;
+            border-radius: 4px;
             border: 1px solid #cbd5e1;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
 
         .description {
-            font-size: 11px;
-            line-height: 1.6;
+            font-size: 9.5px;
+            line-height: 1.4;
             white-space: pre-line;
             color: #334155;
-            margin-top: 4px;
+            margin-top: 2px;
         }
 
         .photo-grid {
-            margin-top: 10px;
+            margin-top: 6px;
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 6px;
         }
 
         .photo-item {
             width: 100%;
-            max-width: 400px;
+            max-width: 320px;
             box-sizing: border-box;
             text-align: center;
             background-color: #f8fafc;
-            padding: 6px;
+            padding: 4px;
             border: 1px solid #e2e8f0;
-            border-radius: 6px;
+            border-radius: 4px;
         }
 
         .photo-item img {
             max-width: 100%;
-            max-height: 300px;
+            max-height: 220px;
             height: auto;
             width: auto;
             object-fit: contain;
-            border-radius: 4px;
+            border-radius: 3px;
             border: 1px solid #cbd5e1;
             display: block;
             margin: 0 auto;
         }
 
         .caption {
-            font-size: 9px;
+            font-size: 8px;
             color: #475569;
             font-style: italic;
-            margin-top: 4px;
+            margin-top: 3px;
             font-weight: 600;
         }
 
         .no-print-bar {
             background: #0f172a;
             color: white;
-            padding: 10px 20px;
-            margin: -20px -20px 20px -20px;
+            padding: 8px 14px;
+            margin: -12px -12px 12px -12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-size: 10px;
         }
 
         .btn-print {
             background-color: #10b981;
             color: white;
             border: none;
-            padding: 6px 16px;
+            padding: 4px 12px;
+            font-size: 10px;
             font-weight: bold;
-            border-radius: 6px;
+            border-radius: 4px;
             cursor: pointer;
         }
 
@@ -202,7 +198,6 @@
         @endphp
 
         <div class="site-block">
-            {{-- HEADER WARNA ABU-ABU: HANYA MENAMPILKAN KETERANGAN SITE --}}
             <div class="site-header">
                 <div>
                     📍 SITE: {{ strtoupper($siteName) }} (BRANCH: {{ strtoupper($branchName) }})
@@ -210,7 +205,6 @@
                 <span class="badge">{{ $reports->count() }} Report(s)</span>
             </div>
 
-            {{-- ISINYA BERWARNA PUTIH: TANGGAL & LOG NOTE --}}
             <div class="site-body">
                 @foreach ($reports as $report)
                     <div class="log-entry">
@@ -223,9 +217,17 @@
                             {{ $report->description }}
                         </div>
 
-                        @if ($report->photos->count() > 0)
+                        {{-- FILTER APABILA FILE GAMBAR AKTUAL BENAR-BENAR ADA --}}
+                        @php
+                            $validPhotos = $report->photos->filter(function ($photo) {
+                                return !empty($photo->photo_path) &&
+                                    file_exists(public_path('storage/' . $photo->photo_path));
+                            });
+                        @endphp
+
+                        @if ($validPhotos->count() > 0)
                             <div class="photo-grid">
-                                @foreach ($report->photos as $photo)
+                                @foreach ($validPhotos as $photo)
                                     <div class="photo-item">
                                         <img src="{{ asset('storage/' . $photo->photo_path) }}"
                                             alt="Photo Documentation">
@@ -241,7 +243,7 @@
             </div>
         </div>
     @empty
-        <p style="text-align: center; color: #94a3b8; padding: 30px; font-weight: bold;">
+        <p style="text-align: center; color: #94a3b8; padding: 20px; font-weight: bold;">
             Tidak ada catatan kegiatan harian untuk rentang tanggal ini.
         </p>
     @endforelse
