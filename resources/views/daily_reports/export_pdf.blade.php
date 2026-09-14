@@ -42,7 +42,7 @@
             font-weight: bold;
         }
 
-        /* CONTAINER SITE BLOCK (CONTINUE PAGE) */
+        /* CONTAINER SITE BLOCK */
         .site-block {
             margin-bottom: 12px;
             width: 100%;
@@ -150,6 +150,32 @@
             margin-top: 3px;
             font-weight: bold;
         }
+
+        /* TANDA TANGAN / SIGNATURE SECTION */
+        .signature-table {
+            width: 100%;
+            margin-top: 24px;
+            border-collapse: collapse;
+            page-break-inside: avoid;
+        }
+
+        .signature-table td {
+            font-size: 8.5pt;
+            vertical-align: top;
+        }
+
+        .signature-title {
+            font-weight: bold;
+            color: #334155;
+            margin-bottom: 45px;
+            /* Ruang untuk tanda tangan basah */
+        }
+
+        .signature-name {
+            font-weight: bold;
+            color: #0f172a;
+            text-decoration: underline;
+        }
     </style>
 </head>
 
@@ -181,7 +207,7 @@
                 </tr>
             </table>
 
-            {{-- ISI CARD PUTIH (CONTINUE PAGE) --}}
+            {{-- ISI CARD PUTIH --}}
             <div class="site-body">
                 @foreach ($reports as $report)
                     <div class="log-entry">
@@ -191,7 +217,11 @@
 
                         <div class="description">
                             <strong>Log Note:</strong><br>
-                            {!! nl2br(e($report->description)) !!}
+                            @php
+                                // CLEANUP: Membersihkan emoji & simbol non-ASCII yang menyebabkan tanda tanya (?) di DomPDF
+                                $cleanDescription = preg_replace('/[^\x20-\x7E\r\n\t]/u', '', $report->description);
+                            @endphp
+                            {!! nl2br(e($cleanDescription)) !!}
                         </div>
 
                         {{-- FILTER GAMBAR LOKAL AKTUAL --}}
@@ -214,7 +244,10 @@
                             <div class="photo-box">
                                 <img src="{{ public_path('storage/' . $photo->photo_path) }}" alt="Photo Documentation">
                                 @if ($photo->caption)
-                                    <div class="caption">{{ $photo->caption }}</div>
+                                    @php
+                                        $cleanCaption = preg_replace('/[^\x20-\x7E\r\n\t]/u', '', $photo->caption);
+                                    @endphp
+                                    <div class="caption">{{ $cleanCaption }}</div>
                                 @endif
                             </div>
                         </td>
@@ -235,6 +268,19 @@
         Tidak ada catatan kegiatan harian untuk rentang tanggal ini.
     </p>
     @endforelse
+
+    {{-- BAGIAN TANDA TANGAN (KNOWING, RANGGA) --}}
+    @if ($groupedReports->count() > 0)
+        <table class="signature-table">
+            <tr>
+                <td style="width: 70%;"></td>
+                <td style="width: 30%; text-align: center;">
+                    <div class="signature-title">Knowing,</div>
+                    <div class="signature-name">Rangga</div>
+                </td>
+            </tr>
+        </table>
+    @endif
 
 </body>
 
