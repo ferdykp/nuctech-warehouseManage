@@ -7,7 +7,7 @@
     <style>
         @page {
             size: a4 portrait;
-            margin: 10mm 10mm 10mm 10mm;
+            margin: 10mm;
         }
 
         body {
@@ -42,14 +42,13 @@
             font-weight: bold;
         }
 
-        /* CONTAINER SITE BLOCK (CONTINUE LAYOUT) */
+        /* CONTAINER SITE BLOCK (CONTINUE PAGE) */
         .site-block {
             margin-bottom: 12px;
             width: 100%;
-            page-break-inside: avoid;
         }
 
-        /* CONTAINER SITE HEADER (ABU-ABU LEBIH ELEGAN) */
+        /* CONTAINER SITE HEADER (ABU-ABU) */
         .site-header-table {
             width: 100%;
             border-collapse: collapse;
@@ -86,7 +85,6 @@
             border-bottom: 1px dashed #cbd5e1;
             padding-bottom: 8px;
             margin-bottom: 8px;
-            page-break-inside: avoid;
         }
 
         .log-entry:last-child {
@@ -114,7 +112,7 @@
             margin-top: 3px;
         }
 
-        /* TAMPILAN GRID FOTO DENGAN TABEL STABIL */
+        /* GRID FOTO */
         .photo-table {
             width: 100%;
             margin-top: 6px;
@@ -134,7 +132,6 @@
             border: 1px solid #e2e8f0;
             padding: 4px;
             text-align: center;
-            page-break-inside: avoid;
         }
 
         .photo-box img {
@@ -184,12 +181,12 @@
                 </tr>
             </table>
 
-            {{-- ISI CARD PUTIH (CONTINUE) --}}
+            {{-- ISI CARD PUTIH (CONTINUE PAGE) --}}
             <div class="site-body">
                 @foreach ($reports as $report)
                     <div class="log-entry">
                         <div class="log-date-box">
-                            📅 {{ $report->report_date->format('l, d F Y') }}
+                            {{ $report->report_date->format('l, d F Y') }}
                         </div>
 
                         <div class="description">
@@ -223,7 +220,6 @@
                         </td>
                 @endforeach
 
-                {{-- Mengisi sel kosong jika jumlah foto ganjil --}}
                 @if ($validPhotos->count() % 2 != 0)
                     <td class="photo-td"></td>
                 @endif
