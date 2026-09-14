@@ -294,8 +294,7 @@
                     class="text-xl font-bold cursor-pointer text-slate-400 hover:text-slate-600">&times;</button>
             </div>
 
-            <form action="{{ route('daily_reports.export_pdf') }}" method="GET" target="_blank"
-                class="p-6 space-y-4">
+            <form action="{{ route('daily_reports.export_pdf') }}" method="GET" class="p-6 space-y-4">
                 <div>
                     <label class="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">Preset
                         Cepat</label>

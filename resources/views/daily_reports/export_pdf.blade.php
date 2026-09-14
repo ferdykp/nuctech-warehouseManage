@@ -97,7 +97,6 @@
             border-radius: 6px;
         }
 
-        /* PERBAIKAN: Menggunakan object-fit: contain dan height auto agar gambar utuh */
         .photo-item img {
             max-width: 100%;
             max-height: 350px;
@@ -118,6 +117,26 @@
             font-weight: 600;
         }
 
+        .no-print-bar {
+            background: #0f172a;
+            color: white;
+            padding: 10px 20px;
+            margin: -20px -20px 20px -20px;
+            display: flex;
+            justify: space-between;
+            align-items: center;
+        }
+
+        .btn-print {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
         @media print {
             body {
                 padding: 0;
@@ -126,11 +145,21 @@
             .report-card {
                 page-break-inside: avoid;
             }
+
+            .no-print-bar {
+                display: none !important;
+            }
         }
     </style>
 </head>
 
 <body>
+
+    {{-- TOMBOL FALLBACK CETAK JIKA DI-BLOCK POPUP --}}
+    <div class="no-print-bar">
+        <span>📄 Daily Activity Report - PDF Mode</span>
+        <button onclick="window.print()" class="btn-print">🖨️ Cetak / Save PDF</button>
+    </div>
 
     <div class="header">
         <h2>Daily Activity Report</h2>
@@ -178,11 +207,12 @@
     @endforelse
 
     <script>
-        window.onload = function() {
+        // Memastikan seluruh halaman & foto selesai di-load sebelum pencetakan
+        window.addEventListener('load', function() {
             setTimeout(function() {
                 window.print();
-            }, 300);
-        };
+            }, 500);
+        });
     </script>
 </body>
 
