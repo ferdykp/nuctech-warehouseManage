@@ -167,7 +167,7 @@
         .signature-title {
             font-weight: bold;
             color: #334155;
-            margin-bottom: 25px;
+            margin-bottom: 65px;
             /* Jarak dibuat lebih rapat */
         }
 
