@@ -7,23 +7,23 @@
     <style>
         @page {
             size: a4 portrait;
-            margin: 12mm 10mm 12mm 10mm;
+            margin: 10mm 10mm 10mm 10mm;
         }
 
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 9pt;
+            font-size: 8.5pt;
             color: #1e293b;
             margin: 0;
             padding: 0;
             line-height: 1.35;
         }
 
-        /* HEADER DOKUMEN */
+        /* HEADER DOKUMEN UTAMA */
         .header {
             text-align: center;
-            border-bottom: 1.5px solid #10b981;
-            padding-bottom: 4px;
+            border-bottom: 2px solid #10b981;
+            padding-bottom: 6px;
             margin-bottom: 12px;
         }
 
@@ -36,41 +36,42 @@
         }
 
         .header p {
-            margin: 3px 0 0 0;
-            font-size: 8.5pt;
+            margin: 2px 0 0 0;
+            font-size: 8pt;
             color: #64748b;
             font-weight: bold;
         }
 
-        /* SITE CARD (CONTINUE LAYOUT) */
+        /* CONTAINER SITE BLOCK (CONTINUE LAYOUT) */
         .site-block {
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             width: 100%;
+            page-break-inside: avoid;
         }
 
-        /* CONTAINER SITE HEADER (ABU-ABU) */
+        /* CONTAINER SITE HEADER (ABU-ABU LEBIH ELEGAN) */
         .site-header-table {
             width: 100%;
             border-collapse: collapse;
-            background-color: #e2e8f0;
+            background-color: #f1f5f9;
             border: 1px solid #cbd5e1;
         }
 
         .site-header-table td {
             padding: 5px 8px;
-            font-size: 9.5pt;
+            font-size: 9pt;
             font-weight: bold;
             color: #0f172a;
+            vertical-align: middle;
         }
 
         .badge {
             background-color: #10b981;
             color: #ffffff;
-            font-size: 7.5pt;
+            font-size: 7pt;
             font-weight: bold;
             padding: 2px 6px;
-            border-radius: 8px;
-            display: inline-block;
+            border-radius: 4px;
         }
 
         /* CONTAINER ISI LOG ACTIVITY (KARTU PUTIH) */
@@ -86,7 +87,6 @@
             padding-bottom: 8px;
             margin-bottom: 8px;
             page-break-inside: avoid;
-            /* Menjaga agar 1 log entry tidak terpotong di tengah halaman */
         }
 
         .log-entry:last-child {
@@ -96,14 +96,15 @@
         }
 
         .log-date-box {
-            background-color: #f1f5f9;
+            background-color: #e2e8f0;
             color: #0f172a;
             font-weight: bold;
-            font-size: 8.5pt;
+            font-size: 8pt;
             padding: 2px 6px;
             border: 1px solid #cbd5e1;
             display: inline-block;
             margin-bottom: 4px;
+            border-radius: 3px;
         }
 
         .description {
@@ -113,11 +114,12 @@
             margin-top: 3px;
         }
 
-        /* TANYA & TAMPILKAN FOTO MENGGUNAKAN TABLE BROWSER DOMPDF */
+        /* TAMPILAN GRID FOTO DENGAN TABEL STABIL */
         .photo-table {
             width: 100%;
             margin-top: 6px;
             border-collapse: collapse;
+            table-layout: fixed;
         }
 
         .photo-td {
@@ -132,11 +134,12 @@
             border: 1px solid #e2e8f0;
             padding: 4px;
             text-align: center;
+            page-break-inside: avoid;
         }
 
         .photo-box img {
             max-width: 100%;
-            max-height: 180px;
+            max-height: 160px;
             height: auto;
             display: block;
             margin: 0 auto;
@@ -144,7 +147,7 @@
         }
 
         .caption {
-            font-size: 7.5pt;
+            font-size: 7pt;
             color: #475569;
             font-style: italic;
             margin-top: 3px;
@@ -175,18 +178,18 @@
                     <td style="text-align: left;">
                         SITE: {{ strtoupper($siteName) }} (BRANCH: {{ strtoupper($branchName) }})
                     </td>
-                    <td style="text-align: right; width: 100px;">
+                    <td style="text-align: right; width: 90px;">
                         <span class="badge">{{ $reports->count() }} Report(s)</span>
                     </td>
                 </tr>
             </table>
 
-            {{-- ISI CARD KARTU PUTIH (CONTINUE) --}}
+            {{-- ISI CARD PUTIH (CONTINUE) --}}
             <div class="site-body">
                 @foreach ($reports as $report)
                     <div class="log-entry">
                         <div class="log-date-box">
-                            {{ $report->report_date->format('l, d F Y') }}
+                            📅 {{ $report->report_date->format('l, d F Y') }}
                         </div>
 
                         <div class="description">
@@ -194,7 +197,7 @@
                             {!! nl2br(e($report->description)) !!}
                         </div>
 
-                        {{-- FILTER APABILA FILE GAMBAR FISIK AKTUAL ADA --}}
+                        {{-- FILTER GAMBAR LOKAL AKTUAL --}}
                         @php
                             $validPhotos = $report->photos->filter(function ($photo) {
                                 return !empty($photo->photo_path) &&
@@ -219,6 +222,8 @@
                             </div>
                         </td>
                 @endforeach
+
+                {{-- Mengisi sel kosong jika jumlah foto ganjil --}}
                 @if ($validPhotos->count() % 2 != 0)
                     <td class="photo-td"></td>
                 @endif
