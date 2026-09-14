@@ -6,7 +6,7 @@
     <title>Daily Activity Report Log</title>
     <style>
         @page {
-            margin: 10mm;
+            margin: 15mm;
             /* Atur margin cetak kertas */
         }
 
