@@ -151,10 +151,10 @@
             font-weight: bold;
         }
 
-        /* TANDA TANGAN / SIGNATURE SECTION */
+        /* TANDA TANGAN / SIGNATURE SECTION (DI KIRI DAN LEBIH RAPAT) */
         .signature-table {
             width: 100%;
-            margin-top: 24px;
+            margin-top: 16px;
             border-collapse: collapse;
             page-break-inside: avoid;
         }
@@ -167,8 +167,8 @@
         .signature-title {
             font-weight: bold;
             color: #334155;
-            margin-bottom: 45px;
-            /* Ruang untuk tanda tangan basah */
+            margin-bottom: 25px;
+            /* Jarak dibuat lebih rapat */
         }
 
         .signature-name {
@@ -269,15 +269,15 @@
     </p>
     @endforelse
 
-    {{-- BAGIAN TANDA TANGAN (KNOWING, RANGGA) --}}
+    {{-- BAGIAN TANDA TANGAN (SEBELAH KIRI & LEBIH RAPAT) --}}
     @if ($groupedReports->count() > 0)
         <table class="signature-table">
             <tr>
-                <td style="width: 70%;"></td>
-                <td style="width: 30%; text-align: center;">
+                <td style="width: 35%; text-align: left;">
                     <div class="signature-title">Knowing,</div>
                     <div class="signature-name">Rangga</div>
                 </td>
+                <td style="width: 65%;"></td>
             </tr>
         </table>
     @endif
