@@ -5,11 +5,6 @@
     <meta charset="UTF-8">
     <title>Daily Activity Report Log</title>
     <style>
-        @page {
-            margin: 15mm;
-            /* Atur margin cetak kertas */
-        }
-
         body {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 9.5px;
