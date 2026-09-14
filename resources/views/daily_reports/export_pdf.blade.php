@@ -198,8 +198,11 @@
             {{-- HEADER WARNA ABU-ABU --}}
             <table class="site-header-table">
                 <tr>
-                    <td style="text-align: left;">
+                    {{-- <td style="text-align: left;">
                         SITE: {{ strtoupper($siteName) }} (BRANCH: {{ strtoupper($branchName) }})
+                    </td> --}}
+                    <td style="text-align: left;">
+                        SITE: {{ strtoupper($siteName) }}
                     </td>
                     <td style="text-align: right; width: 90px;">
                         <span class="badge">{{ $reports->count() }} Report(s)</span>
@@ -216,7 +219,7 @@
                         </div>
 
                         <div class="description">
-                            <strong>Log Note:</strong><br>
+                            <strong>Note:</strong><br>
                             @php
                                 // CLEANUP: Membersihkan emoji & simbol non-ASCII yang menyebabkan tanda tanya (?) di DomPDF
                                 $cleanDescription = preg_replace('/[^\x20-\x7E\r\n\t]/u', '', $report->description);
