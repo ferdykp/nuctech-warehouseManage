@@ -359,4 +359,41 @@ class DailyReportController extends Controller
 
         return response()->json(['message' => 'Foto berhasil dihapus.']);
     }
+
+    // 1. Halaman Trash (Menampilkan Data yang Dihapus)
+    public function trash(Request $request)
+    {
+        // onlyTrashed() hanya mengambil data yang terhapus sementara
+        $reports = DailyReport::onlyTrashed()
+            ->with(['site.branch', 'user'])
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
+
+        return view('daily_reports.trash', compact('reports'));
+    }
+
+    // 2. Restore Data (Mengembalikan Data)
+    public function restore($id)
+    {
+        $report = DailyReport::onlyTrashed()->findOrFail($id);
+        $report->restore(); // Mengosongkan kembali kolom deleted_at
+
+        return redirect()->route('daily_reports.trash')->with('success', 'Data berhasil dikembalikan!');
+    }
+
+    // 3. Force Delete (Hapus Permanen dari Database)
+    public function forceDelete($id)
+    {
+        $report = DailyReport::onlyTrashed()->with('photos')->findOrFail($id);
+
+        // Hapus file fisik foto jika ada
+        foreach ($report->photos as $photo) {
+            \Storage::disk('public')->delete($photo->photo_path);
+        }
+
+        // Hapus permanen dari DB
+        $report->forceDelete();
+
+        return redirect()->route('daily_reports.trash')->with('success', 'Data berhasil dihapus secara permanen!');
+    }
 }

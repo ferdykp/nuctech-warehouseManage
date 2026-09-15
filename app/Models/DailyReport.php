@@ -4,10 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes; // 1. Import Trait
 
 class DailyReport extends Model
 {
     use HasFactory;
+    use SoftDeletes; // 2. Gunakan Trait
+
 
     protected $fillable = [
         'site_id',
@@ -19,6 +22,8 @@ class DailyReport extends Model
     protected $casts = [
         'report_date' => 'date',
     ];
+
+    protected $dates = ['deleted_at'];
 
     public function site()
     {

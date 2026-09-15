@@ -119,6 +119,11 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::put('/{id}', [DailyReportController::class, 'update'])->name('update');
             Route::delete('/photos/{photo}', [DailyReportController::class, 'destroyPhoto'])->name('photos.destroy');
             Route::delete('/{id}', [DailyReportController::class, 'destroy'])->name('destroy');
+
+            // Route Trash / Recycle Bin
+            Route::get('/trash/archive', [DailyReportController::class, 'trash'])->name('trash');
+            Route::post('/{id}/restore', [DailyReportController::class, 'restore'])->name('restore');
+            Route::delete('/{id}/force-delete', [DailyReportController::class, 'forceDelete'])->name('force_delete');
         });
 
         Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');

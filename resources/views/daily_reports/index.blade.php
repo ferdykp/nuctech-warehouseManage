@@ -23,6 +23,12 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+                    {{-- TOMBOL RECYCLE BIN / ARCHIVE --}}
+                    <a href="{{ route('daily_reports.trash') }}"
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200/80 rounded-xl hover:bg-amber-100 active:scale-95 transition-all shadow-2xs cursor-pointer">
+                        <i class="fa-solid fa-box-archive text-amber-600"></i> Recycle Bin
+                    </a>
+
                     <button type="button" onclick="openExportModal()"
                         class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 rounded-xl hover:bg-emerald-100 active:scale-95 transition-all shadow-2xs cursor-pointer">
                         <i class="fa-solid fa-file-pdf text-emerald-600"></i> Export Report (PDF)
@@ -35,13 +41,6 @@
                 </div>
             </div>
         </div>
-
-        {{-- ALERTS --}}
-        @if (session('success'))
-            <div class="p-4 text-xs font-bold border text-emerald-800 border-emerald-200 bg-emerald-50 rounded-2xl">
-                {{ session('success') }}
-            </div>
-        @endif
 
         {{-- 2. TABLE CARD CONTAINER --}}
         <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
@@ -64,7 +63,7 @@
                             </div>
                         </div>
 
-                        {{-- BRANCH FILTER (HANYA UNTUK SUPERADMIN / ADMIN) --}}
+                        {{-- BRANCH FILTER --}}
                         @if (in_array(auth()->user()->role, ['superadmin', 'administration']))
                             <div class="lg:col-span-2">
                                 <label
@@ -194,17 +193,13 @@
                                             <i class="text-xs fa-solid fa-pen-to-square"></i>
                                         </a>
 
-                                        {{-- TOMBOL DELETE --}}
-                                        <form action="{{ route('daily_reports.destroy', $report->id) }}" method="POST"
-                                            onsubmit="return confirm('Hapus laporan ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
-                                                title="Delete">
-                                                <i class="text-xs fa-solid fa-trash-can"></i>
-                                            </button>
-                                        </form>
+                                        {{-- TOMBOL DELETE (DENGAN POPUP MODAL ARCHIVE) --}}
+                                        <button type="button"
+                                            onclick="openDeleteModal({{ $report->id }}, '{{ $report->report_date->format('d M Y') }}', '{{ $report->site->machine_name ?? 'Site' }}')"
+                                            class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
+                                            title="Delete to Recycle Bin">
+                                            <i class="text-xs fa-solid fa-trash-can"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -224,6 +219,42 @@
             <div class="p-4 border-t sm:p-6 border-slate-100 bg-slate-50/30">
                 {{ $reports->links() }}
             </div>
+        </div>
+    </div>
+
+    {{-- MODAL POPUP CONFIRM DELETE TO RECYCLE BIN --}}
+    <div id="deleteModal" onclick="if(event.target===this) closeDeleteModal()"
+        class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs">
+        <div class="flex flex-col w-full max-w-md overflow-hidden bg-white border shadow-2xl border-slate-100 rounded-3xl">
+            <div class="p-6 space-y-4 text-center">
+                <div
+                    class="flex items-center justify-center mx-auto border rounded-full w-14 h-14 text-amber-600 bg-amber-50 border-amber-100">
+                    <i class="text-xl fa-solid fa-box-archive"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold text-slate-900">Pindahkan ke Recycle Bin?</h3>
+                    <p class="mt-1 text-xs font-medium leading-relaxed text-slate-500">
+                        Laporan <strong id="delete_report_info" class="text-slate-800"></strong> akan dipindahkan ke menu
+                        <strong class="text-amber-600">Recycle Bin / Archive</strong>. Data tidak langsung terhapus
+                        permanen dan bisa dikembalikan (*restore*) kapan saja.
+                    </p>
+                </div>
+            </div>
+
+            <form id="deleteForm" method="POST" action="">
+                @csrf
+                @method('DELETE')
+                <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+                    <button type="button" onclick="closeDeleteModal()"
+                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit"
+                        class="px-5 py-2.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md shadow-amber-600/20 active:scale-95 transition-all cursor-pointer">
+                        <i class="mr-1 fa-solid fa-box-archive"></i> Ya, Archieve
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -379,6 +410,30 @@
 
 @push('scripts')
     <script>
+        // MODAL DELETE CONFIRMATION
+        function openDeleteModal(reportId, reportDate, siteName) {
+            const form = document.getElementById('deleteForm');
+            form.action = `/daily-reports/${reportId}`;
+
+            document.getElementById('delete_report_info').innerText = `${siteName} (${reportDate})`;
+
+            const modal = document.getElementById('deleteModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
+            }
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            document.body.classList.remove('overflow-hidden');
+        }
+
         function filterSitesByBranch() {
             const branchId = document.getElementById('filter_branch_id').value;
             const siteSelect = document.getElementById('filter_site_id');
@@ -394,7 +449,6 @@
                 }
             });
 
-            // Reset site selection if hidden
             const currentSelected = siteSelect.options[siteSelect.selectedIndex];
             if (currentSelected && currentSelected.style.display === 'none') {
                 siteSelect.value = '';
@@ -595,6 +649,7 @@
             if (e.key === 'Escape') {
                 closeExportModal();
                 closeDetailModal();
+                closeDeleteModal();
             }
         });
     </script>
