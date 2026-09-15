@@ -104,6 +104,13 @@
 
                 {{-- ACTION BUTTONS --}}
                 <div class="flex flex-wrap items-center gap-2.5">
+                    {{-- TOMBOL RECYCLE BIN / ARCHIVE --}}
+                    <a href="{{ route('reimbursements.trash') }}"
+                        class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200/80 rounded-xl hover:bg-amber-100 active:scale-95 transition-all shadow-2xs cursor-pointer">
+                        <i class="fa-solid fa-box-archive text-amber-600"></i>
+                        <span>Recycle Bin</span>
+                    </a>
+
                     <a href="{{ route('reimbursements.create') }}"
                         class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md shadow-amber-600/20 active:scale-95">
                         <i class="text-xs fa-solid fa-plus"></i>
@@ -259,11 +266,12 @@
                                                 <i class="text-xs fa-solid fa-pen-nib"></i>
                                             </a>
 
-                                            {{-- CANCEL / DELETE --}}
-                                            <button type="button" onclick="confirmCancel('{{ $r->id }}')"
+                                            {{-- CANCEL / DELETE TO RECYCLE BIN --}}
+                                            <button type="button"
+                                                onclick="confirmCancel('{{ $r->id }}', '{{ $r->person_name }}', 'Rp {{ number_format((float) ($r->amount ?? 0), 0, ',', '.') }}')"
                                                 class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
-                                                title="Cancel Claim">
-                                                <i class="text-xs fa-solid fa-ban"></i>
+                                                title="Move to Recycle Bin">
+                                                <i class="text-xs fa-solid fa-trash-can"></i>
                                             </button>
                                         </div>
                                     </td>
@@ -345,6 +353,12 @@
                                     class="p-2 text-white bg-amber-600 hover:bg-amber-700 rounded-xl font-bold text-xs flex-1 text-center flex justify-center items-center gap-1.5 shadow-md shadow-amber-600/20 active:scale-95 transition-all">
                                     <i class="fa-solid fa-pen-nib"></i> Sign Claim
                                 </a>
+
+                                <button type="button"
+                                    onclick="confirmCancel('{{ $r->id }}', '{{ $r->person_name }}', 'Rp {{ number_format((float) ($r->amount ?? 0), 0, ',', '.') }}')"
+                                    class="p-2 text-rose-700 bg-rose-50 border border-rose-100 hover:bg-rose-100 rounded-xl font-bold text-xs flex-1 text-center flex justify-center items-center gap-1.5 transition-colors cursor-pointer">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
                             </div>
                         </div>
                     @empty
@@ -514,26 +528,33 @@
         </div>
     </div>
 
-    {{-- MODAL 2: CANCEL FORM MODAL --}}
+    {{-- MODAL 2: CANCEL / DELETE TO RECYCLE BIN MODAL --}}
     <div id="cancelModal" onclick="if(event.target===this) closeCancelModal()"
         class="fixed inset-0 z-50 flex items-center justify-center hidden p-4 transition-all duration-300 bg-slate-900/60 backdrop-blur-xs">
-        <div class="relative w-full max-w-sm p-6 text-center bg-white border shadow-2xl border-slate-100 rounded-3xl">
+        <div
+            class="relative w-full max-w-md p-6 space-y-4 text-center bg-white border shadow-2xl border-slate-100 rounded-3xl">
             <div
-                class="flex items-center justify-center w-12 h-12 mx-auto mb-3 border rounded-2xl bg-rose-50 border-rose-100 text-rose-600">
-                <i class="text-lg fa-solid fa-triangle-exclamation"></i>
+                class="flex items-center justify-center mx-auto border rounded-full w-14 h-14 text-amber-600 bg-amber-50 border-amber-100">
+                <i class="text-xl fa-solid fa-box-archive"></i>
             </div>
-            <h3 class="text-base font-extrabold text-slate-900">Cancel Reimbursement Claim?</h3>
-            <p class="mt-1 text-xs font-medium text-slate-500">This will permanently delete this operational expense file
-                record from the database.</p>
-            <form method="POST" action="" class="flex gap-3 mt-6">
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900">Pindahkan ke Recycle Bin?</h3>
+                <p class="mt-1 text-xs font-medium leading-relaxed text-slate-500">
+                    Klaim atas nama <strong id="cancel_person_name" class="text-slate-800"></strong> (<span
+                        id="cancel_amount" class="font-bold text-rose-600"></span>) akan dipindahkan ke menu <strong
+                        class="text-amber-600">Recycle Bin / Archive</strong>. Data tidak langsung terhapus permanen dan
+                    bisa dikembalikan kapan saja.
+                </p>
+            </div>
+            <form method="POST" action="" class="flex gap-3 pt-2">
                 @csrf @method('DELETE')
-                <button type="submit"
-                    class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all active:scale-[0.98] shadow-md shadow-rose-600/20 cursor-pointer">
-                    Yes, Delete
-                </button>
                 <button type="button" onclick="closeCancelModal()"
                     class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs uppercase tracking-wider rounded-xl transition-colors cursor-pointer">
-                    Dismiss
+                    Batal
+                </button>
+                <button type="submit"
+                    class="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all active:scale-[0.98] shadow-md shadow-amber-600/20 cursor-pointer">
+                    <i class="mr-1 fa-solid fa-box-archive"></i> Ya, Archive
                 </button>
             </form>
         </div>
@@ -798,14 +819,21 @@
             document.body.classList.remove('overflow-hidden');
         }
 
-        function confirmCancel(id) {
+        function confirmCancel(id, personName = '', amount = '') {
             const modal = document.getElementById('cancelModal');
             if (!modal) return;
+
+            const form = modal.querySelector('form');
+            if (form) form.action = `/reimbursements/${id}`;
+
+            const nameEl = document.getElementById('cancel_person_name');
+            const amountEl = document.getElementById('cancel_amount');
+            if (nameEl) nameEl.innerText = personName;
+            if (amountEl) amountEl.innerText = amount;
+
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             document.body.classList.add('overflow-hidden');
-            const form = modal.querySelector('form');
-            if (form) form.action = `/reimbursements/${id}`;
         }
 
         function closeCancelModal() {

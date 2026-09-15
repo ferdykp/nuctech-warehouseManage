@@ -109,6 +109,11 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('/reimbursements/store', [AdminReimbursementController::class, 'store'])->name('reimbursements.store');
         Route::get('/reimbursements/{id}', [AdminReimbursementController::class, 'show'])->name('reimbursements.show');
         Route::get('/reimbursements/{id}/approval', [AdminReimbursementController::class, 'approval'])->name('reimbursements.approval');
+        Route::prefix('reimbursements')->name('reimbursements.')->group(function () {
+            Route::get('/trash/archive', [AdminReimbursementController::class, 'trash'])->name('trash');
+            Route::post('/{id}/restore', [AdminReimbursementController::class, 'restore'])->name('restore');
+            Route::delete('/{id}/force-delete', [AdminReimbursementController::class, 'forceDelete'])->name('force_delete');
+        });
 
         Route::prefix('daily-reports')->name('daily_reports.')->group(function () {
             Route::get('/', [DailyReportController::class, 'index'])->name('index');

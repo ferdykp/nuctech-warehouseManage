@@ -80,7 +80,6 @@ class AdminReimbursementController extends Controller
 
         return view('reimbursements.index', compact('reimbursements', 'pageTitle', 'totalApprovedAmount', 'pdfBase64'));
     }
-
     public function create()
     {
         $user = auth()->user();
@@ -412,17 +411,57 @@ class AdminReimbursementController extends Controller
         return redirect()->route('reimbursements.index')->with('success', 'Claim rejected successfully.');
     }
 
-    public function destroy($id)
+    public function trash(Request $request)
     {
-        $reimbursement = Reimbursement::findOrFail($id);
+        $role = strtolower(auth()->user()->role ?? 'employee_role');
+
+        $query = Reimbursement::onlyTrashed()->with('user');
+
+        if (!in_array($role, ['superadmin', 'manager'])) {
+            $query->where('user_id', auth()->id());
+        }
+
+        $reimbursements = $query->orderBy('deleted_at', 'desc')->paginate(10);
+
+        return view('reimbursements.trash', compact('reimbursements'));
+    }
+
+    /**
+     * RESTORE DATA KLAIM DARI RECYCLE BIN
+     */
+    public function restore($id)
+    {
+        $reimbursement = Reimbursement::onlyTrashed()->findOrFail($id);
+        $reimbursement->restore();
+
+        return redirect()->route('reimbursements.trash')->with('success', 'Claim record successfully restored.');
+    }
+
+    /**
+     * HAPUS PERMANEN DATA KLAIM & FILE FISIK NOTA
+     */
+    public function forceDelete($id)
+    {
+        $reimbursement = Reimbursement::onlyTrashed()->findOrFail($id);
+
         if ($reimbursement->receipt_attachment) {
             Storage::disk('public')->delete($reimbursement->receipt_attachment);
         }
-        $reimbursement->delete();
 
-        return redirect()->route('reimbursements.index')->with('success', 'Claim canceled successfully.');
+        $reimbursement->forceDelete();
+
+        return redirect()->route('reimbursements.trash')->with('success', 'Claim record permanently deleted.');
     }
 
+    public function destroy($id)
+    {
+        $reimbursement = Reimbursement::findOrFail($id);
+
+        // Soft Delete (File fisik tidak langsung dihapus agar bisa di-restore)
+        $reimbursement->delete();
+
+        return redirect()->route('reimbursements.index')->with('success', 'Claim moved to Recycle Bin.');
+    }
     public function show($id)
     {
         $reimbursement = Reimbursement::findOrFail($id);

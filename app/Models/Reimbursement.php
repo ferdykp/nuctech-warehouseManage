@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Reimbursement extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     /**
      * Atribut yang dapat diisi secara massal (Mass Assignable).
@@ -33,6 +35,7 @@ class Reimbursement extends Model
         'digital_signature', // Tambahkan ini
     ];
 
+    protected $dates = ['deleted_at'];
     /**
      * Konversi (Casting) tipe data kolom database ke tipe data PHP.
      * Memastikan tanggal menjadi objek Carbon dan nominal uang dihitung dengan benar.
