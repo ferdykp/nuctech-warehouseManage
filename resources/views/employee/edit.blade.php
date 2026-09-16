@@ -101,7 +101,6 @@
                                 @endforeach
                             </select>
                         @else
-                            {{-- Fallback jika user login tidak memiliki site_id, gunakan site_id milik data employee yang sedang diedit --}}
                             <input type="hidden" name="site_id"
                                 value="{{ old('site_id', Auth::user()->site_id ?? $employee->site_id) }}">
                             <input type="text"
@@ -109,12 +108,14 @@
                                 class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-600 bg-slate-100 border border-slate-200 rounded-xl cursor-not-allowed"
                                 readonly>
                         @endif
-                    </div> {{-- STATUS --}}
+                    </div>
+
+                    {{-- STATUS --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Employment Status
+                            Employment Status <span class="text-rose-500">*</span>
                         </label>
-                        <select name="status"
+                        <select name="status" id="status_select"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
                             <option value="Probation"
                                 {{ old('status', $employee->status) == 'Probation' ? 'selected' : '' }}>Probation</option>
@@ -124,6 +125,8 @@
                                 {{ old('status', $employee->status) == 'Permanent' ? 'selected' : '' }}>Permanent</option>
                             <option value="Daily" {{ old('status', $employee->status) == 'Daily' ? 'selected' : '' }}>
                                 Daily</option>
+                            <option value="Resigned" class="font-bold text-rose-600"
+                                {{ old('status', $employee->status) == 'Resigned' ? 'selected' : '' }}>🔴 Resigned</option>
                         </select>
                     </div>
 
@@ -256,6 +259,26 @@
                             value="{{ old('contract_start_date', isset($employee->contract_start_date) ? \Carbon\Carbon::parse($employee->contract_start_date)->format('Y-m-d') : '') }}"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
                     </div>
+
+                    {{-- LAST DAY / RESIGN DATE CONTAINER --}}
+                    <div class="hidden p-4 space-y-2 border md:col-span-2 bg-rose-50/40 border-rose-200/80 rounded-2xl"
+                        id="resign_date_container">
+                        <div class="flex items-center gap-2 text-rose-800">
+                            <i class="text-sm fa-solid fa-calendar-xmark"></i>
+                            <label class="text-xs font-extrabold tracking-wider uppercase">
+                                Last Working Day (Tanggal Resign) <span class="text-rose-600">*</span>
+                            </label>
+                        </div>
+                        <p class="text-[11px] text-slate-500 font-medium leading-relaxed">
+                            Masukkan hari terakhir karyawan bekerja. Karyawan ini akan dinonaktifkan dari perhitungan gaji
+                            (payroll) periode berikutnya.
+                        </p>
+                        <div class="relative w-full pt-1 md:w-1/2">
+                            <input type="date" name="resign_date" id="resign_date_input"
+                                value="{{ old('resign_date', isset($employee->resign_date) ? \Carbon\Carbon::parse($employee->resign_date)->format('Y-m-d') : '') }}"
+                                class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-rose-300 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-white text-slate-800">
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -282,6 +305,27 @@
             function initEditEmployeeScripts() {
                 const salaryDisplay = document.getElementById('basic_salary_display');
                 const salaryReal = document.getElementById('basic_salary_real');
+                const statusSelect = document.getElementById('status_select');
+                const resignContainer = document.getElementById('resign_date_container');
+                const resignInput = document.getElementById('resign_date_input');
+
+                // Toggle Visibilitas Input Resign Date & Last Day
+                function checkStatusResign() {
+                    if (statusSelect && resignContainer && resignInput) {
+                        if (statusSelect.value === 'Resigned') {
+                            resignContainer.classList.remove('hidden');
+                            resignInput.setAttribute('required', 'required');
+                        } else {
+                            resignContainer.classList.add('hidden');
+                            resignInput.removeAttribute('required');
+                        }
+                    }
+                }
+
+                if (statusSelect) {
+                    statusSelect.addEventListener('change', checkStatusResign);
+                    checkStatusResign();
+                }
 
                 function formatRupiah(value) {
                     let number = String(value).replace(/\D/g, '');

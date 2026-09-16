@@ -146,8 +146,8 @@ class EmployeeController extends Controller
             'email'                => 'nullable|email|max:255|unique:employees,email,' . $employee->id,
             'nik'                  => 'nullable|string|max:16|unique:employees,nik,' . $employee->id,
             'phone_number'         => 'required|string|max:20',
-            'position'            => 'nullable|string|max:100',
-            'status'               => 'required|in:Permanent,Contract,Probation,Daily',
+            'position'             => 'nullable|string|max:100',
+            'status'               => 'required|in:Permanent,Contract,Probation,Daily,Resigned', // Tambahkan Resigned
             'basic_salary'         => 'nullable|numeric|min:0',
             'bank_name'            => 'nullable|string|max:100',
             'bank_account_number'  => 'nullable|string|max:100',
@@ -155,6 +155,7 @@ class EmployeeController extends Controller
             'tld'                  => 'nullable|in:yes,no',
             'salary_change_reason' => 'nullable|string|max:255',
             'join_date'            => 'required|date',
+            'resign_date'          => 'nullable|required_if:status,Resigned|date', // Tambahkan validasi resign_date
             'contract_start_date'  => 'nullable|date',
         ]);
 
@@ -178,6 +179,9 @@ class EmployeeController extends Controller
         $validatedData['mcu']       = $validatedData['mcu'] ?? $employee->mcu ?? 'no';
         $validatedData['tld']       = $validatedData['tld'] ?? $employee->tld ?? 'no';
 
+        // Atur status aktifitas sistem
+        $validatedData['is_active'] = ($request->status !== 'Resigned');
+
         $employee->update($validatedData);
 
         return redirect()->route('employee.index')->with('success', 'Employee data successfully updated!');
@@ -189,10 +193,6 @@ class EmployeeController extends Controller
             $user = Auth::user();
             $employeeId = is_object($id) ? $id->id : $id;
 
-            if (!is_numeric($employeeId)) {
-                return response()->json(['message' => 'Invalid Employee ID'], 400);
-            }
-
             $employee = Employee::with(['site.branch', 'salaryHistories'])->findOrFail($employeeId);
 
             if ($user && $user->role === 'employee_role' && (int)$employee->site_id !== (int)$user->site_id) {
@@ -200,7 +200,12 @@ class EmployeeController extends Controller
             }
 
             $joinDate = Carbon::parse($employee->join_date);
-            $diff = $joinDate->diff(Carbon::now());
+            // Jika sudah resign, hitung tenure sampai tanggal resign, bukan tanggal hari ini
+            $endDate = ($employee->status === 'Resigned' && $employee->resign_date)
+                ? Carbon::parse($employee->resign_date)
+                : Carbon::now();
+
+            $diff = $joinDate->diff($endDate);
 
             $tenureParts = [];
             if ($diff->y > 0) $tenureParts[] = $diff->y . ' Tahun';
@@ -209,6 +214,9 @@ class EmployeeController extends Controller
 
             $employee->tenure_formatted = implode(' ', $tenureParts);
             $employee->join_date_formatted = $joinDate->translatedFormat('d F Y');
+            $employee->resign_date_formatted = $employee->resign_date
+                ? Carbon::parse($employee->resign_date)->translatedFormat('d F Y')
+                : '-';
             $employee->contract_start_formatted = $employee->contract_start_date
                 ? Carbon::parse($employee->contract_start_date)->translatedFormat('d F Y')
                 : '-';
@@ -218,9 +226,7 @@ class EmployeeController extends Controller
 
             return response()->json($employee);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Gagal mengambil data karyawan: ' . $e->getMessage()
-            ], 500);
+            return response()->json(['message' => 'Gagal mengambil data karyawan: ' . $e->getMessage()], 500);
         }
     }
 

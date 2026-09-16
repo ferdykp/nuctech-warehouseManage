@@ -30,6 +30,11 @@ class Employee extends Model
         'more_information', //from salary
     ];
 
+    protected $casts = [
+        'join_date' => 'date',
+        'resign_date' => 'date',
+    ];
+
     public function site()
     {
         return $this->belongsTo(Site::class, 'site_id');

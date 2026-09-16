@@ -206,11 +206,25 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::put('/{id}', [EmployeeController::class, 'update'])->name('update');
             Route::delete('/{id}', [EmployeeController::class, 'destroy'])->name('destroy');
         });
+        Route::prefix('salary')->name('salary.')->group(function () {
+            Route::get('/', [SalaryController::class, 'index'])->name('index');
+            Route::get('/create', [SalaryController::class, 'create'])->name('create');
+            Route::post('/', [SalaryController::class, 'store'])->name('store');
 
+            // ROUTE GENERATE & RESET PAYROLL BULANAN
+            Route::post('/generate-monthly', [SalaryController::class, 'generateMonthlySalaries'])->name('generateMonthly');
+            Route::post('/reset-monthly', [SalaryController::class, 'resetMonthlySalaries'])->name('resetMonthly'); // <-- Tambahkan Route Ini
+
+            Route::get('/export-excel', [SalaryController::class, 'exportExcel'])->name('exportExcel');
+            Route::get('/{id}', [SalaryController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [SalaryController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [SalaryController::class, 'update'])->name('update');
+            Route::delete('/{id}', [SalaryController::class, 'destroy'])->name('destroy');
+        });
         // Salary Management
-        Route::post('/salary/generate-monthly', [SalaryController::class, 'generateMonthlySalaries'])->name('salary.generateMonthly');
-        Route::get('/salary/export-excel', [SalaryController::class, 'exportExcel'])->name('salary.exportExcel');
-        Route::resource('salary', SalaryController::class);
+        // Route::post('/salary/generate-monthly', [SalaryController::class, 'generateMonthlySalaries'])->name('salary.generateMonthly');
+        // Route::get('/salary/export-excel', [SalaryController::class, 'exportExcel'])->name('salary.exportExcel');
+        // Route::resource('salary', SalaryController::class);
     });
     // Manajemen Employee
     // Manajemen Employee

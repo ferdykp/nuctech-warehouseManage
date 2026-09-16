@@ -96,6 +96,7 @@
 
                         {{-- Filter Grid --}}
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                            {{-- Di bagian dropdown filter status --}}
                             <div>
                                 <label
                                     class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Status</label>
@@ -110,6 +111,8 @@
                                         Probation</option>
                                     <option value="Daily" {{ request('status') == 'Daily' ? 'selected' : '' }}>Daily
                                     </option>
+                                    <option value="Resigned" {{ request('status') == 'Resigned' ? 'selected' : '' }}>🔴
+                                        Resigned</option>
                                 </select>
                             </div>
 
@@ -554,7 +557,6 @@
     }
 
     function showEmployeeDetail(id) {
-        // Reset state visibilitas gaji setiap kali membuka modal baru
         isSalaryVisible = false;
         const icon = document.getElementById('salary_toggle_icon');
         if (icon) icon.className = 'fa-solid fa-eye-slash text-xs';
@@ -582,8 +584,17 @@
                 document.getElementById('detail_bank').innerText = (data.bank_name && data.bank_account_number) ?
                     `${data.bank_name} - ${data.bank_account_number}` : (data.bank_account_number || '-');
 
+                // Badge Status dengan pembedaan warna khusus untuk Resigned
+                let badgeClass = 'bg-slate-100 text-slate-700 border-slate-200';
+                if (data.status === 'Resigned') {
+                    badgeClass = 'bg-rose-50 text-rose-700 border-rose-200';
+                } else if (data.status === 'Permanent') {
+                    badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                }
+
                 document.getElementById('detail_status_badge').innerHTML =
-                    `<span class="px-2.5 py-1 text-[10px] font-extrabold text-slate-700 bg-slate-100 border border-slate-200 rounded-full uppercase">${data.status || 'Active'}</span>`;
+                    `<span class="px-2.5 py-1 text-[10px] font-extrabold border rounded-full uppercase ${badgeClass}">${data.status || 'Active'}</span>`;
+
                 document.getElementById('detail_mcu_badge').innerHTML = (data.mcu === 'yes') ?
                     `<span class="px-2 py-0.5 text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md">YES</span>` :
                     `<span class="px-2 py-0.5 text-[10px] font-black text-slate-500 bg-slate-100 border border-slate-200 rounded-md">NO</span>`;

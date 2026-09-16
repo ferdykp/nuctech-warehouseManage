@@ -28,6 +28,11 @@
                         <i class="fa-solid fa-file-excel text-emerald-600"></i> Export Excel
                     </button>
 
+                    <button type="button" onclick="openResetModal()"
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200/80 rounded-xl hover:bg-rose-100 active:scale-95 transition-all shadow-2xs cursor-pointer">
+                        <i class="fa-solid fa-rotate-left text-rose-600"></i> Reset Payroll
+                    </button>
+
                     <button type="button" onclick="openGenerateModal()"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold text-white transition-all bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Payroll
@@ -165,7 +170,7 @@
                         <i class="text-base fa-solid fa-wand-magic-sparkles"></i>
                     </div>
                     <div>
-                        <h3 class="text-sm font-extrabold text-slate-900">Generate Monthly Payroll</h3>
+                        <h3 class="text-sm font-extrabold text-slate-900">Generate / Re-sync Monthly Payroll</h3>
                         <p class="text-[11px] font-medium text-slate-500">Select period for bulk employee payroll
                             generation.</p>
                     </div>
@@ -202,8 +207,8 @@
                 <div
                     class="p-3.5 text-xs leading-relaxed text-amber-800 bg-amber-50/80 border border-amber-200/80 rounded-2xl flex items-start gap-2.5 font-medium">
                     <i class="fa-solid fa-circle-info text-amber-600 mt-0.5 shrink-0"></i>
-                    <span>If salary data already exists for this period, the system will update records without
-                        duplication.</span>
+                    <span>Sistem akan otomatis mengupdate gaji karyawan aktif dan <strong>menghapus data gaji karyawan yang
+                            sudah Resigned</strong> pada periode ini.</span>
                 </div>
 
                 <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
@@ -214,6 +219,72 @@
                     <button type="submit"
                         class="px-5 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95 cursor-pointer">
                         <i class="mr-1.5 fa-solid fa-wand-magic-sparkles"></i> Process Generation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- MODAL RESET PAYROLL --}}
+    <div id="modalResetSalary" onclick="if(event.target===this) closeResetModal()"
+        class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs">
+        <div class="flex flex-col w-full max-w-md overflow-hidden bg-white border shadow-2xl border-slate-100 rounded-3xl">
+            <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="flex items-center justify-center w-10 h-10 border text-rose-600 bg-rose-50 border-rose-100 rounded-2xl shrink-0">
+                        <i class="text-base fa-solid fa-rotate-left"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-extrabold text-slate-900">Reset Period Payroll</h3>
+                        <p class="text-[11px] font-medium text-slate-500">Kosongkan seluruh data gaji pada bulan terpilih.
+                        </p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeResetModal()"
+                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
+            </div>
+
+            <form action="{{ route('salary.resetMonthly') }}" method="POST" class="p-6 space-y-4">
+                @csrf
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label
+                            class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Month</label>
+                        <select name="month" id="modal_reset_month"
+                            class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 text-slate-800 cursor-pointer">
+                            @foreach ($monthList as $k => $v)
+                                <option value="{{ $k }}">{{ $v }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label
+                            class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Year</label>
+                        <select name="year" id="modal_reset_year"
+                            class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 text-slate-800 cursor-pointer">
+                            @for ($y = date('Y') - 2; $y <= date('Y') + 2; $y++)
+                                <option value="{{ $y }}">{{ $y }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                </div>
+
+                <div
+                    class="p-3.5 text-xs leading-relaxed text-rose-800 bg-rose-50/80 border border-rose-200/80 rounded-2xl flex items-start gap-2.5 font-medium">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-600 mt-0.5 shrink-0"></i>
+                    <span>Tindakan ini akan <strong>menghapus seluruh data penggajian</strong> pada bulan & tahun yang
+                        dipilih agar Anda dapat meng-generate ulang dari awal.</span>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeResetModal()"
+                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit"
+                        class="px-5 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-rose-600 hover:bg-rose-700 rounded-xl shadow-rose-600/20 active:scale-95 cursor-pointer">
+                        <i class="mr-1.5 fa-solid fa-rotate-left"></i> Reset Payroll Periode Ini
                     </button>
                 </div>
             </form>
@@ -369,6 +440,30 @@
             document.body.classList.remove('overflow-hidden');
         }
 
+        function openResetModal() {
+            const monthEl = document.getElementById('filter-month');
+            const yearEl = document.getElementById('filter-year');
+
+            if (monthEl) document.getElementById('modal_reset_month').value = monthEl.value;
+            if (yearEl) document.getElementById('modal_reset_year').value = yearEl.value;
+
+            let modal = document.getElementById('modalResetSalary');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
+            }
+        }
+
+        function closeResetModal() {
+            let modal = document.getElementById('modalResetSalary');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            document.body.classList.remove('overflow-hidden');
+        }
+
         function fetchSalaries(targetUrl = null) {
             const tableContainer = document.getElementById('table-container');
             if (!tableContainer) return;
@@ -394,6 +489,7 @@
                 .then(html => {
                     tableContainer.innerHTML = html;
                     tableContainer.style.opacity = '1';
+                    applySalaryVisibility();
                 })
                 .catch(err => {
                     console.error('Error fetching salaries:', err);
@@ -524,34 +620,14 @@
             window.location.href = url;
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            initSalaryPageScripts();
-
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    closeGenerateModal();
-                    closeSalaryModal();
-                }
-            });
-        });
-
-        if (window.up) {
-            up.compiler('#table-container', function() {
-                initSalaryPageScripts();
-            });
-        }
-
-        // Variable state untuk menyimpan status visibilitas gaji (secara default disembunyikan/true)
         let isSalaryHidden = localStorage.getItem('isSalaryHidden') !== 'false';
 
-        // Fungsi untuk mengganti (toggle) visibilitas gaji pada tabel
         function toggleTableSalaryVisibility() {
             isSalaryHidden = !isSalaryHidden;
             localStorage.setItem('isSalaryHidden', isSalaryHidden);
             applySalaryVisibility();
         }
 
-        // Fungsi untuk menerapkan status visibilitas ke tampilan tabel dan ikon
         function applySalaryVisibility() {
             const icon = document.getElementById('table_salary_toggle_icon');
             const salaryElements = document.querySelectorAll('.salary-amount');
@@ -576,41 +652,6 @@
             });
         }
 
-        // Integrasikan pemicu update setiap kali data tabel selesai di-fetch via AJAX
-        function fetchSalaries(targetUrl = null) {
-            const tableContainer = document.getElementById('table-container');
-            if (!tableContainer) return;
-
-            tableContainer.style.opacity = '0.5';
-
-            const month = document.getElementById('filter-month')?.value || '';
-            const year = document.getElementById('filter-year')?.value || '';
-            const search = document.getElementById('filter-search')?.value || '';
-            const branchId = document.getElementById('filter-branch')?.value || '';
-            const information = document.getElementById('filter-information')?.value || '';
-            const bank = document.getElementById('filter-bank')?.value || '';
-
-            const url = targetUrl ||
-                `{{ route('salary.index') }}?month=${month}&year=${year}&search=${encodeURIComponent(search)}&branch_id=${encodeURIComponent(branchId)}&information=${encodeURIComponent(information)}&bank=${encodeURIComponent(bank)}`;
-
-            fetch(url, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(res => res.text())
-                .then(html => {
-                    tableContainer.innerHTML = html;
-                    tableContainer.style.opacity = '1';
-                    applySalaryVisibility(); // Terapkan status visibilitas gaji pada data baru
-                })
-                .catch(err => {
-                    console.error('Error fetching salaries:', err);
-                    tableContainer.style.opacity = '1';
-                });
-        }
-
-        // Terapkan visibilitas gaji saat dokumen pertama kali dimuat
         document.addEventListener('DOMContentLoaded', function() {
             initSalaryPageScripts();
             applySalaryVisibility();
@@ -618,6 +659,7 @@
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
                     closeGenerateModal();
+                    closeResetModal();
                     closeSalaryModal();
                 }
             });
