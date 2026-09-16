@@ -184,7 +184,7 @@
                 <form action="{{ route('schedule.index') }}" method="GET" id="mainFilterForm"
                     class="flex flex-wrap items-end gap-3.5">
 
-                    {{-- FILTER SITE LOCATIONsesuai Role --}}
+                    {{-- FILTER SITE LOCATION sesuai Role --}}
                     <div class="w-full sm:w-64">
                         <label class="block mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
                             Site Location
@@ -202,7 +202,7 @@
                                 @endforeach
                             </select>
                         @else
-                            {{-- Team Leader & Employee Site locked to their own site --}}
+                            {{-- Non-Superadmin locked to their own site --}}
                             <input type="hidden" name="site_id" id="main_site_select" value="{{ Auth::user()->site_id }}">
                             <div
                                 class="w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold bg-slate-100 border border-slate-200 rounded-xl text-slate-600 flex items-center justify-between">

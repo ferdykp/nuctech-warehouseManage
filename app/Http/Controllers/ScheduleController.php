@@ -34,10 +34,16 @@ class ScheduleController extends Controller
             }
         }
 
-        if ($user->role === 'employee_role') {
-            $selectedSiteId = $user->site_id;
-        } else {
+        // Cek apakah akun superadmin / administration
+        $isSuperAdmin = in_array($user->role, ['superadmin', 'administration']);
+
+        if ($isSuperAdmin) {
             $selectedSiteId = $request->input('site_id', 'all');
+            $sites = Site::with('schedulePattern')->get();
+        } else {
+            // Selain superadmin, hanya tampilkan data milik site user yang login
+            $selectedSiteId = $user->site_id;
+            $sites = Site::where('id', $user->site_id)->with('schedulePattern')->get();
         }
 
         $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
@@ -53,32 +59,26 @@ class ScheduleController extends Controller
                 ->with('shift');
         }]);
 
-        if ($selectedSiteId !== 'all' && !empty($selectedSiteId)) {
+        // Filter karyawan berdasarkan role & site terpilih
+        if (!$isSuperAdmin) {
+            $employeesQuery->where('site_id', $user->site_id);
+        } elseif ($selectedSiteId !== 'all' && !empty($selectedSiteId)) {
             $employeesQuery->where('site_id', $selectedSiteId);
         }
 
         $employees = $employeesQuery->get();
 
-        if ($user->role === 'employee_role') {
-            $sites = Site::where('id', $user->site_id)->with('schedulePattern')->get();
-        } else {
-            $sites = Site::with('schedulePattern')->get();
-        }
-
         return view('schedule.index', compact('employees', 'datesInMonth', 'month', 'year', 'sites', 'selectedSiteId', 'holidays'));
     }
-    /**
-     * NOTE: Endpoint ini tidak lagi dipanggil dari UI (modal Site Patterns terpisah
-     * sudah dihapus dan digabung ke dalam generate()). Dibiarkan tetap ada
-     * untuk kompatibilitas mundur / kebutuhan API lain.
-     */
+
     public function updateSitePattern(Request $request, $siteId)
     {
         $user = Auth::user();
 
         $site = Site::findOrFail($siteId);
+        $isSuperAdmin = in_array($user->role, ['superadmin', 'administration']);
 
-        if ($user->role === 'employee_role' && (int) $user->site_id !== (int) $site->id) {
+        if (!$isSuperAdmin && (int) $user->site_id !== (int) $site->id) {
             abort(403, 'Anda tidak memiliki akses untuk mengubah pola site ini.');
         }
 
@@ -103,6 +103,7 @@ class ScheduleController extends Controller
     public function generate(Request $request)
     {
         $user = Auth::user();
+        $isSuperAdmin = in_array($user->role, ['superadmin', 'administration']);
 
         $rules = [
             'target_site_id' => 'required|exists:sites,id',
@@ -122,12 +123,10 @@ class ScheduleController extends Controller
 
         $site = Site::findOrFail($request->input('target_site_id'));
 
-        if ($user->role === 'employee_role' && (int) $user->site_id !== (int) $site->id) {
+        if (!$isSuperAdmin && (int) $user->site_id !== (int) $site->id) {
             abort(403, 'Anda tidak memiliki akses untuk site ini.');
         }
 
-        // KUNCI PERBAIKAN UX: pola kerja langsung disimpan bersamaan di sini,
-        // jadi tidak mungkin lagi terjadi "generate sukses" tapi pattern belum tersimpan.
         $site->schedulePattern()->updateOrCreate(
             ['site_id' => $site->id],
             [
@@ -156,7 +155,6 @@ class ScheduleController extends Controller
 
         $holidays = $this->holidayService->getHolidays((int) $year);
 
-        // KUNCI PERBAIKAN: Jaga urutan persis sesuai elemen active_shifts[] dari form POST
         $existingShiftIds = Shift::whereIn('id', $activeShiftIds)->pluck('id')->toArray();
         $shiftsPool = array_values(array_filter($activeShiftIds, function ($id) use ($existingShiftIds) {
             return in_array($id, $existingShiftIds);
@@ -166,7 +164,6 @@ class ScheduleController extends Controller
             return redirect()->back()->withErrors(['error' => 'Gagal! Tidak ada shift aktif yang dipilih.']);
         }
 
-        // Tentukan titik mulainya dari Starting Shift yang dipilih
         $startIndex = array_search($startShiftId, $shiftsPool);
         if ($startIndex !== false) {
             $allowedShifts = array_merge(array_slice($shiftsPool, $startIndex), array_slice($shiftsPool, 0, $startIndex));
@@ -174,10 +171,9 @@ class ScheduleController extends Controller
             $allowedShifts = $shiftsPool;
         }
 
-        // Batasi hanya karyawan milik target_site_id — mencegah kebocoran data lintas-site
         $employeesQuery = Employee::whereIn('id', $selectedEmployeeIds)->where('site_id', $site->id);
 
-        if ($user->role === 'employee_role') {
+        if (!$isSuperAdmin) {
             $employeesQuery->where('site_id', $user->site_id);
         }
 
@@ -244,6 +240,7 @@ class ScheduleController extends Controller
     public function updateSingle(Request $request)
     {
         $user = Auth::user();
+        $isSuperAdmin = in_array($user->role, ['superadmin', 'administration']);
 
         $request->validate([
             'employee_id' => 'required|exists:employees,id',
@@ -253,7 +250,7 @@ class ScheduleController extends Controller
 
         $employee = Employee::findOrFail($request->employee_id);
 
-        if ($user->role === 'employee_role' && (int)$user->site_id !== (int)$employee->site_id) {
+        if (!$isSuperAdmin && (int)$user->site_id !== (int)$employee->site_id) {
             return response()->json(['success' => false, 'message' => 'Akses ditolak.'], 403);
         }
 
@@ -268,6 +265,7 @@ class ScheduleController extends Controller
     public function clearSchedule(Request $request)
     {
         $user = Auth::user();
+        $isSuperAdmin = in_array($user->role, ['superadmin', 'administration']);
 
         $request->validate([
             'site_id' => 'required',
@@ -279,7 +277,7 @@ class ScheduleController extends Controller
         $month = sprintf('%02d', $request->month);
         $year = $request->year;
 
-        if ($user->role === 'employee_role' && (int)$user->site_id !== (int)$siteId) {
+        if (!$isSuperAdmin && (int)$user->site_id !== (int)$siteId) {
             return redirect()->back()->withErrors(['error' => 'Akses ditolak untuk site ini.']);
         }
 
@@ -287,10 +285,10 @@ class ScheduleController extends Controller
         $endDate = Carbon::parse($startDate)->endOfMonth()->format('Y-m-d');
 
         $employeeQuery = Employee::query();
-        if ($siteId !== 'all') {
-            $employeeQuery->where('site_id', $siteId);
-        } elseif ($user->role === 'employee_role') {
+        if (!$isSuperAdmin) {
             $employeeQuery->where('site_id', $user->site_id);
+        } elseif ($siteId !== 'all') {
+            $employeeQuery->where('site_id', $siteId);
         }
 
         $employeeIds = $employeeQuery->pluck('id');
@@ -305,16 +303,14 @@ class ScheduleController extends Controller
     public function exportExcel(Request $request)
     {
         $user = Auth::user();
+        $isSuperAdmin = in_array($user->role, ['superadmin', 'administration']);
 
         $month = sprintf('%02d', $request->input('month', date('m')));
         $year = $request->input('year', date('Y'));
 
-        // PENGAMANAN ROLE SITES
-        if ($user->role === 'superadmin') {
-            // Superadmin bisa memilih site tertentu atau 'all'
+        if ($isSuperAdmin) {
             $siteId = $request->input('site_id', 'all');
         } else {
-            // Selain Superadmin (misal team_leader / ebeam), PAKSA menggunakan site_id milik akun yang login
             $siteId = $user->site_id;
         }
 
