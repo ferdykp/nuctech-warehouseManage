@@ -68,11 +68,9 @@ class TelegramWebhookController extends Controller
         $systemHealth = $hasErrorToday ? '⚠️ Ada Warning/Error Log' : '✅ Clean / Normal';
 
         // Template siap copas
-        $msg = "<code>==================================\n";
-        $msg .= "LAPORAN HARIAN SISTEM WEB\n";
+        $msg = "LAPORAN HARIAN SISTEM WEB\n";
         $msg .= "Tanggal : {$dateNow}\n";
-        $msg .= "Waktu   : {$timeNow} WIB\n";
-        $msg .= "==================================\n\n";
+        $msg .= "Waktu   : {$timeNow} WIB\n\n";
         $msg .= "1. STATUS SISTEM & SERVER\n";
         $msg .= "   • Status Web App : Online\n";
         $msg .= "   • Database Status : {$dbStatus}\n";
@@ -84,7 +82,6 @@ class TelegramWebhookController extends Controller
         $msg .= "   • [Status Bug] : Tidak ada isu kritis hari ini.\n\n";
         $msg .= "4. CATATAN / RENCANA BESOK\n";
         $msg .= "   • Monitoring berkala & optimasi performa.\n";
-        $msg .= "==================================</code>";
 
         TelegramService::sendMessageToChat($chatId, $msg);
     }
