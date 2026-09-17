@@ -31,9 +31,8 @@ Route::get('/', [AuthController::class, 'login'])->name('login');
 Route::post('/login/auth', [AuthController::class, 'loginAuth'])->name('auth.login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
-Route::post('/telegram/webhook', [TelegramWebhookController::php, 'handle'])
+Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle'])
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
-
 /*
 |--------------------------------------------------------------------------
 | Authenticated Routes (Semua halaman yang butuh login)
