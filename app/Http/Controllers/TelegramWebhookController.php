@@ -3,17 +3,16 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Site;
-use App\Models\DailyReport;
 use App\Services\TelegramService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
 class TelegramWebhookController extends Controller
 {
     public function handle(Request $request)
     {
-        // Tangkap data yang dikirim Telegram
         $update = $request->all();
 
         if (!isset($update['message']['text'])) {
@@ -23,13 +22,15 @@ class TelegramWebhookController extends Controller
         $text = trim($update['message']['text']);
         $chatId = $update['message']['chat']['id'];
 
-        // Cek apakah perintahnya /report atau /report@nama_bot Anda
         if (str_starts_with($text, '/report')) {
-            $this->sendDailyReportSummary($chatId);
+            $this->sendWebReportTemplate($chatId);
+        } elseif (str_starts_with($text, '/log')) {
+            $this->sendLogAndBugStatus($chatId);
         } elseif (str_starts_with($text, '/start') || str_starts_with($text, '/help')) {
-            $reply = "👋 <b>Selamat datang di System Monitoring Bot!</b>\n\n";
+            $reply = "👋 <b>System Monitoring Bot Ready!</b>\n\n";
             $reply .= "Gunakan perintah berikut:\n";
-            $reply .= "• <b>/report</b> : Melihat ringkasan status input laporan site hari ini.";
+            $reply .= "• <b>/report</b> : Template Laporan Harian Sistem Web (Siap Copas)\n";
+            $reply .= "• <b>/log</b> : Cek error log Laravel & kesehatan server saat ini";
 
             TelegramService::sendMessageToChat($chatId, $reply);
         }
@@ -37,37 +38,94 @@ class TelegramWebhookController extends Controller
         return response()->json(['status' => 'ok']);
     }
 
-    private function sendDailyReportSummary($chatId)
+    /**
+     * Menampilkan Template Laporan Harian Web (Tinggal Copas)
+     */
+    private function sendWebReportTemplate($chatId)
     {
-        $today = Carbon::today()->format('Y-m-d');
-        $totalSites = Site::count();
+        $dateNow = Carbon::now()->translatedFormat('l, d F Y');
+        $timeNow = Carbon::now()->format('H:i');
 
-        // Ambil ID site yang sudah menginput hari ini
-        $activeSiteIds = DailyReport::whereDate('created_at', $today)
-            ->pluck('site_id')
-            ->unique();
-
-        $totalActive = $activeSiteIds->count();
-        $totalReports = DailyReport::whereDate('created_at', $today)->count();
-
-        // Site yang belum input hari ini
-        $missingSites = Site::whereNotIn('id', $activeSiteIds)->pluck('machine_name')->toArray();
-
-        $msg = "📊 <b>LAPORAN HARIAN MASA TRIAL & ERROR</b>\n";
-        $msg .= "Tanggal: " . Carbon::now()->translatedFormat('d F Y (H:i)') . " WIB\n";
-        $msg .= "==================================\n\n";
-        $msg .= "1. <b>STATUS PENGGUNAAN SITE:</b>\n";
-        $msg .= "   • Total Site Aktif Input : <b>{$totalActive} dari {$totalSites} Site</b>\n";
-        $msg .= "   • Total Laporan Masuk : <b>{$totalReports} Laporan</b>\n\n";
-
-        if (!empty($missingSites)) {
-            $msg .= "⚠️ <b>Site Belum Input Hari Ini (" . count($missingSites) . "):</b>\n";
-            foreach ($missingSites as $siteName) {
-                $msg .= "   • " . $siteName . "\n";
-            }
-        } else {
-            $msg .= "🎉 <b>Luar biasa! Seluruh Site sudah menginput laporan hari ini.</b>\n";
+        // Cek status database secara langsung
+        $dbStatus = 'Online / Stable';
+        try {
+            DB::connection()->getPdo();
+        } catch (\Exception $e) {
+            $dbStatus = 'Error Connection!';
         }
+
+        // Cek apakah ada error di log hari ini
+        $logPath = storage_path('logs/laravel.log');
+        $hasErrorToday = false;
+        if (File::exists($logPath)) {
+            $todayStr = Carbon::today()->format('Y-m-d');
+            $logContent = File::get($logPath);
+            if (str_contains($logContent, "[$todayStr]") && str_contains($logContent, 'ERROR')) {
+                $hasErrorToday = true;
+            }
+        }
+
+        $systemHealth = $hasErrorToday ? '⚠️ Ada Warning/Error Log' : '✅ Clean / Normal';
+
+        // Template siap copas
+        $msg = "<code>==================================\n";
+        $msg .= "LAPORAN HARIAN SISTEM WEB\n";
+        $msg .= "Tanggal : {$dateNow}\n";
+        $msg .= "Waktu   : {$timeNow} WIB\n";
+        $msg .= "==================================\n\n";
+        $msg .= "1. STATUS SISTEM & SERVER\n";
+        $msg .= "   • Status Web App : Online\n";
+        $msg .= "   • Database Status : {$dbStatus}\n";
+        $msg .= "   • System Health  : {$systemHealth}\n\n";
+        $msg .= "2. PERBAIKAN / UPDATE HARI INI (CHANGELOG)\n";
+        $msg .= "   • [Fitur/Fix] : - \n";
+        $msg .= "   • [Fitur/Fix] : - \n\n";
+        $msg .= "3. ISU TEKNIS & BUG LOG\n";
+        $msg .= "   • [Status Bug] : Tidak ada isu kritis hari ini.\n\n";
+        $msg .= "4. CATATAN / RENCANA BESOK\n";
+        $msg .= "   • Monitoring berkala & optimasi performa.\n";
+        $msg .= "==================================</code>";
+
+        TelegramService::sendMessageToChat($chatId, $msg);
+    }
+
+    /**
+     * Menampilkan Detail Error Log Laravel & Kesehatan Storage
+     */
+    private function sendLogAndBugStatus($chatId)
+    {
+        $logPath = storage_path('logs/laravel.log');
+
+        $msg = "🔍 <b>SYSTEM LOG & BUG CHECKER</b>\n";
+        $msg .= "Waktu Cek: " . Carbon::now()->format('d/m/Y H:i:s') . " WIB\n";
+        $msg .= "--------------------------------------------------\n\n";
+
+        if (!File::exists($logPath)) {
+            $msg .= "🟢 <b>Log File:</b> Tidak ditemukan file log (Clean).\n";
+        } else {
+            // Ambil 15 baris terakhir dari log
+            $fileLines = file($logPath);
+            $lastLines = array_slice($fileLines, -15);
+            $logSnippet = implode("", $lastLines);
+
+            // Cek indikator error
+            if (str_contains(strtoupper($logSnippet), 'ERROR') || str_contains(strtoupper($logSnippet), 'EXCEPTION')) {
+                $msg .= "🔴 <b>Status Log:</b> Terdeteksi ERROR/EXCEPTION!\n\n";
+                $msg .= "<b>Potongan Log Terakhir:</b>\n";
+                $msg .= "<pre>" . e(substr($logSnippet, 0, 1000)) . "</pre>\n";
+            } else {
+                $msg .= "🟢 <b>Status Log:</b> Normal / Tidak ada error kritis pada baris terakhir.\n\n";
+                $msg .= "<b>Log Terakhir:</b>\n";
+                $msg .= "<pre>" . e(substr($logSnippet, 0, 500)) . "</pre>\n";
+            }
+        }
+
+        // Cek kapasitas storage server
+        $freeSpace = round(disk_free_space("/") / (1024 * 1024 * 1024), 2);
+        $totalSpace = round(disk_total_space("/") / (1024 * 1024 * 1024), 2);
+
+        $msg .= "\n💾 <b>Kapasitas Disk Server:</b>\n";
+        $msg .= "• Sisa Storage: <b>{$freeSpace} GB</b> dari {$totalSpace} GB\n";
 
         TelegramService::sendMessageToChat($chatId, $msg);
     }
