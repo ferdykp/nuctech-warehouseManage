@@ -17,6 +17,7 @@ use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ShiftController;
+use App\Http\Controllers\TelegramWebhookController;
 // use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +30,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [AuthController::class, 'login'])->name('login');
 Route::post('/login/auth', [AuthController::class, 'loginAuth'])->name('auth.login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
+
+Route::post('/telegram/webhook', [TelegramWebhookController::php, 'handle'])
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
 /*
 |--------------------------------------------------------------------------
