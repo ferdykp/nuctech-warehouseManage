@@ -7,6 +7,7 @@ use App\Services\TelegramService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class TelegramWebhookController extends Controller
@@ -26,11 +27,17 @@ class TelegramWebhookController extends Controller
             $this->sendWebReportTemplate($chatId);
         } elseif (str_starts_with($text, '/log')) {
             $this->sendLogAndBugStatus($chatId);
+        } elseif (str_starts_with($text, '/clearlog')) {
+            $this->clearSystemLog($chatId);
+        } elseif (str_starts_with($text, '/backup')) {
+            $this->backupDatabaseToTelegram($chatId);
         } elseif (str_starts_with($text, '/start') || str_starts_with($text, '/help')) {
             $reply = "👋 <b>System Monitoring Bot Ready!</b>\n\n";
             $reply .= "Gunakan perintah berikut:\n";
-            $reply .= "• <b>/report</b> : Template Laporan Harian Sistem Web (Siap Copas)\n";
-            $reply .= "• <b>/log</b> : Cek error log Laravel & kesehatan server saat ini";
+            $reply .= "• <b>/report</b> : Template Laporan Harian Web + Auto Changelog Git (Siap Copas)\n";
+            $reply .= "• <b>/log</b> : Cek error log Laravel & kapasitas disk server\n";
+            $reply .= "• <b>/clearlog</b> : Bersihkan isi file laravel.log\n";
+            $reply .= "• <b>/backup</b> : Backup Database (.sql) & kirim filenya ke Telegram";
 
             TelegramService::sendMessageToChat($chatId, $reply);
         }
@@ -39,14 +46,14 @@ class TelegramWebhookController extends Controller
     }
 
     /**
-     * Menampilkan Template Laporan Harian Web (Tinggal Copas)
+     * Menampilkan Template Laporan Harian Web dengan Auto Changelog dari Git
      */
     private function sendWebReportTemplate($chatId)
     {
         $dateNow = Carbon::now()->translatedFormat('l, d F Y');
         $timeNow = Carbon::now()->format('H:i');
 
-        // Cek status database secara langsung
+        // Cek status database
         $dbStatus = 'Online / Stable';
         try {
             DB::connection()->getPdo();
@@ -54,7 +61,7 @@ class TelegramWebhookController extends Controller
             $dbStatus = 'Error Connection!';
         }
 
-        // Cek apakah ada error di log hari ini
+        // Cek error log hari ini
         $logPath = storage_path('logs/laravel.log');
         $hasErrorToday = false;
         if (File::exists($logPath)) {
@@ -64,8 +71,30 @@ class TelegramWebhookController extends Controller
                 $hasErrorToday = true;
             }
         }
-
         $systemHealth = $hasErrorToday ? '⚠️ Ada Warning/Error Log' : '✅ Clean / Normal';
+
+        // AMBIL AUTO CHANGELOG DARI GIT LOG HARI INI
+        $gitCommits = [];
+        try {
+            // Ambil commit git sejak jam 00:00 hari ini
+            $command = 'git log --since="midnight" --pretty=format:"%s"';
+            $output = shell_exec($command);
+            if (!empty($output)) {
+                $gitCommits = array_filter(explode("\n", trim($output)));
+            }
+        } catch (\Exception $e) {
+            Log::warning("Gagal membaca git log: " . $e->getMessage());
+        }
+
+        // Format string Changelog
+        $changelogStr = "";
+        if (!empty($gitCommits)) {
+            foreach ($gitCommits as $commitMsg) {
+                $changelogStr .= "   • " . e($commitMsg) . "\n";
+            }
+        } else {
+            $changelogStr = "   • Tidak ada update kode / deployment hari ini.\n";
+        }
 
         // Template siap copas
         $msg = "LAPORAN HARIAN SISTEM WEB\n";
@@ -76,18 +105,17 @@ class TelegramWebhookController extends Controller
         $msg .= "   • Database Status : {$dbStatus}\n";
         $msg .= "   • System Health  : {$systemHealth}\n\n";
         $msg .= "2. PERBAIKAN / UPDATE HARI INI (CHANGELOG)\n";
-        $msg .= "   • [Fitur/Fix] : - \n";
-        $msg .= "   • [Fitur/Fix] : - \n\n";
+        $msg .= $changelogStr . "\n";
         $msg .= "3. ISU TEKNIS & BUG LOG\n";
-        $msg .= "   • [Status Bug] : Tidak ada isu kritis hari ini.\n\n";
+        $msg .= "   • [Status Bug] : " . ($hasErrorToday ? "Ditemukan error pada log hari ini (Cek via /log)." : "Tidak ada isu kritis hari ini.") . "\n\n";
         $msg .= "4. CATATAN / RENCANA BESOK\n";
-        $msg .= "   • Monitoring berkala & optimasi performa.\n";
+        $msg .= "   • Monitoring berkala & pemantauan pengguna site.\n";
 
         TelegramService::sendMessageToChat($chatId, $msg);
     }
 
     /**
-     * Menampilkan Detail Error Log Laravel & Kesehatan Storage
+     * Menampilkan Detail Error Log Laravel & Cek Disk
      */
     private function sendLogAndBugStatus($chatId)
     {
@@ -97,15 +125,13 @@ class TelegramWebhookController extends Controller
         $msg .= "Waktu Cek: " . Carbon::now()->format('d/m/Y H:i:s') . " WIB\n";
         $msg .= "--------------------------------------------------\n\n";
 
-        if (!File::exists($logPath)) {
-            $msg .= "🟢 <b>Log File:</b> Tidak ditemukan file log (Clean).\n";
+        if (!File::exists($logPath) || File::size($logPath) === 0) {
+            $msg .= "🟢 <b>Log File:</b> File log kosong (Clean).\n";
         } else {
-            // Ambil 15 baris terakhir dari log
             $fileLines = file($logPath);
             $lastLines = array_slice($fileLines, -15);
             $logSnippet = implode("", $lastLines);
 
-            // Cek indikator error
             if (str_contains(strtoupper($logSnippet), 'ERROR') || str_contains(strtoupper($logSnippet), 'EXCEPTION')) {
                 $msg .= "🔴 <b>Status Log:</b> Terdeteksi ERROR/EXCEPTION!\n\n";
                 $msg .= "<b>Potongan Log Terakhir:</b>\n";
@@ -117,7 +143,6 @@ class TelegramWebhookController extends Controller
             }
         }
 
-        // Cek kapasitas storage server
         $freeSpace = round(disk_free_space("/") / (1024 * 1024 * 1024), 2);
         $totalSpace = round(disk_total_space("/") / (1024 * 1024 * 1024), 2);
 
@@ -125,5 +150,74 @@ class TelegramWebhookController extends Controller
         $msg .= "• Sisa Storage: <b>{$freeSpace} GB</b> dari {$totalSpace} GB\n";
 
         TelegramService::sendMessageToChat($chatId, $msg);
+    }
+
+    /**
+     * Membersihkan File Log Laravel (/clearlog)
+     */
+    private function clearSystemLog($chatId)
+    {
+        $logPath = storage_path('logs/laravel.log');
+
+        if (File::exists($logPath)) {
+            File::put($logPath, ''); // Kosongkan file log
+            $msg = "🧹 <b>SUCCESS!</b> File <code>laravel.log</code> berhasil dibersihkan.";
+        } else {
+            $msg = "ℹ️ File log sudah dalam keadaan kosong.";
+        }
+
+        TelegramService::sendMessageToChat($chatId, $msg);
+    }
+
+    /**
+     * Backup Database (.sql) dan Kirim File ke Telegram (/backup)
+     */
+    private function backupDatabaseToTelegram($chatId)
+    {
+        TelegramService::sendMessageToChat($chatId, "⏳ <i>Memproses dump database, mohon tunggu sebentar...</i>");
+
+        try {
+            $dbName = env('DB_DATABASE');
+            $dbUser = env('DB_USERNAME');
+            $dbPassword = env('DB_PASSWORD');
+            $dbHost = env('DB_HOST', '127.0.0.1');
+
+            $fileName = 'backup_' . $dbName . '_' . date('Y-m-d_H-i-s') . '.sql';
+            $filePath = storage_path('app/' . $fileName);
+
+            // Perintah mysqldump
+            if (!empty($dbPassword)) {
+                $command = "mysqldump -h {$dbHost} -u {$dbUser} -p'{$dbPassword}' {$dbName} > {$filePath}";
+            } else {
+                $command = "mysqldump -h {$dbHost} -u {$dbUser} {$dbName} > {$filePath}";
+            }
+
+            exec($command, $output, $returnVar);
+
+            if ($returnVar === 0 && File::exists($filePath)) {
+                // Kirim Dokumen File SQL ke Telegram API
+                $token = config('services.telegram.bot_token');
+
+                $response = Http::attach(
+                    'document',
+                    file_get_contents($filePath),
+                    $fileName
+                )->post("https://api.telegram.org/bot{$token}/sendDocument", [
+                    'chat_id' => $chatId,
+                    'caption' => "📦 <b>BACKUP DATABASE SUCCESS</b>\nNama File: <code>{$fileName}</code>\nTanggal: " . now()->format('d/m/Y H:i') . " WIB"
+                ]);
+
+                // Hapus file backup lokal di server setelah terkirim agar storage hemat
+                File::delete($filePath);
+
+                if (!$response->successful()) {
+                    TelegramService::sendMessageToChat($chatId, "❌ Gagal mengirim file backup ke Telegram: " . $response->body());
+                }
+            } else {
+                TelegramService::sendMessageToChat($chatId, "❌ Gagal melakukan dump database. Pastikan `mysqldump` terinstall di server.");
+            }
+        } catch (\Exception $e) {
+            TelegramService::sendMessageToChat($chatId, "❌ Terjadi error saat backup: " . $e->getMessage());
+        }
     }
 }
