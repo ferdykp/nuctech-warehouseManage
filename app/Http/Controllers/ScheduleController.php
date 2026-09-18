@@ -15,12 +15,6 @@ use Illuminate\Support\Facades\DB;
 
 class ScheduleController extends Controller
 {
-    /**
-     * Display Schedule Management Dashboard
-     */
-    /**
-     * Display Schedule Management Dashboard
-     */
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -28,18 +22,27 @@ class ScheduleController extends Controller
         $year = $request->get('year', date('Y'));
         $selectedSiteId = $request->get('site_id', 'all');
 
-        // Team leader selalu terkunci pada site mereka sendiri
-        if ($user && $user->role === 'team_leader') {
-            $selectedSiteId = $user->site_id;
+        // Load semua site
+        $sitesQuery = Site::with('schedulePattern')->orderBy('machine_name', 'asc');
+
+        if ($user && $user->role === 'team_leader' && $user->site) {
+            // Ambil prefix nama site Team Leader (misal "CTMIC2100YW" atau "CTMIC2100-YW")
+            $machinePrefix = explode(' ', trim($user->site->machine_name))[0];
+
+            // Filter site yang tampil khusus untuk Team Leader sesuai kelompok project-nya
+            $sitesQuery->where('machine_name', 'LIKE', $machinePrefix . '%');
         }
 
-        // Ambil semua daftar site beserta relasi schedulePattern-nya
-        $sites = Site::with('schedulePattern')->orderBy('machine_name', 'asc')->get();
+        $sites = $sitesQuery->get();
+        $allowedSiteIds = $sites->pluck('id')->toArray();
 
-        // Query daftar karyawan berdasarkan akses site
+        // Filter query karyawan
         $employeeQuery = Employee::with('site');
 
-        if ($selectedSiteId !== 'all' && !empty($selectedSiteId)) {
+        if ($user && $user->role === 'team_leader') {
+            // Team Leader bisa melihat semua karyawan di kelompok site project-nya
+            $employeeQuery->whereIn('site_id', $allowedSiteIds);
+        } elseif ($selectedSiteId !== 'all' && !empty($selectedSiteId)) {
             if (is_array($selectedSiteId)) {
                 $employeeQuery->whereIn('site_id', $selectedSiteId);
             } else {
@@ -49,19 +52,18 @@ class ScheduleController extends Controller
 
         $employees = $employeeQuery->orderBy('name', 'asc')->get();
 
-        // Ambil periode tanggal dalam bulan terpilih
+        // Periode Tanggal
         $startDate = Carbon::createFromDate((int)$year, (int)$month, 1)->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
         $datesInMonth = CarbonPeriod::create($startDate, $endDate);
 
-        // Load jadwal milik karyawan terpilih untuk rentang bulan ini
+        // Schedule Logs
         $employeeIds = $employees->pluck('id');
         $schedules = Schedule::with('shift')
             ->whereIn('employee_id', $employeeIds)
             ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->get();
 
-        // Group jadwal per employee_id dengan penanganan null yang aman
         $schedulesByEmployee = $schedules->groupBy('employee_id');
 
         foreach ($employees as $emp) {
@@ -69,7 +71,6 @@ class ScheduleController extends Controller
             $emp->setRelation('schedules', $empSchedules ?? collect());
         }
 
-        // Ambil data Tanggal Merah & Libur Nasional
         $holidays = $this->getNationalHolidays($year, $month);
 
         return view('schedule.index', compact(
