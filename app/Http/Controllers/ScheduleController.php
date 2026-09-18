@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
-use App\Models\Schedule;
+use App\Models\EmployeeSchedule as Schedule;
 use App\Models\Shift;
 use App\Models\Site;
 use App\Models\SitePattern;
