@@ -184,7 +184,7 @@
                 <form action="{{ route('schedule.index') }}" method="GET" id="mainFilterForm"
                     class="flex flex-wrap items-end gap-3.5">
 
-                    {{-- FILTER SITE LOCATION sesuai Role --}}
+                    {{-- FILTER SITE LOCATION --}}
                     <div class="w-full sm:w-64">
                         <label class="block mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
                             Site Location
@@ -263,7 +263,7 @@
                 </div>
             @endif
 
-            {{-- ARRAY TAMPUNG KARYAWAN YANG MASUK DI HARI LIBUR NASIONAL / TANGGAL MERAH --}}
+            {{-- ARRAY TAMPUNG KARYAWAN YANG MASUK DI HARI LIBUR NASIONAL --}}
             @php
                 $holidayWorkDuty = [];
             @endphp
@@ -404,7 +404,7 @@
                                                             'bg-emerald-50 text-emerald-800 border-emerald-200';
                                                     }
 
-                                                    // DETEKSI MASUK KHUSUS DI HARI LIBUR NASIONAL / TANGGAL MERAH EVENT (SABTU MINGGU BIASA DIABAIKAN)
+                                                    // MASUKAN KE REKAP KHUSUS HARI LIBUR NASIONAL
                                                     if ($holidayName) {
                                                         $holidayWorkDuty[] = [
                                                             'employee_name' => $emp->name,
@@ -460,7 +460,7 @@
             </div>
         </div>
 
-        {{-- 4. HOLIDAY WORK DUTY RECAP CARD (KHUSUS TANGGAL MERAH HARI LIBUR NASIONAL) --}}
+        {{-- 4. HOLIDAY WORK DUTY RECAP CARD --}}
         <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
             <div class="flex items-center justify-between p-5 border-b sm:p-6 border-slate-100 bg-slate-50/50">
                 <div class="flex items-center gap-3">
@@ -471,8 +471,7 @@
                     <div>
                         <h3 class="text-base font-extrabold text-slate-900">National Holiday Duty Roster</h3>
                         <p class="text-xs font-medium text-slate-500 mt-0.5">Daftar karyawan yang memiliki jadwal
-                            piket/masuk kerja khusus pada tanggal merah & hari libur nasional (Sabtu/Minggu biasa
-                            diabaikan).</p>
+                            piket/masuk kerja khusus pada tanggal merah & hari libur nasional.</p>
                     </div>
                 </div>
                 <span
@@ -557,7 +556,7 @@
                 <div>
                     <h3 class="text-lg font-extrabold text-slate-900">Generate Team Rota Schedule</h3>
                     <p class="mt-1 text-xs font-medium sm:text-sm text-slate-500">Atur pola kerja site dan generate jadwal
-                        dalam satu alur — tidak perlu pindah menu.</p>
+                        dalam satu alur secara terpadu.</p>
                 </div>
                 <button type="button" onclick="closeModal('modal-generate')"
                     class="flex items-center justify-center transition-colors rounded-lg cursor-pointer w-9 h-9 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 shrink-0">&times;</button>
@@ -571,84 +570,85 @@
                     <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
                         <div class="space-y-6 lg:col-span-7">
 
-                            {{-- STEP 1: SITE & PERIOD --}}
+                            {{-- STEP 1: MULTI-SITE & PERIOD --}}
                             <div class="p-5 border border-teal-200/80 bg-teal-50/40 rounded-2xl sm:p-6">
                                 <div class="flex items-center gap-2.5 mb-4">
                                     <span
                                         class="flex items-center justify-center w-6 h-6 text-xs font-black text-white bg-teal-500 rounded-full shrink-0">1</span>
                                     <span
-                                        class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">Site
-                                        & Target Periode</span>
+                                        class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">Target
+                                        Sites & Periode</span>
                                 </div>
 
-                                <div class="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4">
-                                    @if (in_array(Auth::user()?->role, ['superadmin', 'administration']))
-                                        <div class="col-span-2 sm:col-span-2">
+                                <div class="space-y-4">
+                                    {{-- MULTI-SITE CHECKBOXES --}}
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
                                             <label
-                                                class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Target
-                                                Site</label>
-                                            <select name="target_site_id" id="gen_target_site"
-                                                onchange="onGenSiteChange()"
-                                                class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all cursor-pointer"
+                                                class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                                Select Target Sites (Bisa Pilih Banyak Site Sekaligus)
+                                            </label>
+                                            <label
+                                                class="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 cursor-pointer">
+                                                <input type="checkbox" id="check-all-sites"
+                                                    onchange="toggleAllGenSites(this.checked)"
+                                                    class="w-3.5 h-3.5 text-teal-600 border-slate-300 rounded focus:ring-teal-500 cursor-pointer">
+                                                Select All
+                                            </label>
+                                        </div>
+
+                                        <div
+                                            class="grid grid-cols-1 gap-2 p-3 overflow-y-auto bg-white border sm:grid-cols-2 border-slate-200 rounded-2xl max-h-44">
+                                            @foreach ($sites as $st)
+                                                <label
+                                                    class="flex items-center gap-2.5 p-2 text-xs font-bold border border-slate-100 rounded-xl hover:bg-teal-50/50 cursor-pointer text-slate-800">
+                                                    <input type="checkbox" name="target_site_ids[]"
+                                                        value="{{ $st->id }}" onchange="onGenSiteChange()"
+                                                        class="w-4 h-4 text-teal-600 rounded border-slate-300 gen-site-checkbox focus:ring-teal-500 shrink-0"
+                                                        {{ ($selectedSiteId ?? '') == $st->id ? 'checked' : '' }}>
+                                                    <span class="truncate">📍 {{ $st->machine_name }}</span>
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                    </div>
+
+                                    {{-- PERIODE BULAN & TAHUN --}}
+                                    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                                        <div class="col-span-1">
+                                            <label
+                                                class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Start
+                                                Day</label>
+                                            <input type="number" name="start_day" value="{{ old('start_day', 1) }}"
+                                                min="1" max="31"
+                                                class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all"
                                                 required>
-                                                <option value="">-- Pilih Site --</option>
-                                                @foreach ($sites as $st)
-                                                    <option value="{{ $st->id }}"
-                                                        {{ ($selectedSiteId ?? '') == $st->id ? 'selected' : '' }}>
-                                                        {{ $st->machine_name }}
+                                        </div>
+
+                                        <div class="col-span-1 sm:col-span-2">
+                                            <label
+                                                class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Month</label>
+                                            <select name="month" id="gen_month"
+                                                class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all cursor-pointer">
+                                                @for ($m = 1; $m <= 12; $m++)
+                                                    <option value="{{ sprintf('%02d', $m) }}"
+                                                        {{ sprintf('%02d', $month) == sprintf('%02d', $m) ? 'selected' : '' }}>
+                                                        {{ date('F', mktime(0, 0, 0, $m, 1)) }}
                                                     </option>
-                                                @endforeach
+                                                @endfor
                                             </select>
                                         </div>
-                                    @else
-                                        <input type="hidden" name="target_site_id" id="gen_target_site"
-                                            value="{{ Auth::user()->site_id }}">
-                                        <div class="col-span-2 sm:col-span-2">
+
+                                        <div class="col-span-1">
                                             <label
-                                                class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Target
-                                                Site</label>
-                                            <div
-                                                class="w-full p-2.5 text-xs font-bold bg-slate-100 border border-slate-200 rounded-xl text-slate-600">
-                                                {{ Auth::user()->site->machine_name ?? '-' }}
-                                            </div>
+                                                class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Year</label>
+                                            <select name="year" id="gen_year"
+                                                class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all cursor-pointer">
+                                                @for ($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
+                                                    <option value="{{ $y }}"
+                                                        {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                                                @endfor
+                                            </select>
                                         </div>
-                                    @endif
-
-                                    <div class="col-span-1 sm:col-span-1">
-                                        <label
-                                            class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Start
-                                            Day</label>
-                                        <input type="number" name="start_day" value="{{ old('start_day', 1) }}"
-                                            min="1" max="31"
-                                            class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all"
-                                            required>
-                                    </div>
-
-                                    <div class="col-span-1 sm:col-span-1"></div>
-
-                                    <div class="col-span-1 sm:col-span-2">
-                                        <label
-                                            class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Month</label>
-                                        <select name="month" id="gen_month"
-                                            class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all cursor-pointer">
-                                            @for ($m = 1; $m <= 12; $m++)
-                                                <option value="{{ sprintf('%02d', $m) }}"
-                                                    {{ sprintf('%02d', $month) == sprintf('%02d', $m) ? 'selected' : '' }}>
-                                                    {{ date('F', mktime(0, 0, 0, $m, 1)) }}
-                                                </option>
-                                            @endfor
-                                        </select>
-                                    </div>
-                                    <div class="col-span-1 sm:col-span-2">
-                                        <label
-                                            class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Year</label>
-                                        <select name="year" id="gen_year"
-                                            class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all cursor-pointer">
-                                            @for ($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
-                                                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>
-                                                    {{ $y }}</option>
-                                            @endfor
-                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -724,7 +724,7 @@
 
                                 <div id="employee-empty-notice"
                                     class="hidden p-3 mb-3 text-xs font-semibold text-center border border-dashed text-slate-400 border-slate-300 rounded-xl">
-                                    Pilih Target Site di Step 1 untuk menampilkan daftar staff.
+                                    Centang minimal 1 Target Site di Step 1 untuk menampilkan daftar staff.
                                 </div>
 
                                 <div
@@ -762,7 +762,7 @@
                         <div id="oh-notice-banner"
                             class="hidden p-4 mb-4 text-xs font-medium leading-relaxed text-blue-800 border border-blue-200/80 bg-blue-50 rounded-xl">
                             <i class="mr-1.5 fa-solid fa-circle-info"></i>
-                            Site ini dikonfigurasi untuk <strong>Office Hours</strong>. Jadwal akan otomatis dibuat untuk
+                            Pola dikonfigurasi untuk <strong>Office Hours</strong>. Jadwal akan otomatis dibuat untuk
                             hari kerja normal (Senin–Jumat) tanpa rotasi shift.
                         </div>
 
@@ -968,6 +968,7 @@
             ];
         });
     @endphp
+
     <script>
         const SITE_PATTERNS = @json($sitePatternsForJs);
 
@@ -994,6 +995,51 @@
                 });
             }
         });
+
+        function toggleAllGenSites(checked) {
+            document.querySelectorAll('.gen-site-checkbox').forEach(cb => {
+                cb.checked = checked;
+            });
+            onGenSiteChange();
+        }
+
+        function onGenSiteChange() {
+            const selectedSiteIds = Array.from(document.querySelectorAll('.gen-site-checkbox:checked'))
+                .map(cb => cb.value);
+
+            document.querySelectorAll('.employee-option').forEach(el => {
+                const empSiteId = el.getAttribute('data-site-id');
+                const isMatched = selectedSiteIds.includes(empSiteId);
+
+                el.style.display = isMatched ? '' : 'none';
+
+                if (!isMatched) {
+                    const cb = el.querySelector('.employee-checkbox');
+                    if (cb) cb.checked = false;
+                }
+            });
+
+            const emptyNotice = document.getElementById('employee-empty-notice');
+            if (emptyNotice) {
+                emptyNotice.classList.toggle('hidden', selectedSiteIds.length > 0);
+            }
+
+            // Ambil pola kerja dari site pertama yang terpilih jika ada
+            if (selectedSiteIds.length > 0) {
+                const firstSiteId = selectedSiteIds[0];
+                const pattern = SITE_PATTERNS[firstSiteId] ?? {
+                    schedule_type: 'office_hour',
+                    work_days: 6,
+                    off_days: 2
+                };
+                document.getElementById('gen_schedule_type').value = pattern.schedule_type;
+                document.getElementById('gen_work_days').value = pattern.work_days;
+                document.getElementById('gen_off_days').value = pattern.off_days;
+            }
+
+            onScheduleTypeChange();
+            updateEmployeeCount();
+        }
 
         function moveShiftItem(button, direction) {
             const row = button.closest('.shift-item-row');
@@ -1098,45 +1144,15 @@
             updateStartingShift();
         }
 
-        function onGenSiteChange() {
-            const siteInput = document.getElementById('gen_target_site');
-            const siteId = siteInput ? siteInput.value : '';
-
-            document.querySelectorAll('.employee-option').forEach(el => {
-                const empSiteId = el.getAttribute('data-site-id');
-                const match = siteId && empSiteId == siteId;
-                el.style.display = match ? '' : 'none';
-                if (!match) {
-                    const cb = el.querySelector('.employee-checkbox');
-                    if (cb) cb.checked = false;
-                }
-            });
-
-            const emptyNotice = document.getElementById('employee-empty-notice');
-            if (emptyNotice) emptyNotice.classList.toggle('hidden', !!siteId);
-
-            const pattern = SITE_PATTERNS[siteId] ?? {
-                schedule_type: 'office_hour',
-                work_days: 6,
-                off_days: 2
-            };
-            document.getElementById('gen_schedule_type').value = pattern.schedule_type;
-            document.getElementById('gen_work_days').value = pattern.work_days;
-            document.getElementById('gen_off_days').value = pattern.off_days;
-
-            onScheduleTypeChange();
-            updateEmployeeCount();
-        }
-
         function filterEmployees() {
             const q = document.getElementById('employee-search').value.toLowerCase();
-            const siteInput = document.getElementById('gen_target_site');
-            const siteId = siteInput ? siteInput.value : '';
+            const selectedSiteIds = Array.from(document.querySelectorAll('.gen-site-checkbox:checked'))
+                .map(cb => cb.value);
 
             document.querySelectorAll('.employee-option').forEach(function(el) {
                 const empSiteId = el.getAttribute('data-site-id');
                 const matchesName = el.dataset.name.includes(q);
-                const matchesSite = siteId && empSiteId == siteId;
+                const matchesSite = selectedSiteIds.includes(empSiteId);
 
                 el.style.display = (matchesName && matchesSite) ? '' : 'none';
             });
@@ -1171,7 +1187,6 @@
         });
 
         function openGenerateModal() {
-            const targetSelect = document.getElementById('gen_target_site');
             const mainSiteSelect = document.getElementById('main_site_select');
             const mainMonth = document.getElementById('main_month_select');
             const mainYear = document.getElementById('main_year_select');
@@ -1183,8 +1198,11 @@
                 document.getElementById('gen_year').value = mainYear.value;
             }
 
-            if (targetSelect && targetSelect.tagName === 'SELECT' && mainSiteSelect && mainSiteSelect.value !== 'all') {
-                targetSelect.value = mainSiteSelect.value;
+            // Jika main filter memilih site spesifik, centang site tersebut di modal
+            if (mainSiteSelect && mainSiteSelect.value !== 'all') {
+                document.querySelectorAll('.gen-site-checkbox').forEach(cb => {
+                    cb.checked = (cb.value === mainSiteSelect.value);
+                });
             }
 
             onGenSiteChange();

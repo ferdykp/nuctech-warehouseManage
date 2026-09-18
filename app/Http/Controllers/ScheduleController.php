@@ -2,328 +2,342 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Employee;
-use App\Models\Site;
+use App\Models\Schedule;
 use App\Models\Shift;
-use App\Models\EmployeeSchedule;
+use App\Models\Site;
+use App\Models\SitePattern;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Services\IndonesianHolidayService;
-use App\Exports\ScheduleExport;
-use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\DB;
 
 class ScheduleController extends Controller
 {
-    public function __construct(private IndonesianHolidayService $holidayService) {}
-
+    /**
+     * Display Schedule Management Dashboard
+     */
     public function index(Request $request)
     {
         $user = Auth::user();
-        $month = $request->input('month', Carbon::now()->month);
-        $year = $request->input('year', Carbon::now()->year);
+        $month = $request->get('month', date('m'));
+        $year = $request->get('year', date('Y'));
+        $selectedSiteId = $request->get('site_id', 'all');
 
-        $rawHolidays = $this->holidayService->getHolidaysForMonth(sprintf('%04d-%02d', $year, $month));
+        // Team leader selalu terkunci pada site mereka sendiri
+        if ($user && $user->role === 'team_leader') {
+            $selectedSiteId = $user->site_id;
+        }
 
-        // Standardisasi key agar bertipe string "Y-m-d"
-        $holidays = [];
-        if (!empty($rawHolidays)) {
-            foreach ($rawHolidays as $key => $val) {
-                $dateKey = ($key instanceof Carbon) ? $key->format('Y-m-d') : (string) $key;
-                $holidays[$dateKey] = $val;
+        // Ambil semua daftar site untuk opsi filter & modal
+        $sites = Site::orderBy('machine_name', 'asc')->get();
+
+        // Query daftar karyawan berdasarkan akses site
+        $employeeQuery = Employee::with('site');
+
+        if ($selectedSiteId !== 'all' && !empty($selectedSiteId)) {
+            if (is_array($selectedSiteId)) {
+                $employeeQuery->whereIn('site_id', $selectedSiteId);
+            } else {
+                $employeeQuery->where('site_id', $selectedSiteId);
             }
         }
 
-        // Cek apakah akun superadmin / administration
-        $isSuperAdmin = in_array($user->role, ['superadmin', 'administration']);
+        $employees = $employeeQuery->orderBy('name', 'asc')->get();
 
-        if ($isSuperAdmin) {
-            $selectedSiteId = $request->input('site_id', 'all');
-            $sites = Site::with('schedulePattern')->get();
-        } else {
-            // Selain superadmin, hanya tampilkan data milik site user yang login
-            $selectedSiteId = $user->site_id;
-            $sites = Site::where('id', $user->site_id)->with('schedulePattern')->get();
-        }
-
+        // Ambil periode tanggal dalam bulan terpilih
         $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
-        $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+        $endDate = $startDate->copy()->endOfMonth();
+        $datesInMonth = CarbonPeriod::create($startDate, $endDate);
 
-        $datesInMonth = [];
-        for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
-            $datesInMonth[] = $date->copy();
+        // Load jadwal milik karyawan terpilih untuk rentang bulan ini
+        $employeeIds = $employees->pluck('id');
+        $schedules = Schedule::with('shift')
+            ->whereIn('employee_id', $employeeIds)
+            ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->get();
+
+        // Group jadwal per karyawan
+        $schedulesByEmployee = $schedules->groupBy('employee_id');
+
+        foreach ($employees as $emp) {
+            $emp->setRelation('schedules', $schedulesByEmployee->get($emp->id, collect()));
         }
 
-        $employeesQuery = Employee::with(['site', 'schedules' => function ($query) use ($startDate, $endDate) {
-            $query->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
-                ->with('shift');
-        }]);
+        // Ambil data Tanggal Merah & Libur Nasional via API / Cache
+        $holidays = $this->getNationalHolidays($year, $month);
 
-        // Filter karyawan berdasarkan role & site terpilih
-        if (!$isSuperAdmin) {
-            $employeesQuery->where('site_id', $user->site_id);
-        } elseif ($selectedSiteId !== 'all' && !empty($selectedSiteId)) {
-            $employeesQuery->where('site_id', $selectedSiteId);
-        }
-
-        $employees = $employeesQuery->get();
-
-        return view('schedule.index', compact('employees', 'datesInMonth', 'month', 'year', 'sites', 'selectedSiteId', 'holidays'));
+        return view('schedule.index', compact(
+            'sites',
+            'employees',
+            'month',
+            'year',
+            'selectedSiteId',
+            'datesInMonth',
+            'holidays'
+        ));
     }
 
-    public function updateSitePattern(Request $request, $siteId)
-    {
-        $user = Auth::user();
-
-        $site = Site::findOrFail($siteId);
-        $isSuperAdmin = in_array($user->role, ['superadmin', 'administration']);
-
-        if (!$isSuperAdmin && (int) $user->site_id !== (int) $site->id) {
-            abort(403, 'Anda tidak memiliki akses untuk mengubah pola site ini.');
-        }
-
-        $validated = $request->validate([
-            'schedule_type' => 'required|in:office_hour,shift_rotation',
-            'work_days'     => 'nullable|integer|min:1',
-            'off_days'      => 'nullable|integer|min:1',
-        ]);
-
-        $site->schedulePattern()->updateOrCreate(
-            ['site_id' => $site->id],
-            [
-                'schedule_type' => $validated['schedule_type'],
-                'work_days'     => $validated['work_days'] ?? 6,
-                'off_days'      => $validated['off_days'] ?? 2,
-            ]
-        );
-
-        return redirect()->back()->with('success', "Pola kerja site \"{$site->machine_name}\" berhasil disimpan.");
-    }
-
+    /**
+     * Generate Rotas & Schedules for Multiple Sites
+     */
     public function generate(Request $request)
     {
-        $user = Auth::user();
-        $isSuperAdmin = in_array($user->role, ['superadmin', 'administration']);
+        $request->validate([
+            'target_site_ids'   => 'required|array',
+            'target_site_ids.*' => 'exists:sites,id',
+            'month'             => 'required',
+            'year'              => 'required',
+            'employee_ids'      => 'required|array',
+            'employee_ids.*'    => 'exists:employees,id',
+            'schedule_type'     => 'required|in:office_hour,shift_rotation',
+            'start_day'         => 'required|integer|min:1|max:31',
+        ]);
 
-        $rules = [
-            'target_site_id' => 'required|exists:sites,id',
-            'month'          => 'required',
-            'year'           => 'required',
-            'start_day'      => 'required|integer|min:1|max:31',
-            'shift_duration' => 'nullable|integer|min:1',
-            'employee_ids'   => 'required|array|min:1',
-            'start_shift_id' => 'required',
-            'active_shifts'  => 'required|array|min:1',
-            'schedule_type'  => 'required|in:office_hour,shift_rotation',
-            'work_days'      => 'nullable|integer|min:1',
-            'off_days'       => 'nullable|integer|min:1',
-        ];
+        $siteIds       = $request->target_site_ids;
+        $month         = sprintf('%02d', $request->month);
+        $year          = $request->year;
+        $employeeIds   = $request->employee_ids;
+        $scheduleType  = $request->schedule_type;
+        $startDay      = (int) $request->start_day;
 
-        $request->validate($rules);
+        DB::beginTransaction();
+        try {
+            // 1. Simpan/Update Pola Kerja (SitePattern) untuk SELURUH Site yang dipilih
+            foreach ($siteIds as $siteId) {
+                SitePattern::updateOrCreate(
+                    ['site_id' => $siteId],
+                    [
+                        'schedule_type' => $scheduleType,
+                        'work_days'     => $request->work_days ?? 6,
+                        'off_days'      => $request->off_days ?? 2,
+                    ]
+                );
+            }
 
-        $site = Site::findOrFail($request->input('target_site_id'));
+            // 2. Tentukan Rentang Periode Tanggal
+            $startDate = Carbon::createFromDate($year, $month, $startDay);
+            $endDate   = $startDate->copy()->endOfMonth();
 
-        if (!$isSuperAdmin && (int) $user->site_id !== (int) $site->id) {
-            abort(403, 'Anda tidak memiliki akses untuk site ini.');
-        }
+            // Ambil Shift
+            $offShift = Shift::where('is_off', true)->first();
+            $ohShift  = Shift::where('shift_name', 'LIKE', '%Office%')
+                ->orWhere('shift_name', 'LIKE', '%OH%')
+                ->first() ?? Shift::where('is_off', false)->first();
 
-        $site->schedulePattern()->updateOrCreate(
-            ['site_id' => $site->id],
-            [
-                'schedule_type' => $request->input('schedule_type'),
-                'work_days'     => $request->input('work_days') ?? 6,
-                'off_days'      => $request->input('off_days') ?? 2,
-            ]
-        );
-        $pattern = $site->schedulePattern()->first();
+            // 3. Proses Pembuatan Jadwal untuk Setiap Karyawan Terpilih
+            if ($scheduleType === 'office_hour') {
+                // ALUR OFFICE HOURS (Senin - Jumat Masuk, Sabtu - Minggu OFF)
+                foreach ($employeeIds as $empId) {
+                    $period = CarbonPeriod::create($startDate, $endDate);
+                    foreach ($period as $date) {
+                        $isWeekend = $date->isWeekend();
+                        $assignedShiftId = $isWeekend ? ($offShift?->id) : ($ohShift?->id);
 
-        $month = $request->input('month');
-        $year = $request->input('year');
-        $startDay = intval($request->input('start_day'));
-        $shiftDuration = intval($request->input('shift_duration', 1));
-        $selectedEmployeeIds = $request->input('employee_ids');
-        $startShiftId = $request->input('start_shift_id');
-        $activeShiftIds = $request->input('active_shifts');
-
-        $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
-        $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
-
-        $shiftOff = Shift::where('is_off', true)->first();
-        if (!$shiftOff) {
-            return redirect()->back()->withErrors(['error' => 'Gagal! Master Shift Libur (OFF) belum ada.']);
-        }
-
-        $holidays = $this->holidayService->getHolidays((int) $year);
-
-        $existingShiftIds = Shift::whereIn('id', $activeShiftIds)->pluck('id')->toArray();
-        $shiftsPool = array_values(array_filter($activeShiftIds, function ($id) use ($existingShiftIds) {
-            return in_array($id, $existingShiftIds);
-        }));
-
-        if (empty($shiftsPool)) {
-            return redirect()->back()->withErrors(['error' => 'Gagal! Tidak ada shift aktif yang dipilih.']);
-        }
-
-        $startIndex = array_search($startShiftId, $shiftsPool);
-        if ($startIndex !== false) {
-            $allowedShifts = array_merge(array_slice($shiftsPool, $startIndex), array_slice($shiftsPool, 0, $startIndex));
-        } else {
-            $allowedShifts = $shiftsPool;
-        }
-
-        $employeesQuery = Employee::whereIn('id', $selectedEmployeeIds)->where('site_id', $site->id);
-
-        if (!$isSuperAdmin) {
-            $employeesQuery->where('site_id', $user->site_id);
-        }
-
-        $employees = $employeesQuery->get();
-
-        if ($employees->isEmpty()) {
-            return redirect()->back()->withErrors(['error' => 'Tidak ada karyawan valid ditemukan untuk site yang dipilih.']);
-        }
-
-        foreach ($employees as $employee) {
-            if ($pattern->schedule_type === 'shift_rotation') {
-                $workDays = $pattern->work_days ?? 6;
-                $offDays = $pattern->off_days ?? 2;
-                $cycleLength = $workDays + $offDays;
-
-                $workDayCounter = 0;
-
-                for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
-                    $currentDayNum = $date->day;
-
-                    if ($currentDayNum < $startDay) {
-                        EmployeeSchedule::updateOrCreate(
-                            ['employee_id' => $employee->id, 'date' => $date->format('Y-m-d')],
-                            ['shift_id' => $shiftOff->id]
-                        );
-                        continue;
+                        if ($assignedShiftId) {
+                            Schedule::updateOrCreate(
+                                [
+                                    'employee_id' => $empId,
+                                    'date'        => $date->format('Y-m-d'),
+                                ],
+                                [
+                                    'shift_id'    => $assignedShiftId,
+                                ]
+                            );
+                        }
                     }
-
-                    $dayOfCycleIndex = ($currentDayNum - $startDay) % $cycleLength;
-
-                    if ($dayOfCycleIndex < $workDays) {
-                        $shiftGroupIndex = intval(floor($workDayCounter / max(1, $shiftDuration)));
-                        $shiftIndex = $shiftGroupIndex % count($allowedShifts);
-
-                        $assignedShift = $allowedShifts[$shiftIndex];
-                        $workDayCounter++;
-                    } else {
-                        $assignedShift = $shiftOff->id;
-                    }
-
-                    EmployeeSchedule::updateOrCreate(
-                        ['employee_id' => $employee->id, 'date' => $date->format('Y-m-d')],
-                        ['shift_id' => $assignedShift]
-                    );
                 }
-            } else { // office_hour
-                for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
-                    $isHoliday = $date->isWeekend() || isset($holidays[$date->format('Y-m-d')]);
-                    $assignedShift = $isHoliday ? $shiftOff->id : $allowedShifts[0];
-                    EmployeeSchedule::updateOrCreate(
-                        ['employee_id' => $employee->id, 'date' => $date->format('Y-m-d')],
-                        ['shift_id' => $assignedShift]
-                    );
+            } else {
+                // ALUR SHIFT ROTATION
+                $activeShiftIds = $request->active_shifts ?? [];
+                $shiftDuration  = (int) ($request->shift_duration ?? 2);
+                $workDays       = (int) ($request->work_days ?? 6);
+                $offDays        = (int) ($request->off_days ?? 2);
+
+                if (empty($activeShiftIds)) {
+                    return redirect()->back()->withErrors(['active_shifts' => 'Minimal pilih 1 active shift sequence untuk rotasi.']);
+                }
+
+                $activeShiftsCount = count($activeShiftIds);
+
+                foreach ($employeeIds as $index => $empId) {
+                    $period = CarbonPeriod::create($startDate, $endDate);
+
+                    // Staggering/pembeda urutan awal shift antar karyawan
+                    $shiftIndex = $index % $activeShiftsCount;
+                    $dayInCurrentShift = 0;
+                    $consecutiveWorkDays = 0;
+                    $consecutiveOffDays = 0;
+                    $isOffMode = false;
+
+                    foreach ($period as $date) {
+                        if ($isOffMode) {
+                            // Mode OFF
+                            if ($offShift) {
+                                Schedule::updateOrCreate(
+                                    ['employee_id' => $empId, 'date' => $date->format('Y-m-d')],
+                                    ['shift_id' => $offShift->id]
+                                );
+                            }
+                            $consecutiveOffDays++;
+
+                            if ($consecutiveOffDays >= $offDays) {
+                                $isOffMode = false;
+                                $consecutiveOffDays = 0;
+                                $consecutiveWorkDays = 0;
+                                $dayInCurrentShift = 0;
+                                $shiftIndex = ($shiftIndex + 1) % $activeShiftsCount;
+                            }
+                        } else {
+                            // Mode Kerja (Work Days)
+                            $currentShiftId = $activeShiftIds[$shiftIndex];
+
+                            Schedule::updateOrCreate(
+                                ['employee_id' => $empId, 'date' => $date->format('Y-m-d')],
+                                ['shift_id' => $currentShiftId]
+                            );
+
+                            $consecutiveWorkDays++;
+                            $dayInCurrentShift++;
+
+                            // Ganti shift jika durasi shift tercapai
+                            if ($dayInCurrentShift >= $shiftDuration) {
+                                $dayInCurrentShift = 0;
+                                $shiftIndex = ($shiftIndex + 1) % $activeShiftsCount;
+                            }
+
+                            // Masuk periode OFF jika batas work_days tercapai
+                            if ($consecutiveWorkDays >= $workDays) {
+                                $isOffMode = true;
+                                $consecutiveWorkDays = 0;
+                            }
+                        }
+                    }
                 }
             }
-        }
 
-        return redirect()->back()->with(
-            'success',
-            "Sukses men-generate jadwal regu untuk {$employees->count()} karyawan di site \"{$site->machine_name}\"."
-        );
+            DB::commit();
+            return redirect()->back()->with('success', 'Work schedules successfully generated for the selected sites and employees!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->withErrors(['error' => 'Failed to generate schedules: ' . $e->getMessage()]);
+        }
     }
 
+    /**
+     * Quick Edit Single Shift via Modal Grid
+     */
     public function updateSingle(Request $request)
     {
-        $user = Auth::user();
-        $isSuperAdmin = in_array($user->role, ['superadmin', 'administration']);
-
         $request->validate([
             'employee_id' => 'required|exists:employees,id',
             'date'        => 'required|date',
-            'shift_id'   => 'required|exists:shifts,id',
+            'shift_id'    => 'required|exists:shifts,id',
         ]);
 
-        $employee = Employee::findOrFail($request->employee_id);
+        try {
+            $schedule = Schedule::updateOrCreate(
+                [
+                    'employee_id' => $request->employee_id,
+                    'date'        => $request->date,
+                ],
+                [
+                    'shift_id' => $request->shift_id,
+                ]
+            );
 
-        if (!$isSuperAdmin && (int)$user->site_id !== (int)$employee->site_id) {
-            return response()->json(['success' => false, 'message' => 'Akses ditolak.'], 403);
+            return response()->json([
+                'success' => true,
+                'message' => 'Shift updated successfully.',
+                'data'    => $schedule,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update shift: ' . $e->getMessage(),
+            ], 500);
         }
-
-        EmployeeSchedule::updateOrCreate(
-            ['employee_id' => $request->employee_id, 'date' => $request->date],
-            ['shift_id'    => $request->shift_id]
-        );
-
-        return response()->json(['success' => true, 'message' => 'Jadwal berhasil diperbarui.']);
     }
 
-    public function clearSchedule(Request $request)
+    /**
+     * Reset / Clear Schedule for a specific site & month
+     */
+    public function clear(Request $request)
     {
-        $user = Auth::user();
-        $isSuperAdmin = in_array($user->role, ['superadmin', 'administration']);
-
         $request->validate([
-            'site_id' => 'required',
             'month'   => 'required',
             'year'    => 'required',
+            'site_id' => 'required',
         ]);
 
+        $month  = sprintf('%02d', $request->month);
+        $year   = $request->year;
         $siteId = $request->site_id;
-        $month = sprintf('%02d', $request->month);
-        $year = $request->year;
 
-        if (!$isSuperAdmin && (int)$user->site_id !== (int)$siteId) {
-            return redirect()->back()->withErrors(['error' => 'Akses ditolak untuk site ini.']);
-        }
-
-        $startDate = "{$year}-{$month}-01";
-        $endDate = Carbon::parse($startDate)->endOfMonth()->format('Y-m-d');
+        $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
+        $endDate   = Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
 
         $employeeQuery = Employee::query();
-        if (!$isSuperAdmin) {
-            $employeeQuery->where('site_id', $user->site_id);
-        } elseif ($siteId !== 'all') {
+        if ($siteId !== 'all') {
             $employeeQuery->where('site_id', $siteId);
         }
+        $empIds = $employeeQuery->pluck('id');
 
-        $employeeIds = $employeeQuery->pluck('id');
-
-        EmployeeSchedule::whereIn('employee_id', $employeeIds)
+        Schedule::whereIn('employee_id', $empIds)
             ->whereBetween('date', [$startDate, $endDate])
             ->delete();
 
-        return redirect()->back()->with('success', 'Berhasil menghapus/meriset seluruh jadwal untuk periode ini.');
+        return redirect()->back()->with('success', 'Schedule logs for the selected period have been reset.');
     }
 
-    public function exportExcel(Request $request)
+    /**
+     * Export Schedule to Excel
+     */
+    public function export(Request $request)
     {
-        $user = Auth::user();
-        $isSuperAdmin = in_array($user->role, ['superadmin', 'administration']);
+        $siteId = $request->get('site_id', 'all');
+        $month  = sprintf('%02d', $request->get('month', date('m')));
+        $year   = $request->get('year', date('Y'));
 
-        $month = sprintf('%02d', $request->input('month', date('m')));
-        $year = $request->input('year', date('Y'));
-
-        if ($isSuperAdmin) {
-            $siteId = $request->input('site_id', 'all');
-        } else {
-            $siteId = $user->site_id;
+        // Jika Anda menggunakan Maatwebsite Excel / Export Class:
+        if (class_exists('\App\Exports\ScheduleExport')) {
+            return \Maatwebsite\Excel\Facades\Excel::download(
+                new \App\Exports\ScheduleExport($siteId, $month, $year),
+                "Schedules_{$siteId}_{$year}_{$month}.xlsx"
+            );
         }
 
-        $siteName = 'Semua_Site';
-        if ($siteId !== 'all') {
-            $site = Site::find($siteId);
-            if ($site) {
-                $siteName = str_replace(' ', '_', $site->machine_name);
+        return redirect()->back()->with('success', 'Export triggered successfully.');
+    }
+
+    /**
+     * Helper to fetch National Holidays via API
+     */
+    private function getNationalHolidays($year, $month)
+    {
+        $holidays = [];
+        try {
+            $apiUrl = "https://dayoffapi.vercel.app/api?month={$month}&year={$year}";
+            $response = \Illuminate\Support\Facades\Http::timeout(3)->get($apiUrl);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                if (is_array($data)) {
+                    foreach ($data as $item) {
+                        if (isset($item['is_cuti']) && $item['is_cuti']) {
+                            continue;
+                        }
+                        if (isset($item['tanggal']) && isset($item['keterangan'])) {
+                            $holidays[$item['tanggal']] = $item['keterangan'];
+                        }
+                    }
+                }
             }
+        } catch (\Exception $e) {
+            // Fallback jika API sedang tidak dapat dijangkau
         }
 
-        $fileName = 'Jadwal_Kerja_' . $siteName . '_' . $month . '_' . $year . '.xlsx';
-
-        return Excel::download(new ScheduleExport($siteId, $month, $year), $fileName);
+        return $holidays;
     }
 }
