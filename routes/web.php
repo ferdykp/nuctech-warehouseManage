@@ -56,13 +56,27 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::put('/shift/{shift}', [ShiftController::class, 'update'])->name('shift.update'); // ROUTE UPDATE BARU
         Route::delete('/shift/{shift}', [ShiftController::class, 'destroy'])->name('shift.destroy');
 
+        // Route::prefix('report')->name('report.')->group(function () {
+        //     Route::get('/', [ReportController::class, 'index'])->name('index');
+        //     Route::get('/export', [ReportController::class, 'export'])->name('export');
+        //     Route::post('/bulk-delete', [ReportController::class, 'bulkDelete'])->name('bulk-delete');
+        //     Route::post('/search', [ReportController::class, 'search'])->name('search');
+        //     Route::resource('/', ReportController::class)->except(['index']);
+        //     Route::get('/global/export', [ReportController::class, 'exportAll'])->name('export_all');
+        // });
         Route::prefix('report')->name('report.')->group(function () {
             Route::get('/', [ReportController::class, 'index'])->name('index');
+            Route::get('/create', [ReportController::class, 'create'])->name('create');
+            Route::post('/', [ReportController::class, 'store'])->name('store');
             Route::get('/export', [ReportController::class, 'export'])->name('export');
+            Route::get('/global/export', [ReportController::class, 'exportAll'])->name('export_all');
             Route::post('/bulk-delete', [ReportController::class, 'bulkDelete'])->name('bulk-delete');
             Route::post('/search', [ReportController::class, 'search'])->name('search');
-            Route::resource('/', ReportController::class)->except(['index']);
-            Route::get('/global/export', [ReportController::class, 'exportAll'])->name('export_all');
+
+            Route::get('/{report}', [ReportController::class, 'show'])->name('show');
+            Route::get('/{report}/edit', [ReportController::class, 'edit'])->name('edit');
+            Route::put('/{report}', [ReportController::class, 'update'])->name('update');
+            Route::delete('/{report}', [ReportController::class, 'destroy'])->name('destroy');
         });
 
         // Inventory / Sparepart
