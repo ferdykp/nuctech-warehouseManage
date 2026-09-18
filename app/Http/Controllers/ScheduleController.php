@@ -22,15 +22,26 @@ class ScheduleController extends Controller
         $year = $request->get('year', date('Y'));
         $selectedSiteId = $request->get('site_id', 'all');
 
+        // Periode Tanggal
+        $startDate = Carbon::createFromDate((int)$year, (int)$month, 1)->startOfMonth();
+        $endDate = $startDate->copy()->endOfMonth();
+        $datesInMonth = CarbonPeriod::create($startDate, $endDate);
+
         // Load semua site
         $sitesQuery = Site::with('schedulePattern')->orderBy('machine_name', 'asc');
 
         if ($user && $user->role === 'team_leader' && $user->site) {
-            // Ambil prefix nama site Team Leader (misal "CTMIC2100YW" atau "CTMIC2100-YW")
-            $machinePrefix = explode(' ', trim($user->site->machine_name))[0];
+            // 1. Ambil kata depan sebelum spasi (misal: "CTMIC2100YW" atau "CTMIC2100-YW")
+            $firstName = explode(' ', trim($user->site->machine_name))[0];
 
-            // Filter site yang tampil khusus untuk Team Leader sesuai kelompok project-nya
-            $sitesQuery->where('machine_name', 'LIKE', $machinePrefix . '%');
+            // 2. Bersihkan tanda strip '-' agar tersisa kata utamanya saja (misal: "CTMIC2100")
+            $cleanPrefix = str_replace('-', '', $firstName);
+
+            // 3. Ambil 5 karakter dasar ("CTMIC") sebagai kunci utama
+            $baseKey = substr($cleanPrefix, 0, 5);
+
+            // Filter site yang mengandung kata kunci "CTMIC"
+            $sitesQuery->where('machine_name', 'LIKE', '%' . $baseKey . '%');
         }
 
         $sites = $sitesQuery->get();
@@ -39,8 +50,14 @@ class ScheduleController extends Controller
         // Filter query karyawan
         $employeeQuery = Employee::with('site');
 
+        // Filter Karyawan Resign: Hanya tampilkan jika aktif ATAU resign_date masih jatuh pada/setelah awal bulan ini
+        $employeeQuery->where(function ($q) use ($startDate) {
+            $q->whereNull('resign_date')
+                ->orWhere('resign_date', '>=', $startDate->format('Y-m-d'));
+        });
+
         if ($user && $user->role === 'team_leader') {
-            // Team Leader bisa melihat semua karyawan di kelompok site project-nya
+            // Team Leader melihat semua karyawan di kelompok site project-nya
             $employeeQuery->whereIn('site_id', $allowedSiteIds);
         } elseif ($selectedSiteId !== 'all' && !empty($selectedSiteId)) {
             if (is_array($selectedSiteId)) {
@@ -51,11 +68,6 @@ class ScheduleController extends Controller
         }
 
         $employees = $employeeQuery->orderBy('name', 'asc')->get();
-
-        // Periode Tanggal
-        $startDate = Carbon::createFromDate((int)$year, (int)$month, 1)->startOfMonth();
-        $endDate = $startDate->copy()->endOfMonth();
-        $datesInMonth = CarbonPeriod::create($startDate, $endDate);
 
         // Schedule Logs
         $employeeIds = $employees->pluck('id');
@@ -83,6 +95,7 @@ class ScheduleController extends Controller
             'holidays'
         ));
     }
+
     /**
      * Generate Rotas & Schedules for Multiple Sites
      */
@@ -132,10 +145,21 @@ class ScheduleController extends Controller
 
             // 3. Proses Pembuatan Jadwal untuk Setiap Karyawan Terpilih
             if ($scheduleType === 'office_hour') {
-                // ALUR OFFICE HOURS (Senin - Jumat Masuk, Sabtu - Minggu OFF)
+                // ALUR OFFICE HOURS
                 foreach ($employeeIds as $empId) {
+                    $employee = Employee::find($empId);
+                    $lastDate = $employee?->resign_date ? Carbon::parse($employee->resign_date)->endOfDay() : null;
+
                     $period = CarbonPeriod::create($startDate, $endDate);
                     foreach ($period as $date) {
+                        // Hentikan pembuatan jadwal & hapus sisa jika tanggal melewati resign_date karyawan
+                        if ($lastDate && $date->greaterThan($lastDate)) {
+                            Schedule::where('employee_id', $empId)
+                                ->where('date', $date->format('Y-m-d'))
+                                ->delete();
+                            continue;
+                        }
+
                         $isWeekend = $date->isWeekend();
                         $assignedShiftId = $isWeekend ? ($offShift?->id) : ($ohShift?->id);
 
@@ -166,9 +190,11 @@ class ScheduleController extends Controller
                 $activeShiftsCount = count($activeShiftIds);
 
                 foreach ($employeeIds as $index => $empId) {
+                    $employee = Employee::find($empId);
+                    $lastDate = $employee?->resign_date ? Carbon::parse($employee->resign_date)->endOfDay() : null;
+
                     $period = CarbonPeriod::create($startDate, $endDate);
 
-                    // Staggering/pembeda urutan awal shift antar karyawan
                     $shiftIndex = $index % $activeShiftsCount;
                     $dayInCurrentShift = 0;
                     $consecutiveWorkDays = 0;
@@ -176,8 +202,15 @@ class ScheduleController extends Controller
                     $isOffMode = false;
 
                     foreach ($period as $date) {
+                        // Hentikan pembuatan jadwal jika melewati resign_date karyawan
+                        if ($lastDate && $date->greaterThan($lastDate)) {
+                            Schedule::where('employee_id', $empId)
+                                ->where('date', $date->format('Y-m-d'))
+                                ->delete();
+                            continue;
+                        }
+
                         if ($isOffMode) {
-                            // Mode OFF
                             if ($offShift) {
                                 Schedule::updateOrCreate(
                                     ['employee_id' => $empId, 'date' => $date->format('Y-m-d')],
@@ -194,7 +227,6 @@ class ScheduleController extends Controller
                                 $shiftIndex = ($shiftIndex + 1) % $activeShiftsCount;
                             }
                         } else {
-                            // Mode Kerja (Work Days)
                             $currentShiftId = $activeShiftIds[$shiftIndex];
 
                             Schedule::updateOrCreate(
@@ -205,13 +237,11 @@ class ScheduleController extends Controller
                             $consecutiveWorkDays++;
                             $dayInCurrentShift++;
 
-                            // Ganti shift jika durasi shift tercapai
                             if ($dayInCurrentShift >= $shiftDuration) {
                                 $dayInCurrentShift = 0;
                                 $shiftIndex = ($shiftIndex + 1) % $activeShiftsCount;
                             }
 
-                            // Masuk periode OFF jika batas work_days tercapai
                             if ($consecutiveWorkDays >= $workDays) {
                                 $isOffMode = true;
                                 $consecutiveWorkDays = 0;
@@ -229,9 +259,6 @@ class ScheduleController extends Controller
         }
     }
 
-    /**
-     * Quick Edit Single Shift via Modal Grid
-     */
     public function updateSingle(Request $request)
     {
         $request->validate([
@@ -241,6 +268,14 @@ class ScheduleController extends Controller
         ]);
 
         try {
+            $employee = Employee::find($request->employee_id);
+            if ($employee?->resign_date && Carbon::parse($request->date)->greaterThan(Carbon::parse($employee->resign_date)->endOfDay())) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak dapat mengubah jadwal setelah tanggal resign (last date) karyawan.',
+                ], 422);
+            }
+
             $schedule = Schedule::updateOrCreate(
                 [
                     'employee_id' => $request->employee_id,
@@ -264,9 +299,6 @@ class ScheduleController extends Controller
         }
     }
 
-    /**
-     * Reset / Clear Schedule for a specific site & month
-     */
     public function clear(Request $request)
     {
         $request->validate([
@@ -295,16 +327,12 @@ class ScheduleController extends Controller
         return redirect()->back()->with('success', 'Schedule logs for the selected period have been reset.');
     }
 
-    /**
-     * Export Schedule to Excel
-     */
     public function export(Request $request)
     {
         $siteId = $request->get('site_id', 'all');
         $month  = sprintf('%02d', $request->get('month', date('m')));
         $year   = $request->get('year', date('Y'));
 
-        // Jika Anda menggunakan Maatwebsite Excel / Export Class:
         if (class_exists('\App\Exports\ScheduleExport')) {
             return \Maatwebsite\Excel\Facades\Excel::download(
                 new \App\Exports\ScheduleExport($siteId, $month, $year),
@@ -315,9 +343,6 @@ class ScheduleController extends Controller
         return redirect()->back()->with('success', 'Export triggered successfully.');
     }
 
-    /**
-     * Helper to fetch National Holidays via API
-     */
     private function getNationalHolidays($year, $month)
     {
         $holidays = [];
@@ -339,7 +364,7 @@ class ScheduleController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            // Fallback jika API sedang tidak dapat dijangkau
+            // Fallback
         }
 
         return $holidays;
