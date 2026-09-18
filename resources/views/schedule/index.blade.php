@@ -263,7 +263,7 @@
                 </div>
             @endif
 
-            {{-- ARRAY TAMPUNG KARYAWAN YANG MASUK DI HARI LIBUR --}}
+            {{-- ARRAY TAMPUNG KARYAWAN YANG MASUK DI HARI LIBUR NASIONAL / TANGGAL MERAH --}}
             @php
                 $holidayWorkDuty = [];
             @endphp
@@ -404,18 +404,15 @@
                                                             'bg-emerald-50 text-emerald-800 border-emerald-200';
                                                     }
 
-                                                    // TANGKAP DETEKSI MASUK DI HARI LIBUR / TANGGAL MERAH
-                                                    if ($holidayName || $date->isWeekend()) {
+                                                    // DETEKSI MASUK KHUSUS DI HARI LIBUR NASIONAL / TANGGAL MERAH EVENT (SABTU MINGGU BIASA DIABAIKAN)
+                                                    if ($holidayName) {
                                                         $holidayWorkDuty[] = [
                                                             'employee_name' => $emp->name,
                                                             'site_name' => $emp->site->machine_name ?? '-',
                                                             'date' => $date->format('d/m/Y'),
                                                             'day_name' => $date->translatedFormat('l'),
-                                                            'holiday_name' =>
-                                                                $holidayName ??
-                                                                'Weekend (' . $date->translatedFormat('l') . ')',
+                                                            'holiday_name' => $holidayName,
                                                             'shift_name' => $shiftName,
-                                                            'is_national_holiday' => !!$holidayName,
                                                         ];
                                                     }
                                                 }
@@ -463,7 +460,7 @@
             </div>
         </div>
 
-        {{-- 4. HOLIDAY WORK DUTY RECAP CARD (KARYAWAN MASUK DI HARI LIBUR) --}}
+        {{-- 4. HOLIDAY WORK DUTY RECAP CARD (KHUSUS TANGGAL MERAH HARI LIBUR NASIONAL) --}}
         <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
             <div class="flex items-center justify-between p-5 border-b sm:p-6 border-slate-100 bg-slate-50/50">
                 <div class="flex items-center gap-3">
@@ -472,9 +469,10 @@
                         <i class="text-lg fa-solid fa-calendar-day"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-extrabold text-slate-900">Holiday & Weekend Duty Roster</h3>
+                        <h3 class="text-base font-extrabold text-slate-900">National Holiday Duty Roster</h3>
                         <p class="text-xs font-medium text-slate-500 mt-0.5">Daftar karyawan yang memiliki jadwal
-                            piket/masuk kerja pada tanggal merah & hari libur nasional.</p>
+                            piket/masuk kerja khusus pada tanggal merah & hari libur nasional (Sabtu/Minggu biasa
+                            diabaikan).</p>
                     </div>
                 </div>
                 <span
@@ -491,63 +489,55 @@
                             <th class="px-6 py-3.5">Employee Name</th>
                             <th class="px-6 py-3.5">Site Location</th>
                             <th class="px-6 py-3.5">Date & Day</th>
-                            <th class="px-6 py-3.5">Holiday Description</th>
+                            <th class="px-6 py-3.5">National Holiday Event</th>
                             <th class="px-6 py-3.5">Assigned Shift</th>
                             <th class="px-6 py-3.5 text-center">Status Badge</th>
                         </tr>
                     </thead>
                     <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
-                        @forelse ($holidayWorkDuty as $duty)
-                            <tr class="transition-colors hover:bg-slate-50/60">
-                                <td class="px-6 py-3.5 font-extrabold text-slate-900">
-                                    {{ $duty['employee_name'] }}
-                                </td>
-                                <td class="px-6 py-3.5 font-semibold text-slate-500">
-                                    {{ $duty['site_name'] }}
-                                </td>
-                                <td class="px-6 py-3.5 font-bold text-slate-800">
-                                    {{ $duty['date'] }} <span
-                                        class="text-[10px] font-normal text-slate-400">({{ $duty['day_name'] }})</span>
-                                </td>
-                                <td
-                                    class="px-6 py-3.5 font-bold {{ $duty['is_national_holiday'] ? 'text-rose-600' : 'text-slate-600' }}">
-                                    @if ($duty['is_national_holiday'])
+                        @if (count($holidayWorkDuty) > 0)
+                            @foreach ($holidayWorkDuty as $duty)
+                                <tr class="transition-colors hover:bg-slate-50/60">
+                                    <td class="px-6 py-3.5 font-extrabold text-slate-900">
+                                        {{ $duty['employee_name'] }}
+                                    </td>
+                                    <td class="px-6 py-3.5 font-semibold text-slate-500">
+                                        {{ $duty['site_name'] }}
+                                    </td>
+                                    <td class="px-6 py-3.5 font-bold text-slate-800">
+                                        {{ $duty['date'] }} <span
+                                            class="text-[10px] font-normal text-slate-400">({{ $duty['day_name'] }})</span>
+                                    </td>
+                                    <td class="px-6 py-3.5 font-bold text-rose-600">
                                         <i class="mr-1 fa-solid fa-flag text-rose-600"></i>
-                                    @endif
-                                    {{ $duty['holiday_name'] }}
-                                </td>
-                                <td class="px-6 py-3.5">
-                                    <span
-                                        class="px-2.5 py-1 text-[10px] font-black rounded-lg border bg-slate-100 border-slate-200 text-slate-700">
-                                        {{ $duty['shift_name'] }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-3.5 text-center">
-                                    @if ($duty['is_national_holiday'])
+                                        {{ $duty['holiday_name'] }}
+                                    </td>
+                                    <td class="px-6 py-3.5">
+                                        <span
+                                            class="px-2.5 py-1 text-[10px] font-black rounded-lg border bg-slate-100 border-slate-200 text-slate-700">
+                                            {{ $duty['shift_name'] }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-3.5 text-center">
                                         <span
                                             class="px-2.5 py-0.5 text-[10px] font-extrabold text-rose-800 bg-rose-50 border border-rose-200/80 rounded-full">
                                             National Holiday Duty
                                         </span>
-                                    @else
-                                        <span
-                                            class="px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200/80 rounded-full">
-                                            Weekend Duty
-                                        </span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @else
                             <tr>
                                 <td colspan="6" class="p-8 text-center text-slate-400">
                                     <div
                                         class="flex items-center justify-center w-10 h-10 mx-auto mb-2 text-lg rounded-xl bg-slate-100 text-slate-400">
                                         <i class="fa-solid fa-user-check"></i>
                                     </div>
-                                    <p class="text-xs font-bold text-slate-700">Tidak ada karyawan yang bertugas pada hari
-                                        libur / tanggal merah di periode ini.</p>
+                                    <p class="text-xs font-bold text-slate-700">Tidak ada karyawan yang bertugas pada
+                                        tanggal merah / hari libur nasional di periode ini.</p>
                                 </td>
                             </tr>
-                        @endforelse
+                        @endif
                     </tbody>
                 </table>
             </div>
