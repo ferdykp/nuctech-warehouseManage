@@ -6,7 +6,7 @@ use App\Models\Employee;
 use App\Models\EmployeeSchedule as Schedule;
 use App\Models\Shift;
 use App\Models\Site;
-use App\Models\SitePattern;
+use App\Models\SiteSchedule as SitePattern;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
