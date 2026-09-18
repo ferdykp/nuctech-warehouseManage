@@ -58,7 +58,7 @@
                             </tr>
                         </thead>
                         <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
-                            @forelse($failureQueue as$item)
+                            @forelse($failureQueue as $item)
                                 <tr class="transition-colors hover:bg-amber-50/20">
                                     <td class="px-6 py-3.5">
                                         <span
