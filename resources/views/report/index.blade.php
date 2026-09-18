@@ -58,7 +58,7 @@
                             </tr>
                         </thead>
                         <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
-                            @forelse($failureQueue as $item)
+                            @forelse($failureQueue as$item)
                                 <tr class="transition-colors hover:bg-amber-50/20">
                                     <td class="px-6 py-3.5">
                                         <span
@@ -159,9 +159,7 @@
                             <th class="px-6 py-4">Site Machine</th>
                             <th class="px-6 py-4">Attendant / Reporter</th>
                             <th class="px-6 py-4 text-center">Failure Date</th>
-                            @if (Auth::user()?->role === 'superadmin')
-                                <th class="w-32 px-6 py-4 text-center">Actions</th>
-                            @endif
+                            <th class="w-32 px-6 py-4 text-center">Actions</th>
                         </tr>
                     </thead>
 
@@ -182,9 +180,99 @@
         </div>
     </div>
 
-    {{-- DELETE CONFIRMATION MODAL --}}
+    {{-- 4. DETAIL REPORT MODAL --}}
+    <div id="modal-detail-report"
+        class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs modal-overlay"
+        onclick="if(event.target===this) closeDetailReportModal()">
+        <div class="w-full max-w-2xl overflow-hidden bg-white border shadow-2xl border-slate-100 rounded-3xl">
+            <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="flex items-center justify-center w-10 h-10 border text-rose-600 bg-rose-50 border-rose-100 rounded-2xl shrink-0">
+                        <i class="text-base fa-solid fa-file-waveform"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-slate-900" id="detail-report-code">Failure Report Detail
+                        </h3>
+                        <p class="text-xs font-medium text-slate-500 mt-0.5">Field breakdown record & troubleshooting
+                            details</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeDetailReportModal()"
+                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
+            </div>
+
+            <div class="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+                {{-- Top Information Grid --}}
+                <div class="grid grid-cols-2 gap-4 p-4 border border-slate-100 rounded-2xl bg-slate-50/50">
+                    <div>
+                        <span class="block text-[10px] font-extrabold uppercase text-slate-400">Site Machine</span>
+                        <span class="text-sm font-extrabold text-slate-900" id="detail-site-machine">-</span>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] font-extrabold uppercase text-slate-400">Series Machine</span>
+                        <span class="font-mono text-xs font-bold text-slate-700" id="detail-series-machine">-</span>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] font-extrabold uppercase text-slate-400">Attendant / Reporter</span>
+                        <span class="text-xs font-bold text-slate-800" id="detail-attendant">-</span>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] font-extrabold uppercase text-slate-400">Failure Date</span>
+                        <span class="text-xs font-bold text-rose-600" id="detail-failure-date">-</span>
+                    </div>
+                </div>
+
+                {{-- Image Evidence (If Any) --}}
+                <div id="detail-image-wrapper" class="hidden space-y-2">
+                    <span class="block text-xs font-bold tracking-wider uppercase text-slate-700">Image Evidence</span>
+                    <div class="overflow-hidden border border-slate-200 rounded-2xl max-h-64 bg-slate-50">
+                        <img id="detail-image" src="" alt="Failure Evidence"
+                            class="object-contain w-full h-full">
+                    </div>
+                </div>
+
+                {{-- Failed Sub-System --}}
+                <div class="space-y-1.5">
+                    <span class="block text-xs font-bold tracking-wider uppercase text-slate-700">Failed Sub-System</span>
+                    <div class="p-3.5 text-xs font-semibold text-slate-800 bg-slate-50 border border-slate-200/80 rounded-xl"
+                        id="detail-subsystem">
+                        -
+                    </div>
+                </div>
+
+                {{-- Failure Phenomenon --}}
+                <div class="space-y-1.5">
+                    <span class="block text-xs font-bold tracking-wider uppercase text-slate-700">Failure Phenomenon</span>
+                    <div class="p-3.5 text-xs leading-relaxed text-slate-700 bg-slate-50 border border-slate-200/80 rounded-xl"
+                        id="detail-phenomenon">
+                        -
+                    </div>
+                </div>
+
+                {{-- Troubleshoot Procedure --}}
+                <div class="space-y-1.5">
+                    <span class="block text-xs font-bold tracking-wider uppercase text-slate-700">Troubleshoot
+                        Procedure</span>
+                    <div class="p-3.5 text-xs leading-relaxed text-slate-700 bg-slate-50 border border-slate-200/80 rounded-xl whitespace-pre-line"
+                        id="detail-procedure">
+                        -
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+                <button type="button" onclick="closeDetailReportModal()"
+                    class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-slate-800 hover:bg-slate-900 rounded-xl active:scale-95 cursor-pointer">
+                    Close Detail
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- 5. DELETE CONFIRMATION MODAL --}}
     <div id="modal-delete-report"
-        class="fixed inset-0 z-50 flex items-center justify-center hidden p-4 transition-all bg-slate-900/60 backdrop-blur-xs">
+        class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all bg-slate-900/60 backdrop-blur-xs">
         <div class="relative w-full max-w-sm p-6 text-center bg-white border shadow-2xl border-slate-100 rounded-3xl">
             <div class="flex justify-center mb-4">
                 <div
@@ -194,7 +282,8 @@
             </div>
             <h3 class="mb-1 text-base font-extrabold text-slate-900">Confirm Deletion</h3>
             <p class="mb-6 text-xs font-medium text-slate-500">
-                Are you sure you want to delete <strong id="delete-report-name" class="text-slate-900">this record</strong>?
+                Are you sure you want to delete <strong id="delete-report-name" class="text-slate-900">this
+                    record</strong>?
                 <span class="block mt-1 font-semibold text-rose-600">This action cannot be undone.</span>
             </p>
             <form id="form-delete-report" method="POST">
@@ -224,6 +313,50 @@
                 const checkboxes = document.querySelectorAll('.sub_chk');
                 checkboxes.forEach(cb => cb.checked = this.checked);
             });
+        }
+
+        // Open Detail Modal Handler
+        function openDetailReportModal(item) {
+            document.getElementById('detail-report-code').innerText = `#REP-${String(item.id).padStart(4, '0')}`;
+            document.getElementById('detail-site-machine').innerText = item.site_machine || '-';
+            document.getElementById('detail-series-machine').innerText = item.series_machine || 'N/A';
+            document.getElementById('detail-attendant').innerText = item.attendant || '-';
+            document.getElementById('detail-failure-date').innerText = item.failure_date ? new Date(item.failure_date)
+                .toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                }) : '-';
+
+            document.getElementById('detail-subsystem').innerText = item.failed_subsystem ||
+                'No specific sub-system noted.';
+            document.getElementById('detail-phenomenon').innerText = item.failure_phenomenon ||
+                'No phenomenon description provided.';
+            document.getElementById('detail-procedure').innerText = item.ts_procedure ||
+                'No troubleshooting procedure logged.';
+
+            // Handle Image Evidence
+            const imgWrapper = document.getElementById('detail-image-wrapper');
+            const imgEl = document.getElementById('detail-image');
+            if (item.image) {
+                imgEl.src = `/storage/${item.image}`;
+                imgWrapper.classList.remove('hidden');
+            } else {
+                imgWrapper.classList.add('hidden');
+                imgEl.src = '';
+            }
+
+            const m = document.getElementById('modal-detail-report');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeDetailReportModal() {
+            const m = document.getElementById('modal-detail-report');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
         }
 
         function openDeleteReportModal(url, name) {
@@ -268,7 +401,7 @@
                         })
                         .catch(err => console.error(err))
                         .finally(() => {
-                            if (searchLoader) searchLoader.classList.add('hidden');
+                            if (searchLoader) searchLoader.classList.hidden = true;
                         });
                 }, 350);
             });

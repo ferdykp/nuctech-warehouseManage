@@ -40,9 +40,16 @@
         </td>
 
         {{-- Action Column --}}
-        @if (Auth::user()?->role === 'superadmin')
-            <td class="px-6 py-4 text-center">
-                <div class="flex items-center justify-center gap-1.5">
+        <td class="px-6 py-4 text-center">
+            <div class="flex items-center justify-center gap-1.5">
+                {{-- Detail Button (Selalu Tampil) --}}
+                <button type="button" onclick='openDetailReportModal(@json($item))'
+                    class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer text-emerald-600 border-emerald-100 rounded-xl bg-emerald-50 hover:bg-emerald-600 hover:text-white active:scale-95"
+                    title="View Detail Report">
+                    <i class="text-xs fa-solid fa-eye"></i>
+                </button>
+
+                @if (Auth::user()?->role === 'superadmin')
                     {{-- Edit --}}
                     <a href="{{ route($routePrefix . '.edit', $item->id) }}"
                         class="flex items-center justify-center w-8 h-8 text-blue-600 transition-all border border-blue-100 rounded-xl bg-blue-50 hover:bg-blue-600 hover:text-white active:scale-95"
@@ -52,18 +59,18 @@
 
                     {{-- Delete --}}
                     <button type="button"
-                        onclick="openDeleteReportModal('{{ route($routePrefix . '.destroy', $item->id) }}', '#REP-{{ str_pad($item->id, 4, '0', STR_PAD_LEFT) }}')"
+                        onclick="openDeleteReportModal('{{ route($routePrefix . '.destroy', ['report' => $item->id]) }}', '#REP-{{ str_pad($item->id, 4, '0', STR_PAD_LEFT) }}')"
                         class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
                         title="Delete Report">
                         <i class="text-xs fa-solid fa-trash-can"></i>
                     </button>
-                </div>
-            </td>
-        @endif
+                @endif
+            </div>
+        </td>
     </tr>
 @empty
     <tr>
-        <td colspan="{{ Auth::user()?->role === 'superadmin' ? 6 : 4 }}" class="p-12 text-center text-slate-400">
+        <td colspan="{{ Auth::user()?->role === 'superadmin' ? 6 : 5 }}" class="p-12 text-center text-slate-400">
             <div
                 class="flex items-center justify-center w-12 h-12 mx-auto mb-3 text-xl rounded-2xl bg-slate-100 text-slate-400">
                 <i class="fa-solid fa-folder-open"></i>
