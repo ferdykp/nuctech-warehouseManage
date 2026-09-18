@@ -18,10 +18,13 @@ class ScheduleController extends Controller
     /**
      * Display Schedule Management Dashboard
      */
+    /**
+     * Display Schedule Management Dashboard
+     */
     public function index(Request $request)
     {
         $user = Auth::user();
-        $month = $request->get('month', date('m'));
+        $month = sprintf('%02d', $request->get('month', date('m')));
         $year = $request->get('year', date('Y'));
         $selectedSiteId = $request->get('site_id', 'all');
 
@@ -30,8 +33,8 @@ class ScheduleController extends Controller
             $selectedSiteId = $user->site_id;
         }
 
-        // Ambil semua daftar site untuk opsi filter & modal
-        $sites = Site::orderBy('machine_name', 'asc')->get();
+        // Ambil semua daftar site beserta relasi schedulePattern-nya
+        $sites = Site::with('schedulePattern')->orderBy('machine_name', 'asc')->get();
 
         // Query daftar karyawan berdasarkan akses site
         $employeeQuery = Employee::with('site');
@@ -47,7 +50,7 @@ class ScheduleController extends Controller
         $employees = $employeeQuery->orderBy('name', 'asc')->get();
 
         // Ambil periode tanggal dalam bulan terpilih
-        $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+        $startDate = Carbon::createFromDate((int)$year, (int)$month, 1)->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
         $datesInMonth = CarbonPeriod::create($startDate, $endDate);
 
@@ -58,14 +61,15 @@ class ScheduleController extends Controller
             ->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
             ->get();
 
-        // Group jadwal per karyawan
+        // Group jadwal per employee_id dengan penanganan null yang aman
         $schedulesByEmployee = $schedules->groupBy('employee_id');
 
         foreach ($employees as $emp) {
-            $emp->setRelation('schedules', $schedulesByEmployee->get($emp->id, collect()));
+            $empSchedules = $schedulesByEmployee->get($emp->id);
+            $emp->setRelation('schedules', $empSchedules ?? collect());
         }
 
-        // Ambil data Tanggal Merah & Libur Nasional via API / Cache
+        // Ambil data Tanggal Merah & Libur Nasional
         $holidays = $this->getNationalHolidays($year, $month);
 
         return view('schedule.index', compact(
@@ -78,7 +82,6 @@ class ScheduleController extends Controller
             'holidays'
         ));
     }
-
     /**
      * Generate Rotas & Schedules for Multiple Sites
      */
