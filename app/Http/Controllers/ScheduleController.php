@@ -17,6 +17,7 @@ class ScheduleController extends Controller
 {
     public function index(Request $request)
     {
+        $request->validate(['month' => 'nullable|integer|between:1,12', 'year' => 'nullable|integer|between:2000,2100', 'site_id' => 'nullable|string']);
         $user = Auth::user();
         $month = sprintf('%02d', $request->get('month', date('m')));
         $year = $request->get('year', date('Y'));
@@ -27,44 +28,12 @@ class ScheduleController extends Controller
         $endDate = $startDate->copy()->endOfMonth();
         $datesInMonth = CarbonPeriod::create($startDate, $endDate);
 
-        // Load semua site
-        $sitesQuery = Site::with('schedulePattern')->orderBy('machine_name', 'asc');
-
-        if ($user && $user->role === 'team_leader' && $user->site) {
-            // 1. Ambil kata depan sebelum spasi (misal: "CTMIC2100YW" atau "CTMIC2100-YW")
-            $firstName = explode(' ', trim($user->site->machine_name))[0];
-
-            // 2. Bersihkan tanda strip '-' agar tersisa kata utamanya saja (misal: "CTMIC2100")
-            $cleanPrefix = str_replace('-', '', $firstName);
-
-            // 3. Ambil 5 karakter dasar ("CTMIC") sebagai kunci utama
-            $baseKey = substr($cleanPrefix, 0, 5);
-
-            // Filter site yang mengandung kata kunci "CTMIC"
-            $sitesQuery->where('machine_name', 'LIKE', '%' . $baseKey . '%');
-        }
-
-        $sites = $sitesQuery->get();
-        $allowedSiteIds = $sites->pluck('id')->toArray();
-
-        // Filter query karyawan
-        $employeeQuery = Employee::with('site');
-
-        // Filter Karyawan Resign: Hanya tampilkan jika aktif ATAU resign_date masih jatuh pada/setelah awal bulan ini
-        $employeeQuery->where(function ($q) use ($startDate) {
-            $q->whereNull('resign_date')
-                ->orWhere('resign_date', '>=', $startDate->format('Y-m-d'));
-        });
-
-        if ($user && $user->role === 'team_leader') {
-            // Team Leader melihat semua karyawan di kelompok site project-nya
-            $employeeQuery->whereIn('site_id', $allowedSiteIds);
-        } elseif ($selectedSiteId !== 'all' && !empty($selectedSiteId)) {
-            if (is_array($selectedSiteId)) {
-                $employeeQuery->whereIn('site_id', $selectedSiteId);
-            } else {
-                $employeeQuery->where('site_id', $selectedSiteId);
-            }
+        $sites = \App\Services\SiteAccess::sites($user, true)->with('schedulePattern')->orderBy('machine_name')->get();
+        $employeeQuery = Employee::with('site')->whereIn('site_id', $sites->pluck('id'));
+        $employeeQuery->where(fn ($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $startDate->format('Y-m-d')));
+        if ($selectedSiteId !== 'all') {
+            \App\Services\SiteAccess::authorize($selectedSiteId, true);
+            $employeeQuery->where('site_id', $selectedSiteId);
         }
 
         $employees = $employeeQuery->orderBy('name', 'asc')->get();
@@ -104,12 +73,17 @@ class ScheduleController extends Controller
         $request->validate([
             'target_site_ids'   => 'required|array',
             'target_site_ids.*' => 'exists:sites,id',
-            'month'             => 'required',
-            'year'              => 'required',
+            'month'             => 'required|integer|between:1,12',
+            'year'              => 'required|integer|between:2000,2100',
             'employee_ids'      => 'required|array',
             'employee_ids.*'    => 'exists:employees,id',
             'schedule_type'     => 'required|in:office_hour,shift_rotation',
             'start_day'         => 'required|integer|min:1|max:31',
+            'work_days' => 'nullable|integer|between:1,31',
+            'off_days' => 'nullable|integer|between:1,31',
+            'shift_duration' => 'nullable|integer|between:1,31',
+            'active_shifts' => 'required_if:schedule_type,shift_rotation|array|min:1',
+            'active_shifts.*' => 'integer|exists:shifts,id',
         ]);
 
         $siteIds       = $request->target_site_ids;
@@ -119,6 +93,14 @@ class ScheduleController extends Controller
         $scheduleType  = $request->schedule_type;
         $startDay      = (int) $request->start_day;
 
+        foreach ($siteIds as $siteId) \App\Services\SiteAccess::authorize($siteId, true);
+        abort_if(Employee::whereIn('id', $employeeIds)->whereNotIn('site_id', $siteIds)->exists(), 403);
+        if (!checkdate((int) $month, $startDay, (int) $year)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['start_day' => 'Tanggal mulai tidak valid untuk bulan ini.']);
+        }
+        if (!Shift::where('is_off', true)->exists() || !Shift::where('is_off', false)->exists()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['shift' => 'Buat shift kerja dan shift OFF sebelum membuat jadwal.']);
+        }
         DB::beginTransaction();
         try {
             // 1. Simpan/Update Pola Kerja (SitePattern) untuk SELURUH Site yang dipilih
@@ -184,7 +166,7 @@ class ScheduleController extends Controller
                 $offDays        = (int) ($request->off_days ?? 2);
 
                 if (empty($activeShiftIds)) {
-                    return redirect()->back()->withErrors(['active_shifts' => 'Minimal pilih 1 active shift sequence untuk rotasi.']);
+                    throw \Illuminate\Validation\ValidationException::withMessages(['active_shifts' => 'Pilih minimal satu shift.']);
                 }
 
                 $activeShiftsCount = count($activeShiftIds);
@@ -267,8 +249,9 @@ class ScheduleController extends Controller
             'shift_id'    => 'required|exists:shifts,id',
         ]);
 
+        $employee = Employee::findOrFail($request->employee_id);
+        \App\Services\SiteAccess::authorize($employee->site_id, true);
         try {
-            $employee = Employee::find($request->employee_id);
             if ($employee?->resign_date && Carbon::parse($request->date)->greaterThan(Carbon::parse($employee->resign_date)->endOfDay())) {
                 return response()->json([
                     'success' => false,
@@ -302,9 +285,9 @@ class ScheduleController extends Controller
     public function clear(Request $request)
     {
         $request->validate([
-            'month'   => 'required',
-            'year'    => 'required',
-            'site_id' => 'required',
+            'month'   => 'required|integer|between:1,12',
+            'year'    => 'required|integer|between:2000,2100',
+            'site_id' => 'required|string',
         ]);
 
         $month  = sprintf('%02d', $request->month);
@@ -314,7 +297,8 @@ class ScheduleController extends Controller
         $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
         $endDate   = Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
 
-        $employeeQuery = Employee::query();
+        $employeeQuery = Employee::whereIn('site_id', \App\Services\SiteAccess::sites(auth()->user(), true)->select('id'));
+        if ($siteId !== 'all') \App\Services\SiteAccess::authorize($siteId, true);
         if ($siteId !== 'all') {
             $employeeQuery->where('site_id', $siteId);
         }
@@ -329,6 +313,8 @@ class ScheduleController extends Controller
 
     public function export(Request $request)
     {
+        $request->validate(['month' => 'nullable|integer|between:1,12', 'year' => 'nullable|integer|between:2000,2100', 'site_id' => 'nullable|string']);
+        if ($request->filled('site_id') && $request->site_id !== 'all') \App\Services\SiteAccess::authorize($request->site_id, true);
         $siteId = $request->get('site_id', 'all');
         $month  = sprintf('%02d', $request->get('month', date('m')));
         $year   = $request->get('year', date('Y'));
@@ -341,6 +327,18 @@ class ScheduleController extends Controller
         }
 
         return redirect()->back()->with('success', 'Export triggered successfully.');
+    }
+
+    public function updateSitePattern(Request $request, Site $site)
+    {
+        \App\Services\SiteAccess::authorize($site->id, true);
+        $data = $request->validate([
+            'schedule_type' => 'required|in:office_hour,shift_rotation',
+            'work_days' => 'required|integer|between:1,31',
+            'off_days' => 'required|integer|between:1,31',
+        ]);
+        SitePattern::updateOrCreate(['site_id' => $site->id], $data);
+        return back()->with('success', 'Pola kerja berhasil diperbarui.');
     }
 
     private function getNationalHolidays($year, $month)

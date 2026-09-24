@@ -25,30 +25,8 @@ class AdminReimbursementController extends Controller
         $role = strtolower(auth()->user()->role ?? 'employee_role');
         $pageTitle = 'Reimbursement Claims';
 
-        $query = Reimbursement::with('user');
+        $query = \App\Services\ReimbursementAccess::query()->with('user');
         $pdfBase64 = null;
-
-        // 1. Filter Role
-        if (in_array($role, ['superadmin', 'manager', 'station_master', 'team_leader'])) {
-            if ($role === 'team_leader') {
-                $query->where(function ($q) {
-                    $q->where('user_id', auth()->id())
-                        ->orWhere('status', 'pending_leader');
-                });
-            } elseif ($role === 'station_master') {
-                $query->where(function ($q) {
-                    $q->where('user_id', auth()->id())
-                        ->orWhere('status', 'pending_station');
-                });
-            } elseif ($role === 'manager') {
-                $query->where(function ($q) {
-                    $q->where('user_id', auth()->id())
-                        ->orWhere('status', 'pending_manager');
-                });
-            }
-        } else {
-            $query->where('user_id', auth()->id());
-        }
 
         // 2. Filter Bulan
         if ($request->filled('month')) {
@@ -71,7 +49,7 @@ class AdminReimbursementController extends Controller
 
         // 4. Pagination
         $reimbursements = $query
-            ->orderByRaw("FIELD(category, 'transportation', 'delivery', 'office')")
+            ->orderByRaw("CASE category WHEN 'transportation' THEN 1 WHEN 'delivery' THEN 2 WHEN 'office' THEN 3 ELSE 4 END")
             ->orderBy('person_name', 'asc')
             ->orderBy('date', 'asc')
             ->orderBy('id', 'asc')
@@ -153,7 +131,7 @@ class AdminReimbursementController extends Controller
         }
 
         $userRole = strtolower(auth()->user()->role ?? 'employee_role');
-        $initialStatus = ($userRole === 'team_leader') ? 'pending_leader' : 'pending';
+        $initialStatus = \App\Services\ReimbursementAccess::approvalStatus($userRole);
 
         Reimbursement::create([
             'user_id' => auth()->id(),
@@ -174,6 +152,7 @@ class AdminReimbursementController extends Controller
     public function approval($id)
     {
         $reimbursement = Reimbursement::findOrFail($id);
+        \App\Services\ReimbursementAccess::view($reimbursement);
         $currentRole = strtolower(auth()->user()->role ?? 'employee_role');
         $myId = auth()->id();
 
@@ -212,16 +191,19 @@ class AdminReimbursementController extends Controller
     public function approve(Request $request, $id)
     {
         $request->validate([
-            'signature'       => 'required|string',
+            'signature'       => 'required|string|max:2800000',
             'pos_x'           => 'required|numeric',
             'pos_y'           => 'required|numeric',
             'scale_w'         => 'required|numeric',
             'scale_h'         => 'required|numeric',
-            'signatures_json' => 'nullable|string',
+            'signatures_json' => 'nullable|json|max:6000000',
             'page'            => 'nullable|integer',
         ]);
 
-        $reimbursement = Reimbursement::findOrFail($id);
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $id) {
+        $reimbursement = Reimbursement::lockForUpdate()->findOrFail($id);
+        \App\Services\ReimbursementAccess::approve($reimbursement);
+        \App\Services\ReimbursementAccess::view($reimbursement);
         $user          = auth()->user();
         $invoicePath   = storage_path('app/public/' . str_replace(['storage/', 'public/'], '', $reimbursement->receipt_attachment));
         $extension     = strtolower(pathinfo($invoicePath, PATHINFO_EXTENSION));
@@ -247,9 +229,24 @@ class AdminReimbursementController extends Controller
             ]];
         }
 
-        $existingSignatures = json_decode($reimbursement->signatures_json, true) ?? [];
+        \Illuminate\Support\Facades\Validator::make(['signatures' => $newSignatures], [
+            'signatures' => 'required|array|min:1|max:20',
+            'signatures.*.image' => 'required|string|max:2800000',
+            'signatures.*.pos_x' => 'required|numeric|between:0,100',
+            'signatures.*.pos_y' => 'required|numeric|between:0,100',
+            'signatures.*.scale_w' => 'required|numeric|gt:0|lte:100',
+            'signatures.*.scale_h' => 'required|numeric|gt:0|lte:100',
+            'signatures.*.page' => 'nullable|integer|min:1',
+        ])->validate();
+        foreach ($newSignatures as &$signature) {
+            $signature['signer_name'] = $user->name;
+            $signature['signer_date'] = now()->format('Y-m-d');
+        }
+        unset($signature);
+        $existingSignatures = $reimbursement->signatures_json ?? [];
+        if (is_string($existingSignatures)) $existingSignatures = json_decode($existingSignatures, true) ?? [];
         $combinedSignatures = array_merge($existingSignatures, $newSignatures);
-        $reimbursement->signatures_json = json_encode($combinedSignatures);
+        $reimbursement->signatures_json = $combinedSignatures;
 
         $sigPaths = [];
         foreach ($newSignatures as $idx => $sig) {
@@ -370,6 +367,7 @@ class AdminReimbursementController extends Controller
         $nextStatus  = 'pending';
 
         switch ($currentRole) {
+            case 'administration':
             case 'employee_role':
                 $nextStatus = 'pending_leader';
                 break;
@@ -393,6 +391,7 @@ class AdminReimbursementController extends Controller
         $reimbursement->save();
 
         return redirect()->route('reimbursements.index')->with('success', 'The document has been successfully signed. Current status: ' . strtoupper($nextStatus));
+        });
     }
 
     public function reject(Request $request, $id)
@@ -401,7 +400,10 @@ class AdminReimbursementController extends Controller
             'rejected_reason' => 'required|string|max:500'
         ]);
 
-        $reimbursement = Reimbursement::findOrFail($id);
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $id) {
+        $reimbursement = Reimbursement::lockForUpdate()->findOrFail($id);
+        \App\Services\ReimbursementAccess::approve($reimbursement);
+        \App\Services\ReimbursementAccess::view($reimbursement);
         $reimbursement->update([
             'status' => 'rejected',
             'approved_by' => auth()->id(),
@@ -409,6 +411,7 @@ class AdminReimbursementController extends Controller
         ]);
 
         return redirect()->route('reimbursements.index')->with('success', 'Claim rejected successfully.');
+        });
     }
 
     public function trash(Request $request)
@@ -432,6 +435,7 @@ class AdminReimbursementController extends Controller
     public function restore($id)
     {
         $reimbursement = Reimbursement::onlyTrashed()->findOrFail($id);
+        \App\Services\ReimbursementAccess::manage($reimbursement);
         $reimbursement->restore();
 
         return redirect()->route('reimbursements.trash')->with('success', 'Claim record successfully restored.');
@@ -443,6 +447,7 @@ class AdminReimbursementController extends Controller
     public function forceDelete($id)
     {
         $reimbursement = Reimbursement::onlyTrashed()->findOrFail($id);
+        \App\Services\ReimbursementAccess::manage($reimbursement);
 
         if ($reimbursement->receipt_attachment) {
             Storage::disk('public')->delete($reimbursement->receipt_attachment);
@@ -456,7 +461,9 @@ class AdminReimbursementController extends Controller
     public function destroy($id)
     {
         $reimbursement = Reimbursement::findOrFail($id);
+        \App\Services\ReimbursementAccess::view($reimbursement);
 
+        \App\Services\ReimbursementAccess::manage($reimbursement);
         // Soft Delete (File fisik tidak langsung dihapus agar bisa di-restore)
         $reimbursement->delete();
 
@@ -465,7 +472,8 @@ class AdminReimbursementController extends Controller
     public function show($id)
     {
         $reimbursement = Reimbursement::findOrFail($id);
-        return view('reimbursements.index', compact('reimbursement'));
+        \App\Services\ReimbursementAccess::view($reimbursement);
+        return redirect()->route('reimbursements.approval', $reimbursement->id);
     }
 
     /**
@@ -480,7 +488,7 @@ class AdminReimbursementController extends Controller
         }
 
         $reimbursements = $query
-            ->orderByRaw("FIELD(category, 'transportation', 'delivery', 'office')")
+            ->orderByRaw("CASE category WHEN 'transportation' THEN 1 WHEN 'delivery' THEN 2 WHEN 'office' THEN 3 ELSE 4 END")
             ->orderBy('person_name', 'asc')
             ->orderBy('date', 'asc')
             ->orderBy('id', 'asc')
@@ -685,6 +693,7 @@ class AdminReimbursementController extends Controller
     public function exportSinglePdf($id)
     {
         $reimbursement = Reimbursement::findOrFail($id);
+        \App\Services\ReimbursementAccess::view($reimbursement);
         $cleanPath = str_replace(['storage/', 'public/'], '', $reimbursement->receipt_attachment);
         $invoicePath = storage_path('app/public/' . $cleanPath);
 
@@ -822,7 +831,7 @@ class AdminReimbursementController extends Controller
         $search = $request->get('search');
         $month = $request->get('month');
 
-        if ($user->role === 'superadmin' || $request->boolean('all_site')) {
+        if ($user->role === 'superadmin') {
             $siteName = 'ALL_SITES';
         } else {
             $rawSiteName = $user->site->machine_name ?? 'SITE';
@@ -840,7 +849,7 @@ class AdminReimbursementController extends Controller
         $fileName = "Reimbursement_{$siteName}_{$userName}_{$monthName}.xlsx";
 
         return Excel::download(
-            new ReimbursementExport($search, $month, $user->role === 'superadmin' || $request->boolean('all_site')),
+            new ReimbursementExport($search, $month, $user->role === 'superadmin'),
             $fileName
         );
     }
@@ -887,8 +896,10 @@ class AdminReimbursementController extends Controller
     public function edit($id)
     {
         $reimbursement = Reimbursement::findOrFail($id);
+        \App\Services\ReimbursementAccess::view($reimbursement);
         $user = auth()->user();
 
+        abort_unless(in_array($reimbursement->status, ['pending', 'rejected']), 409, 'Klaim yang sudah masuk persetujuan tidak dapat diubah.');
         if ($user->role !== 'superadmin' && $reimbursement->user_id !== $user->id) {
             abort(403, 'Unauthorized action.');
         }
@@ -908,8 +919,10 @@ class AdminReimbursementController extends Controller
     public function update(Request $request, $id)
     {
         $reimbursement = Reimbursement::findOrFail($id);
+        \App\Services\ReimbursementAccess::view($reimbursement);
         $user = auth()->user();
 
+        abort_unless(in_array($reimbursement->status, ['pending', 'rejected']), 409, 'Klaim yang sudah masuk persetujuan tidak dapat diubah.');
         if ($user->role !== 'superadmin' && $reimbursement->user_id !== $user->id) {
             abort(403, 'Unauthorized action.');
         }
@@ -941,9 +954,6 @@ class AdminReimbursementController extends Controller
         ];
 
         if ($request->hasFile('receipt_attachment')) {
-            if ($reimbursement->receipt_attachment && Storage::disk('public')->exists($reimbursement->receipt_attachment)) {
-                Storage::disk('public')->delete($reimbursement->receipt_attachment);
-            }
 
             $file = $request->file('receipt_attachment');
             $extension = strtolower($file->getClientOriginalExtension());
@@ -989,7 +999,11 @@ class AdminReimbursementController extends Controller
             }
         }
 
+        $oldReceipt = $reimbursement->receipt_attachment;
         $reimbursement->update($dataToUpdate);
+        if (isset($dataToUpdate['receipt_attachment']) && $oldReceipt !== $dataToUpdate['receipt_attachment']) {
+            Storage::disk('public')->delete($oldReceipt);
+        }
 
         return redirect()->route('reimbursements.index')->with('success', 'Reimbursement claim updated successfully.');
     }

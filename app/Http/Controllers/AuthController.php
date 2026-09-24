@@ -21,17 +21,18 @@ class AuthController extends Controller
     public function loginAuth(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'username' => 'required',
-            'password' => 'required|min:6',
+            'username' => 'required|string|max:255',
+            'password' => 'required|string',
         ]);
 
         if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
+            return back()->withErrors($validator)->withInput($request->only('username'));
         }
 
         if (Auth::attempt($request->only('username', 'password'))) {
 
-            $request->session()->regenerate(); // 🔐 penting
+            $request->session()->regenerate();
+            $request->session()->put('last_activity_at', now()->timestamp);
 
             return redirect()->route('dashboard')
                 ->with('success', 'Login successful');
@@ -39,7 +40,7 @@ class AuthController extends Controller
 
         return back()
             ->withErrors(['username' => 'Username atau password salah'])
-            ->withInput();
+            ->withInput($request->only('username'));
     }
 
     public function logout(Request $request)

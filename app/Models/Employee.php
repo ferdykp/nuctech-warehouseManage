@@ -25,6 +25,7 @@ class Employee extends Model
         'mcu',
         'tld',
         'join_date',
+        'resign_date',
         'contract_start_date',
         'is_active',
         'more_information', //from salary

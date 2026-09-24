@@ -39,7 +39,7 @@ class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, 
     // public function collection()
     // {
     //     $user = Auth::user();
-    //     $query = Reimbursement::query();
+    //     $query = \App\Services\ReimbursementAccess::query();
 
     //     // 1. FILTER BERDASARKAN HAK AKSES / SITE
     //     // Jika BUKAN Superadmin dan TIDAK MINTA All Site:
@@ -73,7 +73,7 @@ class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, 
     public function collection()
     {
         $user = Auth::user();
-        $query = Reimbursement::query();
+        $query = \App\Services\ReimbursementAccess::query();
 
         // 1. FILTER BERDASARKAN HAK AKSES / SITE
         if (!$this->isAllSite && $user->role !== 'superadmin') {
@@ -101,7 +101,7 @@ class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, 
 
         // PERBAIKAN: Urutkan berdasarkan Kategori -> Nama Karyawan -> Tanggal Invoice -> ID
         return $query
-            ->orderByRaw("FIELD(category, 'transportation', 'delivery', 'office')")
+            ->orderByRaw("CASE category WHEN 'transportation' THEN 1 WHEN 'delivery' THEN 2 WHEN 'office' THEN 3 ELSE 4 END")
             ->orderBy('person_name', 'asc')
             ->orderBy('date', 'asc')
             ->orderBy('id', 'asc')

@@ -13,7 +13,9 @@ return new class extends Migration
     public function up(): void
     {
         // Menambahkan 'Resigned' ke dalam definisi ENUM status
-        DB::statement("ALTER TABLE employees MODIFY COLUMN status ENUM('Permanent', 'Contract', 'Probation', 'Daily', 'Resigned') NOT NULL DEFAULT 'Probation'");
+        Schema::table('employees', function (Blueprint $table) {
+            $table->enum('status', ['Permanent', 'Contract', 'Probation', 'Daily', 'Resigned'])->default('Probation')->change();
+        });
     }
 
     /**
@@ -21,6 +23,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE employees MODIFY COLUMN status ENUM('Permanent', 'Contract', 'Probation', 'Daily') NOT NULL DEFAULT 'Probation'");
+        Schema::table('employees', function (Blueprint $table) {
+            $table->enum('status', ['Permanent', 'Contract', 'Probation', 'Daily'])->default('Probation')->change();
+        });
     }
 };

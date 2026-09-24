@@ -14,12 +14,19 @@ class TelegramWebhookController extends Controller
 {
     public function handle(Request $request)
     {
+        $secret = (string) config('services.telegram.webhook_secret');
+        abort_unless($secret !== '' && hash_equals($secret, (string) $request->header('X-Telegram-Bot-Api-Secret-Token')), 403);
         $update = $request->all();
 
         if (!isset($update['message']['text'])) {
             return response()->json(['status' => 'ok']);
         }
 
+        $sender = (string) data_get($update, 'message.from.id', '');
+        $allowed = array_map('strval', config('services.telegram.allowed_user_ids', []));
+        abort_unless(in_array($sender, $allowed, true), 403);
+        abort_unless((string) data_get($update, 'message.chat.id') === (string) config('services.telegram.chat_id'), 403);
+        $request->validate(['message.text' => 'required|string|max:4096', 'message.chat.id' => 'required']);
         $text = trim($update['message']['text']);
         $chatId = $update['message']['chat']['id'];
 
@@ -160,7 +167,8 @@ class TelegramWebhookController extends Controller
         $logPath = storage_path('logs/laravel.log');
 
         if (File::exists($logPath)) {
-            File::put($logPath, ''); // Empty log file$msg = "🧹 <b>SUCCESS!</b> File <code>laravel.log</code> has been cleared successfully.";
+            File::put($logPath, '');
+            $msg = "🧹 <b>SUCCESS!</b> File <code>laravel.log</code> has been cleared successfully.";
         } else {
             $msg = "ℹ️ Log file is already empty.";
         }
@@ -176,22 +184,19 @@ class TelegramWebhookController extends Controller
         TelegramService::sendMessageToChat($chatId, "⏳ <i>Processing database dump, please wait...</i>");
 
         try {
-            $dbName = env('DB_DATABASE');
-            $dbUser = env('DB_USERNAME');
-            $dbPassword = env('DB_PASSWORD');
-            $dbHost = env('DB_HOST', '127.0.0.1');
-
-            $fileName = 'backup_' . $dbName . '_' . date('Y-m-d_H-i-s') . '.sql';
-            $filePath = storage_path('app/' . $fileName);
-
-            // mysqldump command
-            if (!empty($dbPassword)) {
-                $command = "mysqldump -h {$dbHost} -u {$dbUser} -p'{$dbPassword}' {$dbName} > {$filePath}";
-            } else {
-                $command = "mysqldump -h {$dbHost} -u {$dbUser} {$dbName} > {$filePath}";
+            $connection = config('database.connections.'.config('database.default'));
+            if (($connection['driver'] ?? null) !== 'mysql') {
+                throw new \RuntimeException('Backup Telegram hanya tersedia untuk koneksi MySQL.');
             }
-
-            exec($command, $output, $returnVar);
+            $fileName = 'backup_'.now()->format('Y-m-d_H-i-s').'_'.\Illuminate\Support\Str::random(8).'.sql';
+            $filePath = storage_path('app/'.$fileName);
+            $process = new \Symfony\Component\Process\Process([
+                'mysqldump', '--host='.$connection['host'], '--port='.($connection['port'] ?? 3306),
+                '--user='.$connection['username'], '--single-transaction', '--result-file='.$filePath,
+                $connection['database'],
+            ], null, ['MYSQL_PWD' => $connection['password'] ?? '']);
+            $process->setTimeout(120);
+            $returnVar = $process->run();
 
             if ($returnVar === 0 && File::exists($filePath)) {
                 // Send SQL Document to Telegram API
@@ -216,7 +221,10 @@ class TelegramWebhookController extends Controller
                 TelegramService::sendMessageToChat($chatId, "❌ Failed to dump database. Ensure `mysqldump` is installed on the server.");
             }
         } catch (\Exception $e) {
-            TelegramService::sendMessageToChat($chatId, "❌ Error occurred during backup: " . $e->getMessage());
+            Log::error('Telegram backup failed', ['exception' => $e]);
+            TelegramService::sendMessageToChat($chatId, '❌ Backup gagal. Periksa konfigurasi database dan log server.');
+        } finally {
+            if (isset($filePath)) File::delete($filePath);
         }
     }
 }

@@ -73,6 +73,12 @@ class ReportController extends Controller
             'stock_id'           => 'nullable|exists:sparepart_stocks,id',
         ]);
 
+        $site = Site::where('slug', $request->site_machine)->firstOrFail();
+        \App\Services\SiteAccess::authorize($site->id);
+        if ($request->filled('stock_id')) {
+            abort_unless(SparepartStock::whereKey($request->stock_id)->where('site_id', $site->id)->exists(), 403);
+        }
+
         $failureNote =
             "Failed Sub-System:\n" . $request->failed_subsystem .
             "\n\nFailure Phenomenon:\n" . $request->failure_phenomenon;
@@ -94,7 +100,7 @@ class ReportController extends Controller
 
             // Jika dipicu dari antrean damage, kurangi/hapus stok damage tersebut
             if ($request->filled('stock_id')) {
-                $stock = SparepartStock::find($request->stock_id);
+                $stock = SparepartStock::lockForUpdate()->find($request->stock_id);
                 if ($stock && $stock->condition === 'damaged') {
                     if ($stock->qty <= 1) {
                         $stock->delete();
@@ -116,6 +122,10 @@ class ReportController extends Controller
         }
 
         $report = Report::findOrFail($id);
+        if (!auth()->user()->isSuperAdmin()) {
+            $site = Site::where('slug', $report->site_machine)->firstOrFail();
+            \App\Services\SiteAccess::authorize($site->id);
+        }
         $sites = Site::all();
 
         return view('report.edit', compact('report', 'sites'));
@@ -138,11 +148,21 @@ class ReportController extends Controller
             'failure_phenomenon' => 'required|string',
         ]);
 
+        $site = Site::where('slug', $request->site_machine)->firstOrFail();
+        \App\Services\SiteAccess::authorize($site->id);
+        if ($request->filled('stock_id')) {
+            abort_unless(SparepartStock::whereKey($request->stock_id)->where('site_id', $site->id)->exists(), 403);
+        }
+
         $failureNote =
             "Failed Sub-System:\n" . $request->failed_subsystem .
             "\n\nFailure Phenomenon:\n" . $request->failure_phenomenon;
 
         $report = Report::findOrFail($id);
+        if (!auth()->user()->isSuperAdmin()) {
+            $site = Site::where('slug', $report->site_machine)->firstOrFail();
+            \App\Services\SiteAccess::authorize($site->id);
+        }
 
         $data = [
             'attendant'    => $request->attendant,
@@ -172,6 +192,10 @@ class ReportController extends Controller
         }
 
         $report = Report::findOrFail($id);
+        if (!auth()->user()->isSuperAdmin()) {
+            $site = Site::where('slug', $report->site_machine)->firstOrFail();
+            \App\Services\SiteAccess::authorize($site->id);
+        }
 
         if ($report->image) {
             Storage::disk('public')->delete($report->image);
@@ -208,7 +232,8 @@ class ReportController extends Controller
                 return response()->json(['html' => $html]);
             }
 
-            return view('report.index', compact('report'));
+            $failureQueue = SparepartStock::where('condition', 'damaged')->where('qty', '>', 0)->with(['sparepart', 'site'])->get();
+            return view('report.index', compact('report', 'failureQueue'));
         } catch (\Exception $e) {
             \Log::error('report search error: ' . $e->getMessage());
 
@@ -224,6 +249,11 @@ class ReportController extends Controller
             return redirect()->route('report.index')
                 ->with('error', 'Terjadi kesalahan saat search');
         }
+    }
+
+    public function export()
+    {
+        return Excel::download(new \App\Exports\ReportExport(), 'Failure_Reports_'.now()->format('Y-m-d').'.xlsx');
     }
 
     public function exportAll(Request $request)

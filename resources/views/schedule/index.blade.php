@@ -189,28 +189,18 @@
                         <label class="block mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
                             Site Location
                         </label>
-                        @if (in_array(Auth::user()?->role, ['superadmin', 'administration']))
-                            <select name="site_id" id="main_site_select"
-                                class="w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all outline-none cursor-pointer">
-                                <option value="all" {{ ($selectedSiteId ?? 'all') == 'all' ? 'selected' : '' }}>-- All
-                                    Sites --</option>
-                                @foreach ($sites as $st)
-                                    <option value="{{ $st->id }}"
-                                        {{ ($selectedSiteId ?? '') == $st->id ? 'selected' : '' }}>
-                                        {{ $st->machine_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        @else
-                            {{-- Non-Superadmin locked to their own site --}}
-                            <input type="hidden" name="site_id" id="main_site_select" value="{{ Auth::user()->site_id }}">
-                            <div
-                                class="w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold bg-slate-100 border border-slate-200 rounded-xl text-slate-600 flex items-center justify-between">
-                                <span>{{ Auth::user()->site->machine_name ?? 'Registered Site' }}</span>
-                                <span
-                                    class="text-[10px] font-extrabold text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded-md">Fixed</span>
-                            </div>
-                        @endif
+                        <select name="site_id" id="main_site_select"
+                            class="w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all outline-none cursor-pointer">
+                            <option value="all" {{ ($selectedSiteId ?? 'all') == 'all' ? 'selected' : '' }}>
+                                -- {{ Auth::user()?->role === 'team_leader' ? 'All Assigned Sites' : 'All Sites' }} --
+                            </option>
+                            @foreach ($sites as $st)
+                                <option value="{{ $st->id }}"
+                                    {{ ($selectedSiteId ?? '') == $st->id ? 'selected' : '' }}>
+                                    {{ $st->machine_name }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div class="w-1/2 sm:w-44">
@@ -303,8 +293,8 @@
                                 class="inline-block w-2.5 h-2.5 rounded-xs bg-rose-50 border border-rose-200"></span>
                             OFF</span>
                         <span class="flex items-center gap-1.5"><span
-                                class="inline-block w-2.5 h-2.5 rounded-xs bg-white border border-slate-200"></span>
-                            Unassigned</span>
+                                class="inline-block w-2.5 h-2.5 rounded-xs bg-slate-100 border border-slate-300"></span>
+                            Resigned (N/A)</span>
                         <span class="flex items-center gap-1 font-extrabold text-rose-600"><i
                                 class="fa-solid fa-circle-exclamation"></i> National Holiday</span>
                     </div>
@@ -356,7 +346,15 @@
                                 <tr class="transition-colors hover:bg-slate-50/60">
                                     <td
                                         class="px-4 py-3 sticky left-0 bg-white font-extrabold text-slate-900 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
-                                        <div class="text-xs truncate">{{ $emp->name }}</div>
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-xs truncate">{{ $emp->name }}</span>
+                                            @if ($emp->resign_date)
+                                                <span
+                                                    class="px-1.5 py-0.2 text-[8px] font-black text-rose-700 bg-rose-50 border border-rose-200 rounded-md shrink-0">
+                                                    Resigned
+                                                </span>
+                                            @endif
+                                        </div>
                                         <div class="text-[10px] font-semibold text-slate-400 truncate mt-0.5">
                                             {{ $emp->site->machine_name ?? '-' }}
                                         </div>
@@ -375,10 +373,17 @@
                                             $shiftName = $schedule?->shift?->shift_name;
                                             $holidayName = $holidays[$dateStr] ?? null;
 
+                                            // Penanganan Sel Karyawan Resign
+                                            $isAfterResign =
+                                                $emp->resign_date &&
+                                                $date->greaterThan(
+                                                    \Carbon\Carbon::parse($emp->resign_date)->endOfDay(),
+                                                );
+
                                             $badgeColor = 'bg-white text-slate-300 border-slate-200';
                                             $label = '-';
 
-                                            if ($schedule && $schedule->shift) {
+                                            if (!$isAfterResign && $schedule && $schedule->shift) {
                                                 if ($schedule->shift->is_off) {
                                                     $badgeColor = 'bg-rose-50 text-rose-800 border-rose-200';
                                                     $label = 'OFF';
@@ -404,7 +409,6 @@
                                                             'bg-emerald-50 text-emerald-800 border-emerald-200';
                                                     }
 
-                                                    // MASUKAN KE REKAP KHUSUS HARI LIBUR NASIONAL
                                                     if ($holidayName) {
                                                         $holidayWorkDuty[] = [
                                                             'employee_name' => $emp->name,
@@ -418,13 +422,21 @@
                                                 }
                                             }
                                         @endphp
-                                        <td class="p-1 text-center border-l border-slate-100">
-                                            <button type="button"
-                                                onclick="openEditShiftModal({{ $emp->id }}, '{{ addslashes($emp->name) }}', '{{ $date->format('Y-m-d') }}', '{{ $schedule?->shift_id ?? '' }}')"
-                                                class="w-full py-1 text-[9px] font-black border rounded-md transition-transform active:scale-95 cursor-pointer {{ $badgeColor }}"
-                                                title="Click to edit shift ({{ $shiftName ?? 'Unassigned' }})">
-                                                {{ $label }}
-                                            </button>
+                                        <td
+                                            class="p-1 text-center border-l border-slate-100 {{ $isAfterResign ? 'bg-slate-100/70' : '' }}">
+                                            @if ($isAfterResign)
+                                                <span class="text-[9px] font-bold text-slate-300 select-none"
+                                                    title="Employee Resigned on {{ \Carbon\Carbon::parse($emp->resign_date)->format('d M Y') }}">
+                                                    N/A
+                                                </span>
+                                            @else
+                                                <button type="button"
+                                                    onclick="openEditShiftModal({{ $emp->id }}, '{{ addslashes($emp->name) }}', '{{ $date->format('Y-m-d') }}', '{{ $schedule?->shift_id ?? '' }}')"
+                                                    class="w-full py-1 text-[9px] font-black border rounded-md transition-transform active:scale-95 cursor-pointer {{ $badgeColor }}"
+                                                    title="Click to edit shift ({{ $shiftName ?? 'Unassigned' }})">
+                                                    {{ $label }}
+                                                </button>
+                                            @endif
                                         </td>
                                     @endforeach
 
@@ -737,8 +749,17 @@
                                                 class="w-4 h-4 text-blue-600 rounded cursor-pointer border-slate-300 employee-checkbox focus:ring-blue-500 shrink-0"
                                                 {{ in_array($emp->id, old('employee_ids', [])) ? 'checked' : '' }}>
                                             <div class="truncate">
-                                                <span
-                                                    class="block text-xs font-bold text-slate-800">{{ $emp->name }}</span>
+                                                <div class="flex items-center gap-1.5">
+                                                    <span
+                                                        class="block text-xs font-bold text-slate-800">{{ $emp->name }}</span>
+                                                    @if ($emp->resign_date)
+                                                        <span
+                                                            class="px-1.5 py-0.2 text-[8px] font-black text-rose-700 bg-rose-50 border border-rose-200 rounded-md shrink-0">
+                                                            Last:
+                                                            {{ \Carbon\Carbon::parse($emp->resign_date)->format('d M') }}
+                                                        </span>
+                                                    @endif
+                                                </div>
                                                 <span class="text-[10px] block text-slate-400 font-semibold">Site:
                                                     {{ $emp->site->machine_name ?? '-' }}</span>
                                             </div>
@@ -1024,7 +1045,6 @@
                 emptyNotice.classList.toggle('hidden', selectedSiteIds.length > 0);
             }
 
-            // Ambil pola kerja dari site pertama yang terpilih jika ada
             if (selectedSiteIds.length > 0) {
                 const firstSiteId = selectedSiteIds[0];
                 const pattern = SITE_PATTERNS[firstSiteId] ?? {
@@ -1198,7 +1218,6 @@
                 document.getElementById('gen_year').value = mainYear.value;
             }
 
-            // Jika main filter memilih site spesifik, centang site tersebut di modal
             if (mainSiteSelect && mainSiteSelect.value !== 'all') {
                 document.querySelectorAll('.gen-site-checkbox').forEach(cb => {
                     cb.checked = (cb.value === mainSiteSelect.value);

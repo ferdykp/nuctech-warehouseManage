@@ -38,6 +38,7 @@
     </div>
 
     @include('layout.script')
+    @include('layout.session')
     @stack('scripts')
 </body>
 

@@ -12,13 +12,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        // Hanya superadmin yang boleh melihat daftar semua user
-        // if (auth()->user()->role !== 'superadmin') {
-        //     abort(403, 'Akses ditolak.');
-        // }
-
-        $users = User::with('site')->get();
-        return view('profile.profile', compact('users'));
+        return view('profile.profile');
     }
 
     public function profileList()
@@ -45,7 +39,7 @@ class UserController extends Controller
             'username' => 'required|string|max:255|unique:users',
             'email'    => 'required|string|email|max:255|unique:users',
             'password' => 'required|min:6|confirmed',
-            'role'     => 'required|in:superadmin,administration,employee,team_leader,station_master,manager',
+            'role'     => 'required|in:superadmin,administration,employee_role,team_leader,station_master,manager',
             'site_id'  => 'required_if:role,employee_role|nullable|exists:sites,id',
         ]);
 
@@ -77,9 +71,7 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
-        // if (auth()->user()->role !== 'superadmin' && auth()->id() !== $user->id) {
-        //     abort(403, 'Anda tidak memiliki akses untuk mengedit profil orang lain.');
-        // }
+        abort_unless(auth()->user()->isSuperAdmin() || (int) auth()->id() === (int) $user->id, 403);
         $sites = Site::all();
         return view('profile.profileEdit', compact('user', 'sites'));
     }
@@ -89,9 +81,7 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         // Security check: hanya superadmin atau pemilik akun yang bisa update
-        // if (auth()->user()->role !== 'superadmin' && auth()->id() !== $user->id) {
-        //     abort(403, 'Tindakan ilegal.');
-        // }
+        abort_unless(auth()->user()->isSuperAdmin() || (int) auth()->id() === (int) $user->id, 403);
 
         // Aturan validasi dinamis berdasarkan role yang login
         $rules = [
@@ -103,7 +93,7 @@ class UserController extends Controller
 
         // Hanya validasi input role & site jika diubah oleh Superadmin
         if (auth()->user()->role === 'superadmin') {
-            $rules['role'] = 'required|in:superadmin,administration,employee,team_leader,station_master,manager';
+            $rules['role'] = 'required|in:superadmin,administration,employee_role,team_leader,station_master,manager';
             $rules['site_id'] = 'required_if:role,employee_role|nullable|exists:sites,id';
         }
 

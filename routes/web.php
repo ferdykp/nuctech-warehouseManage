@@ -28,7 +28,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [AuthController::class, 'login'])->name('login');
-Route::post('/login/auth', [AuthController::class, 'loginAuth'])->name('auth.login');
+Route::get('/login', fn () => redirect()->route('login'));
+Route::get('/login/auth', fn () => redirect()->route('login'));
+Route::post('/login/auth', [AuthController::class, 'loginAuth'])->middleware('throttle:10,1')->name('auth.login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
 Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle'])
@@ -40,11 +42,16 @@ Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle'])
 */
 Route::middleware(['auth', 'nocache'])->group(function () {
 
+    Route::get('/session/status', function (\Illuminate\Http\Request $request) {
+        return response()->json(['expires_at' => ((int) $request->session()->get('last_activity_at', now()->timestamp) + max(1, (int) config('session.idle_timeout', 30)) * 60) * 1000]);
+    })->name('session.status');
+    Route::post('/session/activity', fn () => response()->noContent())->name('session.activity');
+
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::middleware(['role:superadmin|team_leader'])->group(function () {
-        Route::resource('categories', CategoryController::class);
+        Route::resource('categories', CategoryController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::resource('sites', SiteController::class);
         Route::resource('site', SiteController::class);
 
@@ -70,10 +77,8 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::post('/', [ReportController::class, 'store'])->name('store');
             Route::get('/export', [ReportController::class, 'export'])->name('export');
             Route::get('/global/export', [ReportController::class, 'exportAll'])->name('export_all');
-            Route::post('/bulk-delete', [ReportController::class, 'bulkDelete'])->name('bulk-delete');
             Route::post('/search', [ReportController::class, 'search'])->name('search');
 
-            Route::get('/{report}', [ReportController::class, 'show'])->name('show');
             Route::get('/{report}/edit', [ReportController::class, 'edit'])->name('edit');
             Route::put('/{report}', [ReportController::class, 'update'])->name('update');
             Route::delete('/{report}', [ReportController::class, 'destroy'])->name('destroy');
@@ -86,7 +91,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::post('/adjust/{id}', [SparepartController::class, 'adjust'])->name('adjust');
             Route::get('/', [SparepartController::class, 'index'])->name('index');
             Route::get('/search', [SparepartController::class, 'index'])->name('search');
-            Route::get('/create', [SparepartController::class, 'create'])->name('create');
             Route::post('/store', [SparepartController::class, 'store'])->name('store');
             Route::get('/export', [SparepartController::class, 'exportExcel'])->name('export');
             Route::post('/import', [SparepartController::class, 'importExcel'])->name('import');
@@ -95,16 +99,14 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::delete('/inventory/{site}/stock/{id}', [SparepartController::class, 'destroyStock'])->name('sparepart.stock.destroy');
 
         Route::prefix('sparepart/{slug}/{id}')->name('sparepart.')->group(function () {
-            Route::get('/edit', [SparepartController::class, 'edit'])->name('edit');
             Route::put('/', [SparepartController::class, 'update'])->name('update');
             Route::delete('/', [SparepartController::class, 'destroy'])->name('destroy');
         });
 
-        Route::post('/sparepart/bulk-delete', [SparepartController::class, 'bulkDelete'])->name('sparepart.bulkDelete');
+        Route::post('/sparepart/{site}/bulk-delete', [SparepartController::class, 'bulkDelete'])->name('sparepart.bulkDelete');
 
         // Stock Movement
         Route::prefix('movement')->name('movement.')->group(function () {
-            Route::post('/move/{id}', [SparepartStockController::class, 'move'])->name('move');
             Route::post('/request/{id}', [SparepartStockController::class, 'requestMove'])->name('request');
             Route::post('/approve/{id}', [SparepartStockController::class, 'approveMove'])->name('approve');
             Route::post('/receive/{id}', [SparepartStockController::class, 'receiveMove'])->name('receive');
@@ -117,21 +119,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
 
     Route::middleware(['role:superadmin|employee_role|team_leader|administration'])->group(function () {
-        // Fitur Reimbursement System
-        Route::get('/reimbursements/export-pdf', [AdminReimbursementController::class, 'exportApprovedPdf'])->name('reimbursements.export_pdf');
-        Route::get('/reimbursements/export-excel', [AdminReimbursementController::class, 'exportExcel'])->name('reimbursements.export_excel');
-        Route::get('/reimbursements/{id}/export-single-pdf', [AdminReimbursementController::class, 'exportSinglePdf'])->name('reimbursements.export_single_pdf');
-        Route::get('/reimbursements', [AdminReimbursementController::class, 'index'])->name('reimbursements.index');
-        Route::get('/reimbursements/create', [AdminReimbursementController::class, 'create'])->name('reimbursements.create');
-        Route::post('/reimbursements/store', [AdminReimbursementController::class, 'store'])->name('reimbursements.store');
-        Route::get('/reimbursements/{id}', [AdminReimbursementController::class, 'show'])->name('reimbursements.show');
-        Route::get('/reimbursements/{id}/approval', [AdminReimbursementController::class, 'approval'])->name('reimbursements.approval');
-        Route::prefix('reimbursements')->name('reimbursements.')->group(function () {
-            Route::get('/trash/archive', [AdminReimbursementController::class, 'trash'])->name('trash');
-            Route::post('/{id}/restore', [AdminReimbursementController::class, 'restore'])->name('restore');
-            Route::delete('/{id}/force-delete', [AdminReimbursementController::class, 'forceDelete'])->name('force_delete');
-        });
-
         Route::prefix('daily-reports')->name('daily_reports.')->group(function () {
             Route::get('/', [DailyReportController::class, 'index'])->name('index');
             Route::get('/create', [DailyReportController::class, 'create'])->name('create');
@@ -157,8 +144,8 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('/schedules/generate', [ScheduleController::class, 'generate'])->name('schedule.generate');
         Route::post('/schedules/site-pattern/{site}', [ScheduleController::class, 'updateSitePattern'])->name('schedule.site.update');
         Route::post('/schedule/update-single', [ScheduleController::class, 'updateSingle'])->name('schedule.updateSingle');
-        Route::delete('/schedule/clear', [ScheduleController::class, 'clearSchedule'])->name('schedule.clear');
-        Route::get('/schedule/export', [ScheduleController::class, 'exportExcel'])->name('schedule.export');
+        Route::delete('/schedule/clear', [ScheduleController::class, 'clear'])->name('schedule.clear');
+        Route::get('/schedule/export', [ScheduleController::class, 'export'])->name('schedule.export');
 
         // Leave Management Routes
         Route::get('/leave', [LeaveRequestController::class, 'index'])->name('leave.index');
@@ -185,8 +172,26 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     });
 
 
+    Route::middleware(['role:superadmin|employee_role|team_leader|administration|manager|station_master'])->group(function () {
+        // Fitur Reimbursement System
+        Route::get('/reimbursements/export-pdf', [AdminReimbursementController::class, 'exportApprovedPdf'])->name('reimbursements.export_pdf');
+        Route::get('/reimbursements/export-excel', [AdminReimbursementController::class, 'exportExcel'])->name('reimbursements.export_excel');
+        Route::get('/reimbursements/{id}/export-single-pdf', [AdminReimbursementController::class, 'exportSinglePdf'])->name('reimbursements.export_single_pdf');
+        Route::get('/reimbursements', [AdminReimbursementController::class, 'index'])->name('reimbursements.index');
+        Route::get('/reimbursements/create', [AdminReimbursementController::class, 'create'])->name('reimbursements.create');
+        Route::post('/reimbursements/store', [AdminReimbursementController::class, 'store'])->name('reimbursements.store');
+        Route::get('/reimbursements/{id}', [AdminReimbursementController::class, 'show'])->name('reimbursements.show');
+        Route::get('/reimbursements/{id}/approval', [AdminReimbursementController::class, 'approval'])->name('reimbursements.approval');
+        Route::prefix('reimbursements')->name('reimbursements.')->group(function () {
+            Route::get('/trash/archive', [AdminReimbursementController::class, 'trash'])->name('trash');
+            Route::post('/{id}/restore', [AdminReimbursementController::class, 'restore'])->name('restore');
+            Route::delete('/{id}/force-delete', [AdminReimbursementController::class, 'forceDelete'])->name('force_delete');
+        });
+
+    });
+
     // Filter Khusus Pemeriksa Berwenang
-    Route::middleware(['role:superadmin|employee_role|manager|station_master|team_leader'])->group(function () {
+    Route::middleware(['role:superadmin|employee_role|administration|manager|station_master|team_leader'])->group(function () {
         Route::put('/reimbursements/{id}/approve', [AdminReimbursementController::class, 'approve'])->name('reimbursements.approve');
         Route::put('/reimbursements/{id}/reject', [AdminReimbursementController::class, 'reject'])->name('reimbursements.reject');
         Route::delete('/reimbursements/{id}', [AdminReimbursementController::class, 'destroy'])->name('reimbursements.destroy');
@@ -205,7 +210,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::post('/profile/store', [UserController::class, 'store'])->name('profile.store');
         Route::delete('/profile/{id}', [UserController::class, 'destroy'])->name('profile.destroy');
 
-        Route::resource('branches', BranchController::class);
+        Route::resource('branches', BranchController::class)->except(['show']);
     });
 
 

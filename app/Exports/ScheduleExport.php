@@ -85,6 +85,8 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
             $employeesQuery->where('site_id', $this->siteId);
         }
 
+        $employeesQuery->whereIn('site_id', \App\Services\SiteAccess::sites(auth()->user(), true)->select('id'));
+        $employeesQuery->where(fn ($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $startDate->format('Y-m-d')));
         $employees = $employeesQuery->get();
         $rows = collect();
 

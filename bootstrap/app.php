@@ -13,6 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(prepend: [\App\Http\Middleware\NoCache::class], append: [\App\Http\Middleware\ExpireIdleSession::class]);
+        $middleware->validateCsrfTokens(except: ['telegram/webhook']);
         $middleware->alias([
             'role'    => \App\Http\Middleware\RoleMiddleware::class,
             'nocache' => \App\Http\Middleware\NoCache::class,
@@ -25,10 +27,19 @@ return Application::configure(basePath: dirname(__DIR__))
     })
 
     ->withExceptions(function (Exceptions $exceptions) {
+        $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response) {
+            if ($response->getStatusCode() !== 419) {
+                return $response;
+            }
+            if (request()->expectsJson()) {
+                return response()->json(['message' => 'Sesi formulir berakhir. Muat ulang halaman dan login kembali.'], 419);
+            }
+            return redirect()->route('login')->with('warning', 'Sesi formulir berakhir. Silakan login kembali.');
+        });
         // Kirim notifikasi Telegram saat terjadi Unhandled Exception / Error 500
         $exceptions->reportable(function (\Throwable $e) {
             // Abaikan jika error terjadi di environment local (opsional)
-            if (app()->environment('local')) {
+            if (!app()->environment('production')) {
                 return;
             }
 

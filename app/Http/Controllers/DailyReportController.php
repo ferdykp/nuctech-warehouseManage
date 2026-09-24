@@ -19,7 +19,7 @@ class DailyReportController extends Controller
     //     $query = DailyReport::with(['site.branch', 'user', 'photos'])->latest('report_date');
 
     //     // Filter Hak Akses User biasa vs Admin
-    //     if (!in_array($user->role, ['superadmin', 'administration']) && $user->site_id) {
+    //     if (!in_array($user->role, ['superadmin', 'administration'])) {
     //         $query->where('site_id', $user->site_id);
     //     } else {
     //         // Filter Branch (Khusus Superadmin/Admin)
@@ -65,7 +65,7 @@ class DailyReportController extends Controller
             ->orderBy('report_date', 'desc'); // (Opsional) Mengurutkan tanggal terbaru untuk site yang sama
 
         // Filter Hak Akses User biasa vs Admin
-        if (!in_array($user->role, ['superadmin', 'administration']) && $user->site_id) {
+        if (!in_array($user->role, ['superadmin', 'administration'])) {
             $query->where('site_id', $user->site_id);
         } else {
             // Filter Branch (Khusus Superadmin/Admin)
@@ -121,6 +121,7 @@ class DailyReportController extends Controller
             'captions.*'  => 'nullable|string|max:255',
         ]);
 
+        \App\Services\SiteAccess::authorize($request->site_id);
         DB::beginTransaction();
         try {
             $report = DailyReport::create([
@@ -155,10 +156,8 @@ class DailyReportController extends Controller
     {
         $report = DailyReport::with('photos')->findOrFail($id);
 
-        foreach ($report->photos as $photo) {
-            Storage::disk('public')->delete($photo->photo_path);
-        }
-
+        \App\Services\SiteAccess::authorize($report->site_id);
+        // Keep attachments available when restoring a soft-deleted report.
         $report->delete();
         return redirect()->route('daily_reports.index')->with('success', 'Laporan berhasil dihapus.');
     }
@@ -306,6 +305,7 @@ class DailyReportController extends Controller
             'existing_captions.*' => 'nullable|string|max:255',
         ]);
 
+        \App\Services\SiteAccess::authorize($request->site_id);
         DB::beginTransaction();
         try {
             $report->update([
@@ -365,6 +365,7 @@ class DailyReportController extends Controller
     {
         // onlyTrashed() hanya mengambil data yang terhapus sementara
         $reports = DailyReport::onlyTrashed()
+            ->whereIn('site_id', \App\Services\SiteAccess::sites(auth()->user())->select('id'))
             ->with(['site.branch', 'user'])
             ->orderBy('deleted_at', 'desc')
             ->paginate(10);
@@ -376,6 +377,7 @@ class DailyReportController extends Controller
     public function restore($id)
     {
         $report = DailyReport::onlyTrashed()->findOrFail($id);
+        \App\Services\SiteAccess::authorize($report->site_id);
         $report->restore(); // Mengosongkan kembali kolom deleted_at
 
         return redirect()->route('daily_reports.trash')->with('success', 'Data berhasil dikembalikan!');
@@ -386,6 +388,7 @@ class DailyReportController extends Controller
     {
         $report = DailyReport::onlyTrashed()->with('photos')->findOrFail($id);
 
+        \App\Services\SiteAccess::authorize($report->site_id);
         // Hapus file fisik foto jika ada
         foreach ($report->photos as $photo) {
             \Storage::disk('public')->delete($photo->photo_path);

@@ -22,9 +22,9 @@ class LeaveRequestController extends Controller
         $query = LeaveRequest::with(['employee.site.branch', 'employee.branch', 'leaveType', 'approver']);
 
         // Filter Role Admin Site
-        if ($user->role === 'employee_role') {
+        if (!in_array($user->role, ['superadmin', 'administration'])) {
             $query->whereHas('employee', function ($q) use ($user) {
-                $q->where('site_id', $user->site_id);
+                $q->whereIn('site_id', \App\Services\SiteAccess::sites($user)->select('id'));
             });
         }
 
@@ -49,8 +49,8 @@ class LeaveRequestController extends Controller
         $user = Auth::user();
 
         $employeesQuery = Employee::where('is_active', true)->with(['site.branch', 'branch']);
-        if ($user->role === 'employee_role') {
-            $employeesQuery->where('site_id', $user->site_id);
+        if (!in_array($user->role, ['superadmin', 'administration'])) {
+            $employeesQuery->whereIn('site_id', \App\Services\SiteAccess::sites($user)->select('id'));
         }
         $employees = $employeesQuery->get();
         $leaveTypes = LeaveType::all();
@@ -69,6 +69,7 @@ class LeaveRequestController extends Controller
             'attachment_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
+        \App\Services\SiteAccess::authorize(Employee::findOrFail($request->employee_id)->site_id);
         $leaveType = LeaveType::findOrFail($request->leave_type_id);
 
         // Hitung total hari (abaikan weekend)
@@ -87,7 +88,10 @@ class LeaveRequestController extends Controller
         }
 
         // Pengecekan Quota jika jenis cuti mengurangi kuota tahunan
-        $currentYear = date('Y');
+        if ($start->year !== $end->year) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['end_date' => 'Pisahkan pengajuan cuti untuk tahun yang berbeda.']);
+        }
+        $currentYear = $start->year;
         if ($leaveType->cut_annual_quota) {
             $balance = EmployeeLeaveBalance::firstOrCreate(
                 [
@@ -132,61 +136,45 @@ class LeaveRequestController extends Controller
 
     public function approve(Request $request, $id)
     {
-        $user = Auth::user();
-        $leaveRequest = LeaveRequest::with(['leaveType', 'employee'])->findOrFail($id);
-
-        if ($leaveRequest->status !== 'pending') {
-            return redirect()->back()->with('error', 'Pengajuan ini sudah diproses sebelumnya.');
-        }
-
-        DB::transaction(function () use ($leaveRequest, $user) {
-            // Update status pengajuan
-            $leaveRequest->update([
-                'status'      => 'approved',
-                'approved_by' => $user->id,
-                'approved_at' => now(),
-            ]);
-
-            // Potong saldo cuti jika memotong kuota tahunan
-            if ($leaveRequest->leaveType->cut_annual_quota) {
-                $year = Carbon::parse($leaveRequest->start_date)->year;
-                $balance = EmployeeLeaveBalance::where('employee_id', $leaveRequest->employee_id)
-                    ->where('leave_type_id', $leaveRequest->leave_type_id)
-                    ->where('year', $year)
-                    ->first();
-
-                if ($balance) {
-                    $balance->used_quota += $leaveRequest->total_days;
-                    $balance->remaining_quota = max(0, $balance->total_quota - $balance->used_quota);
-                    $balance->save();
-                }
+        abort_unless(in_array(auth()->user()->role, ['superadmin', 'administration', 'team_leader']), 403);
+        DB::transaction(function () use ($id) {
+            $leave = LeaveRequest::with('leaveType', 'employee')->lockForUpdate()->findOrFail($id);
+            \App\Services\SiteAccess::authorize($leave->employee->site_id);
+            if ($leave->status !== 'pending') {
+                throw \Illuminate\Validation\ValidationException::withMessages(['leave' => 'Pengajuan sudah diproses.']);
             }
-        });
-
-        return redirect()->back()->with('success', "Pengajuan cuti untuk {$leaveRequest->employee->name} telah disetujui.");
+            Employee::whereKey($leave->employee_id)->lockForUpdate()->firstOrFail();
+            if ($leave->leaveType->cut_annual_quota) {
+                $balance = EmployeeLeaveBalance::firstOrCreate([
+                    'employee_id' => $leave->employee_id,
+                    'leave_type_id' => $leave->leave_type_id,
+                    'year' => $leave->start_date->year,
+                ], ['total_quota' => $leave->leaveType->default_quota, 'used_quota' => 0, 'remaining_quota' => $leave->leaveType->default_quota]);
+                if ($balance->remaining_quota < $leave->total_days) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['leave' => 'Sisa kuota cuti tidak mencukupi.']);
+                }
+                $balance->used_quota += $leave->total_days;
+                $balance->remaining_quota = $balance->total_quota - $balance->used_quota;
+                $balance->save();
+            }
+            $leave->update(['status' => 'approved', 'approved_by' => auth()->id(), 'approved_at' => now()]);
+        }, 3);
+        return back()->with('success', 'Pengajuan cuti berhasil disetujui.');
     }
 
     public function reject(Request $request, $id)
     {
-        $request->validate([
-            'rejection_reason' => 'required|string|max:255',
-        ]);
-
-        $user = Auth::user();
-        $leaveRequest = LeaveRequest::findOrFail($id);
-
-        if ($leaveRequest->status !== 'pending') {
-            return redirect()->back()->with('error', 'Pengajuan ini sudah diproses sebelumnya.');
-        }
-
-        $leaveRequest->update([
-            'status'           => 'rejected',
-            'approved_by'      => $user->id,
-            'approved_at'      => now(),
-            'rejection_reason' => $request->rejection_reason,
-        ]);
-
-        return redirect()->back()->with('success', 'Pengajuan cuti berhasil ditolak.');
+        abort_unless(in_array(auth()->user()->role, ['superadmin', 'administration', 'team_leader']), 403);
+        $data = $request->validate(['rejection_reason' => 'required|string|max:255']);
+        DB::transaction(function () use ($id, $data) {
+            $leave = LeaveRequest::lockForUpdate()->findOrFail($id);
+            \App\Services\SiteAccess::authorize($leave->employee->site_id);
+            if ($leave->status !== 'pending') {
+                throw \Illuminate\Validation\ValidationException::withMessages(['leave' => 'Pengajuan sudah diproses.']);
+            }
+            $leave->update($data + ['status' => 'rejected', 'approved_by' => auth()->id(), 'approved_at' => now()]);
+        }, 3);
+        return back()->with('success', 'Pengajuan cuti berhasil ditolak.');
     }
 
     /**
@@ -197,6 +185,7 @@ class LeaveRequestController extends Controller
     public function edit($id)
     {
         $leaveRequest = LeaveRequest::findOrFail($id);
+        \App\Services\SiteAccess::authorize($leaveRequest->employee->site_id);
 
         // Hanya pengajuan berstatus 'pending' yang boleh diedit
         if ($leaveRequest->status !== 'pending') {
@@ -205,8 +194,8 @@ class LeaveRequestController extends Controller
 
         $user = Auth::user();
         $employeesQuery = Employee::where('is_active', true)->with(['site.branch', 'branch']);
-        if ($user->role === 'employee_role') {
-            $employeesQuery->where('site_id', $user->site_id);
+        if (!in_array($user->role, ['superadmin', 'administration'])) {
+            $employeesQuery->whereIn('site_id', \App\Services\SiteAccess::sites($user)->select('id'));
         }
         $employees = $employeesQuery->get();
         $leaveTypes = LeaveType::all();
@@ -222,6 +211,7 @@ class LeaveRequestController extends Controller
     public function update(Request $request, $id)
     {
         $leaveRequest = LeaveRequest::findOrFail($id);
+        \App\Services\SiteAccess::authorize($leaveRequest->employee->site_id);
 
         if ($leaveRequest->status !== 'pending') {
             return redirect()->route('leave.index')->with('error', 'Pengajuan cuti yang sudah diproses tidak dapat diubah.');
@@ -236,6 +226,7 @@ class LeaveRequestController extends Controller
             'attachment_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
+        \App\Services\SiteAccess::authorize(Employee::findOrFail($request->employee_id)->site_id);
         $leaveType = LeaveType::findOrFail($request->leave_type_id);
 
         // Hitung total hari (abaikan weekend)
@@ -254,7 +245,10 @@ class LeaveRequestController extends Controller
         }
 
         // Pengecekan Quota jika jenis cuti mengurangi kuota tahunan
-        $currentYear = date('Y');
+        if ($start->year !== $end->year) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['end_date' => 'Pisahkan pengajuan cuti untuk tahun yang berbeda.']);
+        }
+        $currentYear = $start->year;
         if ($leaveType->cut_annual_quota) {
             $balance = EmployeeLeaveBalance::firstOrCreate(
                 [
@@ -304,9 +298,11 @@ class LeaveRequestController extends Controller
      */
     public function destroy($id)
     {
-        $leaveRequest = LeaveRequest::with('leaveType')->findOrFail($id);
-
-        DB::transaction(function () use ($leaveRequest) {
+        DB::transaction(function () use ($id) {
+            $leaveRequest = LeaveRequest::with('leaveType')->lockForUpdate()->findOrFail($id);
+            \App\Services\SiteAccess::authorize($leaveRequest->employee->site_id);
+            abort_if(auth()->user()->role === 'employee_role' && $leaveRequest->status !== 'pending', 403);
+            Employee::whereKey($leaveRequest->employee_id)->lockForUpdate()->firstOrFail();
             // Jika cuti yang dihapus berstatus 'approved' dan memotong kuota, kembalikan kuotanya
             if ($leaveRequest->status === 'approved' && $leaveRequest->leaveType->cut_annual_quota) {
                 $year = Carbon::parse($leaveRequest->start_date)->year;

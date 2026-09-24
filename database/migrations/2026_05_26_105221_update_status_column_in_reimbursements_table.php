@@ -14,14 +14,16 @@ return new class extends Migration
     {
         // Menggunakan DB::statement karena mengubah opsi ENUM di MySQL 
         // jauh lebih aman dan akurat menggunakan query mentah langsung.
-        DB::statement("ALTER TABLE reimbursements MODIFY COLUMN status ENUM(
+        Schema::table('reimbursements', function (Blueprint $table) {
+            $table->enum('status', [
             'pending', 
             'pending_leader', 
             'pending_station', 
             'pending_manager', 
             'approved', 
             'rejected'
-        ) DEFAULT 'pending'");
+        ])->default('pending')->change();
+        });
     }
 
     /**
@@ -30,10 +32,12 @@ return new class extends Migration
     public function down(): void
     {
         // Kembalikan ke struktur awal jika dilakukan rollback
-        DB::statement("ALTER TABLE reimbursements MODIFY COLUMN status ENUM(
+        Schema::table('reimbursements', function (Blueprint $table) {
+            $table->enum('status', [
             'pending', 
             'approved', 
             'rejected'
-        ) DEFAULT 'pending'");
+        ])->default('pending')->change();
+        });
     }
 };
