@@ -178,6 +178,7 @@ class AttendanceDetailSheet implements FromCollection, WithTitle, WithHeadings, 
             $employeesQuery->where('site_id', $this->siteId);
         }
 
+        $employeesQuery->whereIn('site_id', \App\Services\SiteAccess::sites(auth()->user(), true)->select('id'));
         $employees = $employeesQuery->get();
 
         // LOGIKA PENENTUAN URUTAN & FORMAT NAMA SITE SESUAI TARGET GAMBAR 2

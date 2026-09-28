@@ -258,4 +258,69 @@ class SecurityAndSessionTest extends TestCase
         $this->assertSame(5, $stock->fresh()->qty);
     }
 
+    public function test_attendance_rejects_invalid_matrix_and_cross_site_employee(): void
+    {
+        $site = $this->site(); $employee = $this->employee($site);
+        $user = $this->user('employee_role', $site);
+        $this->actingAs($user)->postJson('/attendance/store', ['month' => '2026-09', 'site_id' => $site->id, 'calendar_raw_data' => [$employee->id => json_encode([1 => ['s1' => 999, 's2' => 0, 's3' => 0]])]])->assertUnprocessable();
+        $other = $this->employee($this->site());
+        $this->postJson('/attendance/store', ['month' => '2026-09', 'site_id' => $site->id, 'calendar_raw_data' => [$other->id => json_encode([1 => ['s1' => 1, 's2' => 0, 's3' => 0]])]])->assertForbidden();
+        $this->assertDatabaseCount('attendances', 0);
+        $this->post('/attendance/store', ['month' => '2026-09', 'site_id' => $site->id, 'calendar_raw_data' => [$employee->id => json_encode([1 => ['s1' => 1, 's2' => 0, 's3' => 0]])]])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('attendances', ['employee_id' => $employee->id, 'attendance_count' => 1]);
+    }
+
+    public function test_team_leader_without_site_cannot_see_all_schedules(): void
+    {
+        $site = $this->site(); $employee = $this->employee($site);
+        $this->actingAs($this->user('team_leader'))->get('/schedules')->assertOk()->assertDontSee($employee->name);
+    }
+
+    public function test_resign_date_is_saved_and_schedule_after_last_day_is_rejected(): void
+    {
+        $site = $this->site(); $employee = $this->employee($site);
+        $employee->update(['resign_date' => '2026-09-10', 'status' => 'Resigned', 'is_active' => false]);
+        $this->assertSame('2026-09-10', $employee->fresh()->resign_date->format('Y-m-d'));
+        $shift = Shift::create(['shift_name' => 'Day', 'start_time' => '08:00', 'end_time' => '16:00']);
+        $this->actingAs($this->user('superadmin'))->postJson('/schedule/update-single', ['employee_id' => $employee->id, 'date' => '2026-09-11', 'shift_id' => $shift->id])->assertUnprocessable();
+        $this->postJson('/schedule/update-single', ['employee_id' => $employee->id, 'date' => '2026-09-10', 'shift_id' => $shift->id])->assertOk();
+    }
+
+    public function test_site_update_keeps_inventory_url_stable(): void
+    {
+        $site = $this->site(); $slug = $site->slug;
+        $this->actingAs($this->user('superadmin'))->put('/sites/'.$site->id, ['branch_id' => $site->branch_id, 'machine_name' => 'Renamed Machine', 'location' => 'Jakarta'])->assertSessionHasNoErrors();
+        $this->assertSame($slug, $site->fresh()->slug);
+        $this->get('/inventory/'.$slug)->assertOk();
+        $this->actingAs($this->user('team_leader', $this->site()))->put('/sites/'.$site->id, ['branch_id' => $site->branch_id, 'machine_name' => 'Unauthorized', 'location' => 'Other'])->assertForbidden();
+    }
+
+    public function test_payroll_generation_preserves_history_of_resigned_employee(): void
+    {
+        $site = $this->site(); $employee = $this->employee($site);
+        $employee->update(['resign_date' => '2026-09-10', 'status' => 'Resigned', 'is_active' => false]);
+        $salary = new \App\Models\Salary();
+        $salary->forceFill(['employee_id' => $employee->id, 'name' => $employee->name, 'bank' => 'BCA', 'account_no' => 'TEST', 'amount' => 1000, 'information' => 'regular salary', 'created_at' => '2026-08-15 12:00:00', 'updated_at' => '2026-08-15 12:00:00'])->save();
+        $this->actingAs($this->user('superadmin'))->post('/salary/generate-monthly', ['month' => 8, 'year' => 2026])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('salaries', ['id' => $salary->id]);
+        $this->post('/salary/generate-monthly', ['month' => 13, 'year' => 2026])->assertSessionHasErrors('month');
+    }
+
+    public function test_reimbursement_signing_stores_array_and_cannot_skip_approval_stage(): void
+    {
+        $owner = $this->user('employee_role', $this->site());
+        $claim = $this->claim($owner);
+        $file = \Illuminate\Http\UploadedFile::fake()->image('signature.png', 100, 50);
+        $bytes = file_get_contents($file->getRealPath());
+        Storage::disk('public')->put($claim->receipt_attachment, $bytes);
+        $payload = ['signature' => 'data:image/png;base64,'.base64_encode($bytes), 'pos_x' => 0, 'pos_y' => 0, 'scale_w' => 20, 'scale_h' => 20];
+        $this->actingAs($owner)->put('/reimbursements/'.$claim->id.'/approve', $payload)->assertSessionHasNoErrors()->assertRedirect();
+        $this->assertSame('pending_leader', $claim->fresh()->status);
+        $this->assertIsArray($claim->fresh()->signatures_json);
+        $this->put('/reimbursements/'.$claim->id.'/approve', $payload)->assertForbidden();
+        $this->actingAs($this->user('team_leader', $owner->site))->put('/reimbursements/'.$claim->id.'/approve', $payload)->assertSessionHasNoErrors();
+        $this->assertSame('pending_station', $claim->fresh()->status);
+        $this->assertCount(2, $claim->fresh()->signatures_json);
+    }
+
 }

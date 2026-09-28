@@ -177,6 +177,7 @@ class AttendanceFix implements FromCollection, WithTitle, WithHeadings, WithColu
             $employeesQuery->where('site_id', $this->siteId);
         }
 
+        $employeesQuery->whereIn('site_id', \App\Services\SiteAccess::sites(auth()->user(), true)->select('id'));
         $employees = $employeesQuery->get();
 
         // 1. PENENTUAN URUTAN BERSATU DENGAN ATTENDANCEDETAILSHEET

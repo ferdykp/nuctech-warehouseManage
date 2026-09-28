@@ -14,6 +14,17 @@
     let checking = false;
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
     function exit() { window.location.replace(loginUrl); }
+    window.addEventListener('pagehide', () => { document.documentElement.style.visibility = 'hidden'; });
+    window.addEventListener('session:expired', exit);
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = async (...args) => {
+        const response = await originalFetch(...args);
+        if ([401, 419].includes(response.status)) exit();
+        return response;
+    };
+    if (window.jQuery) {
+        window.jQuery(document).ajaxError((_event, xhr) => { if ([401, 419].includes(xhr.status)) exit(); });
+    }
     function schedule() {
         clearTimeout(timer);
         timer = setTimeout(checkSession, Math.max(1000, expiresAt - Date.now()));

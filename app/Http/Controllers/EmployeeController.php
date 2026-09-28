@@ -155,7 +155,7 @@ class EmployeeController extends Controller
             'tld'                  => 'nullable|in:yes,no',
             'salary_change_reason' => 'nullable|string|max:255',
             'join_date'            => 'required|date',
-            'resign_date'          => 'nullable|required_if:status,Resigned|date', // Tambahkan validasi resign_date
+            'resign_date'          => 'nullable|required_if:status,Resigned|date|after_or_equal:join_date', // Tambahkan validasi resign_date
             'contract_start_date'  => 'nullable|date',
         ]);
 
@@ -181,6 +181,7 @@ class EmployeeController extends Controller
 
         // Atur status aktifitas sistem
         $validatedData['is_active'] = ($request->status !== 'Resigned');
+        if ($request->status !== 'Resigned') $validatedData['resign_date'] = null;
 
         $employee->update($validatedData);
 

@@ -434,7 +434,7 @@ class SalaryController extends Controller
         $user = Auth::user();
 
         $request->validate([
-            'month' => 'required',
+            'month' => 'required|integer|between:1,12',
             'year'  => 'required|integer|min:2000|max:2100',
         ]);
 
@@ -447,35 +447,12 @@ class SalaryController extends Controller
 
         $targetTimestamp = Carbon::create($year, (int) $month, 15, 12, 0, 0);
 
-        /*
-        |--------------------------------------------------------------------------
-        | 1. PEMBERSIHAN AUTOMATIS (CLEANUP RESIGNED / INACTIVE EMPLOYEES)
-        |--------------------------------------------------------------------------
-        | Hapus record gaji pada periode ini milik karyawan yang berstatus Resigned
-        | atau non-aktif (is_active = false)
-        */
-        $resignedEmployeeIds = Employee::where('is_active', false)
-            ->orWhere('status', 'Resigned')
-            ->pluck('id');
-
-        $deletedCount = Salary::whereIn('employee_id', $resignedEmployeeIds)
-            ->whereBetween('created_at', [
-                $startOfMonth->format('Y-m-d H:i:s'),
-                $endOfMonth->format('Y-m-d H:i:s'),
-            ])
-            ->delete();
-
-        /*
-        |--------------------------------------------------------------------------
-        | 2. QUERY KARYAWAN AKTIF PERIODE INI
-        |--------------------------------------------------------------------------
-        */
-        $query = Employee::where('is_active', true)
-            ->where('status', '!=', 'Resigned')
-            ->with([
-                'site.branch',
-                'branch',
-            ]);
+        // Preserve existing payroll records: a later resignation must not erase salary history.
+        $query = Employee::where(function ($q) use ($startOfMonth) {
+            $q->where('is_active', true)->orWhere('resign_date', '>=', $startOfMonth->toDateString());
+        })->where(function ($q) use ($endOfMonth) {
+            $q->whereNull('join_date')->orWhere('join_date', '<=', $endOfMonth->toDateString());
+        })->with(['site.branch', 'branch']);
 
         if ($user->role === 'employee_role') {
             $query->where('site_id', $user->site_id);
@@ -554,9 +531,6 @@ class SalaryController extends Controller
         }
 
         $message = "Sukses memproses data gaji untuk {$processedCount} karyawan aktif pada periode {$month}/{$year}. (Dibuat: {$createdCount}, diperbarui: {$updatedCount})";
-        if ($deletedCount > 0) {
-            $message .= " Serta menghapus {$deletedCount} data gaji karyawan yang telah Resigned.";
-        }
 
         return redirect()
             ->route('salary.index', [
@@ -574,7 +548,7 @@ class SalaryController extends Controller
     public function resetMonthlySalaries(Request $request)
     {
         $request->validate([
-            'month' => 'required',
+            'month' => 'required|integer|between:1,12',
             'year'  => 'required|integer|min:2000|max:2100',
         ]);
 

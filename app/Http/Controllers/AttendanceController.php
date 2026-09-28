@@ -24,16 +24,10 @@ class AttendanceController extends Controller
         $monthInput = $request->input('month');
         $month = $this->sanitizeMonth($monthInput);
 
-        // KONTROL AKSES SITE SESUAI LOGIN:
-        if ($user->role === 'employee_role') {
-            $sites = Site::where('id', $user->site_id)->get();
-            $siteId = $user->site_id; // Paksa siteId ke site milik employee_role
-        } else {
-            $sites = Site::all();
-            $siteId = $request->input('site_id'); // Bisa berupa ID site atau string 'all'
-        }
-
-        $query = Attendance::with(['employee.site']);
+        $sites = \App\Services\SiteAccess::sites($user, true)->get();
+        $siteId = $request->input('site_id', $user->role === 'employee_role' ? $user->site_id : null);
+        if ($siteId && $siteId !== 'all') \App\Services\SiteAccess::authorize($siteId, true);
+        $query = Attendance::with(['employee.site'])->whereHas('employee', fn ($q) => $q->whereIn('site_id', $sites->pluck('id')));
 
         // Jika siteId diisi dan bukan 'all', filter berdasarkan site_id
         if (!empty($siteId) && $siteId !== 'all') {
@@ -70,6 +64,7 @@ class AttendanceController extends Controller
                 $employeesQuery->where('site_id', $siteId);
             }
 
+            $employeesQuery->whereIn('site_id', \App\Services\SiteAccess::sites($user, true)->select('id'));
             $employees = $employeesQuery->get();
         }
 
@@ -83,13 +78,9 @@ class AttendanceController extends Controller
      */
     public function getEmployeesByBranch(Request $request, $siteId)
     {
+        if ($siteId !== 'all') \App\Services\SiteAccess::authorize($siteId, true);
         try {
             $user = Auth::user();
-
-            // Hak akses multi-tenant
-            if ($user && $user->role === 'employee_role' && (int)$user->site_id !== (int)$siteId) {
-                return response()->json(['message' => 'Akses ditolak untuk site ini.'], 403);
-            }
 
             $month = $this->sanitizeMonth($request->input('month'));
 
@@ -111,6 +102,7 @@ class AttendanceController extends Controller
                 $employeesQuery->where('site_id', $siteId);
             }
 
+            $employeesQuery->whereIn('site_id', \App\Services\SiteAccess::sites($user, true)->select('id'));
             $employees = $employeesQuery->get();
 
             return response()->json($employees);
@@ -126,16 +118,13 @@ class AttendanceController extends Controller
         $user = Auth::user();
 
         $request->validate([
-            'site_id' => 'required',
-            'month' => 'required'
+            'site_id' => 'required|string',
+            'month' => 'required|date_format:Y-m'
         ]);
 
         $siteId = $request->site_id;
 
-        // Security check employee_role
-        if ($user->role === 'employee_role') {
-            $siteId = $user->site_id; // Paksa admin site hanya bisa ekspor site milik sendiri
-        }
+        if ($siteId !== 'all') \App\Services\SiteAccess::authorize($siteId, true);
 
         if ($siteId === 'all') {
             $filename = 'Rekap_Absensi_Semua_Site_' . $request->month . '.xlsx';
@@ -149,57 +138,43 @@ class AttendanceController extends Controller
 
     public function storeAttendance(Request $request)
     {
-        $user = Auth::user();
-        $month = $this->sanitizeMonth($request->input('month'));
-        $siteId = $request->input('site_id');
-
-        if ($user->role === 'employee_role' && (int)$user->site_id !== (int)$siteId) {
-            abort(403, 'Anda tidak memiliki akses menyimpan absensi di site ini.');
-        }
-
-        if (!$request->has('calendar_raw_data') || empty($request->calendar_raw_data)) {
-            return redirect()->back()->with('error', 'Tidak ada data absensi yang dikirim.');
-        }
-
-        $daysInMonth = $this->getWorkingDaysCount($month);
-
-        foreach ($request->calendar_raw_data as $employeeId => $matrixJson) {
-            if (empty($matrixJson)) {
-                continue;
-            }
-
-            if ($user->role === 'employee_role') {
-                $isMyEmployee = Employee::where('id', $employeeId)->where('site_id', $user->site_id)->exists();
-                if (!$isMyEmployee) continue;
-            }
-
-            $shiftsArray = json_decode($matrixJson, true);
-            $totalKehadiranSesi = 0;
-
-            if (!empty($shiftsArray)) {
-                foreach ($shiftsArray as $day => $sessions) {
-                    $totalKehadiranSesi += (($sessions['s1'] ?? 0) + ($sessions['s2'] ?? 0) + ($sessions['s3'] ?? 0));
+        $data = $request->validate([
+            'month' => 'required|date_format:Y-m',
+            'site_id' => 'required',
+            'calendar_raw_data' => 'required|array|min:1',
+            'calendar_raw_data.*' => 'required|json',
+        ]);
+        if ($data['site_id'] !== 'all') \App\Services\SiteAccess::authorize($data['site_id'], true);
+        $days = Carbon::createFromFormat('!Y-m', $data['month'])->daysInMonth;
+        $rows = [];
+        foreach ($data['calendar_raw_data'] as $employeeId => $json) {
+            $employee = Employee::findOrFail($employeeId);
+            \App\Services\SiteAccess::authorize($employee->site_id, true);
+            abort_if($data['site_id'] !== 'all' && (int) $employee->site_id !== (int) $data['site_id'], 403);
+            $matrix = json_decode($json, true);
+            \Illuminate\Support\Facades\Validator::make(['matrix' => $matrix], [
+                'matrix' => 'required|array', 'matrix.*' => 'required|array:s1,s2,s3',
+                'matrix.*.s1' => 'required|integer|between:0,1',
+                'matrix.*.s2' => 'required|integer|between:0,1',
+                'matrix.*.s3' => 'required|integer|between:0,1',
+            ])->validate();
+            $count = 0;
+            foreach ($matrix as $day => $sessions) {
+                if (!ctype_digit((string) $day) || (int) $day < 1 || (int) $day > $days) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['calendar_raw_data' => 'Tanggal absensi tidak valid.']);
                 }
+                $count += array_sum($sessions);
             }
-
-            Attendance::updateOrCreate(
-                [
-                    'employee_id' => $employeeId,
-                    'month'       => $month,
-                ],
-                [
-                    'working_days'     => $daysInMonth,
-                    'attendance_count' => $totalKehadiranSesi,
-                    'matrix_details'   => $matrixJson
-                ]
-            );
+            $rows[$employeeId] = ['attendance_count' => $count, 'matrix_details' => json_encode($matrix)];
         }
-
-        return redirect()->to(route('attendance.index', [
-            'site_id'   => $siteId,
-            'month'     => $month,
-            'auto_full' => $request->input('auto_full', 'true')
-        ]))->with('success', 'All bulk employee attendance plot data has been successfully saved!');
+        $workingDays = $this->getWorkingDaysCount($data['month']);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, $data, $workingDays) {
+            foreach ($rows as $employeeId => $row) {
+                Employee::whereKey($employeeId)->lockForUpdate()->firstOrFail();
+                Attendance::updateOrCreate(['employee_id' => $employeeId, 'month' => $data['month']], $row + ['working_days' => $workingDays]);
+            }
+        }, 3);
+        return redirect()->route('attendance.index', ['site_id' => $data['site_id'], 'month' => $data['month']])->with('success', 'Data absensi berhasil disimpan.');
     }
 
     private function getWorkingDaysCount(string $monthString): int
@@ -254,6 +229,7 @@ class AttendanceController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk menghapus data rekap absensi site ini.');
         }
 
+        \App\Services\SiteAccess::authorize($attendance->employee->site_id, true);
         $attendance->delete();
 
         return redirect()->back()->with('success', 'The employee attendance summary data has been successfully deleted.');

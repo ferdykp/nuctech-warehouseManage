@@ -27,7 +27,8 @@ class SiteController extends Controller
     {
         $request->validate([
             'branch_id'    => 'required|exists:branches,id',
-            'machine_name' => 'required',
+            'machine_name' => 'required|string|max:255',
+            'location' => 'required|string|max:1000',
         ]);
 
         Site::create([
@@ -47,26 +48,29 @@ class SiteController extends Controller
     public function show($slug)
     {
         $site = Site::findOrFail($slug);
+        return redirect()->route('sparepart.index', $site->slug);
     }
 
     public function edit($id)
     {
         $site = Site::findOrFail($id);
+        \App\Services\SiteAccess::authorize($site->id);
         $branches = Branch::all();
         return view('site.siteEdit', compact('site', 'branches'));
     }
 
     public function update(Request $request, Site $site)
     {
+        \App\Services\SiteAccess::authorize($site->id);
         $request->validate([
             'branch_id'    => 'required|exists:branches,id',
             'machine_name' => 'required|string|max:255',
+            'location' => 'required|string|max:1000',
         ]);
 
         $site->update([
             'branch_id'    => $request->branch_id,
             'machine_name' => $request->machine_name,
-            'slug'         => Str::slug($request->machine_name) . '-' . Str::random(5),
             'location'     => $request->location,
         ]);
 
@@ -78,7 +82,9 @@ class SiteController extends Controller
 
     public function destroy($id)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
         $site = Site::findOrFail($id);
+        \App\Services\SiteAccess::authorize($site->id);
         $site->delete();
 
         // <--- 4. Hapus Cache Sidebar & Dashboard saat site dihapus (Garis Solusi Utama)
