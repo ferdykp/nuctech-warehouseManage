@@ -33,7 +33,7 @@ class ScheduleController extends Controller
         $endDate = $startDate->copy()->endOfMonth();
         $datesInMonth = CarbonPeriod::create($startDate, $endDate);
 
-        // --- PERBAIKAN PENGAMBILAN SITES ---
+        // --- PENGAMBILAN SITES ---
         $sitesQuery = \App\Services\SiteAccess::sites($user, true);
         $sites = $sitesQuery->with('schedulePattern')->orderBy('machine_name')->get();
 
@@ -208,17 +208,18 @@ class ScheduleController extends Controller
 
                 $activeShiftsCount = count($activeShiftIds);
 
-                foreach ($employeeIds as $index => $empId) {
+                foreach ($employeeIds as $empId) {
                     $employee = Employee::find($empId);
                     $lastDate = $employee?->resign_date ? Carbon::parse($employee->resign_date)->endOfDay() : null;
 
                     $period = CarbonPeriod::create($startDate, $endDate);
 
-                    $shiftIndex = $index % $activeShiftsCount;
-                    $dayInCurrentShift = 0;
+                    // PERBAIKAN: Shift Index selalu dimulai dari 0 agar jadwal antar karyawan seragam
+                    $shiftIndex          = 0;
+                    $dayInCurrentShift   = 0;
                     $consecutiveWorkDays = 0;
-                    $consecutiveOffDays = 0;
-                    $isOffMode = false;
+                    $consecutiveOffDays  = 0;
+                    $isOffMode           = false;
 
                     foreach ($period as $date) {
                         if ($lastDate && $date->greaterThan($lastDate)) {
@@ -238,11 +239,11 @@ class ScheduleController extends Controller
                             $consecutiveOffDays++;
 
                             if ($consecutiveOffDays >= $offDays) {
-                                $isOffMode = false;
-                                $consecutiveOffDays = 0;
+                                $isOffMode           = false;
+                                $consecutiveOffDays  = 0;
                                 $consecutiveWorkDays = 0;
-                                $dayInCurrentShift = 0;
-                                $shiftIndex = ($shiftIndex + 1) % $activeShiftsCount;
+                                $dayInCurrentShift   = 0;
+                                $shiftIndex          = ($shiftIndex + 1) % $activeShiftsCount;
                             }
                         } else {
                             $currentShiftId = $activeShiftIds[$shiftIndex];
@@ -257,11 +258,11 @@ class ScheduleController extends Controller
 
                             if ($dayInCurrentShift >= $shiftDuration) {
                                 $dayInCurrentShift = 0;
-                                $shiftIndex = ($shiftIndex + 1) % $activeShiftsCount;
+                                $shiftIndex        = ($shiftIndex + 1) % $activeShiftsCount;
                             }
 
                             if ($consecutiveWorkDays >= $workDays) {
-                                $isOffMode = true;
+                                $isOffMode           = true;
                                 $consecutiveWorkDays = 0;
                             }
                         }
@@ -327,7 +328,7 @@ class ScheduleController extends Controller
 
     public function clear(Request $request)
     {
-        // Konversi input month dan year ke integer sebelum validasi
+        // PERBAIKAN: Konversi input month dan year ke integer sebelum validasi untuk mencegah error validasi string
         $request->merge([
             'month' => (int) $request->input('month'),
             'year'  => (int) $request->input('year'),
