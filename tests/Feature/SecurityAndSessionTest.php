@@ -258,4 +258,133 @@ class SecurityAndSessionTest extends TestCase
         $this->assertSame(5, $stock->fresh()->qty);
     }
 
+    public function test_employee_last_date_is_saved_and_returned_in_detail(): void
+    {
+        $site = $this->site();
+        $employee = $this->employee($site);
+        $this->actingAs($this->user('superadmin'));
+
+        $this->put('/employee/'.$employee->id, [
+            'site_id' => $site->id,
+            'name' => $employee->name,
+            'phone_number' => $employee->phone_number,
+            'status' => 'Resigned',
+            'join_date' => '2026-01-01',
+            'resign_date' => '2026-09-25',
+        ])->assertRedirect(route('employee.index'))->assertSessionHasNoErrors();
+
+        $this->assertSame('2026-09-25', $employee->fresh()->resign_date->format('Y-m-d'));
+        $this->getJson('/employee/'.$employee->id)->assertOk()
+            ->assertJsonPath('resign_date_formatted', '25 September 2026');
+
+        $withoutLastDate = $this->employee($site);
+        $this->getJson('/employee/'.$withoutLastDate->id)->assertOk()
+            ->assertJsonPath('resign_date_formatted', '-');
+    }
+
+    public function test_both_schedule_patterns_stop_on_last_date_inclusively(): void
+    {
+        $site = $this->site();
+        $employee = $this->employee($site);
+        $employee->update(['resign_date' => '2026-09-11', 'status' => 'Resigned', 'is_active' => false]);
+        $work = Shift::create(['shift_name' => 'Office Hour', 'start_time' => '08:00', 'end_time' => '16:00']);
+        Shift::create(['shift_name' => 'OFF', 'start_time' => '00:00', 'end_time' => '00:00', 'is_off' => true]);
+        $this->actingAs($this->user('superadmin'));
+        foreach (['office_hour', 'shift_rotation'] as $pattern) {
+            \App\Models\EmployeeSchedule::where('employee_id', $employee->id)->delete();
+            \App\Models\EmployeeSchedule::create(['employee_id' => $employee->id, 'date' => '2026-09-20', 'shift_id' => $work->id]);
+            $this->post('/schedules/generate', [
+                'target_site_ids' => [$site->id], 'employee_ids' => [$employee->id],
+                'month' => 9, 'year' => 2026, 'start_day' => 1, 'schedule_type' => $pattern,
+                'active_shifts' => [$work->id], 'work_days' => 6, 'off_days' => 2, 'shift_duration' => 2,
+            ])->assertSessionHasNoErrors();
+            $this->assertDatabaseCount('employee_schedules', 11);
+            $this->assertDatabaseHas('employee_schedules', ['employee_id' => $employee->id, 'date' => '2026-09-11']);
+            $this->assertFalse($employee->schedules()->whereDate('date', '>', '2026-09-11')->exists());
+        }
+        $this->postJson('/schedule/update-single', ['employee_id' => $employee->id, 'date' => '2026-09-12', 'shift_id' => $work->id])->assertUnprocessable();
+    }
+
+    public function test_partial_generation_removes_stale_schedule_before_requested_start(): void
+    {
+        $site = $this->site(); $employee = $this->employee($site);
+        $employee->update(['resign_date' => '2026-09-11']);
+        $work = Shift::create(['shift_name' => 'Office Hour', 'start_time' => '08:00', 'end_time' => '16:00']);
+        Shift::create(['shift_name' => 'OFF', 'start_time' => '00:00', 'end_time' => '00:00', 'is_off' => true]);
+        foreach (['2026-09-11', '2026-09-12', '2026-09-25'] as $date) {
+            \App\Models\EmployeeSchedule::create(['employee_id' => $employee->id, 'date' => $date, 'shift_id' => $work->id]);
+        }
+        $this->actingAs($this->user('superadmin'))->post('/schedules/generate', [
+            'target_site_ids' => [$site->id], 'employee_ids' => [$employee->id],
+            'month' => 9, 'year' => 2026, 'start_day' => 20, 'schedule_type' => 'office_hour',
+        ])->assertSessionHasNoErrors();
+        $this->assertDatabaseCount('employee_schedules', 1);
+        $this->assertDatabaseHas('employee_schedules', ['date' => '2026-09-11']);
+    }
+
+    public function test_attendance_defaults_follow_schedule_and_ignore_dates_after_resignation(): void
+    {
+        $site = $this->site(); $employee = $this->employee($site);
+        $employee->update(['resign_date' => '2026-09-11', 'status' => 'Resigned', 'is_active' => false]);
+        $shift = Shift::create(['shift_name' => 'Shift 2', 'start_time' => '16:00', 'end_time' => '00:00']);
+        foreach (['2026-09-11', '2026-09-14'] as $date) {
+            \App\Models\EmployeeSchedule::create(['employee_id' => $employee->id, 'date' => $date, 'shift_id' => $shift->id]);
+        }
+        $this->actingAs($this->user('superadmin'));
+        $response = $this->getJson('/api/branches/'.$site->id.'/employees?month=2026-09')->assertOk();
+        $response->assertJsonPath('0.last_working_date', '2026-09-11')
+            ->assertJsonPath('0.scheduled_attendance.11.s2', 1)
+            ->assertJsonPath('0.scheduled_attendance.10.s1', 0)
+            ->assertJsonPath('0.scheduled_attendance.14.s2', 0)
+            ->assertJsonCount(1, '0.schedules');
+        $this->getJson('/api/branches/'.$site->id.'/employees?month=2026-10')->assertOk()->assertExactJson([]);
+        $this->getJson('/api/branches/'.$site->id.'/employees?month=2026-08')->assertOk()->assertJsonCount(1);
+        foreach ([\App\Exports\Sheets\AttendanceFix::class => 2, \App\Exports\Sheets\AttendanceDetailSheet::class => 3] as $class => $offset) {
+            $row = (new $class($site->id, '2026-09'))->collection()->first();
+            $this->assertSame('.', $row[$offset + 10 * 3 + 1]);
+            $this->assertSame('', $row[$offset + 13 * 3 + 1]);
+        }
+        $rows = (new \App\Exports\ScheduleExport($site->id, 9, 2026))->collection();
+        $calendarRow = $rows->first(fn ($row) => ($row[0] ?? null) === 1 && ($row[1] ?? null) === '' && ($row[2] ?? null) === $employee->name);
+        $this->assertSame('N/A', $calendarRow[14]);
+        $summary = $rows->first(fn ($row) => ($row[0] ?? null) === 1 && ($row[1] ?? null) === $employee->name);
+        $this->assertSame(1, $summary[6]);
+
+    }
+
+    public function test_attendance_save_rejects_after_last_date_and_counts_only_valid_sessions(): void
+    {
+        $site = $this->site(); $employee = $this->employee($site);
+        $employee->update(['resign_date' => '2026-09-11']);
+        $shift = Shift::create(['shift_name' => 'Shift 1', 'start_time' => '08:00', 'end_time' => '16:00']);
+        \App\Models\EmployeeSchedule::create(['employee_id' => $employee->id, 'date' => '2026-09-11', 'shift_id' => $shift->id]);
+        $this->actingAs($this->user('superadmin'));
+        $payload = ['month' => '2026-09', 'site_id' => $site->id, 'calendar_raw_data' => [$employee->id => json_encode([12 => ['s1' => 1, 's2' => 0, 's3' => 0]])]];
+        $this->postJson('/attendance/store', $payload)->assertUnprocessable();
+        $this->assertDatabaseCount('attendances', 0);
+        $payload['calendar_raw_data'][$employee->id] = json_encode([11 => ['s1' => 1, 's2' => 0, 's3' => 0], 12 => ['s1' => 0, 's2' => 0, 's3' => 0]]);
+        $this->post('/attendance/store', $payload)->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('attendances', ['employee_id' => $employee->id, 'attendance_count' => 1, 'working_days' => 1]);
+    }
+
+    public function test_saved_attendance_and_exports_exclude_old_values_after_last_date(): void
+    {
+        $site = $this->site(); $employee = $this->employee($site);
+        $employee->update(['resign_date' => '2026-09-11']);
+        \App\Models\Attendance::create(['employee_id' => $employee->id, 'month' => '2026-09', 'working_days' => 22, 'attendance_count' => 2,
+            'matrix_details' => json_encode([11 => ['s1' => 1, 's2' => 0, 's3' => 0], 14 => ['s1' => 1, 's2' => 0, 's3' => 0]])]);
+        $this->actingAs($this->user('superadmin'));
+        $response = $this->getJson('/api/branches/'.$site->id.'/employees?month=2026-09')->assertOk();
+        $matrix = json_decode($response->json('0.attendances.0.matrix_details'), true);
+        $this->assertSame(1, $matrix[11]['s1']);
+        $this->assertSame(0, $matrix[14]['s1']);
+        $this->assertSame(1, $response->json('0.attendances.0.attendance_count'));
+        foreach ([\App\Exports\Sheets\AttendanceFix::class => 2, \App\Exports\Sheets\AttendanceDetailSheet::class => 3] as $class => $offset) {
+            $rows = (new $class($site->id, '2026-09'))->collection();
+            $this->assertSame('.', $rows->first()[$offset + 10 * 3]);
+            $this->assertSame('', $rows->first()[$offset + 13 * 3]);
+            $this->assertCount(0, (new $class($site->id, '2026-10'))->collection());
+        }
+    }
+
 }

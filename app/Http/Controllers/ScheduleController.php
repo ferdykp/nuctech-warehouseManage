@@ -119,6 +119,14 @@ class ScheduleController extends Controller
             $startDate = Carbon::createFromDate($year, $month, $startDay);
             $endDate   = $startDate->copy()->endOfMonth();
 
+            // Remove stale entries throughout this month, even when generation starts after the last date.
+            foreach (Employee::whereIn('id', $employeeIds)->whereNotNull('resign_date')->get() as $employee) {
+                Schedule::where('employee_id', $employee->id)
+                    ->whereBetween('date', [$startDate->copy()->startOfMonth()->toDateString(), $endDate->toDateString()])
+                    ->whereDate('date', '>', $employee->resign_date->toDateString())
+                    ->delete();
+            }
+
             // Ambil Shift
             $offShift = Shift::where('is_off', true)->first();
             $ohShift  = Shift::where('shift_name', 'LIKE', '%Office%')

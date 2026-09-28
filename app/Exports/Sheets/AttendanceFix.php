@@ -177,6 +177,7 @@ class AttendanceFix implements FromCollection, WithTitle, WithHeadings, WithColu
             $employeesQuery->where('site_id', $this->siteId);
         }
 
+        $employeesQuery->where(fn ($q) => $q->whereNull('resign_date')->orWhereDate('resign_date', '>=', $startDate));
         $employees = $employeesQuery->get();
 
         // 1. PENENTUAN URUTAN BERSATU DENGAN ATTENDANCEDETAILSHEET
@@ -258,50 +259,12 @@ class AttendanceFix implements FromCollection, WithTitle, WithHeadings, WithColu
                 $employee->name
             ];
 
-            $savedMatrix = [];
-            $hasMatrixData = false;
-            if ($attendance && !empty($attendance->matrix_details)) {
-                $savedMatrix = json_decode($attendance->matrix_details, true);
-                $hasMatrixData = true;
-            }
-
+            $saved = $attendance && $attendance->matrix_details ? json_decode($attendance->matrix_details, true) : null;
+            $matrix = (new \App\Services\AttendanceCalendar())->matrix($employee, $this->month, $saved);
             for ($day = 1; $day <= $daysInMonth; $day++) {
-                $dateStr = Carbon::parse($this->month . '-' . str_pad($day, 2, '0', STR_PAD_LEFT))->format('Y-m-d');
-
-                if ($hasMatrixData) {
-                    $v1 = isset($savedMatrix[$day]['s1']) ? (int) $savedMatrix[$day]['s1'] : 0;
-                    $v2 = isset($savedMatrix[$day]['s2']) ? (int) $savedMatrix[$day]['s2'] : 0;
-                    $v3 = isset($savedMatrix[$day]['s3']) ? (int) $savedMatrix[$day]['s3'] : 0;
-                } else {
-                    $sched = $employee->schedules->firstWhere('date', $dateStr);
-                    if ($sched && $sched->shift) {
-                        $shiftName = strtolower($sched->shift->shift_name ?? '');
-                        $isOff = $sched->shift->is_off;
-
-                        if ($isOff) {
-                            $v1 = 0;
-                            $v2 = 0;
-                            $v3 = 0;
-                        } elseif (str_contains($shiftName, '2')) {
-                            $v1 = 0;
-                            $v2 = 1;
-                            $v3 = 0;
-                        } elseif (str_contains($shiftName, '3')) {
-                            $v1 = 0;
-                            $v2 = 0;
-                            $v3 = 1;
-                        } else {
-                            $v1 = 1;
-                            $v2 = 0;
-                            $v3 = 0;
-                        }
-                    } else {
-                        $currentDate = Carbon::parse($dateStr);
-                        $v1 = $currentDate->isWeekend() ? 0 : 1;
-                        $v2 = 0;
-                        $v3 = 0;
-                    }
-                }
+                $v1 = $matrix[$day]['s1'];
+                $v2 = $matrix[$day]['s2'];
+                $v3 = $matrix[$day]['s3'];
 
                 $row[] = ($v1 === 1) ? '.' : '';
                 $row[] = ($v2 === 1) ? '.' : '';

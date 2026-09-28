@@ -125,7 +125,7 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
             for ($d = 1; $d <= 16; $d++) {
                 $dateStr = Carbon::createFromDate($this->year, $this->month, $d)->format('Y-m-d');
                 $sched = $schedulesMap->get($dateStr);
-                $empRow[] = $this->getShiftCode($sched);
+                $empRow[] = $emp->resign_date && $dateStr > $emp->resign_date->format('Y-m-d') ? 'N/A' : $this->getShiftCode($sched);
             }
             $rows->push($empRow);
             $no++;
@@ -159,7 +159,7 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
             for ($d = 17; $d <= $totalDays; $d++) {
                 $dateStr = Carbon::createFromDate($this->year, $this->month, $d)->format('Y-m-d');
                 $sched = $schedulesMap->get($dateStr);
-                $empRow[] = $this->getShiftCode($sched);
+                $empRow[] = $emp->resign_date && $dateStr > $emp->resign_date->format('Y-m-d') ? 'N/A' : $this->getShiftCode($sched);
             }
             $rows->push($empRow);
             $no++;
@@ -207,6 +207,7 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
                 $dateStr = Carbon::createFromDate($this->year, $this->month, $d)->format('Y-m-d');
                 $sched = $schedulesMap->get($dateStr);
 
+                if ($emp->resign_date && $dateStr > $emp->resign_date->format('Y-m-d')) continue;
                 if ($sched && $sched->shift) {
                     if ($sched->shift->is_off) {
                         $totalOff++;

@@ -596,8 +596,8 @@
                 const lastDateElem = document.getElementById('detail_last_date');
                 const lastDateWrapper = document.getElementById('detail_last_date_wrapper');
 
-                if (data.last_date_formatted) {
-                    lastDateElem.innerText = data.last_date_formatted;
+                if (data.resign_date_formatted) {
+                    lastDateElem.innerText = data.resign_date_formatted;
                     if (data.status === 'Resigned') {
                         lastDateWrapper.className = 'p-3.5 border border-rose-200/80 rounded-2xl bg-rose-50/40';
                         lastDateElem.className = 'text-xs font-black text-rose-700 sm:text-sm';

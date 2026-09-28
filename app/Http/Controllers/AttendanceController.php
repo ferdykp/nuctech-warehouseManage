@@ -7,6 +7,7 @@ use App\Exports\AttendanceExport;
 use App\Models\Employee;
 use App\Models\Site;
 use App\Services\IndonesianHolidayService;
+use App\Services\AttendanceCalendar;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
@@ -33,7 +34,7 @@ class AttendanceController extends Controller
             $siteId = $request->input('site_id'); // Bisa berupa ID site atau string 'all'
         }
 
-        $query = Attendance::with(['employee.site']);
+        $query = Attendance::with(['employee.site', 'employee.schedules' => fn ($q) => $q->whereBetween('date', [$month.'-01', Carbon::parse($month.'-01')->endOfMonth()->toDateString()])->with('shift')]);
 
         // Jika siteId diisi dan bukan 'all', filter berdasarkan site_id
         if (!empty($siteId) && $siteId !== 'all') {
@@ -44,6 +45,15 @@ class AttendanceController extends Controller
 
         $query->where('month', $month);
         $attendances = $query->get();
+        foreach ($attendances as $attendance) {
+            if ($attendance->employee?->resign_date && $attendance->matrix_details) {
+                $calendar = new AttendanceCalendar();
+                $matrix = $calendar->matrix($attendance->employee, $month, json_decode($attendance->matrix_details, true) ?? []);
+                $attendance->matrix_details = json_encode($matrix);
+                $attendance->attendance_count = $calendar->count($matrix);
+                $attendance->working_days = $calendar->count($calendar->matrix($attendance->employee, $month));
+            }
+        }
 
         $employees = [];
         if ($siteId) {
@@ -70,7 +80,9 @@ class AttendanceController extends Controller
                 $employeesQuery->where('site_id', $siteId);
             }
 
+            $employeesQuery->where(fn ($q) => $q->whereNull('resign_date')->orWhereDate('resign_date', '>=', $startDate));
             $employees = $employeesQuery->get();
+            $this->prepareEmployees($employees, $month);
         }
 
         $holidays = $this->holidayService->getHolidaysForMonth($month);
@@ -111,7 +123,9 @@ class AttendanceController extends Controller
                 $employeesQuery->where('site_id', $siteId);
             }
 
+            $employeesQuery->where(fn ($q) => $q->whereNull('resign_date')->orWhereDate('resign_date', '>=', $startDate));
             $employees = $employeesQuery->get();
+            $this->prepareEmployees($employees, $month);
 
             return response()->json($employees);
         } catch (\Exception $e) {
@@ -149,87 +163,69 @@ class AttendanceController extends Controller
 
     public function storeAttendance(Request $request)
     {
+        $data = $request->validate([
+            'month' => 'required|date_format:Y-m',
+            'site_id' => 'required',
+            'calendar_raw_data' => 'required|array|min:1',
+            'calendar_raw_data.*' => 'required|json',
+        ]);
         $user = Auth::user();
-        $month = $this->sanitizeMonth($request->input('month'));
-        $siteId = $request->input('site_id');
-
-        if ($user->role === 'employee_role' && (int)$user->site_id !== (int)$siteId) {
-            abort(403, 'Anda tidak memiliki akses menyimpan absensi di site ini.');
-        }
-
-        if (!$request->has('calendar_raw_data') || empty($request->calendar_raw_data)) {
-            return redirect()->back()->with('error', 'Tidak ada data absensi yang dikirim.');
-        }
-
-        $daysInMonth = $this->getWorkingDaysCount($month);
-
-        foreach ($request->calendar_raw_data as $employeeId => $matrixJson) {
-            if (empty($matrixJson)) {
-                continue;
-            }
-
-            if ($user->role === 'employee_role') {
-                $isMyEmployee = Employee::where('id', $employeeId)->where('site_id', $user->site_id)->exists();
-                if (!$isMyEmployee) continue;
-            }
-
-            $shiftsArray = json_decode($matrixJson, true);
-            $totalKehadiranSesi = 0;
-
-            if (!empty($shiftsArray)) {
-                foreach ($shiftsArray as $day => $sessions) {
-                    $totalKehadiranSesi += (($sessions['s1'] ?? 0) + ($sessions['s2'] ?? 0) + ($sessions['s3'] ?? 0));
+        abort_if($user->role === 'employee_role' && (int) $user->site_id !== (int) $data['site_id'], 403);
+        $calendar = new AttendanceCalendar();
+        $daysInMonth = Carbon::createFromFormat('!Y-m', $data['month'])->daysInMonth;
+        $rows = [];
+        foreach ($data['calendar_raw_data'] as $employeeId => $json) {
+            $employee = Employee::with(['schedules' => fn ($q) => $q->whereBetween('date', [$data['month'].'-01', $data['month'].'-'.$daysInMonth])->with('shift')])->findOrFail($employeeId);
+            abort_if($user->role === 'employee_role' && (int) $employee->site_id !== (int) $user->site_id, 403);
+            abort_if($data['site_id'] !== 'all' && (int) $employee->site_id !== (int) $data['site_id'], 403);
+            $matrix = json_decode($json, true);
+            \Illuminate\Support\Facades\Validator::make(['matrix' => $matrix], [
+                'matrix' => 'required|array', 'matrix.*' => 'array:s1,s2,s3',
+                'matrix.*.s1' => 'required|integer|between:0,1',
+                'matrix.*.s2' => 'required|integer|between:0,1',
+                'matrix.*.s3' => 'required|integer|between:0,1',
+            ])->validate();
+            foreach ($matrix as $day => $sessions) {
+                if (!ctype_digit((string) $day) || (int) $day < 1 || (int) $day > $daysInMonth) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['calendar_raw_data' => 'Tanggal absensi tidak valid.']);
+                }
+                $date = Carbon::createFromFormat('!Y-m', $data['month'])->day((int) $day);
+                if ($employee->resign_date && $date->gt($employee->resign_date) && array_sum($sessions) > 0) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['calendar_raw_data' => 'Absensi tidak boleh diisi setelah Last Date '.$employee->resign_date->format('d-m-Y').'.']);
                 }
             }
-
-            Attendance::updateOrCreate(
-                [
-                    'employee_id' => $employeeId,
-                    'month'       => $month,
-                ],
-                [
-                    'working_days'     => $daysInMonth,
-                    'attendance_count' => $totalKehadiranSesi,
-                    'matrix_details'   => $matrixJson
-                ]
-            );
+            $normalized = $calendar->matrix($employee, $data['month'], $matrix);
+            $rows[$employeeId] = [
+                'working_days' => $calendar->count($calendar->matrix($employee, $data['month'])),
+                'attendance_count' => $calendar->count($normalized),
+                'matrix_details' => json_encode($normalized),
+            ];
         }
-
-        return redirect()->to(route('attendance.index', [
-            'site_id'   => $siteId,
-            'month'     => $month,
-            'auto_full' => $request->input('auto_full', 'true')
-        ]))->with('success', 'All bulk employee attendance plot data has been successfully saved!');
+        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, $data) {
+            foreach ($rows as $employeeId => $row) {
+                Attendance::updateOrCreate(['employee_id' => $employeeId, 'month' => $data['month']], $row);
+            }
+        });
+        return redirect()->route('attendance.index', ['site_id' => $data['site_id'], 'month' => $data['month'], 'auto_full' => $request->input('auto_full', 'true')])
+            ->with('success', 'Data absensi berhasil disimpan sesuai batas Last Date.');
     }
 
-    private function getWorkingDaysCount(string $monthString): int
+    private function prepareEmployees($employees, string $month): void
     {
-        try {
-            $date = Carbon::parse($monthString . '-01');
-        } catch (\Exception $e) {
-            $date = Carbon::now();
-            $monthString = $date->format('Y-m');
-        }
-
-        $daysInMonth = $date->daysInMonth;
-        $holidays = $this->holidayService->getHolidaysForMonth($monthString);
-
-        $workingDaysCount = 0;
-        for ($day = 1; $day <= $daysInMonth; $day++) {
-            $currentDate = Carbon::parse($monthString . '-' . str_pad($day, 2, '0', STR_PAD_LEFT));
-
-            if ($currentDate->isWeekend()) {
-                continue;
+        $calendar = new AttendanceCalendar();
+        foreach ($employees as $employee) {
+            $employee->last_working_date = $employee->resign_date?->format('Y-m-d');
+            $employee->scheduled_attendance = $calendar->matrix($employee, $month);
+            if ($employee->resign_date) {
+                $employee->setRelation('schedules', $employee->schedules->filter(fn ($s) => $s->date->lte($employee->resign_date))->values());
+                foreach ($employee->attendances as $attendance) {
+                    $matrix = $calendar->matrix($employee, $month, json_decode($attendance->matrix_details ?? '{}', true) ?? []);
+                    $attendance->matrix_details = json_encode($matrix);
+                    $attendance->attendance_count = $calendar->count($matrix);
+                    $attendance->working_days = $calendar->count($employee->scheduled_attendance);
+                }
             }
-
-            if (isset($holidays[$currentDate->toDateString()])) {
-                continue;
-            }
-
-            $workingDaysCount++;
         }
-
-        return $workingDaysCount;
     }
 
     private function sanitizeMonth(?string $monthInput): string

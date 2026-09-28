@@ -167,7 +167,7 @@
                             Record Employee Attendance {{ $currentSiteId === 'all' ? '(All Sites)' : '' }}
                         </h5>
                         <p class="mt-1 text-xs font-medium text-slate-500 ms-8">
-                            Check working sessions per date, or toggle automatic schedule alignment below.
+                            Auto-fill follows saved schedules. Dates after Last Date are unavailable; dates without a schedule remain empty.
                         </p>
                     </div>
                     <div
@@ -439,7 +439,6 @@
     <script>
         var attendanceState = attendanceState || {};
         var currentActiveEmployeeId = currentActiveEmployeeId || null;
-        var employeeSchedulesState = employeeSchedulesState || {};
         var indonesianHolidays = @json($holidays ?? []);
 
         function getFormattedMonth() {
@@ -541,66 +540,24 @@
             fieldContainer.classList.toggle('hidden', isLoading);
         }
 
+        function isAfterLastDate(employeeId, day) {
+            const lastDate = attendanceState[employeeId]?.lastDate;
+            if (!lastDate) return false;
+            const { year, month } = parseMonthRaw();
+            const date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            return date > lastDate;
+        }
+
+        function scheduledSessions(employeeId, day) {
+            if (isAfterLastDate(employeeId, day)) return { s1: 0, s2: 0, s3: 0 };
+            return { ...(attendanceState[employeeId].scheduled[day] || { s1: 0, s2: 0, s3: 0 }) };
+        }
+
         function toggleManualInput(isChecked) {
             document.getElementById('auto_full_hidden').value = isChecked ? 'true' : 'false';
-            let totalDays = getDaysInMonth();
-            let {
-                year,
-                month
-            } = parseMonthRaw();
-
             Object.keys(attendanceState).forEach(empId => {
-                let schedules = employeeSchedulesState[empId] || [];
-
-                for (let d = 1; d <= totalDays; d++) {
-                    let dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                    let sched = schedules.find(s => s.date === dateStr);
-
-                    if (isChecked) {
-                        if (sched && sched.shift) {
-                            let shiftName = (sched.shift.shift_name || '').toLowerCase();
-                            let isOff = sched.shift.is_off;
-
-                            if (isOff) {
-                                attendanceState[empId].shifts[d] = {
-                                    s1: 0,
-                                    s2: 0,
-                                    s3: 0
-                                };
-                            } else if (shiftName.includes('2')) {
-                                attendanceState[empId].shifts[d] = {
-                                    s1: 0,
-                                    s2: 1,
-                                    s3: 0
-                                };
-                            } else if (shiftName.includes('3')) {
-                                attendanceState[empId].shifts[d] = {
-                                    s1: 0,
-                                    s2: 0,
-                                    s3: 1
-                                };
-                            } else {
-                                attendanceState[empId].shifts[d] = {
-                                    s1: 1,
-                                    s2: 0,
-                                    s3: 0
-                                };
-                            }
-                        } else {
-                            let shouldBeOff = isWeekendDay(d) || isHoliday(d);
-                            attendanceState[empId].shifts[d] = {
-                                s1: shouldBeOff ? 0 : 1,
-                                s2: 0,
-                                s3: 0
-                            };
-                        }
-                    } else {
-                        attendanceState[empId].shifts[d] = {
-                            s1: 0,
-                            s2: 0,
-                            s3: 0
-                        };
-                    }
+                for (let d = 1; d <= getDaysInMonth(); d++) {
+                    attendanceState[empId].shifts[d] = isChecked ? scheduledSessions(empId, d) : { s1: 0, s2: 0, s3: 0 };
                 }
                 updateLiveCounters(empId);
                 syncCalendarCheckboxesIfOpen(empId);
@@ -637,7 +594,6 @@
                 .then(data => {
                     fieldContainer.innerHTML = '';
                     attendanceState = {};
-                    employeeSchedulesState = {};
 
                     if (!data || data.length === 0) {
                         fieldContainer.innerHTML = `
@@ -653,7 +609,6 @@
                         document.getElementById('autoFullAttendance').checked : false;
 
                     data.forEach(emp => {
-                        employeeSchedulesState[emp.id] = emp.schedules || [];
 
                         let hasSavedData = emp.attendances && emp.attendances.length > 0 && emp.attendances[0]
                             .matrix_details;
@@ -671,64 +626,22 @@
 
                         attendanceState[emp.id] = {
                             name: emp.name,
+                            lastDate: emp.last_working_date,
+                            scheduled: emp.scheduled_attendance || {},
                             shifts: {}
                         };
 
                         for (let d = 1; d <= totalDays; d++) {
-                            if (savedShifts && savedShifts[d] !== undefined) {
+                            if (isAfterLastDate(emp.id, d)) {
+                                attendanceState[emp.id].shifts[d] = { s1: 0, s2: 0, s3: 0 };
+                            } else if (savedShifts) {
                                 attendanceState[emp.id].shifts[d] = {
-                                    s1: savedShifts[d].s1 !== undefined ? parseInt(savedShifts[d].s1) : 0,
-                                    s2: savedShifts[d].s2 !== undefined ? parseInt(savedShifts[d].s2) : 0,
-                                    s3: savedShifts[d].s3 !== undefined ? parseInt(savedShifts[d].s3) : 0
+                                    s1: Number(savedShifts[d]?.s1 || 0),
+                                    s2: Number(savedShifts[d]?.s2 || 0),
+                                    s3: Number(savedShifts[d]?.s3 || 0)
                                 };
-                            } else if (isAutoFull) {
-                                let dateStr =
-                                    `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                                let sched = (emp.schedules || []).find(s => s.date === dateStr);
-
-                                if (sched && sched.shift) {
-                                    let shiftName = (sched.shift.shift_name || '').toLowerCase();
-                                    let isOff = sched.shift.is_off;
-
-                                    if (isOff) {
-                                        attendanceState[emp.id].shifts[d] = {
-                                            s1: 0,
-                                            s2: 0,
-                                            s3: 0
-                                        };
-                                    } else if (shiftName.includes('2')) {
-                                        attendanceState[emp.id].shifts[d] = {
-                                            s1: 0,
-                                            s2: 1,
-                                            s3: 0
-                                        };
-                                    } else if (shiftName.includes('3')) {
-                                        attendanceState[emp.id].shifts[d] = {
-                                            s1: 0,
-                                            s2: 0,
-                                            s3: 1
-                                        };
-                                    } else {
-                                        attendanceState[emp.id].shifts[d] = {
-                                            s1: 1,
-                                            s2: 0,
-                                            s3: 0
-                                        };
-                                    }
-                                } else {
-                                    let shouldBeOff = isWeekendDay(d) || isHoliday(d);
-                                    attendanceState[emp.id].shifts[d] = {
-                                        s1: shouldBeOff ? 0 : 1,
-                                        s2: 0,
-                                        s3: 0
-                                    };
-                                }
                             } else {
-                                attendanceState[emp.id].shifts[d] = {
-                                    s1: 0,
-                                    s2: 0,
-                                    s3: 0
-                                };
+                                attendanceState[emp.id].shifts[d] = isAutoFull ? scheduledSessions(emp.id, d) : { s1: 0, s2: 0, s3: 0 };
                             }
                         }
 
@@ -785,6 +698,7 @@
                 s2 = 0,
                 s3 = 0;
             for (let d = 1; d <= totalDays; d++) {
+                if (isAfterLastDate(employeeId, d)) empData.shifts[d] = { s1: 0, s2: 0, s3: 0 };
                 if (empData.shifts[d].s1 === 1) s1++;
                 if (empData.shifts[d].s2 === 1) s2++;
                 if (empData.shifts[d].s3 === 1) s3++;
@@ -800,6 +714,7 @@
         }
 
         function toggleDateShift(day, shiftKey, isChecked) {
+            if (isAfterLastDate(currentActiveEmployeeId, day)) return;
             if (currentActiveEmployeeId && attendanceState[currentActiveEmployeeId]) {
                 attendanceState[currentActiveEmployeeId].shifts[day][shiftKey] = isChecked ? 1 : 0;
                 updateLiveCounters(currentActiveEmployeeId);
@@ -823,6 +738,10 @@
             let rows = '';
             for (let d = 1; d <= totalDays; d++) {
                 let dayData = attendanceState[employeeId].shifts[d];
+                if (isAfterLastDate(employeeId, d)) {
+                    rows += `<tr class="border-b border-slate-100 bg-slate-100"><td class="px-4 py-2.5 text-xs text-slate-400">Date ${d}</td><td colspan="3" class="px-3 py-2.5 text-xs font-bold text-slate-400">N/A — After Last Date</td></tr>`;
+                    continue;
+                }
                 let holidayName = getHolidayName(d);
                 let isOff = isWeekendDay(d) || holidayName;
                 let weekendBadge = isOff ?

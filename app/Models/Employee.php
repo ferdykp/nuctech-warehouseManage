@@ -29,6 +29,7 @@ class Employee extends Model
         'contract_start_date',
         'is_active',
         'more_information', //from salary
+        'last_date'
     ];
 
     protected $casts = [
