@@ -615,7 +615,7 @@
                                                     <input type="checkbox" name="target_site_ids[]"
                                                         value="{{ $st->id }}" onchange="onGenSiteChange()"
                                                         class="w-4 h-4 text-teal-600 rounded border-slate-300 gen-site-checkbox focus:ring-teal-500 shrink-0"
-                                                        {{ ($selectedSiteId ?? '') == $st->id ? 'checked' : '' }}>
+                                                        {{ count($sites) === 1 || ($selectedSiteId ?? 'all') == 'all' || ($selectedSiteId ?? '') == $st->id || Auth::user()?->site_id == $st->id ? 'checked' : '' }}>
                                                     <span class="truncate">📍 {{ $st->machine_name }}</span>
                                                 </label>
                                             @endforeach
@@ -1216,10 +1216,18 @@
                 document.getElementById('gen_year').value = mainYear.value;
             }
 
-            if (mainSiteSelect && mainSiteSelect.value !== 'all') {
-                document.querySelectorAll('.gen-site-checkbox').forEach(cb => {
-                    cb.checked = (cb.value === mainSiteSelect.value);
-                });
+            if (mainSiteSelect) {
+                if (mainSiteSelect.value !== 'all') {
+                    document.querySelectorAll('.gen-site-checkbox').forEach(cb => {
+                        cb.checked = (cb.value === mainSiteSelect.value);
+                    });
+                } else {
+                    document.querySelectorAll('.gen-site-checkbox').forEach(cb => {
+                        cb.checked = true;
+                    });
+                    const checkAll = document.getElementById('check-all-sites');
+                    if (checkAll) checkAll.checked = true;
+                }
             }
 
             onGenSiteChange();

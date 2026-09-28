@@ -30,7 +30,7 @@ class ScheduleController extends Controller
 
         $sites = \App\Services\SiteAccess::sites($user, true)->with('schedulePattern')->orderBy('machine_name')->get();
         $employeeQuery = Employee::with('site')->whereIn('site_id', $sites->pluck('id'));
-        $employeeQuery->where(fn ($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $startDate->format('Y-m-d')));
+        $employeeQuery->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $startDate->format('Y-m-d')));
         if ($selectedSiteId !== 'all') {
             \App\Services\SiteAccess::authorize($selectedSiteId, true);
             $employeeQuery->where('site_id', $selectedSiteId);

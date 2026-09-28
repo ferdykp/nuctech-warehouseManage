@@ -65,7 +65,76 @@
             </div>
         </div>
 
-        {{-- 2. MAIN TABLE & FILTER CONTAINER --}}
+        {{-- 2. CONTAINER UPCOMING ANNIVERSARIES / CONTRACT RENEWAL (JOIN DATE TERDEKAT BULAN INI) --}}
+        @php
+            $currentMonth = date('n');
+            $upcomingEmployees = $employees
+                ->filter(function ($emp) use ($currentMonth) {
+                    return $emp->join_date &&
+                        \Carbon\Carbon::parse($emp->join_date)->month == $currentMonth &&
+                        $emp->status !== 'Resigned';
+                })
+                ->sortBy(function ($emp) {
+                    return \Carbon\Carbon::parse($emp->join_date)->day;
+                });
+        @endphp
+
+        @if ($upcomingEmployees->count() > 0)
+            <div
+                class="p-5 border shadow-xs bg-gradient-to-r from-amber-50/90 via-orange-50/50 to-amber-50/90 border-amber-200/80 rounded-3xl">
+                <div class="flex items-center justify-between pb-3 mb-3 border-b border-amber-200/60">
+                    <div class="flex items-center gap-2.5">
+                        <div
+                            class="flex items-center justify-center w-8 h-8 text-xs font-bold text-white shadow-xs rounded-xl bg-amber-500">
+                            <i class="fa-solid fa-cake-candles"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-extrabold tracking-wider uppercase text-amber-900 sm:text-sm">
+                                Join Date Terdekat Bulan Ini ({{ date('F Y') }})
+                            </h3>
+                            <p class="text-[11px] font-medium text-amber-700">
+                                Evaluasi Perpanjangan Kontrak Tahunan & Gaji ke-13
+                            </p>
+                        </div>
+                    </div>
+                    <span
+                        class="px-3 py-1 text-xs font-extrabold border rounded-full text-amber-800 bg-amber-100/80 border-amber-300/80">
+                        {{ $upcomingEmployees->count() }} Karyawan
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                    @foreach ($upcomingEmployees as $emp)
+                        @php
+                            $joinDate = \Carbon\Carbon::parse($emp->join_date);
+                            $yearsWorked = \Carbon\Carbon::now()->diffInYears($joinDate);
+                        @endphp
+                        <div onclick="showEmployeeDetail({{ $emp->id }})"
+                            class="flex items-center justify-between p-3 transition-all bg-white border cursor-pointer border-amber-200/60 rounded-2xl shadow-2xs hover:border-amber-400 hover:shadow-xs group">
+                            <div class="mr-2 truncate">
+                                <div class="text-xs font-extrabold truncate text-slate-800 group-hover:text-amber-700">
+                                    {{ $emp->name }}
+                                </div>
+                                <div class="text-[10px] font-semibold text-slate-500 truncate">
+                                    {{ $emp->site->machine_name ?? 'Site N/A' }} • {{ $emp->position ?? 'Staff' }}
+                                </div>
+                                {{-- <div class="text-[10px] font-extrabold text-blue-600 mt-0.5">
+                                    Masa Kerja: {{ $yearsWorked }} Tahun
+                                </div> --}}
+                            </div>
+                            <div class="text-right shrink-0">
+                                <span
+                                    class="px-2.5 py-1 text-[11px] font-black text-amber-900 bg-amber-100/90 border border-amber-200 rounded-xl inline-block">
+                                    {{ $joinDate->format('d M') }}
+                                </span>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        {{-- 3. MAIN TABLE & FILTER CONTAINER --}}
         <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
 
             {{-- FORM FILTER DENGAN EVENT DELEGATION --}}
@@ -95,7 +164,43 @@
                         </div>
 
                         {{-- Filter Grid --}}
-                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+                            {{-- Filter Join Month --}}
+                            <div>
+                                <label
+                                    class="block mb-1.5 text-[10px] font-extrabold text-amber-700 uppercase tracking-wider">
+                                    <i class="mr-1 fa-solid fa-calendar-days text-amber-600"></i> Join Month
+                                </label>
+                                <select name="join_month" id="filter_join_month"
+                                    class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border outline-none cursor-pointer border-amber-200 rounded-xl focus:border-amber-500 text-slate-800">
+                                    <option value="">All Months</option>
+                                    @for ($m = 1; $m <= 12; $m++)
+                                        <option value="{{ $m }}"
+                                            {{ request('join_month') == $m ? 'selected' : '' }}>
+                                            {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                                        </option>
+                                    @endfor
+                                </select>
+                            </div>
+
+                            {{-- Filter Join Day --}}
+                            <div>
+                                <label
+                                    class="block mb-1.5 text-[10px] font-extrabold text-amber-700 uppercase tracking-wider">
+                                    <i class="mr-1 fa-solid fa-calendar-day text-amber-600"></i> Join Date
+                                </label>
+                                <select name="join_day" id="filter_join_day"
+                                    class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border outline-none cursor-pointer border-amber-200 rounded-xl focus:border-amber-500 text-slate-800">
+                                    <option value="">All Days</option>
+                                    @for ($d = 1; $d <= 31; $d++)
+                                        <option value="{{ $d }}"
+                                            {{ request('join_day') == $d ? 'selected' : '' }}>
+                                            Date {{ $d }}
+                                        </option>
+                                    @endfor
+                                </select>
+                            </div>
+
                             {{-- Dropdown Filter Status --}}
                             <div>
                                 <label
