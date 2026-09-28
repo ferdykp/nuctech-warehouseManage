@@ -57,7 +57,7 @@
                             <i class="fa-solid fa-file-excel"></i> Export Excel
                         </button>
                     @else
-                        <a href="{{ route('schedule.export', ['site_id' => Auth::user()->site_id, 'month' => sprintf('%02d', $month), 'year' => $year]) }}"
+                        <a href="{{ route('schedule.export', ['site_id' => Auth::user()->site_id, 'month' => $month, 'year' => $year]) }}"
                             up-follow="false" download
                             class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95"
                             title="Export schedule to Excel">
@@ -144,7 +144,7 @@
                                 <select name="month"
                                     class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all text-slate-800 cursor-pointer">
                                     @for ($m = 1; $m <= 12; $m++)
-                                        <option value="{{ sprintf('%02d', $m) }}" {{ $month == $m ? 'selected' : '' }}>
+                                        <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
                                             {{ date('F', mktime(0, 0, 0, $m, 1)) }}
                                         </option>
                                     @endfor
@@ -209,7 +209,7 @@
                         <select name="month" id="main_month_select"
                             class="w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all outline-none cursor-pointer">
                             @for ($m = 1; $m <= 12; $m++)
-                                <option value="{{ sprintf('%02d', $m) }}" {{ $month == $m ? 'selected' : '' }}>
+                                <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
                                     {{ date('F', mktime(0, 0, 0, $m, 1)) }}
                                 </option>
                             @endfor
@@ -348,7 +348,7 @@
                                         class="px-4 py-3 sticky left-0 bg-white font-extrabold text-slate-900 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
                                         <div class="flex items-center gap-1.5">
                                             <span class="text-xs truncate">{{ $emp->name }}</span>
-                                            @if ($emp->resign_date)
+                                            @if ($emp->last_date)
                                                 <span
                                                     class="px-1.5 py-0.2 text-[8px] font-black text-rose-700 bg-rose-50 border border-rose-200 rounded-md shrink-0">
                                                     Resigned
@@ -375,10 +375,8 @@
 
                                             // Penanganan Sel Karyawan Resign
                                             $isAfterResign =
-                                                $emp->resign_date &&
-                                                $date->greaterThan(
-                                                    \Carbon\Carbon::parse($emp->resign_date)->endOfDay(),
-                                                );
+                                                $emp->last_date &&
+                                                $date->greaterThan(\Carbon\Carbon::parse($emp->last_date)->endOfDay());
 
                                             $badgeColor = 'bg-white text-slate-300 border-slate-200';
                                             $label = '-';
@@ -426,7 +424,7 @@
                                             class="p-1 text-center border-l border-slate-100 {{ $isAfterResign ? 'bg-slate-100/70' : '' }}">
                                             @if ($isAfterResign)
                                                 <span class="text-[9px] font-bold text-slate-300 select-none"
-                                                    title="Employee Resigned on {{ \Carbon\Carbon::parse($emp->resign_date)->format('d M Y') }}">
+                                                    title="Employee Resigned on {{ \Carbon\Carbon::parse($emp->last_date)->format('d M Y') }}">
                                                     N/A
                                                 </span>
                                             @else
@@ -642,8 +640,8 @@
                                             <select name="month" id="gen_month"
                                                 class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all cursor-pointer">
                                                 @for ($m = 1; $m <= 12; $m++)
-                                                    <option value="{{ sprintf('%02d', $m) }}"
-                                                        {{ sprintf('%02d', $month) == sprintf('%02d', $m) ? 'selected' : '' }}>
+                                                    <option value="{{ $m }}"
+                                                        {{ $month == $m ? 'selected' : '' }}>
                                                         {{ date('F', mktime(0, 0, 0, $m, 1)) }}
                                                     </option>
                                                 @endfor
@@ -752,11 +750,11 @@
                                                 <div class="flex items-center gap-1.5">
                                                     <span
                                                         class="block text-xs font-bold text-slate-800">{{ $emp->name }}</span>
-                                                    @if ($emp->resign_date)
+                                                    @if ($emp->last_date)
                                                         <span
                                                             class="px-1.5 py-0.2 text-[8px] font-black text-rose-700 bg-rose-50 border border-rose-200 rounded-md shrink-0">
                                                             Last:
-                                                            {{ \Carbon\Carbon::parse($emp->resign_date)->format('d M') }}
+                                                            {{ \Carbon\Carbon::parse($emp->last_date)->format('d M') }}
                                                         </span>
                                                     @endif
                                                 </div>
@@ -957,7 +955,7 @@
                 @csrf
                 @method('DELETE')
 
-                <input type="hidden" name="month" value="{{ sprintf('%02d', $month) }}">
+                <input type="hidden" name="month" value="{{ $month }}">
                 <input type="hidden" name="year" value="{{ $year }}">
                 <input type="hidden" name="site_id" value="{{ $selectedSiteId }}">
 
