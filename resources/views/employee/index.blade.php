@@ -96,7 +96,7 @@
 
                         {{-- Filter Grid --}}
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                            {{-- Di bagian dropdown filter status --}}
+                            {{-- Dropdown Filter Status --}}
                             <div>
                                 <label
                                     class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Status</label>
@@ -332,6 +332,14 @@
                         <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Join
                             Date</span>
                         <strong class="text-xs sm:text-sm text-slate-800" id="detail_join_date">-</strong>
+                    </div>
+
+                    {{-- INFORMASI LAST DATE (RESIGN DATE) --}}
+                    <div id="detail_last_date_wrapper"
+                        class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
+                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Last Date
+                            (Resign)</span>
+                        <strong class="text-xs sm:text-sm text-slate-800" id="detail_last_date">-</strong>
                     </div>
                 </div>
 
@@ -583,6 +591,25 @@
                 document.getElementById('detail_join_date').innerText = data.join_date_formatted || '-';
                 document.getElementById('detail_bank').innerText = (data.bank_name && data.bank_account_number) ?
                     `${data.bank_name} - ${data.bank_account_number}` : (data.bank_account_number || '-');
+
+                // Render Last Date (Resign Date)
+                const lastDateElem = document.getElementById('detail_last_date');
+                const lastDateWrapper = document.getElementById('detail_last_date_wrapper');
+
+                if (data.last_date_formatted) {
+                    lastDateElem.innerText = data.last_date_formatted;
+                    if (data.status === 'Resigned') {
+                        lastDateWrapper.className = 'p-3.5 border border-rose-200/80 rounded-2xl bg-rose-50/40';
+                        lastDateElem.className = 'text-xs font-black text-rose-700 sm:text-sm';
+                    } else {
+                        lastDateWrapper.className = 'p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50';
+                        lastDateElem.className = 'text-xs sm:text-sm text-slate-800';
+                    }
+                } else {
+                    lastDateElem.innerText = '-';
+                    lastDateWrapper.className = 'p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50';
+                    lastDateElem.className = 'text-xs sm:text-sm text-slate-800';
+                }
 
                 // Badge Status dengan pembedaan warna khusus untuk Resigned
                 let badgeClass = 'bg-slate-100 text-slate-700 border-slate-200';
