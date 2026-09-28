@@ -19,9 +19,44 @@ class EmployeeController extends Controller
     {
         $user = Auth::user();
         $search = $request->input('search');
+
+        // 1. Dapatkan filter bulan untuk banner Join Date (default bulan saat ini: 1-12)
+        $bannerMonth = (int) $request->get('banner_month', date('n'));
+
+        // List Nama Bulan dalam Bahasa Indonesia
+        $monthsList = [
+            1 => 'Januari',
+            2 => 'Februari',
+            3 => 'Maret',
+            4 => 'April',
+            5 => 'Mei',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'Agustus',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Desember'
+        ];
+
+        // 2. Query khusus Karyawan Join Date 1 Bulan Full (Berdasarkan bulan terpilih, tanpa memedulikan tahun join)
+        $upcomingEmployeesQuery = Employee::with(['site'])
+            ->where('status', '!=', 'Resigned')
+            ->whereNotNull('join_date')
+            ->whereRaw('MONTH(join_date) = ?', [$bannerMonth]);
+
+        if ($user->role === 'employee_role') {
+            $upcomingEmployeesQuery->where('site_id', $user->site_id);
+        }
+
+        $upcomingEmployees = $upcomingEmployeesQuery
+            ->orderByRaw('DAY(join_date) ASC')
+            ->get();
+
+        // 3. Query Utama untuk Tabel Karyawan
         $employeesQuery = Employee::with(['site.branch']);
 
-        // 1. FILTER AKSES ROLE / SITE
+        // FILTER AKSES ROLE / SITE
         if ($user->role === 'employee_role') {
             $employeesQuery->where('site_id', $user->site_id);
             $sites = Site::where('id', $user->site_id)->get();
@@ -32,7 +67,7 @@ class EmployeeController extends Controller
             }
         }
 
-        // 2. FILTER SEARCH (Dikelompokkan agar tidak merusak filter lain)
+        // FILTER SEARCH
         if (!empty($search)) {
             $employeesQuery->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
@@ -44,29 +79,39 @@ class EmployeeController extends Controller
             });
         }
 
-        // 3. FILTER STATUS PEKERJAAN
+        // FILTER JOIN MONTH PADA TABEL
+        if ($request->filled('join_month')) {
+            $employeesQuery->whereRaw('MONTH(join_date) = ?', [$request->join_month]);
+        }
+
+        // FILTER JOIN DAY PADA TABEL
+        if ($request->filled('join_day')) {
+            $employeesQuery->whereRaw('DAY(join_date) = ?', [$request->join_day]);
+        }
+
+        // FILTER STATUS PEKERJAAN
         if ($request->filled('status')) {
             $employeesQuery->where('status', $request->status);
         }
 
-        // 4. FILTER BRANCH (CABANG)
+        // FILTER BRANCH (CABANG)
         if ($request->filled('branch_id') && $request->branch_id !== 'all') {
             $employeesQuery->whereHas('site', function ($q) use ($request) {
                 $q->where('branch_id', $request->branch_id);
             });
         }
 
-        // 5. FILTER MCU STATUS (yes / no)
+        // FILTER MCU STATUS
         if ($request->filled('mcu')) {
             $employeesQuery->where('mcu', $request->mcu);
         }
 
-        // 6. FILTER TLD BADGE (yes / no)
+        // FILTER TLD BADGE
         if ($request->filled('tld')) {
             $employeesQuery->where('tld', $request->tld);
         }
 
-        // 7. FILTER BANK NAME
+        // FILTER BANK NAME
         if ($request->filled('bank_name')) {
             $employeesQuery->where('bank_name', $request->bank_name);
         }
@@ -79,8 +124,17 @@ class EmployeeController extends Controller
             return view('employee.table', compact('employees'))->render();
         }
 
-        return view('employee.index', compact('sites', 'branches', 'employees'));
+        return view('employee.index', compact(
+            'sites',
+            'branches',
+            'employees',
+            'upcomingEmployees',
+            'bannerMonth',
+            'monthsList'
+        ));
     }
+
+    // ... (method store, update, show, edit, create, destroy, export, import, getEmployeesByBranch TETAP SAMA SEPERTI KODE LAMA ANDA)
 
     public function store(Request $request)
     {

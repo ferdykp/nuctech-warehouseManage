@@ -65,49 +65,60 @@
             </div>
         </div>
 
-        {{-- 2. CONTAINER UPCOMING ANNIVERSARIES / CONTRACT RENEWAL (JOIN DATE TERDEKAT BULAN INI) --}}
-        @php
-            $currentMonth = date('n');
-            $upcomingEmployees = $employees
-                ->filter(function ($emp) use ($currentMonth) {
-                    return $emp->join_date &&
-                        \Carbon\Carbon::parse($emp->join_date)->month == $currentMonth &&
-                        $emp->status !== 'Resigned';
-                })
-                ->sortBy(function ($emp) {
-                    return \Carbon\Carbon::parse($emp->join_date)->day;
-                });
-        @endphp
-
-        @if ($upcomingEmployees->count() > 0)
-            <div
-                class="p-5 border shadow-xs bg-gradient-to-r from-amber-50/90 via-orange-50/50 to-amber-50/90 border-amber-200/80 rounded-3xl">
-                <div class="flex items-center justify-between pb-3 mb-3 border-b border-amber-200/60">
-                    <div class="flex items-center gap-2.5">
-                        <div
-                            class="flex items-center justify-center w-8 h-8 text-xs font-bold text-white shadow-xs rounded-xl bg-amber-500">
-                            <i class="fa-solid fa-cake-candles"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-xs font-extrabold tracking-wider uppercase text-amber-900 sm:text-sm">
-                                Join Date Terdekat Bulan Ini ({{ date('F Y') }})
-                            </h3>
-                            <p class="text-[11px] font-medium text-amber-700">
-                                Evaluasi Perpanjangan Kontrak Tahunan & Gaji ke-13
-                            </p>
-                        </div>
+        {{-- 2. CONTAINER JOIN DATE KARYAWAN 1 BULAN FULL + FILTER BULAN --}}
+        <div
+            class="p-5 space-y-4 border shadow-xs bg-gradient-to-r from-amber-50/90 via-orange-50/50 to-amber-50/90 border-amber-200/80 rounded-3xl">
+            <div class="flex flex-col justify-between gap-3 pb-3 border-b sm:flex-row sm:items-center border-amber-200/60">
+                <div class="flex items-center gap-2.5">
+                    <div
+                        class="flex items-center justify-center w-8 h-8 text-xs font-bold text-white shadow-xs rounded-xl bg-amber-500 shrink-0">
+                        <i class="fa-solid fa-cake-candles"></i>
                     </div>
+                    <div>
+                        <h3 class="text-xs font-extrabold tracking-wider uppercase text-amber-900 sm:text-sm">
+                            Join Date Karyawan Bulan {{ $monthsList[$bannerMonth] }}
+                        </h3>
+                        <p class="text-[11px] font-medium text-amber-700">
+                            Evaluasi Perpanjangan Kontrak Tahunan & Masa Kerja Karyawan
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2.5 shrink-0">
+                    {{-- Dropdown Filter Pilihan Bulan Banner --}}
+                    <form action="{{ route('employee.index') }}" method="GET" class="flex items-center">
+                        @foreach (request()->except('banner_month', 'page') as $key => $value)
+                            @if (is_array($value))
+                                @foreach ($value as $v)
+                                    <input type="hidden" name="{{ $key }}[]" value="{{ $v }}">
+                                @endforeach
+                            @else
+                                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                            @endif
+                        @endforeach
+
+                        <select name="banner_month" onchange="this.form.submit()"
+                            class="py-1.5 px-3 text-xs font-bold bg-white border border-amber-300 rounded-xl text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 cursor-pointer shadow-2xs">
+                            @foreach ($monthsList as $mNum => $mName)
+                                <option value="{{ $mNum }}" {{ $bannerMonth == $mNum ? 'selected' : '' }}>
+                                    Bulan {{ $mName }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+
                     <span
-                        class="px-3 py-1 text-xs font-extrabold border rounded-full text-amber-800 bg-amber-100/80 border-amber-300/80">
+                        class="px-3 py-1.5 text-xs font-extrabold border rounded-xl text-amber-800 bg-amber-100/80 border-amber-300/80">
                         {{ $upcomingEmployees->count() }} Karyawan
                     </span>
                 </div>
+            </div>
 
+            @if ($upcomingEmployees->count() > 0)
                 <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                     @foreach ($upcomingEmployees as $emp)
                         @php
                             $joinDate = \Carbon\Carbon::parse($emp->join_date);
-                            $yearsWorked = \Carbon\Carbon::now()->diffInYears($joinDate);
                         @endphp
                         <div onclick="showEmployeeDetail({{ $emp->id }})"
                             class="flex items-center justify-between p-3 transition-all bg-white border cursor-pointer border-amber-200/60 rounded-2xl shadow-2xs hover:border-amber-400 hover:shadow-xs group">
@@ -118,21 +129,23 @@
                                 <div class="text-[10px] font-semibold text-slate-500 truncate">
                                     {{ $emp->site->machine_name ?? 'Site N/A' }} • {{ $emp->position ?? 'Staff' }}
                                 </div>
-                                {{-- <div class="text-[10px] font-extrabold text-blue-600 mt-0.5">
-                                    Masa Kerja: {{ $yearsWorked }} Tahun
-                                </div> --}}
                             </div>
                             <div class="text-right shrink-0">
                                 <span
                                     class="px-2.5 py-1 text-[11px] font-black text-amber-900 bg-amber-100/90 border border-amber-200 rounded-xl inline-block">
-                                    {{ $joinDate->format('d M') }}
+                                    {{ $joinDate->format('d M Y') }}
                                 </span>
                             </div>
                         </div>
                     @endforeach
                 </div>
-            </div>
-        @endif
+            @else
+                <div
+                    class="p-4 text-xs font-bold text-center border border-dashed bg-white/60 border-amber-200 rounded-2xl text-amber-700/60">
+                    Tidak ada karyawan yang bergabung pada bulan {{ $monthsList[$bannerMonth] }}.
+                </div>
+            @endif
+        </div>
 
         {{-- 3. MAIN TABLE & FILTER CONTAINER --}}
         <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
