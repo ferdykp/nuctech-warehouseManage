@@ -797,7 +797,7 @@
 
                                 <div id="shift-sequence-container"
                                     class="space-y-2 p-2.5 bg-white border border-slate-200 rounded-2xl min-h-[200px] max-h-[280px] overflow-y-auto">
-                                    @foreach (App\Models\Shift::orderBy('is_off', 'asc')->orderBy('start_time', 'asc')->get() as $sf)
+                                    @foreach (App\Models\Shift::where('is_off', false)->orderBy('start_time', 'asc')->get() as $sf)
                                         @php
                                             $sfNameLower = strtolower($sf->shift_name);
                                             $isOfficeHour =
@@ -815,7 +815,7 @@
                                                     value="{{ $sf->id }}" onchange="updateStartingShift()"
                                                     class="w-4 h-4 text-purple-600 rounded cursor-pointer active-shift-checkbox focus:ring-purple-500"
                                                     {{ old('active_shifts') ? (in_array($sf->id, old('active_shifts')) ? 'checked' : '') : 'checked' }}>
-                                                <span>{{ $sf->shift_name }} {{ $sf->is_off ? '(OFF/Libur)' : '' }}</span>
+                                                <span>{{ $sf->shift_name }}</span>
                                                 <span
                                                     class="start-badge hidden items-center gap-1 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white uppercase bg-purple-600 rounded-full">
                                                     <i class="fa-solid fa-flag text-[8px]"></i> Start
@@ -1154,10 +1154,7 @@
             document.querySelectorAll('.shift-item-row').forEach(row => {
                 const isOh = row.getAttribute('data-is-oh') === 'true';
                 const cb = row.querySelector('.active-shift-checkbox');
-
-                // PERBAIKAN: Jika Office Hour = tampilkan HANYA shift OH, jika Shift Rotation = sembunyikan shift OH
                 const shouldShow = isOfficeHour ? isOh : !isOh;
-
                 row.style.display = shouldShow ? '' : 'none';
                 if (cb) cb.checked = shouldShow;
             });
