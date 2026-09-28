@@ -327,6 +327,12 @@ class ScheduleController extends Controller
 
     public function clear(Request $request)
     {
+        // Konversi input month dan year ke integer sebelum validasi
+        $request->merge([
+            'month' => (int) $request->input('month'),
+            'year'  => (int) $request->input('year'),
+        ]);
+
         $request->validate([
             'month'   => 'required|integer|between:1,12',
             'year'    => 'required|integer|between:2000,2100',
