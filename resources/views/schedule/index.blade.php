@@ -18,7 +18,7 @@
                         Employee Work Schedules
                     </h1>
                     <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
-                        Monitor duty schedules, configure site work patterns, and generate team rotas automatically.
+                        Kelola jadwal kerja, atur pola kerja site, dan buat rotasi tim secara otomatis dan efisien.
                     </p>
 
                     {{-- ACCESS MODE BADGE --}}
@@ -373,7 +373,6 @@
                                             $shiftName = $schedule?->shift?->shift_name;
                                             $holidayName = $holidays[$dateStr] ?? null;
 
-                                            // Penanganan Sel Karyawan Resign
                                             $isAfterResign =
                                                 $emp->last_date &&
                                                 $date->greaterThan(\Carbon\Carbon::parse($emp->last_date)->endOfDay());
@@ -781,8 +780,8 @@
                         <div id="oh-notice-banner"
                             class="hidden p-4 mb-4 text-xs font-medium leading-relaxed text-blue-800 border border-blue-200/80 bg-blue-50 rounded-xl">
                             <i class="mr-1.5 fa-solid fa-circle-info"></i>
-                            Pola dikonfigurasi untuk <strong>Office Hours</strong>. Jadwal akan otomatis dibuat untuk
-                            hari kerja normal (Senin–Jumat) tanpa rotasi shift.
+                            Pola dikonfigurasi untuk <strong>Office Hours</strong>. Jadwal akan otomatis dibuat untuk hari
+                            kerja normal (Senin–Jumat) tanpa rotasi shift.
                         </div>
 
                         <div class="grid grid-cols-1 gap-5 lg:grid-cols-12">
@@ -790,14 +789,15 @@
                                 <div class="flex items-center justify-between mb-2">
                                     <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Active
                                         Shift Sequence</label>
-                                    <span class="text-[10px] text-slate-400 font-medium">Use <i
+                                    <span class="text-[10px] text-slate-400 font-medium">Gunakan tombol <i
                                             class="fa-solid fa-arrow-up text-slate-500"></i> <i
-                                            class="fa-solid fa-arrow-down text-slate-500"></i> to reorder</span>
+                                            class="fa-solid fa-arrow-down text-slate-500"></i> untuk mengatur urutan
+                                        rotasi</span>
                                 </div>
 
                                 <div id="shift-sequence-container"
                                     class="space-y-2 p-2.5 bg-white border border-slate-200 rounded-2xl min-h-[200px] max-h-[280px] overflow-y-auto">
-                                    @foreach (App\Models\Shift::where('is_off', false)->orderBy('start_time', 'asc')->get() as $sf)
+                                    @foreach (App\Models\Shift::orderBy('is_off', 'asc')->orderBy('start_time', 'asc')->get() as $sf)
                                         @php
                                             $sfNameLower = strtolower($sf->shift_name);
                                             $isOfficeHour =
@@ -807,7 +807,8 @@
                                         @endphp
                                         <div class="flex items-center justify-between p-2.5 border bg-slate-50 border-slate-200/80 rounded-xl shift-item-row transition-shadow duration-200"
                                             data-shift-id="{{ $sf->id }}" data-shift-name="{{ $sf->shift_name }}"
-                                            data-is-oh="{{ $isOfficeHour ? 'true' : 'false' }}">
+                                            data-is-oh="{{ $isOfficeHour ? 'true' : 'false' }}"
+                                            data-is-off="{{ $sf->is_off ? 'true' : 'false' }}">
 
                                             <label
                                                 class="flex items-center gap-2 text-xs font-bold cursor-pointer text-slate-700">
@@ -815,7 +816,7 @@
                                                     value="{{ $sf->id }}" onchange="updateStartingShift()"
                                                     class="w-4 h-4 text-purple-600 rounded cursor-pointer active-shift-checkbox focus:ring-purple-500"
                                                     {{ old('active_shifts') ? (in_array($sf->id, old('active_shifts')) ? 'checked' : '') : 'checked' }}>
-                                                <span>{{ $sf->shift_name }}</span>
+                                                <span>{{ $sf->shift_name }} {{ $sf->is_off ? '(OFF/Libur)' : '' }}</span>
                                                 <span
                                                     class="start-badge hidden items-center gap-1 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white uppercase bg-purple-600 rounded-full">
                                                     <i class="fa-solid fa-flag text-[8px]"></i> Start
@@ -851,7 +852,7 @@
                                         <span id="start_shift_display_text">—</span>
                                     </div>
                                     <p class="mt-2.5 text-[10px] text-slate-400 leading-relaxed font-medium">
-                                        Follows the top item of Active Shift Sequence.
+                                        Otomatis mengikuti shift paling atas di Active Shift Sequence.
                                     </p>
                                 </div>
 
@@ -862,8 +863,9 @@
                                     <input type="number" name="shift_duration" id="gen_shift_duration"
                                         value="{{ old('shift_duration', 2) }}" min="1"
                                         class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 text-slate-800 transition-all">
-                                    <p class="mt-2.5 text-[10px] text-slate-400 font-medium leading-relaxed">Consecutive
-                                        days in the same shift.</p>
+                                    <p class="mt-2.5 text-[10px] text-slate-400 font-medium leading-relaxed">
+                                        Durasi hari berturut-turut pada shift yang sama.
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -943,8 +945,8 @@
                     </div>
                     <div>
                         <h3 class="text-base font-extrabold text-slate-900">Reset Period Schedule</h3>
-                        <p class="text-xs font-medium text-slate-500 mt-0.5">This action will delete all schedule logs for
-                            the selected site.</p>
+                        <p class="text-xs font-medium text-slate-500 mt-0.5">Tindakan ini akan menghapus log jadwal pada
+                            site terpilih.</p>
                     </div>
                 </div>
                 <button type="button" onclick="closeModal('modal-clear')"
@@ -961,7 +963,7 @@
 
                 <div
                     class="p-3.5 text-xs text-rose-800 border border-rose-200/80 bg-rose-50/80 rounded-2xl font-semibold leading-relaxed">
-                    Are you sure you want to delete all schedule logs for
+                    Apakah Anda yakin ingin menghapus seluruh log jadwal untuk periode
                     <strong>{{ date('F Y', mktime(0, 0, 0, $month, 1, $year)) }}</strong>?
                 </div>
 
@@ -1064,34 +1066,21 @@
             if (!row) return;
 
             const container = document.getElementById('shift-sequence-container');
-            const rows = Array.from(container.children);
+            const visibleRows = Array.from(container.children).filter(r => r.style.display !== 'none');
+            const currentIndex = visibleRows.indexOf(row);
 
-            const firstRects = new Map();
-            rows.forEach(r => firstRects.set(r, r.getBoundingClientRect()));
+            if (currentIndex === -1) return;
 
-            if (direction === 'up' && row.previousElementSibling) {
-                container.insertBefore(row, row.previousElementSibling);
-            } else if (direction === 'down' && row.nextElementSibling) {
-                container.insertBefore(row.nextElementSibling, row);
+            if (direction === 'up' && currentIndex > 0) {
+                const targetRow = visibleRows[currentIndex - 1];
+                container.insertBefore(row, targetRow);
+            } else if (direction === 'down' && currentIndex < visibleRows.length - 1) {
+                const targetRow = visibleRows[currentIndex + 1];
+                container.insertBefore(targetRow, row);
             } else {
                 updateStartingShift();
                 return;
             }
-
-            rows.forEach(r => {
-                const first = firstRects.get(r);
-                const last = r.getBoundingClientRect();
-                const deltaY = first.top - last.top;
-
-                if (deltaY) {
-                    r.style.transition = 'none';
-                    r.style.transform = `translateY(${deltaY}px)`;
-                    requestAnimationFrame(() => {
-                        r.style.transition = 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)';
-                        r.style.transform = '';
-                    });
-                }
-            });
 
             row.classList.add('ring-2', 'ring-purple-400', 'ring-offset-1');
             setTimeout(() => row.classList.remove('ring-2', 'ring-purple-400', 'ring-offset-1'), 260);
@@ -1153,10 +1142,18 @@
 
             document.querySelectorAll('.shift-item-row').forEach(row => {
                 const isOh = row.getAttribute('data-is-oh') === 'true';
+                const isOffShift = row.getAttribute('data-is-off') === 'true';
                 const cb = row.querySelector('.active-shift-checkbox');
-                const shouldShow = isOfficeHour ? isOh : !isOh;
-                row.style.display = shouldShow ? '' : 'none';
-                if (cb) cb.checked = shouldShow;
+
+                if (isOfficeHour) {
+                    row.style.display = isOh ? '' : 'none';
+                    if (cb) cb.checked = isOh;
+                } else {
+                    // Dinamis Shift Rotation: Sembunyikan Office Hour DAN Shift OFF otomatis
+                    const isWorkShift = !isOh && !isOffShift;
+                    row.style.display = isWorkShift ? '' : 'none';
+                    if (cb) cb.checked = isWorkShift;
+                }
             });
 
             updateStartingShift();

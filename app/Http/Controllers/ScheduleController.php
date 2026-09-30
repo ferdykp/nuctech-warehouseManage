@@ -28,23 +28,19 @@ class ScheduleController extends Controller
         $year = $request->get('year', date('Y'));
         $selectedSiteId = $request->get('site_id', 'all');
 
-        // Periode Tanggal
         $startDate = Carbon::createFromDate((int)$year, (int)$month, 1)->startOfMonth();
         $endDate = $startDate->copy()->endOfMonth();
         $datesInMonth = CarbonPeriod::create($startDate, $endDate);
 
-        // --- PENGAMBILAN SITES ---
         $sitesQuery = \App\Services\SiteAccess::sites($user, true);
         $sites = $sitesQuery->with('schedulePattern')->orderBy('machine_name')->get();
 
-        // FALLBACK: Jika Service SiteAccess mengembalikan kosong untuk Team Leader / User Biasa
         if ($sites->isEmpty() && $user->site_id) {
             $sites = Site::where('id', $user->site_id)->with('schedulePattern')->get();
         } elseif ($sites->isEmpty() && in_array($user->role, ['superadmin', 'administration'])) {
             $sites = Site::with('schedulePattern')->orderBy('machine_name')->get();
         }
 
-        // Query Karyawan
         $siteIds = $sites->pluck('id');
         $employeeQuery = Employee::with('site')->whereIn('site_id', $siteIds);
         $employeeQuery->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $startDate->format('Y-m-d')));
@@ -53,7 +49,6 @@ class ScheduleController extends Controller
             if (in_array($user->role, ['superadmin', 'administration'])) {
                 $employeeQuery->where('site_id', $selectedSiteId);
             } else {
-                // Untuk Team Leader
                 \App\Services\SiteAccess::authorize($selectedSiteId, true);
                 $employeeQuery->where('site_id', $selectedSiteId);
             }
@@ -61,7 +56,6 @@ class ScheduleController extends Controller
 
         $employees = $employeeQuery->orderBy('name', 'asc')->get();
 
-        // Schedule Logs
         $employeeIds = $employees->pluck('id');
         $schedules = Schedule::with('shift')
             ->whereIn('employee_id', $employeeIds)
@@ -88,9 +82,6 @@ class ScheduleController extends Controller
         ));
     }
 
-    /**
-     * Generate Rotas & Schedules for Multiple Sites
-     */
     public function generate(Request $request)
     {
         $request->validate([
@@ -136,7 +127,7 @@ class ScheduleController extends Controller
 
         DB::beginTransaction();
         try {
-            // 1. Simpan/Update Pola Kerja (SitePattern) untuk SELURUH Site yang dipilih
+            // 1. Simpan/Update Pola Kerja (SitePattern)
             foreach ($siteIds as $siteId) {
                 SitePattern::updateOrCreate(
                     ['site_id' => $siteId],
@@ -148,10 +139,11 @@ class ScheduleController extends Controller
                 );
             }
 
-            // 2. Tentukan Rentang Periode Tanggal
+            // 2. Periode Tanggal
             $startDate = Carbon::createFromDate($year, $month, $startDay);
             $endDate   = $startDate->copy()->endOfMonth();
 
+            // Clean-up karyawan resign
             foreach (Employee::whereIn('id', $employeeIds)->whereNotNull('resign_date')->get() as $employee) {
                 Schedule::where('employee_id', $employee->id)
                     ->whereBetween('date', [$startDate->copy()->startOfMonth()->toDateString(), $endDate->toDateString()])
@@ -159,13 +151,12 @@ class ScheduleController extends Controller
                     ->delete();
             }
 
-            // Ambil Shift
             $offShift = Shift::where('is_off', true)->first();
             $ohShift  = Shift::where('shift_name', 'LIKE', '%Office%')
                 ->orWhere('shift_name', 'LIKE', '%OH%')
                 ->first() ?? Shift::where('is_off', false)->first();
 
-            // 3. Proses Pembuatan Jadwal untuk Setiap Karyawan Terpilih
+            // 3. PROSES GENERATE JADWAL
             if ($scheduleType === 'office_hour') {
                 foreach ($employeeIds as $empId) {
                     $employee = Employee::find($empId);
@@ -185,25 +176,30 @@ class ScheduleController extends Controller
 
                         if ($assignedShiftId) {
                             Schedule::updateOrCreate(
-                                [
-                                    'employee_id' => $empId,
-                                    'date'        => $date->format('Y-m-d'),
-                                ],
-                                [
-                                    'shift_id'    => $assignedShiftId,
-                                ]
+                                ['employee_id' => $empId, 'date' => $date->format('Y-m-d')],
+                                ['shift_id'    => $assignedShiftId]
                             );
                         }
                     }
                 }
-            } else {
-                $activeShiftIds = $request->active_shifts ?? [];
+            } else { // DYNAMIC SHIFT ROTATION
+                $rawActiveShiftIds = $request->active_shifts ?? [];
+
+                // Ambil ID shift kerja aktif
+                $workShiftIds = Shift::whereIn('id', $rawActiveShiftIds)
+                    ->where('is_off', false)
+                    ->pluck('id')
+                    ->toArray();
+
+                // Preservasi urutan array shift
+                $activeShiftIds = array_values(array_filter($rawActiveShiftIds, fn($id) => in_array($id, $workShiftIds)));
+
                 $shiftDuration  = (int) ($request->shift_duration ?? 2);
                 $workDays       = (int) ($request->work_days ?? 6);
                 $offDays        = (int) ($request->off_days ?? 2);
 
                 if (empty($activeShiftIds)) {
-                    throw \Illuminate\Validation\ValidationException::withMessages(['active_shifts' => 'Pilih minimal satu shift.']);
+                    throw \Illuminate\Validation\ValidationException::withMessages(['active_shifts' => 'Pilih minimal satu shift kerja aktif.']);
                 }
 
                 $activeShiftsCount = count($activeShiftIds);
@@ -212,14 +208,97 @@ class ScheduleController extends Controller
                     $employee = Employee::find($empId);
                     $lastDate = $employee?->resign_date ? Carbon::parse($employee->resign_date)->endOfDay() : null;
 
-                    $period = CarbonPeriod::create($startDate, $endDate);
+                    // --- LOGIKA CONTINUOUS LOOKBACK PERBAIKAN ---
+                    $prevDate = $startDate->copy()->subDay();
+                    $prevSchedule = Schedule::where('employee_id', $empId)
+                        ->where('date', $prevDate->format('Y-m-d'))
+                        ->first();
 
-                    // PERBAIKAN: Shift Index selalu dimulai dari 0 agar jadwal antar karyawan seragam
                     $shiftIndex          = 0;
                     $dayInCurrentShift   = 0;
                     $consecutiveWorkDays = 0;
                     $consecutiveOffDays  = 0;
                     $isOffMode           = false;
+
+                    if ($prevSchedule) {
+                        if ($prevSchedule->shift_id == $offShift?->id) {
+                            // Skenario A: Tanggal H-1 (30 Sep) Karyawan sedang LIBUR (OFF)
+                            $checkDate = $prevDate->copy();
+                            while (true) {
+                                $s = Schedule::where('employee_id', $empId)->where('date', $checkDate->format('Y-m-d'))->first();
+                                if ($s && $s->shift_id == $offShift?->id) {
+                                    $consecutiveOffDays++;
+                                    $checkDate->subDay();
+                                } else {
+                                    break;
+                                }
+                            }
+
+                            if ($consecutiveOffDays < $offDays) {
+                                // Masih ada sisa hari libur
+                                $isOffMode = true;
+                                if ($s && in_array($s->shift_id, $activeShiftIds)) {
+                                    $lastShiftIdx = array_search($s->shift_id, $activeShiftIds);
+                                    if ($lastShiftIdx !== false) {
+                                        $shiftIndex = ($lastShiftIdx + 1) % $activeShiftsCount;
+                                    }
+                                }
+                            } else {
+                                // Libur sudah pas/selesai di akhir bulan lalu -> Mulai kerja shift berikutnya
+                                $isOffMode = false;
+                                $consecutiveOffDays = 0;
+                                if ($s && in_array($s->shift_id, $activeShiftIds)) {
+                                    $lastShiftIdx = array_search($s->shift_id, $activeShiftIds);
+                                    if ($lastShiftIdx !== false) {
+                                        $shiftIndex = ($lastShiftIdx + 1) % $activeShiftsCount;
+                                    }
+                                }
+                            }
+                        } else {
+                            // Skenario B: Tanggal H-1 (30 Sep) Karyawan sedang KERJA
+                            $checkDate = $prevDate->copy();
+                            $lastShiftId = $prevSchedule->shift_id;
+
+                            while (true) {
+                                $s = Schedule::where('employee_id', $empId)->where('date', $checkDate->format('Y-m-d'))->first();
+                                if ($s && $s->shift && !$s->shift->is_off) {
+                                    $consecutiveWorkDays++;
+                                    if ($s->shift_id == $lastShiftId) {
+                                        $dayInCurrentShift++;
+                                    }
+                                    $checkDate->subDay();
+                                } else {
+                                    break;
+                                }
+                            }
+
+                            $foundIdx = array_search($lastShiftId, $activeShiftIds);
+                            if ($foundIdx !== false) {
+                                $shiftIndex = $foundIdx;
+                            }
+
+                            // JIKA HARI KERJA SUDAH MENCAPAI TARGET (MISAL: 6 HARI KERJA)
+                            if ($consecutiveWorkDays >= $workDays) {
+                                // Langsung masuk mode LIBUR untuk tanggal 1 bulan berikutnya
+                                $isOffMode           = true;
+                                $consecutiveWorkDays = 0;
+                                $consecutiveOffDays  = 0;
+                                $dayInCurrentShift   = 0;
+                                // Siapkan index shift berikutnya (S1) saat libur nanti selesai
+                                $shiftIndex          = ($shiftIndex + 1) % $activeShiftsCount;
+                            } else {
+                                // Masih ada sisa hari kerja
+                                $isOffMode = false;
+                                if ($dayInCurrentShift >= $shiftDuration) {
+                                    $dayInCurrentShift = 0;
+                                    $shiftIndex        = ($shiftIndex + 1) % $activeShiftsCount;
+                                }
+                            }
+                        }
+                    }
+
+                    // --- GENERATE JADWAL BULAN INI ---
+                    $period = CarbonPeriod::create($startDate, $endDate);
 
                     foreach ($period as $date) {
                         if ($lastDate && $date->greaterThan($lastDate)) {
@@ -243,7 +322,6 @@ class ScheduleController extends Controller
                                 $consecutiveOffDays  = 0;
                                 $consecutiveWorkDays = 0;
                                 $dayInCurrentShift   = 0;
-                                $shiftIndex          = ($shiftIndex + 1) % $activeShiftsCount;
                             }
                         } else {
                             $currentShiftId = $activeShiftIds[$shiftIndex];
@@ -328,7 +406,6 @@ class ScheduleController extends Controller
 
     public function clear(Request $request)
     {
-        // PERBAIKAN: Konversi input month dan year ke integer sebelum validasi untuk mencegah error validasi string
         $request->merge([
             'month' => (int) $request->input('month'),
             'year'  => (int) $request->input('year'),
