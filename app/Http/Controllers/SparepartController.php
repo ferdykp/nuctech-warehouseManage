@@ -158,6 +158,35 @@ class SparepartController extends Controller
     /**
      * Update data sparepart.
      */
+    // public function update(Request $request, string $site, int $id)
+    // {
+    //     $siteData = $this->getSite($site);
+    //     $this->authorizeSiteAccess($siteData);
+
+    //     $request->validate([
+    //         'item_name'     => 'required|string',
+    //         'serial_number' => 'nullable|string|unique:spareparts,serial_number,' . $id,
+    //         'category_id'   => 'nullable|exists:categories,id',
+    //         'type'          => 'required|string',
+    //         'uom'           => 'required|string',
+    //         'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+    //     ]);
+
+    //     $sparepart = Sparepart::findOrFail($id);
+    //     abort_unless(auth()->user()->isSuperAdmin() || $sparepart->stocks()->where('site_id', $siteData->id)->exists(), 403);
+
+    //     if ($request->hasFile('image')) {
+    //         if ($sparepart->image) Storage::disk('public')->delete($sparepart->image);
+    //         $sparepart->image = $request->file('image')->store('spareparts', 'public');
+    //     }
+
+    //     $sparepart->update($request->only('item_name', 'serial_number', 'category_id', 'type', 'uom', 'note'));
+
+    //     return redirect()->route('sparepart.index', $site)->with('success', 'Data sparepart diperbarui');
+    // }
+    /**
+     * Update data sparepart dan jumlah stok.
+     */
     public function update(Request $request, string $site, int $id)
     {
         $siteData = $this->getSite($site);
@@ -165,24 +194,59 @@ class SparepartController extends Controller
 
         $request->validate([
             'item_name'     => 'required|string',
-            'serial_number' => 'nullable|string|unique:spareparts,serial_number,' . $id,
+            'serial_number' => 'nullable|string',
             'category_id'   => 'nullable|exists:categories,id',
             'type'          => 'required|string',
             'uom'           => 'required|string',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'qty'           => 'nullable|integer|min:0',
+            'image'         => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
 
-        $sparepart = Sparepart::findOrFail($id);
-        abort_unless(auth()->user()->isSuperAdmin() || $sparepart->stocks()->where('site_id', $siteData->id)->exists(), 403);
+        return DB::transaction(function () use ($request, $siteData, $site, $id) {
+            // Cek apakah $id merujuk ke SparepartStock atau Sparepart
+            $stock = SparepartStock::where('site_id', $siteData->id)->find($id);
 
-        if ($request->hasFile('image')) {
-            if ($sparepart->image) Storage::disk('public')->delete($sparepart->image);
-            $sparepart->image = $request->file('image')->store('spareparts', 'public');
-        }
+            if ($stock) {
+                $sparepart = $stock->sparepart;
+            } else {
+                $sparepart = Sparepart::findOrFail($id);
+                $stock = SparepartStock::where('site_id', $siteData->id)
+                    ->where('sparepart_id', $sparepart->id)
+                    ->first();
+            }
 
-        $sparepart->update($request->only('item_name', 'serial_number', 'category_id', 'type', 'uom', 'note'));
+            // Update gambar jika ada
+            if ($request->hasFile('image')) {
+                if ($sparepart->image) Storage::disk('public')->delete($sparepart->image);
+                $sparepart->image = $request->file('image')->store('spareparts', 'public');
+            }
 
-        return redirect()->route('sparepart.index', $site)->with('success', 'Data sparepart diperbarui');
+            // Update Master Sparepart
+            $sparepart->update($request->only('item_name', 'serial_number', 'category_id', 'type', 'uom', 'note'));
+
+            // 🟢 Update Jumlah Stok jika input qty dikirim
+            if ($stock && $request->has('qty')) {
+                $oldQty = $stock->qty;
+                $newQty = (int) $request->qty;
+
+                if ($oldQty !== $newQty) {
+                    $stock->update(['qty' => $newQty]);
+
+                    // Catat riwayat koreksi stok
+                    SparepartHistory::create([
+                        'sparepart_id' => $sparepart->id,
+                        'from_site_id' => $siteData->id,
+                        'to_site_id'   => $siteData->id,
+                        'action'       => 'ADJUSTMENT',
+                        'condition'    => $stock->condition,
+                        'qty'          => $newQty,
+                        'note'         => "Koreksi stok manual dari {$oldQty} menjadi {$newQty} oleh " . Auth::user()->name,
+                    ]);
+                }
+            }
+
+            return redirect()->route('sparepart.index', $site)->with('success', 'Data sparepart dan stok berhasil diperbarui.');
+        });
     }
 
     /**
@@ -343,7 +407,9 @@ class SparepartController extends Controller
                     throw \Illuminate\Validation\ValidationException::withMessages(['qty_to_move' => 'Jumlah melebihi stok tersedia.']);
                 }
                 $target = SparepartStock::firstOrCreate([
-                    'sparepart_id' => $source->sparepart_id, 'site_id' => $site->id, 'condition' => $data['new_condition'],
+                    'sparepart_id' => $source->sparepart_id,
+                    'site_id' => $site->id,
+                    'condition' => $data['new_condition'],
                 ], ['qty' => 0]);
                 $source->decrement('qty', $qty);
                 $target->increment('qty', $qty);
@@ -352,8 +418,13 @@ class SparepartController extends Controller
                 $action = 'CONDITION_CHANGE';
             }
             SparepartHistory::create([
-                'sparepart_id' => $source->sparepart_id, 'from_site_id' => $site->id, 'to_site_id' => $site->id,
-                'action' => $action, 'condition' => $data['new_condition'], 'qty' => $qty, 'note' => $note,
+                'sparepart_id' => $source->sparepart_id,
+                'from_site_id' => $site->id,
+                'to_site_id' => $site->id,
+                'action' => $action,
+                'condition' => $data['new_condition'],
+                'qty' => $qty,
+                'note' => $note,
             ]);
         }, 3);
         return back()->with('success', 'Stok berhasil diperbarui.');

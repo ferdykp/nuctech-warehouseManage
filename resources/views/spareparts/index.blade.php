@@ -370,6 +370,13 @@
                         <input type="text" id="edit_item_name" name="item_name" required
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-medium text-slate-800">
                     </div>
+
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Quantity</label>
+                        <input type="number" id="edit_qty" name="qty" required min="0"
+                            class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold text-slate-800">
+                    </div>
+
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Category</label>
                         <select id="edit_category_id" name="category_id"
@@ -803,6 +810,8 @@
             const modal = document.getElementById('modal-edit');
             const form = document.getElementById('form-edit');
 
+            // Jika data item berasal dari SparepartStock, stok ada di item.qty
+            const stockId = item.id;
             const sparepartId = item.sparepart_id ? item.sparepart_id : item.id;
             const itemName = item.sparepart ? item.sparepart.item_name : item.item_name;
             const categoryId = item.sparepart ? item.sparepart.category_id : item.category_id;
@@ -810,8 +819,9 @@
             const type = item.sparepart ? item.sparepart.type : item.type;
             const uom = item.sparepart ? item.sparepart.uom : item.uom;
             const note = item.sparepart ? item.sparepart.note : item.note;
+            const currentQty = item.qty !== undefined ? item.qty : 0;
 
-            form.action = "/sparepart/{{ $slug }}/" + sparepartId;
+            form.action = "/sparepart/{{ $slug }}/" + stockId; // Kirim ID Stock / Sparepart
 
             document.getElementById('edit_item_name').value = itemName || '';
             document.getElementById('edit_category_id').value = categoryId || '';
@@ -819,6 +829,11 @@
             document.getElementById('edit_type').value = type || '';
             document.getElementById('edit_uom').value = uom || 'PCS';
             document.getElementById('edit_note').value = note || '';
+
+            // 🟢 SET VALUE QUANTITY
+            if (document.getElementById('edit_qty')) {
+                document.getElementById('edit_qty').value = currentQty;
+            }
 
             modal.classList.remove('hidden');
             modal.classList.add('flex');
