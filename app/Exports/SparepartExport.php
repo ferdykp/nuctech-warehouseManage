@@ -31,10 +31,14 @@ class SparepartExport implements
     {
         $this->site = Site::with('branch')->where('slug', $siteCode)->firstOrFail();
 
-        // Ambil stok per baris spesifik (kondisi terpisah)
+        // 🟢 FIX: Diurutkan berdasarkan nama item (A-Z), lalu berdasarkan kondisi
         $this->stocks = SparepartStock::with(['sparepart.category', 'site'])
             ->where('site_id', $this->site->id)
-            ->orderBy('created_at', 'desc')
+            ->whereHas('sparepart') // Memastikan relation sparepart ada
+            ->join('spareparts', 'sparepart_stocks.sparepart_id', '=', 'spareparts.id')
+            ->orderBy('spareparts.item_name', 'asc')
+            ->orderBy('sparepart_stocks.condition', 'asc')
+            ->select('sparepart_stocks.*') // Memastikan atribut primary key stock tetap aman
             ->get();
     }
 
