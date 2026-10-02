@@ -44,11 +44,11 @@ class SparepartExport implements
     }
 
     /**
-     * Data dimulai dari baris ke-6 agar baris 1-4 bisa dipakai untuk Judul Site/Branch
+     * Data dimulai dari baris ke-5 (Header Tabel di baris 4)
      */
     public function startCell(): string
     {
-        return 'A5';
+        return 'A4';
     }
 
     public function headings(): array
@@ -97,7 +97,7 @@ class SparepartExport implements
     public function drawings()
     {
         $drawings = [];
-        $startRow = 6; // Baris data pertama adalah baris 6 (karena header di baris 5)
+        $startRow = 5; // Baris data pertama adalah baris 5 (karena header di baris 4)
 
         foreach ($this->stocks as $index => $stock) {
             $sparepart = $stock->sparepart;
@@ -125,52 +125,52 @@ class SparepartExport implements
 
                 $branchName = $this->site->branch->branch_name ?? 'Unassigned Branch';
                 $machineName = $this->site->machine_name ?? 'Site Machine Unit';
-                $exportDate = now()->translatedFormat('d F Y, H:i') . ' WIB';
 
                 // ==========================================
-                // 1. HEADER TITLE BANNER (BARIS 1 - 3)
+                // 1. HEADER TITLE BANNER (BARIS 1 - 2, CENTERED)
                 // ==========================================
                 $sheet->mergeCells('A1:J1');
                 $sheet->setCellValue('A1', 'SITE INVENTORY MONITORING REPORT');
                 $sheet->getStyle('A1')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 16, 'color' => ['rgb' => '0F172A']],
-                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                        'vertical'   => Alignment::VERTICAL_CENTER,
+                    ],
                 ]);
 
                 $sheet->mergeCells('A2:J2');
-                $sheet->setCellValue('A2', "LOCATION: {$machineName}  •  BRANCH: {$branchName}");
+                $sheet->setCellValue('A2', "LOCATION: {$machineName}   •   BRANCH: {$branchName}");
                 $sheet->getStyle('A2')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 11, 'color' => ['rgb' => '475569']],
-                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                        'vertical'   => Alignment::VERTICAL_CENTER,
+                    ],
                 ]);
 
-                $sheet->mergeCells('A3:J3');
-                $sheet->setCellValue('A3', "Exported Date: {$exportDate}");
-                $sheet->getStyle('A3')->applyFromArray([
-                    'font' => ['italic' => true, 'size' => 9, 'color' => ['rgb' => '64748B']],
-                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT, 'vertical' => Alignment::VERTICAL_CENTER],
-                ]);
-
-                $sheet->getRowDimension(1)->setRowHeight(24);
-                $sheet->getRowDimension(2)->setRowHeight(18);
-                $sheet->getRowDimension(3)->setRowHeight(16);
-                $sheet->getRowDimension(4)->setRowHeight(10); // Spasi kosong
+                $sheet->getRowDimension(1)->setRowHeight(26);
+                $sheet->getRowDimension(2)->setRowHeight(20);
+                $sheet->getRowDimension(3)->setRowHeight(10); // Spasi kosong sebelum tabel
 
                 // ==========================================
-                // 2. HEADER TABEL (BARIS 5)
+                // 2. HEADER TABEL (BARIS 4)
                 // ==========================================
-                $sheet->getStyle('A5:J5')->applyFromArray([
+                $sheet->getStyle('A4:J4')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'FFFFFF']],
-                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                        'vertical'   => Alignment::VERTICAL_CENTER,
+                    ],
                     'fill' => [
                         'fillType' => Fill::FILL_SOLID,
                         'startColor' => ['rgb' => '1E293B'], // Slate 800 (Corporate Dark)
                     ],
                 ]);
-                $sheet->getRowDimension(5)->setRowHeight(28);
+                $sheet->getRowDimension(4)->setRowHeight(28);
 
                 // ==========================================
-                // 3. LEBAR KOLOM (AUTOFIT & STYLED)
+                // 3. LEBAR KOLOM
                 // ==========================================
                 $sheet->getColumnDimension('A')->setWidth(7);   // NO
                 $sheet->getColumnDimension('B')->setWidth(18);  // CATEGORY
@@ -187,7 +187,7 @@ class SparepartExport implements
                 // 4. STYLING BARIS DATA & ZEBRA STRIPING
                 // ==========================================
                 $totalData = count($this->stocks);
-                $startRow = 6;
+                $startRow = 5;
                 $endRow = $startRow + $totalData - 1;
 
                 if ($totalData > 0) {
@@ -234,7 +234,7 @@ class SparepartExport implements
                     }
 
                     // Border untuk seluruh tabel
-                    $sheet->getStyle('A5:J' . $endRow)->applyFromArray([
+                    $sheet->getStyle('A4:J' . $endRow)->applyFromArray([
                         'borders' => [
                             'allBorders' => [
                                 'borderStyle' => Border::BORDER_THIN,
