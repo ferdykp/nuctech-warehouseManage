@@ -3,7 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Site;
-use App\Models\SparepartStock;
+use App\Models\Sparepart;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -24,32 +24,29 @@ class SparepartExport implements
     WithCustomStartCell,
     WithEvents
 {
-    protected $stocks;
+    protected $spareparts;
     protected $site;
 
     public function __construct(string $siteCode)
     {
         $this->site = Site::with('branch')->where('slug', $siteCode)->firstOrFail();
 
-        // 🟢 FIX: Diurutkan berdasarkan nama item (A-Z), lalu berdasarkan kondisi
-        $this->stocks = SparepartStock::with(['sparepart.category', 'site'])
-            ->where('site_id', $this->site->id)
-            ->whereHas('sparepart') // Memastikan relation sparepart ada
-            ->join('spareparts', 'sparepart_stocks.sparepart_id', '=', 'spareparts.id')
-            ->orderBy('spareparts.item_name', 'asc')
-            ->orderBy('sparepart_stocks.condition', 'asc')
-            ->select('sparepart_stocks.*') // Memastikan atribut primary key stock tetap aman
+        // 🟢 Ambil Master Sparepart yang ada di Site ini dan urutkan A-Z
+        $this->spareparts = Sparepart::whereHas('stocks', function ($q) {
+            $q->where('site_id', $this->site->id);
+        })
+            ->with(['category', 'stocks' => function ($q) {
+                $q->where('site_id', $this->site->id);
+            }])
+            ->orderBy('item_name', 'asc')
             ->get();
     }
 
     public function collection()
     {
-        return $this->stocks;
+        return $this->spareparts;
     }
 
-    /**
-     * Data dimulai dari baris ke-5 (Header Tabel di baris 4)
-     */
     public function startCell(): string
     {
         return 'A4';
@@ -63,56 +60,70 @@ class SparepartExport implements
             'ITEM NAME',
             'SERIAL NUMBER',
             'TYPE / MODEL',
-            'QTY',
+            'TOTAL QTY',
             'UOM',
-            'CONDITION',
-            'REMARKS / NOTE',
+            'REMARKS / CONDITION DETAILS',
             'ATTACHMENT',
         ];
     }
 
-    public function map($stock): array
+    public function map($sparepart): array
     {
         static $no = 1;
-        $sparepart = $stock->sparepart;
 
-        $conditionLabel = match (strtolower($stock->condition)) {
-            'new'        => 'NEW',
-            'used-good'  => 'USED (GOOD)',
-            'damaged'    => 'DAMAGED',
-            'repair'     => 'REPAIRED',
-            default      => strtoupper($stock->condition),
-        };
+        // 1. Hitung TOTAL QTY dari semua kondisi di site ini
+        $totalQty = $sparepart->stocks->sum('qty');
+
+        // 2. Susun Rincian Kondisi (misal: "NEW: 15, USED (GOOD): 5")
+        $conditionDetails = [];
+        foreach ($sparepart->stocks as $stock) {
+            if ($stock->qty > 0) {
+                $condName = match (strtolower($stock->condition)) {
+                    'new'        => 'NEW',
+                    'used-good'  => 'USED (GOOD)',
+                    'damaged'    => 'DAMAGED',
+                    'repair'     => 'REPAIRED',
+                    default      => strtoupper($stock->condition),
+                };
+                $conditionDetails[] = "{$condName}: {$stock->qty}";
+            }
+        }
+
+        $conditionText = !empty($conditionDetails) ? implode(' | ', $conditionDetails) : '-';
+
+        // Gabungkan catatan manual (jika ada) dengan rincian kondisi
+        $finalRemarks = $conditionText;
+        if (!empty($sparepart->note)) {
+            $finalRemarks .= " (Note: {$sparepart->note})";
+        }
 
         return [
             $no++,
-            $sparepart?->category?->name ?? 'Uncategorized',
-            $sparepart?->item_name ?? '-',
-            $sparepart?->serial_number ?? '-',
-            $sparepart?->type ?? '-',
-            $stock->qty,
-            strtoupper($sparepart?->uom ?? 'PCS'),
-            $conditionLabel,
-            $sparepart?->note ?? '-',
-            '', // Kolom J untuk gambar
+            $sparepart->category?->name ?? 'Uncategorized',
+            $sparepart->item_name ?? '-',
+            $sparepart->serial_number ?? '-',
+            $sparepart->type ?? '-',
+            $totalQty,
+            strtoupper($sparepart->uom ?? 'PCS'),
+            $finalRemarks,
+            '', // Kolom I untuk Gambar
         ];
     }
 
     public function drawings()
     {
         $drawings = [];
-        $startRow = 5; // Baris data pertama adalah baris 5 (karena header di baris 4)
+        $startRow = 5;
 
-        foreach ($this->stocks as $index => $stock) {
-            $sparepart = $stock->sparepart;
-            if ($sparepart && $sparepart->image && file_exists(storage_path('app/public/' . $sparepart->image))) {
+        foreach ($this->spareparts as $index => $sparepart) {
+            if ($sparepart->image && file_exists(storage_path('app/public/' . $sparepart->image))) {
                 $drawing = new Drawing();
                 $drawing->setName($sparepart->item_name);
                 $drawing->setPath(storage_path('app/public/' . $sparepart->image));
                 $drawing->setHeight(55);
 
                 $currentRow = $startRow + $index;
-                $drawing->setCoordinates('J' . $currentRow);
+                $drawing->setCoordinates('I' . $currentRow);
                 $drawing->setOffsetX(15);
                 $drawing->setOffsetY(8);
                 $drawings[] = $drawing;
@@ -133,7 +144,7 @@ class SparepartExport implements
                 // ==========================================
                 // 1. HEADER TITLE BANNER (BARIS 1 - 2, CENTERED)
                 // ==========================================
-                $sheet->mergeCells('A1:J1');
+                $sheet->mergeCells('A1:I1');
                 $sheet->setCellValue('A1', 'SITE INVENTORY MONITORING REPORT');
                 $sheet->getStyle('A1')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 16, 'color' => ['rgb' => '0F172A']],
@@ -143,7 +154,7 @@ class SparepartExport implements
                     ],
                 ]);
 
-                $sheet->mergeCells('A2:J2');
+                $sheet->mergeCells('A2:I2');
                 $sheet->setCellValue('A2', "LOCATION: {$machineName}   •   BRANCH: {$branchName}");
                 $sheet->getStyle('A2')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 11, 'color' => ['rgb' => '475569']],
@@ -155,12 +166,12 @@ class SparepartExport implements
 
                 $sheet->getRowDimension(1)->setRowHeight(26);
                 $sheet->getRowDimension(2)->setRowHeight(20);
-                $sheet->getRowDimension(3)->setRowHeight(10); // Spasi kosong sebelum tabel
+                $sheet->getRowDimension(3)->setRowHeight(10);
 
                 // ==========================================
                 // 2. HEADER TABEL (BARIS 4)
                 // ==========================================
-                $sheet->getStyle('A4:J4')->applyFromArray([
+                $sheet->getStyle('A4:I4')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 10, 'color' => ['rgb' => 'FFFFFF']],
                     'alignment' => [
                         'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -181,36 +192,34 @@ class SparepartExport implements
                 $sheet->getColumnDimension('C')->setWidth(30);  // ITEM NAME
                 $sheet->getColumnDimension('D')->setWidth(20);  // SERIAL NUMBER
                 $sheet->getColumnDimension('E')->setWidth(18);  // TYPE
-                $sheet->getColumnDimension('F')->setWidth(10);  // QTY
+                $sheet->getColumnDimension('F')->setWidth(12);  // TOTAL QTY
                 $sheet->getColumnDimension('G')->setWidth(10);  // UOM
-                $sheet->getColumnDimension('H')->setWidth(16);  // CONDITION
-                $sheet->getColumnDimension('I')->setWidth(28);  // REMARKS
-                $sheet->getColumnDimension('J')->setWidth(18);  // ATTACHMENT
+                $sheet->getColumnDimension('H')->setWidth(36);  // REMARKS / CONDITION DETAILS
+                $sheet->getColumnDimension('I')->setWidth(18);  // ATTACHMENT
 
                 // ==========================================
                 // 4. STYLING BARIS DATA & ZEBRA STRIPING
                 // ==========================================
-                $totalData = count($this->stocks);
+                $totalData = count($this->spareparts);
                 $startRow = 5;
                 $endRow = $startRow + $totalData - 1;
 
                 if ($totalData > 0) {
                     for ($i = 0; $i < $totalData; $i++) {
                         $currentRow = $startRow + $i;
-                        $stock = $this->stocks[$i];
 
                         $sheet->getRowDimension($currentRow)->setRowHeight(55);
 
                         // Alignment
                         $sheet->getStyle('A' . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                         $sheet->getStyle('B' . $currentRow . ':E' . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                        $sheet->getStyle('F' . $currentRow . ':H' . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                        $sheet->getStyle('I' . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
-                        $sheet->getStyle('A' . $currentRow . ':J' . $currentRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+                        $sheet->getStyle('F' . $currentRow . ':G' . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                        $sheet->getStyle('H' . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+                        $sheet->getStyle('A' . $currentRow . ':I' . $currentRow)->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
 
-                        // Zebra striping (Selang seling warna abu muda)
+                        // Zebra striping
                         if ($i % 2 === 1) {
-                            $sheet->getStyle('A' . $currentRow . ':J' . $currentRow)->applyFromArray([
+                            $sheet->getStyle('A' . $currentRow . ':I' . $currentRow)->applyFromArray([
                                 'fill' => [
                                     'fillType' => Fill::FILL_SOLID,
                                     'startColor' => ['rgb' => 'F8FAFC'],
@@ -218,27 +227,14 @@ class SparepartExport implements
                             ]);
                         }
 
-                        // Style Warna Teks Kondisi
-                        $conditionColor = match (strtolower($stock->condition)) {
-                            'new'       => '059669', // Emerald Green
-                            'used-good' => '2563EB', // Blue
-                            'damaged'   => 'DC2626', // Red
-                            'repair'    => 'D97706', // Amber
-                            default     => '475569',
-                        };
-
-                        $sheet->getStyle('H' . $currentRow)->applyFromArray([
-                            'font' => ['bold' => true, 'color' => ['rgb' => $conditionColor]],
-                        ]);
-
-                        // Bold untuk QTY
+                        // Bold untuk Total QTY
                         $sheet->getStyle('F' . $currentRow)->applyFromArray([
-                            'font' => ['bold' => true],
+                            'font' => ['bold' => true, 'color' => ['rgb' => '2563EB']], // Warna Biru Bold
                         ]);
                     }
 
                     // Border untuk seluruh tabel
-                    $sheet->getStyle('A4:J' . $endRow)->applyFromArray([
+                    $sheet->getStyle('A4:I' . $endRow)->applyFromArray([
                         'borders' => [
                             'allBorders' => [
                                 'borderStyle' => Border::BORDER_THIN,
@@ -259,7 +255,7 @@ class SparepartExport implements
                     $sheet->setCellValue('A' . $summaryRow, 'TOTAL ACCUMULATED STOCK');
                     $sheet->setCellValue('F' . $summaryRow, "=SUM(F{$startRow}:F{$endRow})");
 
-                    $sheet->getStyle('A' . $summaryRow . ':J' . $summaryRow)->applyFromArray([
+                    $sheet->getStyle('A' . $summaryRow . ':I' . $summaryRow)->applyFromArray([
                         'font' => ['bold' => true, 'size' => 10, 'color' => ['rgb' => '0F172A']],
                         'alignment' => ['vertical' => Alignment::VERTICAL_CENTER],
                         'fill' => [
