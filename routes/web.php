@@ -28,8 +28,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [AuthController::class, 'login'])->name('login');
-Route::get('/login', fn () => redirect()->route('login'));
-Route::get('/login/auth', fn () => redirect()->route('login'));
+Route::get('/login', fn() => redirect()->route('login'));
+Route::get('/login/auth', fn() => redirect()->route('login'));
 Route::post('/login/auth', [AuthController::class, 'loginAuth'])->middleware('throttle:10,1')->name('auth.login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
@@ -45,7 +45,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::get('/session/status', function (\Illuminate\Http\Request $request) {
         return response()->json(['expires_at' => ((int) $request->session()->get('last_activity_at', now()->timestamp) + max(1, (int) config('session.idle_timeout', 30)) * 60) * 1000]);
     })->name('session.status');
-    Route::post('/session/activity', fn () => response()->noContent())->name('session.activity');
+    Route::post('/session/activity', fn() => response()->noContent())->name('session.activity');
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -72,7 +72,9 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         //     Route::get('/global/export', [ReportController::class, 'exportAll'])->name('export_all');
         // });
         Route::prefix('report')->name('report.')->group(function () {
-            Route::get('/', [ReportController::class, 'index'])->name('index');
+            // Route index utama menangani opsional slug atau wajib slug
+            Route::get('/{slug?}', [ReportController::class, 'index'])->name('index');
+
             Route::get('/create', [ReportController::class, 'create'])->name('create');
             Route::post('/', [ReportController::class, 'store'])->name('store');
             Route::get('/export', [ReportController::class, 'export'])->name('export');
@@ -187,7 +189,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::post('/{id}/restore', [AdminReimbursementController::class, 'restore'])->name('restore');
             Route::delete('/{id}/force-delete', [AdminReimbursementController::class, 'forceDelete'])->name('force_delete');
         });
-
     });
 
     // Filter Khusus Pemeriksa Berwenang

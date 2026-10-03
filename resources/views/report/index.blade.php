@@ -33,70 +33,76 @@
         </div>
 
         {{-- 2. FAILURE QUEUE CARD (PENDING DAMAGED STOCK) --}}
-        <div class="p-6 space-y-4 bg-white border shadow-xs border-amber-200/80 rounded-3xl">
-            <div class="flex items-center gap-2">
-                <span class="relative flex w-2.5 h-2.5">
-                    <span
-                        class="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping bg-amber-400"></span>
-                    <span class="relative inline-flex w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                </span>
-                <h3 class="text-xs font-extrabold tracking-wider uppercase text-amber-800">
-                    Pending Report Queue (Damaged Inventory Stock)
-                </h3>
-            </div>
+        @if (Auth::user()?->role === 'superadmin' ||
+                (Auth::user()?->role === 'team_leader' && Auth::user()?->site_id === $siteData->id))
 
-            <div class="overflow-hidden border border-slate-200/80 rounded-2xl">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[650px]">
-                        <thead>
-                            <tr
-                                class="border-b bg-amber-50/50 border-slate-200/80 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
-                                <th class="px-6 py-3.5">Sparepart Info</th>
-                                <th class="px-6 py-3.5">Site Location</th>
-                                <th class="px-6 py-3.5 text-center">Damaged Qty</th>
-                                <th class="px-6 py-3.5 text-center w-40">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
-                            @forelse($failureQueue as $item)
-                                <tr class="transition-colors hover:bg-amber-50/20">
-                                    <td class="px-6 py-3.5">
-                                        <span
-                                            class="block text-sm font-bold leading-snug text-slate-900">{{ $item->sparepart?->item_name ?? 'N/A' }}</span>
-                                        <span class="text-[10px] font-mono text-slate-400">SN:
-                                            {{ $item->sparepart?->serial_number ?? '-' }}</span>
-                                    </td>
-                                    <td class="px-6 py-3.5 font-bold text-slate-700">
-                                        {{ $item->site?->machine_name ?? 'N/A' }}
-                                    </td>
-                                    <td class="px-6 py-3.5 font-black text-center text-rose-600 text-sm">
-                                        {{ $item->qty }} <span
-                                            class="text-[10px] font-bold text-slate-400 uppercase">{{ $item->sparepart?->uom ?? 'PCS' }}</span>
-                                    </td>
-                                    <td class="px-6 py-3.5 text-center">
-                                        @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader']))
-                                            <a href="{{ route('report.create', ['stock_id' => $item->id]) }}"
-                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs transition-all active:scale-95">
-                                                <i class="fa-solid fa-file-pen"></i> Process Log
-                                            </a>
-                                        @else
-                                            <span class="text-xs italic text-slate-400">Waiting Admin</span>
-                                        @endif
-                                    </td>
+            <div class="p-6 space-y-4 bg-white border shadow-xs border-amber-200/80 rounded-3xl">
+                <div class="flex items-center gap-2">
+                    <span class="relative flex w-2.5 h-2.5">
+                        <span
+                            class="absolute inline-flex w-full h-full rounded-full opacity-75 animate-ping bg-amber-400"></span>
+                        <span class="relative inline-flex w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                    </span>
+                    <h3 class="text-xs font-extrabold tracking-wider uppercase text-amber-800">
+                        Pending Report Queue (Damaged Inventory Stock)
+                    </h3>
+                </div>
+
+                <div class="overflow-hidden border border-slate-200/80 rounded-2xl">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[650px]">
+                            <thead>
+                                <tr
+                                    class="border-b bg-amber-50/50 border-slate-200/80 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                                    <th class="px-6 py-3.5">Sparepart Info</th>
+                                    <th class="px-6 py-3.5">Site Location</th>
+                                    <th class="px-6 py-3.5 text-center">Damaged Qty</th>
+                                    <th class="px-6 py-3.5 text-center w-40">Action</th>
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="p-6 text-xs italic font-medium text-center text-slate-400">
-                                        <i class="mr-1.5 fa-solid fa-circle-check text-emerald-500"></i> No newly damaged
-                                        spareparts awaiting breakdown logs.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
+                                @forelse($failureQueue as $item)
+                                    <tr class="transition-colors hover:bg-amber-50/20">
+                                        <td class="px-6 py-3.5">
+                                            <span
+                                                class="block text-sm font-bold leading-snug text-slate-900">{{ $item->sparepart?->item_name ?? 'N/A' }}</span>
+                                            <span class="text-[10px] font-mono text-slate-400">SN:
+                                                {{ $item->sparepart?->serial_number ?? '-' }}</span>
+                                        </td>
+                                        <td class="px-6 py-3.5 font-bold text-slate-700">
+                                            {{ $item->site?->machine_name ?? 'N/A' }}
+                                        </td>
+                                        <td class="px-6 py-3.5 font-black text-center text-rose-600 text-sm">
+                                            {{ $item->qty }} <span
+                                                class="text-[10px] font-bold text-slate-400 uppercase">{{ $item->sparepart?->uom ?? 'PCS' }}</span>
+                                        </td>
+                                        <td class="px-6 py-3.5 text-center">
+                                            @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader']))
+                                                <a href="{{ route('report.create', ['stock_id' => $item->id]) }}"
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs transition-all active:scale-95">
+                                                    <i class="fa-solid fa-file-pen"></i> Process Log
+                                                </a>
+                                            @else
+                                                <span class="text-xs italic text-slate-400">Waiting Admin</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4"
+                                            class="p-6 text-xs italic font-medium text-center text-slate-400">
+                                            <i class="mr-1.5 fa-solid fa-circle-check text-emerald-500"></i> No newly
+                                            damaged
+                                            spareparts awaiting breakdown logs.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
+        @endif
 
         {{-- 3. MAIN TABLE & TOOLBAR CARD --}}
         <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">

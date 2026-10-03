@@ -37,4 +37,8 @@ class Site extends Model
     {
         return $this->hasMany(SparepartStock::class, 'site_id');
     }
+    public function report()
+    {
+        return $this->hasMany(Site::class, 'site_id');
+    }
 }

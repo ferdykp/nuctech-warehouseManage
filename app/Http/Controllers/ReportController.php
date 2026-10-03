@@ -13,18 +13,50 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
-    // Mengambil data report beserta antrean kegagalan (Failure Queue)
-    public function index()
+    private function getSite(string $slug): Site
     {
-        $report = Report::latest()->paginate(10);
+        return Site::where('slug', $slug)->firstOrFail();
+    }
 
-        // Ambil sparepart berstatus 'damaged' yang qty-nya > 0 untuk antrean
-        $failureQueue = SparepartStock::where('condition', 'damaged')
+    private function authorizeSiteAccess(Site $siteData)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'superadmin' && (int) $user->site_id !== (int) $siteData->id) {
+            abort(403, 'Anda tidak memiliki akses ke site ini.');
+        }
+    }
+    // Mengambil data report beserta antrean kegagalan (Failure Queue)
+    public function index(Request $request, ?string $slug = null)
+    {
+        // Jika diakses tanpa slug, arahkan ke site user atau site pertama
+        if (!$slug) {
+            $user = Auth::user();
+            if ($user->role === 'team_leader' && $user->site) {
+                return redirect()->route('report.index', $user->site->slug);
+            }
+            $siteData = Site::first();
+            abort_unless($siteData, 404, 'Data site tidak ditemukan.');
+            return redirect()->route('report.index', $siteData->slug);
+        }
+
+        $siteData = $this->getSite($slug);
+        $this->authorizeSiteAccess($siteData);
+
+        // 🟢 Filter laporan berdasarkan nama mesin/site yang cocok dengan siteData->machine_name
+        $report = Report::where('site_machine', $siteData->machine_name)
+            ->latest()
+            ->paginate(10);
+
+        // Ambil sparepart berstatus 'damaged' yang qty-nya > 0 untuk antrean di site ini
+        $failureQueue = SparepartStock::where('site_id', $siteData->id)
+            ->where('condition', 'damaged')
             ->where('qty', '>', 0)
             ->with(['sparepart', 'site'])
             ->get();
 
-        return view('report.index', compact('report', 'failureQueue'));
+        $all_sites = Site::with('branch')->where('id', '!=', $siteData->id)->get();
+
+        return view('report.index', compact('report', 'failureQueue', 'siteData', 'slug', 'all_sites'));
     }
 
     // Menerima parameter opsional stock_id jika diakses dari tombol "Process Log"
@@ -253,7 +285,7 @@ class ReportController extends Controller
 
     public function export()
     {
-        return Excel::download(new \App\Exports\ReportExport(), 'Failure_Reports_'.now()->format('Y-m-d').'.xlsx');
+        return Excel::download(new \App\Exports\ReportExport(), 'Failure_Reports_' . now()->format('Y-m-d') . '.xlsx');
     }
 
     public function exportAll(Request $request)
