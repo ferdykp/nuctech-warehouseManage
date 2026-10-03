@@ -1141,4 +1141,22 @@ class AdminReimbursementController extends Controller
 
         return redirect()->route('reimbursements.index')->with('success', 'Reimbursement claim updated successfully.');
     }
+
+    public function fastApprove($id)
+    {
+        $reimbursement = Reimbursement::findOrFail($id);
+        $user = auth()->user();
+
+        // Pastikan hanya role tertentu yang bisa melakukan fast-track
+        if (!in_array($user->role, ['superadmin', 'team_leader', 'station_master', 'manager'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $reimbursement->update([
+            'status' => 'approved',
+            'approved_by' => $user->id,
+        ]);
+
+        return redirect()->route('reimbursements.index')->with('success', 'Klaim berhasil ditandai sebagai disetujui (Fast-Track Approved).');
+    }
 }

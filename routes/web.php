@@ -189,6 +189,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::post('/{id}/restore', [AdminReimbursementController::class, 'restore'])->name('restore');
             Route::delete('/{id}/force-delete', [AdminReimbursementController::class, 'forceDelete'])->name('force_delete');
         });
+        Route::post('/reimbursements/{id}/fast-approve', [AdminReimbursementController::class, 'fastApprove'])->name('reimbursements.fast_approve');
     });
 
     // Filter Khusus Pemeriksa Berwenang

@@ -3,74 +3,107 @@
 @section('title', 'Reimbursement Claims')
 
 @section('content')
-    <div class="w-full space-y-6">
+    <div class="w-full space-y-5">
 
-        {{-- 1. HEADER CARD --}}
-        <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {{-- 1. HEADER & METRIC SUMMARY --}}
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+                    {{ $pageTitle ?? 'Reimbursement Claims' }}
+                </h1>
+                <p class="mt-0.5 text-xs text-slate-500 sm:text-sm">
+                    Manage, audit, and verify operational expense claims across site units.
+                </p>
+            </div>
+
+            <div class="flex items-center gap-2.5">
+                <a href="{{ route('reimbursements.trash') }}"
+                    class="inline-flex items-center h-10 gap-2 px-4 text-xs font-semibold transition-all bg-white border text-slate-700 border-slate-200 rounded-xl hover:bg-slate-50 shadow-2xs">
+                    <i class="fa-solid fa-box-archive text-slate-400"></i>
+                    <span>Recycle Bin</span>
+                </a>
+                <a href="{{ route('reimbursements.create') }}"
+                    class="inline-flex items-center gap-2 h-10 p-4 text-xs font-semibold text-white bg-slate-900 rounded-xl hover:bg-slate-800 transition-all shadow-sm active:scale-[0.98]">
+                    <i class="fa-solid fa-plus text-[11px]"></i>
+                    <span>File New Claim</span>
+                </a>
+            </div>
+        </div>
+
+        {{-- KPI STATS CARDS --}}
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div class="flex items-center justify-between p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs">
                 <div>
-                    <div
-                        class="inline-flex items-center gap-2 px-3 py-1 mb-2 text-xs font-bold border rounded-full bg-amber-50 border-amber-100 text-amber-800">
-                        <i class="fa-solid fa-receipt text-[10px]"></i> Expense Tracking
-                    </div>
-                    <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                        {{ $pageTitle ?? 'Reimbursement Claims' }}
-                    </h1>
-                    <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
-                        Track, audit, and manage operational expense claims across all site units.
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block">Total
+                        Approved</span>
+                    <p id="totalApprovedAmountText" class="text-lg font-bold text-slate-900 font-mono mt-0.5">
+                        Rp {{ number_format((float) ($totalApprovedAmount ?? 0), 0, ',', '.') }}
                     </p>
                 </div>
-
-                {{-- Quick Stats Approved Funds --}}
                 <div
-                    class="flex items-center gap-3.5 px-5 py-3 bg-slate-50/80 border border-slate-200/80 rounded-2xl shrink-0">
-                    <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100">
-                        <i class="text-lg fa-solid fa-money-bill-wave"></i>
-                    </div>
-                    <div>
-                        <span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider block">Total Approved
-                            Funds</span>
-                        <span id="totalApprovedAmountText" class="text-lg font-black sm:text-xl text-slate-900">
-                            Rp {{ number_format((float) ($totalApprovedAmount ?? 0), 0, ',', '.') }}
-                        </span>
-                    </div>
+                    class="flex items-center justify-center w-10 h-10 border rounded-xl bg-emerald-50 text-emerald-600 shrink-0 border-emerald-100">
+                    <i class="text-sm fa-solid fa-wallet"></i>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs">
+                <div>
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block">Total
+                        Records</span>
+                    <p class="text-lg font-bold text-slate-900 font-mono mt-0.5">
+                        {{ $reimbursements->total() }} <span
+                            class="font-sans text-xs font-normal text-slate-400">Claims</span>
+                    </p>
+                </div>
+                <div
+                    class="flex items-center justify-center w-10 h-10 border rounded-xl bg-slate-100 text-slate-600 shrink-0 border-slate-200">
+                    <i class="text-sm fa-solid fa-receipt"></i>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs">
+                <div>
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block">Filter
+                        Period</span>
+                    <p class="mt-1 text-xs font-semibold truncate text-slate-800">
+                        {{ request('month') && isset($months[request('month')]) ? $months[request('month')] : 'All Months' }}
+                    </p>
+                </div>
+                <div
+                    class="flex items-center justify-center w-10 h-10 border rounded-xl bg-slate-100 text-slate-600 shrink-0 border-slate-200">
+                    <i class="text-sm fa-regular fa-calendar-check"></i>
                 </div>
             </div>
         </div>
 
-        {{-- 2. MAIN TABLE & TOOLBAR CARD --}}
-        <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
+        {{-- 2. TABLE CONTAINER --}}
+        <div class="overflow-hidden bg-white border border-slate-200/90 rounded-2xl shadow-2xs">
 
-            {{-- TOOLBAR & FILTER SECTION --}}
+            {{-- TOOLBAR (FILTER & EXPORT BAR) --}}
             <div
-                class="flex flex-col justify-between gap-4 p-5 border-b sm:p-6 lg:flex-row lg:items-center border-slate-100 bg-slate-50/30">
-
-                {{-- SEARCH & MONTH FILTER FORM --}}
+                class="p-4 border-b border-slate-100 bg-slate-50/40 flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
                 <form id="reimburseFilterForm" action="{{ route('reimbursements.index') }}" method="GET"
-                    onsubmit="return false;" class="flex flex-col flex-1 gap-3 sm:flex-row sm:items-center">
+                    onsubmit="return false;" class="flex flex-wrap items-center gap-2.5 flex-1">
 
-                    {{-- SEARCH INPUT WITH ICON --}}
-                    <div class="relative w-full sm:w-72">
+                    {{-- Search Input --}}
+                    <div class="relative w-full sm:w-80">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
-                            <i class="text-xs fa-solid fa-magnifying-glass" id="searchIcon"></i>
+                            <i class="text-xs fa-solid fa-magnifying-glass"></i>
                         </span>
                         <input type="text" id="reimburseSearchInput" name="search" value="{{ request('search') }}"
-                            placeholder="Search staff, route, invoice..." autocomplete="off"
-                            class="w-full py-2.5 pl-10 pr-8 text-xs font-medium bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all shadow-2xs">
+                            placeholder="Search requester, route, or invoice ref..." autocomplete="off"
+                            class="w-full h-10 pl-9.5 pr-8 text-xs bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all shadow-2xs">
 
                         <button type="button" id="clearSearchBtn" onclick="clearSearch()"
                             class="{{ request('search') ? '' : 'hidden' }} absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 cursor-pointer">
-                            <i class="text-xs fa-solid fa-xmark"></i>
+                            <i class="text-xs fa-solid fa-circle-xmark"></i>
                         </button>
                     </div>
 
-                    {{-- MONTH FILTER SELECT WITH ICON --}}
-                    <div class="relative w-full sm:w-auto">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-amber-600">
-                            <i class="text-xs fa-solid fa-calendar-days"></i>
-                        </span>
+                    {{-- Month Dropdown --}}
+                    <div class="relative w-full sm:w-44">
                         <select id="reimburseMonthSelect" name="month"
-                            class="w-full sm:w-48 py-2.5 pl-9 pr-10 text-xs font-bold bg-amber-50/60 border border-amber-200/80 rounded-xl text-amber-900 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 appearance-none cursor-pointer transition-all">
+                            class="w-full h-10 pl-3.5 pr-8 text-xs bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 appearance-none cursor-pointer transition-all shadow-2xs">
                             <option value="">All Months</option>
                             @php
                                 $months = [
@@ -94,198 +127,175 @@
                                 </option>
                             @endforeach
                         </select>
-                        <span
-                            class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-amber-600">
-                            <i class="text-[10px] fa-solid fa-chevron-down"></i>
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
                         </span>
                     </div>
 
                 </form>
 
-                {{-- ACTION BUTTONS --}}
-                <div class="flex flex-wrap items-center gap-2.5">
-                    {{-- TOMBOL RECYCLE BIN / ARCHIVE --}}
-                    <a href="{{ route('reimbursements.trash') }}"
-                        class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200/80 rounded-xl hover:bg-amber-100 active:scale-95 transition-all shadow-2xs cursor-pointer">
-                        <i class="fa-solid fa-box-archive text-amber-600"></i>
-                        <span>Recycle Bin</span>
-                    </a>
-
-                    <a href="{{ route('reimbursements.create') }}"
-                        class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md shadow-amber-600/20 active:scale-95">
-                        <i class="text-xs fa-solid fa-plus"></i>
-                        <span>File New Claim</span>
-                    </a>
+                {{-- Export Actions --}}
+                <div class="flex items-center gap-2 shrink-0">
                     <a href="{{ route('reimbursements.export_pdf', ['month' => request('month')]) }}" id="pdfExportLink"
-                        download
-                        class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-600/20 active:scale-95">
-                        <i class="fa-solid fa-file-pdf"></i> PDF Summary
+                        download title="Export PDF"
+                        class="h-10 px-3.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-2xs inline-flex items-center gap-2 active:scale-[0.98]">
+                        <i class="text-sm fa-solid fa-file-pdf text-rose-500"></i>
+                        <span>Export PDF</span>
                     </a>
-                    <button type="button" onclick="exportExcelReport()"
-                        class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer">
-                        <i class="fa-solid fa-file-excel"></i> Export Excel
+                    <button type="button" onclick="exportExcelReport()" title="Export Excel"
+                        class="h-10 px-3.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-2xs inline-flex items-center gap-2 active:scale-[0.98] cursor-pointer">
+                        <i class="text-sm fa-solid fa-file-excel text-emerald-600"></i>
+                        <span>Export Excel</span>
                     </button>
                 </div>
             </div>
 
-            {{-- DYNAMIC DATA CONTAINER (AJAX UPDATED) --}}
-            <div id="reimbursementDataWrapper" class="transition-opacity duration-200">
+            {{-- DYNAMIC DATA WRAPPER --}}
+            <div id="reimbursementDataWrapper" class="transition-opacity duration-150">
 
-                {{-- SUB-HEADER TEXT SHOWING CURRENT FILTER STATE --}}
-                <div
-                    class="flex flex-col gap-2 px-6 py-4 border-b border-slate-100 bg-slate-50/50 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="flex items-center gap-2">
-                        <div class="flex items-center justify-center w-6 h-6 rounded-lg bg-amber-100 text-amber-700">
-                            <i class="text-xs fa-solid fa-filter"></i>
-                        </div>
-                        <h2 id="currentFilterLabel" class="text-xs font-extrabold tracking-wider uppercase text-slate-700">
-                            @if (request('month') && isset($months[request('month')]))
-                                Claim Records for {{ $months[request('month')] }}
-                            @else
-                                All Months Claim Records
-                            @endif
-                            @if (request('search'))
-                                <span class="ml-1 font-bold normal-case text-amber-600">(Filtered by:
-                                    "{{ request('search') }}")</span>
-                            @endif
-                        </h2>
-                    </div>
-                    <span class="text-[11px] font-semibold text-slate-400">
-                        Showing {{ $reimbursements->total() }} record(s)
-                    </span>
-                </div>
-
-                {{-- DESKTOP VIEW TABLE --}}
+                {{-- DESKTOP TABLE --}}
                 <div id="desktopTableContainer" class="hidden overflow-x-auto md:block">
-                    <table class="w-full text-left border-collapse min-w-[750px]">
+                    <table class="w-full text-left border-collapse min-w-[700px]">
                         <thead>
                             <tr
-                                class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
-                                <th class="w-16 px-6 py-4 text-center">No</th>
-                                <th class="px-6 py-4">Requester / Date</th>
-                                <th class="px-6 py-4">Category</th>
-                                <th class="px-6 py-4">Details / Route</th>
-                                <th class="px-6 py-4 text-center">Amount</th>
-                                <th class="px-6 py-4 text-center">No. Invoice</th>
-                                <th class="px-6 py-4 text-center">Status</th>
-                                <th class="w-48 px-6 py-4 text-right">Actions</th>
+                                class="text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50 border-b border-slate-100">
+                                <th class="px-5 py-3">Requester & Category</th>
+                                <th class="px-5 py-3 text-right">Amount</th>
+                                <th class="px-5 py-3 text-center">Status</th>
+                                <th class="w-48 px-5 py-3 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
                             @forelse ($reimbursements as $r)
-                                <tr class="transition-colors hover:bg-slate-50/60">
-                                    <td class="px-6 py-4 font-bold text-center text-slate-400">
-                                        {{ ($reimbursements->currentPage() - 1) * $reimbursements->perPage() + $loop->iteration }}
-                                    </td>
-                                    <td class="px-6 py-4">
+                                <tr class="transition-colors hover:bg-slate-50/80">
+                                    {{-- Column 1: Requester, Category, Date, & Route/Invoice Ref --}}
+                                    <td class="px-5 py-3.5">
                                         <div class="flex items-center gap-3">
                                             <div
-                                                class="flex items-center justify-center w-8 h-8 text-xs font-black border text-amber-700 bg-amber-50 rounded-xl shrink-0 border-amber-100">
+                                                class="flex items-center justify-center w-8 h-8 text-xs font-bold border text-slate-700 bg-slate-100 border-slate-200 rounded-xl shrink-0">
                                                 {{ strtoupper(substr($r->person_name ?? '?', 0, 1)) }}
                                             </div>
-                                            <div>
-                                                <p class="text-sm font-bold leading-snug text-slate-900">
-                                                    {{ $r->person_name }}</p>
-                                                <p class="text-[11px] font-medium text-slate-400 mt-0.5">
-                                                    {{ \Carbon\Carbon::parse($r->date)->format('d M Y') }}
-                                                </p>
+                                            <div class="space-y-0.5">
+                                                <div class="flex items-center gap-2">
+                                                    <p class="font-bold leading-tight text-slate-900">{{ $r->person_name }}
+                                                    </p>
+                                                    <span
+                                                        class="px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-wider rounded border
+                                                        {{ $r->category == 'transportation' ? 'bg-blue-50 text-blue-700 border-blue-200/60' : ($r->category == 'delivery' ? 'bg-purple-50 text-purple-700 border-purple-200/60' : 'bg-slate-100 text-slate-600 border-slate-200') }}">
+                                                        {{ $r->category }}
+                                                    </span>
+                                                </div>
+                                                <div class="flex items-center gap-2 text-[11px] text-slate-400">
+                                                    <span>{{ \Carbon\Carbon::parse($r->date)->format('d M Y') }}</span>
+                                                    @if (in_array($r->category, ['transportation', 'delivery']))
+                                                        <span>•</span>
+                                                        <span class="text-slate-500 font-normal truncate max-w-[180px]">
+                                                            {{ $r->from_location }} <i
+                                                                class="fa-solid fa-arrow-right text-[9px] mx-0.5 text-slate-300"></i>
+                                                            {{ $r->to_location }}
+                                                        </span>
+                                                    @elseif($r->comment)
+                                                        <span>•</span>
+                                                        <span class="font-mono text-slate-500 text-[10px]">Ref:
+                                                            {{ $r->comment }}</span>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4">
-                                        <span
-                                            class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg uppercase tracking-wider
-                                                {{ $r->category == 'transportation' ? 'bg-blue-50 text-blue-700 border border-blue-200/60' : ($r->category == 'delivery' ? 'bg-purple-50 text-purple-700 border border-purple-200/60' : 'bg-slate-100 text-slate-700 border border-slate-200') }}">
-                                            {{ $r->category }}
-                                        </span>
+
+                                    {{-- Column 2: Amount --}}
+                                    <td class="px-5 py-3.5 text-right font-mono font-bold text-slate-900 text-sm">
+                                        Rp {{ number_format((float) ($r->amount ?? 0), 0, ',', '.') }}
                                     </td>
-                                    <td class="px-6 py-4">
-                                        @if (in_array($r->category, ['transportation', 'delivery']))
-                                            <p class="text-xs font-semibold text-slate-700">
-                                                <i class="mr-1 fa-solid fa-location-dot text-rose-500"></i>
-                                                {{ $r->from_location }}
-                                                <i class="mx-1 fa-solid fa-arrow-right text-slate-400 text-[10px]"></i>
-                                                {{ $r->to_location }}
-                                            </p>
-                                        @else
-                                            <p class="text-xs italic text-slate-400">No routing required</p>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-4 text-center">
-                                        <span class="text-xs font-black text-slate-900">
-                                            Rp {{ number_format((float) ($r->amount ?? 0), 0, ',', '.') }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-center">
-                                        <span class="font-mono text-xs font-bold text-slate-600">
-                                            {{ $r->comment ?: '-' }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-center">
+
+                                    {{-- Column 3: Status --}}
+                                    <td class="px-5 py-3.5 text-center">
                                         @if ($r->status == 'approved')
                                             <span
-                                                class="px-2.5 py-1 text-[10px] font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg uppercase">Approved</span>
+                                                class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200/80 rounded-md">
+                                                <i class="fa-solid fa-check text-[9px]"></i> Approved
+                                            </span>
                                         @elseif($r->status == 'rejected')
                                             <span
-                                                class="px-2.5 py-1 text-[10px] font-extrabold text-rose-800 bg-rose-50 border border-rose-200 rounded-lg uppercase">Rejected</span>
+                                                class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 border border-rose-200/80 rounded-md">
+                                                <i class="fa-solid fa-xmark text-[9px]"></i> Rejected
+                                            </span>
                                         @else
                                             <span
-                                                class="px-2.5 py-1 text-[10px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg uppercase animate-pulse">
-                                                {{ strtoupper(str_replace('_', ' ', $r->status)) }}
+                                                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200/80 rounded-md">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                                {{ str_replace('_', ' ', $r->status) }}
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 text-right">
-                                        <div class="flex items-center justify-end gap-1.5">
-                                            {{-- EDIT --}}
-                                            <a href="{{ route('reimbursements.edit', $r->id) }}"
-                                                class="flex items-center justify-center w-8 h-8 transition-all border rounded-xl text-amber-600 bg-amber-50 border-amber-100 hover:bg-amber-600 hover:text-white active:scale-95"
-                                                title="Edit Claim">
-                                                <i class="text-xs fa-solid fa-pen-to-square"></i>
-                                            </a>
 
-                                            {{-- SINGLE PDF --}}
-                                            <a href="{{ route('reimbursements.export_single_pdf', $r->id) }}" download
-                                                class="flex items-center justify-center w-8 h-8 transition-all border rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
-                                                title="Download Invoice PDF">
-                                                <i class="text-xs fa-solid fa-file-pdf"></i>
-                                            </a>
+                                    {{-- Column 4: Direct Action Buttons --}}
+                                    <td class="px-5 py-3.5 text-right">
+                                        <div class="flex items-center justify-end gap-1">
+                                            {{-- Fast Approve --}}
+                                            @if (in_array($r->status, ['pending', 'pending_leader', 'pending_station', 'pending_manager']) &&
+                                                    in_array(Auth::user()->role, ['superadmin', 'station_master', 'manager']))
+                                                <form action="{{ route('reimbursements.fast_approve', $r->id) }}"
+                                                    method="POST" class="inline">
+                                                    @csrf
+                                                    <button type="submit" title="Fast Approve"
+                                                        class="inline-flex items-center justify-center transition-colors border rounded-lg cursor-pointer w-7 h-7 text-emerald-600 bg-emerald-50 border-emerald-100 hover:bg-emerald-600 hover:text-white">
+                                                        <i class="fa-solid fa-check-double text-[11px]"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
 
-                                            {{-- QUICK VIEW --}}
+                                            {{-- Quick View Details --}}
                                             <button type="button" onclick="openDetailModal(this)"
                                                 data-reimbursement="{{ json_encode($r, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) }}"
-                                                class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-slate-600 bg-slate-100 border-slate-200 hover:bg-slate-900 hover:text-white active:scale-95"
-                                                title="Quick View Details">
-                                                <i class="text-xs fa-solid fa-receipt"></i>
+                                                title="View Details & Receipt Proof"
+                                                class="inline-flex items-center justify-center transition-colors border rounded-lg cursor-pointer w-7 h-7 text-slate-600 bg-slate-100 border-slate-200/80 hover:bg-slate-900 hover:text-white">
+                                                <i class="fa-solid fa-eye text-[11px]"></i>
                                             </button>
 
-                                            {{-- SIGN APPROVAL --}}
+                                            {{-- Sign Approval --}}
                                             <a href="{{ route('reimbursements.approval', $r->id) }}"
-                                                class="flex items-center justify-center w-8 h-8 text-blue-600 transition-all border border-blue-100 rounded-xl bg-blue-50 hover:bg-blue-600 hover:text-white active:scale-95"
-                                                title="Digital Signature Page">
-                                                <i class="text-xs fa-solid fa-pen-nib"></i>
+                                                title="Digital Signature"
+                                                class="inline-flex items-center justify-center text-blue-600 transition-colors border border-blue-100 rounded-lg w-7 h-7 bg-blue-50 hover:bg-blue-600 hover:text-white">
+                                                <i class="fa-solid fa-pen-nib text-[11px]"></i>
                                             </a>
 
-                                            {{-- CANCEL / DELETE TO RECYCLE BIN --}}
+                                            {{-- Download PDF --}}
+                                            <a href="{{ route('reimbursements.export_single_pdf', $r->id) }}" download
+                                                title="Download PDF Invoice"
+                                                class="inline-flex items-center justify-center transition-colors border rounded-lg w-7 h-7 text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white">
+                                                <i class="fa-solid fa-file-pdf text-[11px]"></i>
+                                            </a>
+
+                                            {{-- Edit --}}
+                                            <a href="{{ route('reimbursements.edit', $r->id) }}" title="Edit Claim"
+                                                class="inline-flex items-center justify-center transition-colors border rounded-lg w-7 h-7 text-slate-500 bg-slate-50 border-slate-200/80 hover:bg-slate-200 hover:text-slate-800">
+                                                <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+                                            </a>
+
+                                            {{-- Archive --}}
                                             <button type="button"
                                                 onclick="confirmCancel('{{ $r->id }}', '{{ $r->person_name }}', 'Rp {{ number_format((float) ($r->amount ?? 0), 0, ',', '.') }}')"
-                                                class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
-                                                title="Move to Recycle Bin">
-                                                <i class="text-xs fa-solid fa-trash-can"></i>
+                                                title="Move to Recycle Bin"
+                                                class="inline-flex items-center justify-center transition-colors border rounded-lg cursor-pointer w-7 h-7 text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white">
+                                                <i class="fa-solid fa-trash-can text-[11px]"></i>
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="p-12 text-center text-slate-400">
-                                        <div
-                                            class="flex items-center justify-center w-12 h-12 mx-auto mb-3 text-xl rounded-2xl bg-slate-100 text-slate-400">
-                                            <i class="fa-solid fa-receipt"></i>
+                                    <td colspan="4" class="p-10 text-center bg-slate-50/30">
+                                        <div class="max-w-xs mx-auto text-center">
+                                            <div
+                                                class="flex items-center justify-center w-10 h-10 mx-auto mb-2 border rounded-xl bg-slate-100 text-slate-400 border-slate-200">
+                                                <i class="text-sm fa-solid fa-receipt"></i>
+                                            </div>
+                                            <p class="text-xs font-bold text-slate-800">No Claims Found</p>
+                                            <p class="mt-0.5 text-[11px] text-slate-400">There are no reimbursement records
+                                                matching your filter criteria.</p>
                                         </div>
-                                        <p class="text-sm font-bold text-slate-800">No Claims Found</p>
-                                        <p class="mt-1 text-xs text-slate-400">We couldn't find any reimbursement claims
-                                            matching your filter criteria.</p>
                                     </td>
                                 </tr>
                             @endforelse
@@ -296,111 +306,107 @@
                 {{-- MOBILE VIEW CARDS --}}
                 <div id="mobileCardContainer" class="p-4 space-y-3 md:hidden bg-slate-50/50">
                     @forelse ($reimbursements as $r)
-                        <div class="p-4 space-y-3 bg-white border border-slate-200/80 shadow-2xs rounded-2xl">
+                        <div class="p-3.5 bg-white border border-slate-200 rounded-xl space-y-2.5 shadow-2xs">
                             <div class="flex items-start justify-between gap-2">
-                                <div class="flex items-center gap-2.5">
+                                <div class="flex items-center gap-2">
                                     <div
-                                        class="flex items-center justify-center w-8 h-8 text-xs font-black border rounded-xl text-amber-700 bg-amber-50 shrink-0 border-amber-100">
+                                        class="w-7 h-7 font-bold text-slate-700 bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-center text-[11px] shrink-0">
                                         {{ strtoupper(substr($r->person_name ?? '?', 0, 1)) }}
                                     </div>
                                     <div>
-                                        <p class="text-xs font-bold text-slate-900">{{ $r->person_name }}</p>
-                                        <p class="text-[10px] text-slate-400">
-                                            {{ \Carbon\Carbon::parse($r->date)->format('d M Y') }}
+                                        <p class="text-xs font-bold leading-tight text-slate-900">{{ $r->person_name }}
                                         </p>
+                                        <p class="text-[10px] text-slate-400">
+                                            {{ \Carbon\Carbon::parse($r->date)->format('d M Y') }}</p>
                                     </div>
                                 </div>
-                                <div>
-                                    @if ($r->status == 'approved')
-                                        <span
-                                            class="px-2 py-0.5 text-[9px] font-bold text-emerald-800 bg-emerald-50 rounded-md uppercase border border-emerald-200">Approved</span>
-                                    @elseif($r->status == 'rejected')
-                                        <span
-                                            class="px-2 py-0.5 text-[9px] font-bold text-rose-800 bg-rose-50 rounded-md uppercase border border-rose-200">Rejected</span>
-                                    @else
-                                        <span
-                                            class="px-2 py-0.5 text-[9px] font-bold text-amber-800 bg-amber-50 rounded-md uppercase border border-amber-200 animate-pulse">Pending</span>
+                                <span
+                                    class="px-2 py-0.5 text-[9px] font-bold rounded border uppercase
+                                    {{ $r->status == 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : ($r->status == 'rejected' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200') }}">
+                                    {{ str_replace('_', ' ', $r->status) }}
+                                </span>
+                            </div>
+
+                            <div class="flex items-center justify-between p-2 text-xs rounded-lg bg-slate-50">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase">{{ $r->category }}</span>
+                                <span class="font-mono font-bold text-slate-900">Rp
+                                    {{ number_format((float) ($r->amount ?? 0), 0, ',', '.') }}</span>
+                            </div>
+
+                            <div class="flex items-center justify-between gap-1 pt-1 border-t border-slate-100">
+                                <div class="flex gap-1">
+                                    <a href="{{ route('reimbursements.edit', $r->id) }}"
+                                        class="p-2 text-xs rounded-lg text-slate-600 bg-slate-100">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                    <button type="button" onclick="openDetailModal(this)"
+                                        data-reimbursement="{{ json_encode($r, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) }}"
+                                        class="p-2 text-xs rounded-lg cursor-pointer text-slate-600 bg-slate-100">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                    <button type="button"
+                                        onclick="confirmCancel('{{ $r->id }}', '{{ $r->person_name }}', 'Rp {{ number_format((float) ($r->amount ?? 0), 0, ',', '.') }}')"
+                                        class="p-2 text-xs rounded-lg cursor-pointer text-rose-600 bg-rose-50">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+
+                                <div class="flex items-center gap-1.5">
+                                    @if (in_array($r->status, ['pending', 'pending_leader', 'pending_station', 'pending_manager']) &&
+                                            in_array(Auth::user()->role, ['superadmin', 'station_master', 'manager']))
+                                        <form action="{{ route('reimbursements.fast_approve', $r->id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit"
+                                                class="px-2.5 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl cursor-pointer">
+                                                <i class="fa-solid fa-check-double"></i>
+                                            </button>
+                                        </form>
                                     @endif
+                                    <a href="{{ route('reimbursements.approval', $r->id) }}"
+                                        class="px-3 py-1 text-xs font-bold text-white bg-slate-900 rounded-xl">
+                                        Sign
+                                    </a>
                                 </div>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-2 p-3 text-xs border bg-slate-50 rounded-xl border-slate-100">
-                                <div>
-                                    <span class="block text-[10px] font-bold text-slate-400 uppercase">Category</span>
-                                    <span
-                                        class="font-bold text-slate-800 uppercase text-[11px]">{{ $r->category }}</span>
-                                </div>
-                                <div>
-                                    <span class="block text-[10px] font-bold text-slate-400 uppercase">Amount</span>
-                                    <span class="font-black text-slate-900 text-[11px]">Rp
-                                        {{ number_format((float) ($r->amount ?? 0), 0, ',', '.') }}</span>
-                                </div>
-                            </div>
-
-                            <div class="flex gap-2 pt-1">
-                                <a href="{{ route('reimbursements.edit', $r->id) }}"
-                                    class="p-2 text-amber-700 bg-amber-50 border border-amber-100 hover:bg-amber-100 rounded-xl font-bold text-xs flex-1 text-center flex justify-center items-center gap-1.5 transition-colors">
-                                    <i class="fa-solid fa-pen-to-square"></i> Edit
-                                </a>
-
-                                <button type="button" onclick="openDetailModal(this)"
-                                    data-reimbursement="{{ json_encode($r, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) }}"
-                                    class="p-2 text-slate-700 bg-slate-100 border border-slate-200 hover:bg-slate-200 rounded-xl font-bold text-xs flex-1 text-center flex justify-center items-center gap-1.5 transition-colors cursor-pointer">
-                                    <i class="fa-solid fa-receipt"></i> Details
-                                </button>
-
-                                <a href="{{ route('reimbursements.approval', $r->id) }}"
-                                    class="p-2 text-white bg-amber-600 hover:bg-amber-700 rounded-xl font-bold text-xs flex-1 text-center flex justify-center items-center gap-1.5 shadow-md shadow-amber-600/20 active:scale-95 transition-all">
-                                    <i class="fa-solid fa-pen-nib"></i> Sign Claim
-                                </a>
-
-                                <button type="button"
-                                    onclick="confirmCancel('{{ $r->id }}', '{{ $r->person_name }}', 'Rp {{ number_format((float) ($r->amount ?? 0), 0, ',', '.') }}')"
-                                    class="p-2 text-rose-700 bg-rose-50 border border-rose-100 hover:bg-rose-100 rounded-xl font-bold text-xs flex-1 text-center flex justify-center items-center gap-1.5 transition-colors cursor-pointer">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
                             </div>
                         </div>
                     @empty
-                        <div
-                            class="p-8 text-xs font-medium text-center bg-white border border-slate-200 text-slate-400 rounded-2xl">
-                            No reimbursement claims filed for this criteria.
+                        <div class="p-6 text-xs text-center bg-white border text-slate-400 border-slate-200 rounded-xl">
+                            No claims found for this criteria.
                         </div>
                     @endforelse
                 </div>
 
-                {{-- PAGINATION LINKS --}}
+                {{-- PAGINATION --}}
                 @if ($reimbursements->hasPages())
                     <div
-                        class="flex flex-col items-center justify-between gap-3 p-4 border-t sm:flex-row sm:p-6 bg-slate-50/50 border-slate-100 ajax-pagination">
+                        class="flex flex-col gap-3 p-4 border-t sm:flex-row sm:items-center sm:justify-between border-slate-100 bg-slate-50/40 ajax-pagination">
                         <p class="text-xs font-medium text-slate-500">
-                            Showing <span class="font-bold text-slate-800">{{ $reimbursements->firstItem() }}</span>
-                            to <span class="font-bold text-slate-800">{{ $reimbursements->lastItem() }}</span>
-                            of <span class="font-bold text-slate-800">{{ $reimbursements->total() }}</span> results
+                            Showing <strong class="text-slate-800">{{ $reimbursements->firstItem() }}</strong> – <strong
+                                class="text-slate-800">{{ $reimbursements->lastItem() }}</strong> of <strong
+                                class="text-slate-800">{{ $reimbursements->total() }}</strong> claims
                         </p>
 
                         <div class="flex items-center gap-1">
                             @if ($reimbursements->onFirstPage())
                                 <span
-                                    class="px-3 py-1.5 text-xs font-bold text-slate-300 bg-slate-100 rounded-xl cursor-not-allowed">
+                                    class="px-2.5 py-1 text-xs font-semibold text-slate-300 bg-slate-100 rounded-lg cursor-not-allowed">
                                     <i class="fa-solid fa-chevron-left"></i>
                                 </span>
                             @else
                                 <a href="{{ $reimbursements->previousPageUrl() }}"
-                                    class="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-amber-600 hover:text-white rounded-xl transition-colors">
+                                    class="px-2.5 py-1 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
                                     <i class="fa-solid fa-chevron-left"></i>
                                 </a>
                             @endif
 
                             @foreach ($reimbursements->getUrlRange(1, $reimbursements->lastPage()) as $page => $url)
                                 @if ($page == $reimbursements->currentPage())
-                                    <span
-                                        class="px-3 py-1.5 text-xs font-black text-white bg-amber-600 rounded-xl shadow-xs">
+                                    <span class="px-3 py-1 text-xs font-bold text-white rounded-lg bg-slate-900">
                                         {{ $page }}
                                     </span>
                                 @else
                                     <a href="{{ $url }}"
-                                        class="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-amber-600 hover:text-white rounded-xl transition-colors">
+                                        class="px-3 py-1 text-xs font-semibold transition-colors bg-white border rounded-lg text-slate-600 border-slate-200 hover:bg-slate-50">
                                         {{ $page }}
                                     </a>
                                 @endif
@@ -408,153 +414,141 @@
 
                             @if ($reimbursements->hasMorePages())
                                 <a href="{{ $reimbursements->nextPageUrl() }}"
-                                    class="px-3 py-1.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-amber-600 hover:text-white rounded-xl transition-colors">
+                                    class="px-2.5 py-1 text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
                                     <i class="fa-solid fa-chevron-right"></i>
                                 </a>
                             @else
                                 <span
-                                    class="px-3 py-1.5 text-xs font-bold text-slate-300 bg-slate-100 rounded-xl cursor-not-allowed">
+                                    class="px-2.5 py-1 text-xs font-semibold text-slate-300 bg-slate-100 rounded-lg cursor-not-allowed">
                                     <i class="fa-solid fa-chevron-right"></i>
                                 </span>
                             @endif
                         </div>
                     </div>
                 @endif
-            </div>
 
+            </div>
         </div>
     </div>
 
-    {{-- MODAL 1: QUICK DETAIL PREVIEW --}}
+    {{-- MODAL 1: PREVIEW DETAILS --}}
     <div id="detailModal" onclick="if(event.target===this) closeDetailModal()"
-        class="fixed inset-0 z-50 flex items-center justify-center hidden p-4 transition-all duration-300 bg-slate-900/60 backdrop-blur-xs">
+        class="fixed inset-0 z-50 flex items-center justify-center hidden p-4 transition-opacity bg-slate-900/40 backdrop-blur-xs">
         <div
-            class="relative w-full max-w-4xl bg-white border border-slate-100 shadow-2xl rounded-3xl flex flex-col max-h-[90vh] overflow-hidden">
-            <div class="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/50 shrink-0">
-                <div class="space-y-0.5">
+            class="relative w-full max-w-3xl bg-white border border-slate-200 shadow-2xl rounded-2xl flex flex-col max-h-[90vh] overflow-hidden">
+
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/60 shrink-0">
+                <div class="flex items-center gap-2">
                     <span id="modal-category"
-                        class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-lg bg-amber-50 text-amber-800 border border-amber-200">Category</span>
-                    <h3 class="text-base font-extrabold text-slate-900">Operational Claim Specification</h3>
+                        class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-slate-200 text-slate-800">
+                        Category
+                    </span>
+                    <h3 class="text-sm font-bold text-slate-900">Claim Details & Receipt Proof</h3>
                 </div>
                 <button onclick="closeDetailModal()" type="button"
-                    class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-slate-600 hover:bg-slate-100">
-                    <i class="text-base fa-solid fa-xmark"></i>
+                    class="cursor-pointer text-slate-400 hover:text-slate-600">
+                    <i class="text-lg fa-solid fa-xmark"></i>
                 </button>
             </div>
 
             <div class="grid grid-cols-1 gap-6 p-6 overflow-y-auto text-xs lg:grid-cols-5">
                 <div class="space-y-4 lg:col-span-2">
-                    <div class="grid grid-cols-2 gap-3 p-4 border border-slate-200/80 bg-slate-50/50 rounded-2xl">
+                    <div class="p-3.5 border border-slate-200/80 bg-slate-50/50 rounded-xl space-y-2">
                         <div>
-                            <span
-                                class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Requester</span>
-                            <p id="modal-name" class="font-bold text-slate-900 mt-0.5 text-sm">-</p>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Requester
+                                Name</span>
+                            <p id="modal-name" class="font-bold text-slate-900 text-sm mt-0.5">-</p>
                         </div>
-                        <div>
-                            <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Date
+                        <div class="pt-2 border-t border-slate-200/60">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Date
                                 Filed</span>
-                            <p id="modal-date" class="font-bold text-slate-900 mt-0.5 text-sm">-</p>
+                            <p id="modal-date" class="font-medium text-slate-800 mt-0.5">-</p>
                         </div>
                     </div>
 
-                    <div class="p-4 space-y-3 border border-slate-200/80 rounded-2xl">
+                    <div class="p-3.5 border border-slate-200/80 rounded-xl space-y-2">
                         <div>
-                            <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Total Claim
-                                Value</span>
-                            <p id="modal-amount" class="text-xl font-black text-rose-600 mt-0.5">Rp 0</p>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Claim
+                                Amount</span>
+                            <p id="modal-amount" class="text-lg font-mono font-bold text-slate-900 mt-0.5">Rp 0</p>
                         </div>
-                        <div class="pt-3 border-t border-slate-100">
-                            <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Route
+                        <div class="pt-2 border-t border-slate-100">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Route
                                 Info</span>
-                            <p id="modal-route" class="font-semibold leading-normal text-slate-800 mt-0.5">-</p>
+                            <p id="modal-route" class="font-medium text-slate-800 mt-0.5">-</p>
                         </div>
                     </div>
 
-                    <div class="space-y-1.5">
-                        <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Statement
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Notes /
                             Description</span>
-                        <div class="p-3.5 text-xs italic font-medium leading-relaxed border bg-amber-50/40 border-amber-200/60 rounded-2xl text-slate-700"
-                            id="modal-comment">
+                        <div id="modal-comment"
+                            class="p-3 italic border border-slate-200 bg-slate-50/50 rounded-xl text-slate-700">
                             "No description provided."
                         </div>
                     </div>
 
-                    <div class="space-y-2">
-                        <span
-                            class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-timeline text-amber-600"></i> Sign & Approval Status
-                        </span>
-                        <div class="p-3.5 space-y-2.5 text-xs border bg-slate-50/50 rounded-2xl border-slate-200/80">
-                            <div class="flex items-center justify-between pb-2 border-b border-slate-200/60">
-                                <span class="flex items-center gap-2 font-bold text-slate-700">
-                                    <i class="fa-solid fa-user text-[10px] text-slate-400"></i> 1. Staff Requester
-                                </span>
-                                <span id="sign-status-staff" class="px-2 py-0.5 rounded-md text-[10px] font-bold"></span>
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">Approval
+                            Hierarchy Trail</span>
+                        <div class="p-3 space-y-2 border border-slate-200/80 rounded-xl bg-slate-50/30">
+                            <div class="flex items-center justify-between pb-1.5 border-b border-slate-200/60">
+                                <span class="font-semibold text-slate-700">1. Staff Requester</span>
+                                <span id="sign-status-staff" class="px-2 py-0.5 rounded text-[10px] font-bold"></span>
                             </div>
-                            <div class="flex items-center justify-between pb-2 border-b border-slate-200/60">
-                                <span class="flex items-center gap-2 font-bold text-slate-700">
-                                    <i class="fa-solid fa-user-tie text-[10px] text-slate-400"></i> 2. Team Leader
-                                </span>
-                                <span id="sign-status-leader" class="px-2 py-0.5 rounded-md text-[10px] font-bold"></span>
+                            <div class="flex items-center justify-between pb-1.5 border-b border-slate-200/60">
+                                <span class="font-semibold text-slate-700">2. Team Leader</span>
+                                <span id="sign-status-leader" class="px-2 py-0.5 rounded text-[10px] font-bold"></span>
                             </div>
-                            <div class="flex items-center justify-between pb-2 border-b border-slate-200/60">
-                                <span class="flex items-center gap-2 font-bold text-slate-700">
-                                    <i class="fa-solid fa-house-laptop text-[10px] text-slate-400"></i> 3. Station Master
-                                </span>
-                                <span id="sign-status-station"
-                                    class="px-2 py-0.5 rounded-md text-[10px] font-bold"></span>
+                            <div class="flex items-center justify-between pb-1.5 border-b border-slate-200/60">
+                                <span class="font-semibold text-slate-700">3. Station Master</span>
+                                <span id="sign-status-station" class="px-2 py-0.5 rounded text-[10px] font-bold"></span>
                             </div>
                             <div class="flex items-center justify-between">
-                                <span class="flex items-center gap-2 font-bold text-slate-700">
-                                    <i class="fa-solid fa-user-gear text-[10px] text-slate-400"></i> 4. Operational Manager
-                                </span>
-                                <span id="sign-status-manager"
-                                    class="px-2 py-0.5 rounded-md text-[10px] font-bold"></span>
+                                <span class="font-semibold text-slate-700">4. Operational Manager</span>
+                                <span id="sign-status-manager" class="px-2 py-0.5 rounded text-[10px] font-bold"></span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="lg:col-span-3 flex flex-col space-y-2 min-h-[320px]">
-                    <span
-                        class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider flex items-center gap-1.5">
-                        <i class="fa-solid fa-scroll text-slate-400"></i> Receipt Attachment Preview
-                    </span>
+                <div class="lg:col-span-3 flex flex-col space-y-1.5 min-h-[300px]">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Receipt
+                        Attachment</span>
                     <div id="modal-attachment-frame"
-                        class="relative flex-1 w-full overflow-hidden border bg-slate-100 rounded-2xl border-slate-200/80">
+                        class="relative flex-1 w-full overflow-hidden border border-slate-200 bg-slate-100 rounded-xl">
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- MODAL 2: CANCEL / DELETE TO RECYCLE BIN MODAL --}}
+    {{-- MODAL 2: CANCEL / DELETE CONFIRMATION --}}
     <div id="cancelModal" onclick="if(event.target===this) closeCancelModal()"
-        class="fixed inset-0 z-50 flex items-center justify-center hidden p-4 transition-all duration-300 bg-slate-900/60 backdrop-blur-xs">
+        class="fixed inset-0 z-50 flex items-center justify-center hidden p-4 transition-opacity bg-slate-900/40 backdrop-blur-xs">
         <div
-            class="relative w-full max-w-md p-6 space-y-4 text-center bg-white border shadow-2xl border-slate-100 rounded-3xl">
+            class="relative w-full max-w-sm p-6 space-y-4 text-center bg-white border shadow-2xl border-slate-200 rounded-2xl">
             <div
-                class="flex items-center justify-center mx-auto border rounded-full w-14 h-14 text-amber-600 bg-amber-50 border-amber-100">
-                <i class="text-xl fa-solid fa-box-archive"></i>
+                class="flex items-center justify-center w-12 h-12 mx-auto border rounded-full bg-slate-100 text-slate-700 border-slate-200">
+                <i class="text-lg fa-solid fa-box-archive"></i>
             </div>
             <div>
-                <h3 class="text-base font-extrabold text-slate-900">Pindahkan ke Recycle Bin?</h3>
-                <p class="mt-1 text-xs font-medium leading-relaxed text-slate-500">
-                    Klaim atas nama <strong id="cancel_person_name" class="text-slate-800"></strong> (<span
-                        id="cancel_amount" class="font-bold text-rose-600"></span>) akan dipindahkan ke menu <strong
-                        class="text-amber-600">Recycle Bin / Archive</strong>. Data tidak langsung terhapus permanen dan
-                    bisa dikembalikan kapan saja.
+                <h3 class="text-sm font-bold text-slate-900">Archive This Claim?</h3>
+                <p class="mt-1 text-xs leading-relaxed text-slate-500">
+                    Claim filed by <strong id="cancel_person_name" class="text-slate-800"></strong> (<span
+                        id="cancel_amount" class="font-mono font-bold text-slate-900"></span>) will be moved to the
+                    <strong>Recycle Bin / Archive</strong> folder.
                 </p>
             </div>
-            <form method="POST" action="" class="flex gap-3 pt-2">
+            <form method="POST" action="" class="flex gap-2 pt-2">
                 @csrf @method('DELETE')
                 <button type="button" onclick="closeCancelModal()"
-                    class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs uppercase tracking-wider rounded-xl transition-colors cursor-pointer">
-                    Batal
+                    class="flex-1 py-2 text-xs font-semibold transition-colors cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl">
+                    Cancel
                 </button>
                 <button type="submit"
-                    class="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all active:scale-[0.98] shadow-md shadow-amber-600/20 cursor-pointer">
-                    <i class="mr-1 fa-solid fa-box-archive"></i> Ya, Archive
+                    class="flex-1 py-2 text-xs font-semibold text-white transition-colors cursor-pointer bg-slate-900 hover:bg-slate-800 rounded-xl shadow-2xs">
+                    Archive
                 </button>
             </form>
         </div>
@@ -649,7 +643,7 @@
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
                 fetchReimbursementData();
-            }, 400);
+            }, 350);
         }
 
         function handleMonthChange() {
@@ -708,7 +702,7 @@
                 data = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
             } catch (e) {
                 console.error("Failed to parse reimbursement json:", e);
-                alert("Gagal memuat detail data. Silakan coba kembali.");
+                alert("Failed to load details. Please try again.");
                 return;
             }
 
@@ -732,7 +726,7 @@
 
             if (data.category === 'transportation' || data.category === 'delivery') {
                 document.getElementById('modal-route').innerHTML =
-                    `<i class="mr-1 fa-solid fa-map-pin text-rose-500"></i> ${data.from_location || '-'} <i class="mx-1 fa-solid fa-arrow-right text-slate-300"></i> ${data.to_location || '-'}`;
+                    `<span class="font-semibold text-slate-900">${data.from_location || '-'}</span> <i class="mx-1 fa-solid fa-arrow-right text-slate-300"></i> <span class="font-semibold text-slate-900">${data.to_location || '-'}</span>`;
             } else {
                 document.getElementById('modal-route').innerText = "Routing Exempted";
             }
@@ -754,25 +748,23 @@
                 if (isSigned) {
                     el.innerText = "✓ Signed";
                     el.className =
-                        "px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200";
+                        "px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200";
                 } else {
                     el.innerText = fallbackText;
                     el.className =
-                        "px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-50 text-slate-400 border border-slate-200 italic";
+                        "px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-400 border border-slate-200";
                 }
             }
 
             const hasStaff = signatures.some(s => s && (s.role === 'employee_role' || s.level === 'employee_role')) || !!
-                data
-                .person_name;
+                data.person_name;
             const hasLeader = signatures.some(s => s && (s.role === 'leader' || s.level === 'leader')) || (data.status !==
                 'pending' && data.status !== 'pending_leader');
             const hasStation = signatures.some(s => s && (s.role === 'station_master' || s.role === 'station')) || (data
-                .status ===
-                'approved' || data.status === 'pending_manager');
+                .status === 'approved' || data.status === 'pending_manager');
             const hasManager = signatures.some(s => s && s.role === 'manager') || data.status === 'approved';
 
-            renderSignBadge('sign-status-staff', hasStaff, "Pending Sign");
+            renderSignBadge('sign-status-staff', hasStaff, "Pending");
             renderSignBadge('sign-status-leader', hasLeader, "Pending Review");
             renderSignBadge('sign-status-station', hasStation, "Pending Approval");
             renderSignBadge('sign-status-manager', hasManager, "Pending Disbursement");
@@ -792,10 +784,10 @@
 
                 if (fileExt === 'pdf') {
                     frame.innerHTML =
-                        `<object data="${fullUrl}#toolbar=0" type="application/pdf" class="block w-full h-full min-h-[300px]"></object>`;
+                        `<object data="${fullUrl}#toolbar=0" type="application/pdf" class="block w-full h-full min-h-[280px]"></object>`;
                 } else {
                     frame.innerHTML =
-                        `<div class="flex items-center justify-center w-full h-full p-2 bg-slate-50"><img src="${fullUrl}" class="object-contain max-w-full max-h-full rounded-xl" /></div>`;
+                        `<div class="flex items-center justify-center w-full h-full p-2 bg-slate-50"><img src="${fullUrl}" class="object-contain max-w-full max-h-full rounded-lg" /></div>`;
                 }
             } else {
                 frame.innerHTML =
