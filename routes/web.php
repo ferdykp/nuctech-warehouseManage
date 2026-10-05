@@ -176,6 +176,8 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
     Route::middleware(['role:superadmin|employee_role|team_leader|administration|manager|station_master'])->group(function () {
         // Fitur Reimbursement System
+        Route::post('/reimbursements/import-excel', [AdminReimbursementController::class, 'importExcel'])
+            ->name('reimbursements.import_excel');
         Route::get('/reimbursements/export-pdf', [AdminReimbursementController::class, 'exportApprovedPdf'])->name('reimbursements.export_pdf');
         Route::get('/reimbursements/export-excel', [AdminReimbursementController::class, 'exportExcel'])->name('reimbursements.export_excel');
         Route::get('/reimbursements/{id}/export-single-pdf', [AdminReimbursementController::class, 'exportSinglePdf'])->name('reimbursements.export_single_pdf');

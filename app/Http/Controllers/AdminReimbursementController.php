@@ -14,6 +14,8 @@ use Intervention\Image\Drivers\Gd\Driver;
 use setasign\Fpdi\Fpdi;
 use App\Exports\ReimbursementExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\ReimbursementImport;
+
 
 class AdminReimbursementController extends Controller
 {
@@ -1171,5 +1173,31 @@ class AdminReimbursementController extends Controller
         ]);
 
         return redirect()->route('reimbursements.index')->with('success', 'Klaim berhasil ditandai sebagai disetujui (Fast-Track Approved).');
+    }
+
+    public function importExcel(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240' // Max 10MB
+        ]);
+
+        try {
+            $import = new ReimbursementImport();
+            Excel::import($import, $request->file('file'));
+
+            $count = $import->getImportedCount();
+
+            if ($count > 0) {
+                return redirect()->route('reimbursements.index')
+                    ->with('success', "Berhasil mengimpor {$count} data klaim reimbursement dari Excel.");
+            }
+
+            return redirect()->route('reimbursements.index')
+                ->with('error', 'Tidak ada data valid yang ditemukan pada file Excel.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Reimbursement Import Error: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Gagal mengimpor file Excel. Pastikan format file sesuai dengan template output export.');
+        }
     }
 }
