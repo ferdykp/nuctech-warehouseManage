@@ -688,6 +688,10 @@
             if (currentMonth) url.searchParams.set('month', currentMonth);
             if (currentSearch) url.searchParams.set('search', currentSearch);
 
+            // @if (Auth::user()?->role === 'superadmin')
+            //     url.searchParams.set('all_site', '1');
+            // @endif
+
             @if (in_array(Auth::user()?->role, ['superadmin', 'administration']))
                 url.searchParams.set('all_site', '1');
             @endif

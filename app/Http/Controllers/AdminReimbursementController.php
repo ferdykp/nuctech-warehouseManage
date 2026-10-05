@@ -481,7 +481,16 @@ class AdminReimbursementController extends Controller
      */
     public function exportApprovedPdf(Request $request)
     {
-        $query = Reimbursement::where('user_id', auth()->id())->with('user');
+        $user = auth()->user();
+
+        // 🟢 Jika superadmin / administration, ambil seluruh data klaim
+        if (in_array($user->role, ['superadmin', 'administration'])) {
+            $query = Reimbursement::query();
+        } else {
+            $query = Reimbursement::where('user_id', $user->id);
+        }
+
+        $query->with('user');
 
         if ($request->filled('month')) {
             $query->whereMonth('date', $request->month);
@@ -493,6 +502,7 @@ class AdminReimbursementController extends Controller
             ->orderBy('date', 'asc')
             ->orderBy('id', 'asc')
             ->get();
+
 
         if ($reimbursements->isEmpty()) {
             return redirect()->back()->with('error', 'Tidak ada data reimbursement APPROVED untuk bulan yang dipilih.');
@@ -831,7 +841,10 @@ class AdminReimbursementController extends Controller
         $search = $request->get('search');
         $month = $request->get('month');
 
-        if ($user->role === 'superadmin') {
+        // 🟢 Cek jika role superadmin atau administration
+        $isAllSite = in_array($user->role, ['superadmin', 'administration']);
+
+        if ($isAllSite) {
             $siteName = 'ALL_SITES';
         } else {
             $rawSiteName = $user->site->machine_name ?? 'SITE';
@@ -849,7 +862,7 @@ class AdminReimbursementController extends Controller
         $fileName = "Reimbursement_{$siteName}_{$userName}_{$monthName}.xlsx";
 
         return Excel::download(
-            new ReimbursementExport($search, $month, $user->role === 'superadmin'),
+            new ReimbursementExport($search, $month, $isAllSite),
             $fileName
         );
     }
