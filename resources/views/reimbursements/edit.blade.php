@@ -83,7 +83,9 @@
                                 class="absolute left-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
                                 <i class="text-xs fa-solid fa-calendar-days"></i>
                             </span>
-                            <input type="date" name="date" value="{{ old('date', $reimbursement->date) }}" required
+                            <input type="date" name="date"
+                                value="{{ old('date', $reimbursement->date ? \Carbon\Carbon::parse($reimbursement->date)->format('Y-m-d') : '') }}"
+                                required
                                 class="w-full py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
                         </div>
                         @error('date')

@@ -1178,7 +1178,7 @@ class AdminReimbursementController extends Controller
     public function importExcel(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240' // Max 10MB
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240'
         ]);
 
         try {
@@ -1189,15 +1189,16 @@ class AdminReimbursementController extends Controller
 
             if ($count > 0) {
                 return redirect()->route('reimbursements.index')
-                    ->with('success', "Berhasil mengimpor {$count} data klaim reimbursement dari Excel.");
+                    ->with('success', "Berhasil mengimpor {$count} data klaim reimbursement.");
             }
 
             return redirect()->route('reimbursements.index')
-                ->with('error', 'Tidak ada data valid yang ditemukan pada file Excel.');
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Reimbursement Import Error: ' . $e->getMessage());
+                ->with('error', 'Tidak ada data klaim valid yang ditemukan pada file Excel.');
+        } catch (\Throwable $e) {
+            Log::error('Reimbursement Import Exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+
             return redirect()->back()
-                ->with('error', 'Gagal mengimpor file Excel. Pastikan format file sesuai dengan template output export.');
+                ->with('error', 'Gagal mengimpor Excel: ' . $e->getMessage());
         }
     }
 }
