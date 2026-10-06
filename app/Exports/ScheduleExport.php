@@ -76,17 +76,26 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
             }
         }
 
+        $user = auth()->user();
+
         $employeesQuery = Employee::with(['schedules' => function ($q) use ($startDate, $endDate) {
             $q->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
                 ->with('shift');
         }]);
 
-        if ($this->siteId !== 'all' && !empty($this->siteId)) {
-            $employeesQuery->where('site_id', $this->siteId);
+        // Perbaikan penanganan hak akses site agar aman untuk team_leader saat proses export
+        if ($user && !in_array($user->role, ['superadmin', 'administration'])) {
+            $allowedSiteId = ($this->siteId === 'all') ? $user->site_id : $this->siteId;
+            if ($allowedSiteId) {
+                $employeesQuery->where('site_id', $allowedSiteId);
+            }
+        } else {
+            if ($this->siteId !== 'all' && !empty($this->siteId)) {
+                $employeesQuery->where('site_id', $this->siteId);
+            }
         }
 
-        $employeesQuery->whereIn('site_id', \App\Services\SiteAccess::sites(auth()->user(), true)->select('id'));
-        $employeesQuery->where(fn ($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $startDate->format('Y-m-d')));
+        $employeesQuery->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $startDate->format('Y-m-d')));
         $employees = $employeesQuery->get();
         $rows = collect();
 
@@ -116,7 +125,6 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
 
         $no = 1;
         foreach ($employees as $emp) {
-            // Mapping jadwal berdasarkan string Y-m-d agar akurat
             $schedulesMap = $emp->schedules->keyBy(function ($item) {
                 return $item->date instanceof Carbon ? $item->date->format('Y-m-d') : (string)$item->date;
             });
@@ -254,7 +262,6 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
     {
         $nameLower = strtolower($shiftName);
 
-        // Jika nama shift mengandung Office Hour / OH
         if (str_contains($nameLower, 'office') || str_contains($nameLower, 'oh')) {
             return 'OH';
         }

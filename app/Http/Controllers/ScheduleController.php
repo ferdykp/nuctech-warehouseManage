@@ -45,12 +45,18 @@ class ScheduleController extends Controller
         $employeeQuery = Employee::with('site')->whereIn('site_id', $siteIds);
         $employeeQuery->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $startDate->format('Y-m-d')));
 
+        // PERBAIKAN: Validasi site_id untuk team_leader agar aman dan tidak error 403
+        // PERBAIKAN: Validasi site_id untuk team_leader agar aman dan tidak error 403
         if ($selectedSiteId !== 'all') {
             if (in_array($user->role, ['superadmin', 'administration'])) {
                 $employeeQuery->where('site_id', $selectedSiteId);
             } else {
-                \App\Services\SiteAccess::authorize($selectedSiteId, true);
-                $employeeQuery->where('site_id', $selectedSiteId);
+                // Pastikan site yang dipilih termasuk ke dalam list site yang diizinkan untuk team_leader
+                if ($siteIds->contains($selectedSiteId)) {
+                    $employeeQuery->where('site_id', $selectedSiteId);
+                } else {
+                    $employeeQuery->where('site_id', $user->site_id); // Fallback ke site utama jika tidak valid
+                }
             }
         }
 
@@ -471,9 +477,11 @@ class ScheduleController extends Controller
         $year   = $request->get('year', date('Y'));
         $siteId = $request->get('site_id', 'all');
 
-        // Jika user adalah team_leader, paksa site_id menggunakan site miliknya sendiri demi keamanan
+        // Jika team_leader mengeksport dengan opsi 'all' atau site miliknya sendiri
         if (!in_array($user->role, ['superadmin', 'administration'])) {
-            $siteId = $user->site_id ?? 'all';
+            if ($siteId === 'all' && $user->site_id) {
+                $siteId = $user->site_id; // Batasi ke site milik team_leader jika 'all'
+            }
         }
 
         if (class_exists('\App\Exports\ScheduleExport')) {

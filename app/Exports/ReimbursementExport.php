@@ -30,46 +30,6 @@ class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, 
         $this->isAllSite = $isAllSite;
     }
 
-    /**
-     * Ambil data reimbursement berdasarkan hak akses dan filter
-     */
-    /**
-     * Ambil data reimbursement berdasarkan hak akses dan filter
-     */
-    // public function collection()
-    // {
-    //     $user = Auth::user();
-    //     $query = \App\Services\ReimbursementAccess::query();
-
-    //     // 1. FILTER BERDASARKAN HAK AKSES / SITE
-    //     // Jika BUKAN Superadmin dan TIDAK MINTA All Site:
-    //     if (!$this->isAllSite && $user->role !== 'superadmin') {
-    //         if ($user->site_id) {
-    //             // Filter berdasarkan site_id milik User yang membuat reimbursement
-    //             $query->whereHas('user', function ($q) use ($user) {
-    //                 $q->where('site_id', $user->site_id);
-    //             });
-    //         } else {
-    //             // Fallback jika user tidak punya site_id, filter berdasarkan user_id pengunduh
-    //             $query->where('user_id', $user->id);
-    //         }
-    //     }
-
-    //     // 2. FILTER BULAN (jika ada)
-    //     if ($this->month) {
-    //         $query->whereMonth('date', $this->month);
-    //     }
-
-    //     // 3. FILTER LIVE SEARCH (jika ada)
-    //     if ($this->search) {
-    //         $query->where(function ($q) {
-    //             $q->where('person_name', 'like', "%{$this->search}%")
-    //                 ->orWhere('comment', 'like', "%{$this->search}%");
-    //         });
-    //     }
-
-    //     return $query->latest('date')->get();
-    // }
     public function collection()
     {
         $user = Auth::user();
@@ -99,7 +59,7 @@ class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, 
             });
         }
 
-        // PERBAIKAN: Urutkan berdasarkan Kategori -> Nama Karyawan -> Tanggal Invoice -> ID
+        // Urutkan berdasarkan Kategori -> Nama Karyawan -> Tanggal Invoice -> ID
         return $query
             ->orderByRaw("CASE category WHEN 'transportation' THEN 1 WHEN 'delivery' THEN 2 WHEN 'office' THEN 3 ELSE 4 END")
             ->orderBy('person_name', 'asc')
@@ -107,8 +67,9 @@ class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, 
             ->orderBy('id', 'asc')
             ->get();
     }
+
     /**
-     * Mapping kosong untuk mencegah dump data model otomatis ke arah kanan (J ke kanan)
+     * Mapping kosong untuk mencegah dump data model otomatis ke arah kanan
      */
     public function map($reimbursement): array
     {
@@ -167,12 +128,9 @@ class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, 
                 ];
 
                 $currentRow = 3;
-                $mergeRanges = [];
 
-                // 3. Loop per Kategori untuk membangun baris Excel
+                // 3. Loop per Kategori untuk membangun baris Excel (Tanpa Merge Kolom B)
                 foreach ($categories as $catKey => $items) {
-                    $startCatRow = $currentRow;
-
                     if ($items->count() > 0) {
                         foreach ($items as $item) {
                             $snNumber = $claimMap[$item->id] ?? '-';
@@ -209,13 +167,9 @@ class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, 
 
                         $currentRow++;
                     }
-
-                    $endCatRow = $currentRow - 1;
-
-                    if ($startCatRow <= $endCatRow) {
-                        $mergeRanges[] = "B{$startCatRow}:B{$endCatRow}";
-                    }
                 }
+
+                $endTableDataRow = $currentRow - 1;
 
                 // 4. BAGIAN TOTAL & FOOTER
                 $totalRowStart = $currentRow;
@@ -227,36 +181,73 @@ class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, 
                 $exchangeRow = $totalRowStart + 1;
                 $sheet->mergeCells("D{$exchangeRow}:F{$exchangeRow}");
                 $sheet->setCellValue("D{$exchangeRow}", "Exchange Rate");
+                $sheet->setCellValue("H{$exchangeRow}", "(filled in by PT UMA)");
 
                 $cnyRow = $totalRowStart + 2;
                 $sheet->mergeCells("D{$cnyRow}:F{$cnyRow}");
                 $sheet->setCellValue("D{$cnyRow}", "Total Amount (CNY)");
+                $sheet->setCellValue("H{$cnyRow}", "(filled in by PT UMA)");
 
-                $lastRow = $cnyRow;
+                // 5. BAGIAN TANDA TANGAN (SIGNATURES)
+                $sigRow1 = $cnyRow + 4; // Beri jarak 3 baris kosong
+                $sigRow2 = $sigRow1 + 1;
+                $sigRow3 = $sigRow2 + 3; // Beri ruang kosong untuk tanda tangan fisik/coretan
+                $sigRow4 = $sigRow3 + 1;
 
-                // 5. STYLING FORMATTING
+                // Proposed By (Kolom B-C)
+                $sheet->mergeCells("B{$sigRow1}:C{$sigRow1}");
+                $sheet->setCellValue("B{$sigRow1}", "Proposed By");
+                $sheet->mergeCells("B{$sigRow2}:C{$sigRow2}");
+                $sheet->setCellValue("B{$sigRow2}", "Local Team Leader");
+                $sheet->mergeCells("B{$sigRow4}:C{$sigRow4}");
+                $sheet->setCellValue("B{$sigRow4}", "Rangga Rajasa");
+
+                // Approval By 1 (Kolom E-F)
+                $sheet->mergeCells("E{$sigRow1}:F{$sigRow1}");
+                $sheet->setCellValue("E{$sigRow1}", "Approval By");
+                $sheet->mergeCells("E{$sigRow2}:F{$sigRow2}");
+                $sheet->setCellValue("E{$sigRow2}", "Station Master");
+                $sheet->mergeCells("E{$sigRow4}:F{$sigRow4}");
+                $sheet->setCellValue("E{$sigRow4}", "张举");
+
+                // Approval By 2 (Kolom G-H)
+                $sheet->mergeCells("G{$sigRow1}:H{$sigRow1}");
+                $sheet->setCellValue("G{$sigRow1}", "Approval By");
+                $sheet->mergeCells("G{$sigRow4}:H{$sigRow4}");
+                $sheet->setCellValue("G{$sigRow4}", "Mr. Tao Jinbo");
+
+                $lastRow = $sigRow4;
+
+                // 6. STYLING FORMATTING
                 $sheet->mergeCells('A1:H1');
                 $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(12);
                 $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-
-                foreach ($mergeRanges as $range) {
-                    $sheet->mergeCells($range);
-                }
 
                 $sheet->getStyle('A2:H2')->getFont()->setBold(true)->setSize(10);
                 $sheet->getStyle('A2:H2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
                 $sheet->getStyle('A2:H2')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('F8FAFC');
 
-                $sheet->getStyle("A3:A{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle("B3:B" . ($totalRowStart - 1))->getAlignment()->setVertical(Alignment::VERTICAL_CENTER)->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle("C3:C" . ($totalRowStart - 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("A3:A{$endTableDataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("B3:B{$endTableDataRow}")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER)->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("C3:C{$endTableDataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-                $sheet->getStyle("D{$totalRowStart}:F{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT)->setVertical(Alignment::VERTICAL_CENTER);
-                $sheet->getStyle("D{$totalRowStart}:H{$lastRow}")->getFont()->setBold(true);
+                $sheet->getStyle("D{$totalRowStart}:F{$cnyRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT)->setVertical(Alignment::VERTICAL_CENTER);
+                $sheet->getStyle("D{$totalRowStart}:H{$cnyRow}")->getFont()->setBold(true);
 
-                $sheet->getStyle("G3:G{$lastRow}")->getFont()->setBold(true);
-                $sheet->getStyle("G3:G{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-                $sheet->getStyle("G3:G{$lastRow}")->getNumberFormat()->setFormatCode('"IDR " #,##0');
+                // Format Nominal Kolom G (Data tabel & Baris Total Amount IDR)
+                $sheet->getStyle("G3:G{$endTableDataRow}")->getFont()->setBold(true);
+                $sheet->getStyle("G3:G{$endTableDataRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                $sheet->getStyle("G3:G{$endTableDataRow}")->getNumberFormat()->setFormatCode('"IDR " #,##0');
+
+                // Terapkan format angka juga pada baris Total Amount (G{$totalRowStart})
+                $sheet->getStyle("G{$totalRowStart}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                $sheet->getStyle("G{$totalRowStart}")->getNumberFormat()->setFormatCode('"IDR " #,##0');
+
+                // Styling blok tanda tangan agar rapi dan berada di tengah
+                $sigBlockRange = "B{$sigRow1}:H{$sigRow4}";
+                $sheet->getStyle($sigBlockRange)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)->setVertical(Alignment::VERTICAL_CENTER);
+                $sheet->getStyle("B{$sigRow1}:H{$sigRow2}")->getFont()->setBold(true);
+                $sheet->getStyle("B{$sigRow4}:H{$sigRow4}")->getFont()->setBold(true);
 
                 $borderStyle = [
                     'borders' => [
@@ -266,8 +257,8 @@ class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, 
                         ],
                     ],
                 ];
-                $sheet->getStyle("A2:H" . ($totalRowStart - 1))->applyFromArray($borderStyle);
-                $sheet->getStyle("D{$totalRowStart}:G{$lastRow}")->applyFromArray($borderStyle);
+                $sheet->getStyle("A2:H{$endTableDataRow}")->applyFromArray($borderStyle);
+                $sheet->getStyle("D{$totalRowStart}:G{$cnyRow}")->applyFromArray($borderStyle);
 
                 foreach (range('A', 'H') as $columnID) {
                     $sheet->getColumnDimension($columnID)->setAutoSize(true);
