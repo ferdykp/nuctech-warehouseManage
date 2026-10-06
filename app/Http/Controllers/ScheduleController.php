@@ -442,12 +442,39 @@ class ScheduleController extends Controller
         return redirect()->back()->with('success', 'Schedule logs for the selected period have been reset.');
     }
 
+    // public function export(Request $request)
+    // {
+    //     $request->validate(['month' => 'nullable|integer|between:1,12', 'year' => 'nullable|integer|between:2000,2100', 'site_id' => 'nullable|string']);
+    //     $siteId = $request->get('site_id', 'all');
+    //     $month  = sprintf('%02d', $request->get('month', date('m')));
+    //     $year   = $request->get('year', date('Y'));
+
+    //     if (class_exists('\App\Exports\ScheduleExport')) {
+    //         return \Maatwebsite\Excel\Facades\Excel::download(
+    //             new \App\Exports\ScheduleExport($siteId, $month, $year),
+    //             "Schedules_{$siteId}_{$year}_{$month}.xlsx"
+    //         );
+    //     }
+
+    //     return redirect()->back()->with('success', 'Export triggered successfully.');
+    // }
     public function export(Request $request)
     {
-        $request->validate(['month' => 'nullable|integer|between:1,12', 'year' => 'nullable|integer|between:2000,2100', 'site_id' => 'nullable|string']);
-        $siteId = $request->get('site_id', 'all');
+        $request->validate([
+            'month'   => 'nullable|integer|between:1,12',
+            'year'    => 'nullable|integer|between:2000,2100',
+            'site_id' => 'nullable|string'
+        ]);
+
+        $user   = Auth::user();
         $month  = sprintf('%02d', $request->get('month', date('m')));
         $year   = $request->get('year', date('Y'));
+        $siteId = $request->get('site_id', 'all');
+
+        // Jika user adalah team_leader, paksa site_id menggunakan site miliknya sendiri demi keamanan
+        if (!in_array($user->role, ['superadmin', 'administration'])) {
+            $siteId = $user->site_id ?? 'all';
+        }
 
         if (class_exists('\App\Exports\ScheduleExport')) {
             return \Maatwebsite\Excel\Facades\Excel::download(
