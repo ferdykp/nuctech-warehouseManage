@@ -481,11 +481,18 @@ class AdminReimbursementController extends Controller
     /**
      * EXPORT SUMMARY PDF (DENGAN GHOSTSCRIPT CONVERSION)
      */
+    /**
+     * EXPORT SUMMARY PDF
+     *
+     * - Portrait PDF / image  : 1 dokumen = 1 slot
+     * - Landscape PDF         : setiap halaman dibelah menjadi 2 PDF temporary
+     *                           (kiri + kanan), sehingga tidak membutuhkan
+     *                           ClippingRect() dan tidak menyebabkan overlap.
+     */
     public function exportApprovedPdf(Request $request)
     {
         $user = auth()->user();
 
-        // 🟢 Jika superadmin / administration, ambil seluruh data klaim
         if (in_array($user->role, ['superadmin', 'administration'])) {
             $query = Reimbursement::query();
         } else {
@@ -505,7 +512,6 @@ class AdminReimbursementController extends Controller
             ->orderBy('id', 'asc')
             ->get();
 
-
         if ($reimbursements->isEmpty()) {
             return redirect()->back()->with('error', 'Tidak ada data reimbursement APPROVED untuk bulan yang dipilih.');
         }
@@ -513,185 +519,134 @@ class AdminReimbursementController extends Controller
         $pdf = new Fpdi('L', 'mm', 'A4');
         $pdf->SetAutoPageBreak(false);
 
-        $canvasWidth  = 297;
-        $canvasHeight = 210;
-        $marginOuter  = 10;
-        $gapCenter    = 6;
-        $maxPageWidth = ($canvasWidth - ($marginOuter * 2) - $gapCenter) / 2;
-        $maxPageHeight = $canvasHeight - 20;
+        $canvasWidth    = 297;
+        $canvasHeight   = 210;
+        $marginOuter    = 10;
+        $gapCenter      = 6;
+        $maxPageWidth   = ($canvasWidth - ($marginOuter * 2) - $gapCenter) / 2;
+        $maxPageHeight  = $canvasHeight - 20;
 
         $documentQueue = [];
         $claimCounter = 1;
 
-        foreach ($reimbursements as $reimbursement) {
-            if (!$reimbursement->receipt_attachment) continue;
-
-            $cleanPath = str_replace(['storage/', 'public/'], '', $reimbursement->receipt_attachment);
-            $invoicePath = storage_path('app/public/' . $cleanPath);
-
-            if (!file_exists($invoicePath)) {
-                $invoicePath = public_path('storage/' . $cleanPath);
-                if (!file_exists($invoicePath)) continue;
-            }
-
-            $extension = strtolower(pathinfo($invoicePath, PATHINFO_EXTENSION));
-
-            if ($extension === 'pdf') {
-                // 🟢 Konversi PDF via Ghostscript
-                $pdfData = $this->convertPdfToVersion14($invoicePath);
-                $targetPdf = $pdfData['path'];
-
-                try {
-                    $subPdf = new Fpdi();
-                    $pageCount = $subPdf->setSourceFile($targetPdf);
-
-                    for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                        $documentQueue[] = [
-                            'type' => 'pdf',
-                            'file' => $targetPdf,
-                            'page_no' => $pageNo,
-                            'claim_no' => $claimCounter,
-                            'is_temp' => $pdfData['is_temp']
-                        ];
-                    }
-                } catch (\Exception $e) {
-                    Log::error("FPDI Error pada Summary PDF ID {$reimbursement->id}: " . $e->getMessage());
-                    if ($pdfData['is_temp'] && file_exists($targetPdf)) @unlink($targetPdf);
+        try {
+            foreach ($reimbursements as $reimbursement) {
+                if (!$reimbursement->receipt_attachment) {
                     continue;
                 }
-            } elseif (in_array($extension, ['jpg', 'jpeg', 'png'])) {
-                $documentQueue[] = [
-                    'type' => 'image',
-                    'file' => $invoicePath,
-                    'claim_no' => $claimCounter,
-                    'is_temp' => false
-                ];
-            }
 
-            if (count($documentQueue) % 2 !== 0) {
-                $documentQueue[] = ['type' => 'blank', 'is_temp' => false];
-            }
+                $invoicePath = $this->resolveReceiptPath($reimbursement->receipt_attachment);
 
-            $claimCounter++;
-        }
-
-        if (empty($documentQueue)) {
-            return redirect()->back()->with('error', 'Tidak ada berkas nota yang dapat diproses ke PDF Summary.');
-        }
-
-        $totalItems = count($documentQueue);
-
-        for ($i = 0; $i < $totalItems; $i += 2) {
-            $pdf->AddPage('L', [$canvasWidth, $canvasHeight]);
-
-            $leftItem = $documentQueue[$i];
-
-            if ($leftItem['type'] !== 'blank') {
-                $x1 = $marginOuter;
-                $y1 = ($canvasHeight - $maxPageHeight) / 2;
-
-                if ($leftItem['type'] === 'pdf') {
-                    $pdf->setSourceFile($leftItem['file']);
-                    $tplId = $pdf->importPage($leftItem['page_no']);
-                    $size  = $pdf->getTemplateSize($tplId);
-                    $ratio = $size['width'] / $size['height'];
-
-                    $w1 = $maxPageWidth;
-                    $h1 = $w1 / $ratio;
-                    if ($h1 > $maxPageHeight) {
-                        $h1 = $maxPageHeight;
-                        $w1 = $h1 * $ratio;
-                    }
-                    $x1_centered = $x1 + (($maxPageWidth - $w1) / 2);
-                    $y1_centered = ($canvasHeight - $h1) / 2;
-
-                    $pdf->useTemplate($tplId, $x1_centered, $y1_centered, $w1, $h1);
-                } else {
-                    list($imgWidth, $imgHeight) = getimagesize($leftItem['file']);
-                    $ratio = $imgWidth / $imgHeight;
-
-                    $w1 = $maxPageWidth;
-                    $h1 = $w1 / $ratio;
-                    if ($h1 > $maxPageHeight) {
-                        $h1 = $maxPageHeight;
-                        $w1 = $h1 * $ratio;
-                    }
-                    $x1_centered = $x1 + (($maxPageWidth - $w1) / 2);
-                    $y1_centered = ($canvasHeight - $h1) / 2;
-
-                    $pdf->Image($leftItem['file'], $x1_centered, $y1_centered, $w1, $h1);
+                if (!$invoicePath || !file_exists($invoicePath)) {
+                    Log::warning("Receipt tidak ditemukan untuk reimbursement ID {$reimbursement->id}");
+                    continue;
                 }
 
-                $pdf->SetDrawColor(40, 40, 40);
-                $pdf->SetLineWidth(0.3);
-                $pdf->Rect($x1, $y1, $maxPageWidth, $maxPageHeight);
+                $extension = strtolower(pathinfo($invoicePath, PATHINFO_EXTENSION));
 
-                $pdf->SetFont('Helvetica', 'B', 10);
-                $pdf->SetTextColor(40, 40, 40);
-                $pdf->SetXY($x1 + $maxPageWidth - 30, $y1 - 6);
-                $pdf->Cell(30, 5, 'SN. ' . $leftItem['claim_no'], 0, 0, 'R');
-            }
+                if ($extension === 'pdf') {
+                    $pdfData = $this->convertPdfToVersion14($invoicePath);
+                    $targetPdf = $pdfData['path'];
+                    $claimQueueStart = count($documentQueue);
+                    $sourcePdfStillNeeded = false;
 
-            if (isset($documentQueue[$i + 1])) {
-                $rightItem = $documentQueue[$i + 1];
+                    try {
+                        $reader = new Fpdi();
+                        $pageCount = $reader->setSourceFile($targetPdf);
 
-                if ($rightItem['type'] !== 'blank') {
-                    $x2 = $marginOuter + $maxPageWidth + $gapCenter;
-                    $y2 = ($canvasHeight - $maxPageHeight) / 2;
+                        for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                            $tplId = $reader->importPage($pageNo);
+                            $size = $reader->getTemplateSize($tplId);
 
-                    if ($rightItem['type'] === 'pdf') {
-                        $pdf->setSourceFile($rightItem['file']);
-                        $tplId = $pdf->importPage($rightItem['page_no']);
-                        $size  = $pdf->getTemplateSize($tplId);
-                        $ratio = $size['width'] / $size['height'];
+                            if ($size['width'] > $size['height']) {
+                                // LANDSCAPE: benar-benar buat 2 file setengah halaman.
+                                $halves = $this->createLandscapeHalfPages($targetPdf, $pageNo);
 
-                        $w2 = $maxPageWidth;
-                        $h2 = $w2 / $ratio;
-                        if ($h2 > $maxPageHeight) {
-                            $h2 = $maxPageHeight;
-                            $w2 = $h2 * $ratio;
+                                foreach ($halves as $half) {
+                                    $documentQueue[] = [
+                                        'type' => 'pdf',
+                                        'file' => $half['file'],
+                                        'page_no' => 1,
+                                        'claim_no' => $claimCounter,
+                                        'is_temp' => true,
+                                    ];
+                                }
+                            } else {
+                                // PORTRAIT: tetap sebagai satu dokumen.
+                                $sourcePdfStillNeeded = true;
+                                $documentQueue[] = [
+                                    'type' => 'pdf',
+                                    'file' => $targetPdf,
+                                    'page_no' => $pageNo,
+                                    'claim_no' => $claimCounter,
+                                    'is_temp' => $pdfData['is_temp'],
+                                ];
+                            }
                         }
-                        $x2_centered = $x2 + (($maxPageWidth - $w2) / 2);
-                        $y2_centered = ($canvasHeight - $h2) / 2;
 
-                        $pdf->useTemplate($tplId, $x2_centered, $y2_centered, $w2, $h2);
-                    } else {
-                        list($imgWidth, $imgHeight) = getimagesize($rightItem['file']);
-                        $ratio = $imgWidth / $imgHeight;
-
-                        $w2 = $maxPageWidth;
-                        $h2 = $w2 / $ratio;
-                        if ($h2 > $maxPageHeight) {
-                            $h2 = $maxPageHeight;
-                            $w2 = $h2 * $ratio;
+                        // Hanya hapus hasil Ghostscript jika TIDAK ADA halaman
+                        // portrait yang masih menggunakannya.
+                        if ($pdfData['is_temp'] && !$sourcePdfStillNeeded && file_exists($targetPdf)) {
+                            @unlink($targetPdf);
                         }
-                        $x2_centered = $x2 + (($maxPageWidth - $w2) / 2);
-                        $y2_centered = ($canvasHeight - $h2) / 2;
+                    } catch (\Throwable $e) {
+                        Log::error("FPDI Error pada Summary PDF ID {$reimbursement->id}: {$e->getMessage()}");
 
-                        $pdf->Image($rightItem['file'], $x2_centered, $y2_centered, $w2, $h2);
+                        if ($pdfData['is_temp'] && file_exists($targetPdf)) {
+                            @unlink($targetPdf);
+                        }
+
+                        // Buang hanya item temporary yang dibuat untuk klaim ini.
+                        $failedItems = array_splice($documentQueue, $claimQueueStart);
+                        $this->cleanupTemporaryQueueFiles($failedItems);
+
+                        continue;
                     }
-
-                    $pdf->Rect($x2, $y2, $maxPageWidth, $maxPageHeight);
-
-                    $pdf->SetFont('Helvetica', 'B', 10);
-                    $pdf->SetTextColor(40, 40, 40);
-                    $pdf->SetXY($x2 + $maxPageWidth - 30, $y2 - 6);
-                    $pdf->Cell(30, 5, 'SN. ' . $rightItem['claim_no'], 0, 0, 'R');
+                } elseif (in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                    $documentQueue[] = [
+                        'type' => 'image',
+                        'file' => $invoicePath,
+                        'claim_no' => $claimCounter,
+                        'is_temp' => false,
+                    ];
                 }
+
+                // Setiap klaim harus mulai dari slot baru jika jumlah itemnya ganjil.
+                if (count($documentQueue) % 2 !== 0) {
+                    $documentQueue[] = [
+                        'type' => 'blank',
+                        'is_temp' => false,
+                    ];
+                }
+
+                $claimCounter++;
             }
+
+            if (empty($documentQueue)) {
+                return redirect()->back()->with('error', 'Tidak ada berkas nota yang dapat diproses ke PDF Summary.');
+            }
+
+            $this->renderDocumentQueueToA4(
+                $pdf,
+                $documentQueue,
+                $canvasWidth,
+                $canvasHeight,
+                $marginOuter,
+                $gapCenter,
+                $maxPageWidth,
+                $maxPageHeight,
+                true
+            );
+
+            $pdfContent = $pdf->Output('S');
+        } finally {
+            $this->cleanupTemporaryQueueFiles($documentQueue);
         }
 
-        // Output PDF Stream
-        $pdfContent = $pdf->Output('S');
+        $monthName = $request->filled('month')
+            ? date('F', mktime(0, 0, 0, $request->month, 10))
+            : 'All_Months';
 
-        // 🟢 Hapus file temporary Ghostscript
-        foreach ($documentQueue as $item) {
-            if (!empty($item['is_temp']) && file_exists($item['file'])) {
-                @unlink($item['file']);
-            }
-        }
-
-        $monthName = $request->filled('month') ? date('F', mktime(0, 0, 0, $request->month, 10)) : 'All_Months';
         $fileName = "reimbursements_approved_{$monthName}_" . now()->format('Y') . ".pdf";
 
         return response($pdfContent)
@@ -706,128 +661,124 @@ class AdminReimbursementController extends Controller
     {
         $reimbursement = Reimbursement::findOrFail($id);
         \App\Services\ReimbursementAccess::view($reimbursement);
-        $cleanPath = str_replace(['storage/', 'public/'], '', $reimbursement->receipt_attachment);
-        $invoicePath = storage_path('app/public/' . $cleanPath);
 
-        if (!$reimbursement->receipt_attachment || !file_exists($invoicePath)) {
+        if (!$reimbursement->receipt_attachment) {
+            return redirect()->back()->with('error', 'Berkas nota bukti lampiran tidak ditemukan.');
+        }
+
+        $invoicePath = $this->resolveReceiptPath($reimbursement->receipt_attachment);
+
+        if (!$invoicePath || !file_exists($invoicePath)) {
             return redirect()->back()->with('error', 'Berkas nota bukti lampiran tidak ditemukan fisik datanya.');
         }
 
         $pdf = new Fpdi('L', 'mm', 'A4');
         $pdf->SetAutoPageBreak(false);
 
-        $canvasWidth  = 297;
-        $canvasHeight = 210;
-        $marginOuter  = 10;
-        $gapCenter    = 6;
-        $maxPageWidth = ($canvasWidth - ($marginOuter * 2) - $gapCenter) / 2;
-        $maxPageHeight = $canvasHeight - 20;
+        $canvasWidth    = 297;
+        $canvasHeight   = 210;
+        $marginOuter    = 10;
+        $gapCenter      = 6;
+        $maxPageWidth   = ($canvasWidth - ($marginOuter * 2) - $gapCenter) / 2;
+        $maxPageHeight  = $canvasHeight - 20;
 
         $extension = strtolower(pathinfo($invoicePath, PATHINFO_EXTENSION));
         $documentQueue = [];
 
-        if ($extension === 'pdf') {
-            $pdfData = $this->convertPdfToVersion14($invoicePath);
-            $targetPdfPath = $pdfData['path'];
+        try {
+            if ($extension === 'pdf') {
+                $pdfData = $this->convertPdfToVersion14($invoicePath);
+                $targetPdfPath = $pdfData['path'];
 
-            try {
-                $subPdf = new Fpdi();
-                $pageCount = $subPdf->setSourceFile($targetPdfPath);
+                try {
+                    $reader = new Fpdi();
+                    $pageCount = $reader->setSourceFile($targetPdfPath);
+                    $sourcePdfStillNeeded = false;
 
-                for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                    $documentQueue[] = [
-                        'type' => 'pdf',
-                        'file' => $targetPdfPath,
-                        'page_no' => $pageNo,
-                        'is_temp' => $pdfData['is_temp']
-                    ];
+                    for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                        $tplId = $reader->importPage($pageNo);
+                        $size = $reader->getTemplateSize($tplId);
+
+                        if ($size['width'] > $size['height']) {
+                            // LANDSCAPE: satu halaman menjadi dua slot.
+                            $halves = $this->createLandscapeHalfPages($targetPdfPath, $pageNo);
+
+                            foreach ($halves as $half) {
+                                $documentQueue[] = [
+                                    'type' => 'pdf',
+                                    'file' => $half['file'],
+                                    'page_no' => 1,
+                                    'claim_no' => null,
+                                    'is_temp' => true,
+                                ];
+                            }
+                        } else {
+                            $sourcePdfStillNeeded = true;
+                            $documentQueue[] = [
+                                'type' => 'pdf',
+                                'file' => $targetPdfPath,
+                                'page_no' => $pageNo,
+                                'claim_no' => null,
+                                'is_temp' => $pdfData['is_temp'],
+                            ];
+                        }
+                    }
+
+                    // Hapus hasil Ghostscript hanya jika semua halaman sudah
+                    // berubah menjadi half-PDF dan tidak ada queue item yang
+                    // masih membutuhkan targetPdfPath.
+                    if ($pdfData['is_temp'] && !$sourcePdfStillNeeded && file_exists($targetPdfPath)) {
+                        @unlink($targetPdfPath);
+                    }
+                } catch (\Throwable $e) {
+                    Log::error("FPDI Parsing Failed: " . $e->getMessage());
+
+                    if ($pdfData['is_temp'] && file_exists($targetPdfPath)) {
+                        @unlink($targetPdfPath);
+                    }
+
+                    $this->cleanupTemporaryQueueFiles($documentQueue);
+
+                    return redirect()->back()->with('error', 'Gagal membaca berkas PDF lampiran.');
                 }
-            } catch (\Exception $e) {
-                Log::error("FPDI Parsing Failed: " . $e->getMessage());
-                if ($pdfData['is_temp'] && file_exists($targetPdfPath)) @unlink($targetPdfPath);
-                return redirect()->back()->with('error', 'Gagal membaca berkas PDF lampiran.');
-            }
-        } elseif (in_array($extension, ['jpg', 'jpeg', 'png'])) {
-            $documentQueue[] = ['type' => 'image', 'file' => $invoicePath, 'is_temp' => false];
-        }
-
-        $totalItems = count($documentQueue);
-        for ($i = 0; $i < $totalItems; $i += 2) {
-            $pdf->AddPage('L', [$canvasWidth, $canvasHeight]);
-
-            $leftItem = $documentQueue[$i];
-            $x1 = $marginOuter;
-            $y1 = ($canvasHeight - $maxPageHeight) / 2;
-
-            if ($leftItem['type'] === 'pdf') {
-                $pdf->setSourceFile($leftItem['file']);
-                $tplId = $pdf->importPage($leftItem['page_no']);
-                $size  = $pdf->getTemplateSize($tplId);
-                $ratio = $size['width'] / $size['height'];
-
-                $w1 = $maxPageWidth;
-                $h1 = $w1 / $ratio;
-                if ($h1 > $maxPageHeight) {
-                    $h1 = $maxPageHeight;
-                    $w1 = $h1 * $ratio;
-                }
-                $pdf->useTemplate($tplId, $x1 + (($maxPageWidth - $w1) / 2), ($canvasHeight - $h1) / 2, $w1, $h1);
+            } elseif (in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                $documentQueue[] = [
+                    'type' => 'image',
+                    'file' => $invoicePath,
+                    'claim_no' => null,
+                    'is_temp' => false,
+                ];
             } else {
-                list($imgWidth, $imgHeight) = getimagesize($leftItem['file']);
-                $ratio = $imgWidth / $imgHeight;
-                $w1 = $maxPageWidth;
-                $h1 = $w1 / $ratio;
-                if ($h1 > $maxPageHeight) {
-                    $h1 = $maxPageHeight;
-                    $w1 = $h1 * $ratio;
-                }
-                $pdf->Image($leftItem['file'], $x1 + (($maxPageWidth - $w1) / 2), ($canvasHeight - $h1) / 2, $w1, $h1);
+                return redirect()->back()->with('error', 'Format berkas lampiran tidak didukung.');
             }
 
-            $pdf->SetDrawColor(40, 40, 40);
-            $pdf->SetLineWidth(0.3);
-            $pdf->Rect($x1, $y1, $maxPageWidth, $maxPageHeight);
-
-            if (isset($documentQueue[$i + 1])) {
-                $rightItem = $documentQueue[$i + 1];
-                $x2 = $marginOuter + $maxPageWidth + $gapCenter;
-                $y2 = $y1;
-
-                if ($rightItem['type'] === 'pdf') {
-                    $pdf->setSourceFile($rightItem['file']);
-                    $tplId = $pdf->importPage($rightItem['page_no']);
-                    $size  = $pdf->getTemplateSize($tplId);
-                    $ratio = $size['width'] / $size['height'];
-
-                    $w2 = $maxPageWidth;
-                    $h2 = $w2 / $ratio;
-                    if ($h2 > $maxPageHeight) {
-                        $h2 = $maxPageHeight;
-                        $w2 = $h2 * $ratio;
-                    }
-                    $pdf->useTemplate($tplId, $x2 + (($maxPageWidth - $w2) / 2), ($canvasHeight - $h2) / 2, $w2, $h2);
-                } else {
-                    list($imgWidth, $imgHeight) = getimagesize($rightItem['file']);
-                    $ratio = $imgWidth / $imgHeight;
-                    $w2 = $maxPageWidth;
-                    $h2 = $w2 / $ratio;
-                    if ($h2 > $maxPageHeight) {
-                        $h2 = $maxPageHeight;
-                        $w2 = $h2 * $ratio;
-                    }
-                    $pdf->Image($rightItem['file'], $x2 + (($maxPageWidth - $w2) / 2), ($canvasHeight - $h2) / 2, $w2, $h2);
-                }
-                $pdf->Rect($x2, $y2, $maxPageWidth, $maxPageHeight);
+            if (empty($documentQueue)) {
+                return redirect()->back()->with('error', 'Tidak ada halaman yang dapat diekspor.');
             }
-        }
 
-        $pdfContent = $pdf->Output('S');
-
-        // 🟢 Hapus file temp Ghostscript
-        foreach ($documentQueue as $item) {
-            if (!empty($item['is_temp']) && file_exists($item['file'])) {
-                @unlink($item['file']);
+            // Single invoice tetap memakai layout dua slot per halaman A4.
+            if (count($documentQueue) % 2 !== 0) {
+                $documentQueue[] = [
+                    'type' => 'blank',
+                    'is_temp' => false,
+                ];
             }
+
+            $this->renderDocumentQueueToA4(
+                $pdf,
+                $documentQueue,
+                $canvasWidth,
+                $canvasHeight,
+                $marginOuter,
+                $gapCenter,
+                $maxPageWidth,
+                $maxPageHeight,
+                false
+            );
+
+            $pdfContent = $pdf->Output('S');
+        } finally {
+            $this->cleanupTemporaryQueueFiles($documentQueue);
         }
 
         $filename = 'invoice_' . strtolower(str_replace(' ', '_', $reimbursement->person_name)) . '_' . $reimbursement->id . '.pdf';
@@ -835,6 +786,262 @@ class AdminReimbursementController extends Controller
         return response($pdfContent)
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
+
+    /**
+     * Resolve path receipt yang tersimpan di database.
+     */
+    private function resolveReceiptPath($receiptAttachment)
+    {
+        $cleanPath = str_replace(['storage/', 'public/'], '', $receiptAttachment);
+
+        $candidates = [
+            storage_path('app/public/' . $cleanPath),
+            public_path('storage/' . $cleanPath),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (file_exists($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Membuat dua PDF temporary dari satu halaman PDF LANDSCAPE.
+     *
+     * Hasil:
+     *   - left  = setengah kiri halaman asli
+     *   - right = setengah kanan halaman asli
+     *
+     * Tidak menggunakan ClippingRect(). Batas page PDF temporary
+     * sendiri menjadi clipping boundary, sehingga tidak ada overlap.
+     */
+    private function createLandscapeHalfPages($sourcePdf, $pageNo)
+    {
+        $reader = new Fpdi();
+        $pageCount = $reader->setSourceFile($sourcePdf);
+
+        if ($pageNo < 1 || $pageNo > $pageCount) {
+            throw new \RuntimeException("Halaman PDF tidak valid: {$pageNo}");
+        }
+
+        $sourceTemplate = $reader->importPage($pageNo);
+        $size = $reader->getTemplateSize($sourceTemplate);
+
+        $pageWidth = (float) $size['width'];
+        $pageHeight = (float) $size['height'];
+
+        if ($pageWidth <= $pageHeight) {
+            throw new \RuntimeException('createLandscapeHalfPages hanya menerima halaman landscape.');
+        }
+
+        $halfWidth = $pageWidth / 2;
+        $result = [];
+        $createdFiles = [];
+
+        try {
+            foreach (['left', 'right'] as $side) {
+                $out = new Fpdi();
+                $out->SetAutoPageBreak(false);
+                $out->setSourceFile($sourcePdf);
+                $tplId = $out->importPage($pageNo);
+
+                // Halaman output hanya selebar setengah halaman sumber.
+                $out->AddPage('P', [$halfWidth, $pageHeight]);
+
+                if ($side === 'left') {
+                    // Bagian kiri halaman asli berada di dalam page output.
+                    $x = 0;
+                } else {
+                    // Geser halaman asli ke kiri agar bagian kanan berada
+                    // tepat di dalam page output.
+                    $x = -$halfWidth;
+                }
+
+                $out->useTemplate(
+                    $tplId,
+                    $x,
+                    0,
+                    $pageWidth,
+                    $pageHeight
+                );
+
+                $tempPath = storage_path(
+                    'app/public/receipts/landscape_half_' . uniqid('', true) . '_' . $side . '.pdf'
+                );
+
+                $out->Output($tempPath, 'F');
+
+                if (!file_exists($tempPath) || filesize($tempPath) <= 0) {
+                    throw new \RuntimeException("Gagal membuat PDF {$side} dari halaman landscape.");
+                }
+
+                $createdFiles[] = $tempPath;
+                $result[] = [
+                    'side' => $side,
+                    'file' => $tempPath,
+                ];
+            }
+        } catch (\Throwable $e) {
+            foreach ($createdFiles as $file) {
+                if (file_exists($file)) {
+                    @unlink($file);
+                }
+            }
+
+            throw $e;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Render queue menjadi halaman A4 landscape, dua slot per halaman.
+     */
+    private function renderDocumentQueueToA4(
+        Fpdi $pdf,
+        array $documentQueue,
+        $canvasWidth,
+        $canvasHeight,
+        $marginOuter,
+        $gapCenter,
+        $maxPageWidth,
+        $maxPageHeight,
+        $showClaimNumber = false
+    ) {
+        $totalItems = count($documentQueue);
+
+        for ($i = 0; $i < $totalItems; $i += 2) {
+            $pdf->AddPage('L', [$canvasWidth, $canvasHeight]);
+
+            $leftItem = $documentQueue[$i] ?? ['type' => 'blank'];
+            $rightItem = $documentQueue[$i + 1] ?? ['type' => 'blank'];
+
+            $this->renderDocumentSlot(
+                $pdf,
+                $leftItem,
+                $marginOuter,
+                ($canvasHeight - $maxPageHeight) / 2,
+                $maxPageWidth,
+                $maxPageHeight,
+                $showClaimNumber
+            );
+
+            $this->renderDocumentSlot(
+                $pdf,
+                $rightItem,
+                $marginOuter + $maxPageWidth + $gapCenter,
+                ($canvasHeight - $maxPageHeight) / 2,
+                $maxPageWidth,
+                $maxPageHeight,
+                $showClaimNumber
+            );
+        }
+    }
+
+    /**
+     * Render satu item ke satu slot.
+     */
+    private function renderDocumentSlot(
+        Fpdi $pdf,
+        array $item,
+        $slotX,
+        $slotY,
+        $slotW,
+        $slotH,
+        $showClaimNumber = false
+    ) {
+        if (($item['type'] ?? 'blank') === 'blank') {
+            return;
+        }
+
+        $type = $item['type'];
+        $file = $item['file'] ?? null;
+
+        if (!$file || !file_exists($file)) {
+            return;
+        }
+
+        if ($type === 'pdf') {
+            $pdf->setSourceFile($file);
+            $tplId = $pdf->importPage($item['page_no'] ?? 1);
+            $size = $pdf->getTemplateSize($tplId);
+
+            $ratio = $size['width'] / max($size['height'], 0.001);
+            $w = $slotW;
+            $h = $w / $ratio;
+
+            if ($h > $slotH) {
+                $h = $slotH;
+                $w = $h * $ratio;
+            }
+
+            $x = $slotX + (($slotW - $w) / 2);
+            $y = $slotY + (($slotH - $h) / 2);
+
+            $pdf->useTemplate($tplId, $x, $y, $w, $h);
+        } elseif ($type === 'image') {
+            $imageSize = @getimagesize($file);
+
+            if (!$imageSize || empty($imageSize[0]) || empty($imageSize[1])) {
+                return;
+            }
+
+            $ratio = $imageSize[0] / max($imageSize[1], 1);
+            $w = $slotW;
+            $h = $w / $ratio;
+
+            if ($h > $slotH) {
+                $h = $slotH;
+                $w = $h * $ratio;
+            }
+
+            $x = $slotX + (($slotW - $w) / 2);
+            $y = $slotY + (($slotH - $h) / 2);
+
+            $pdf->Image($file, $x, $y, $w, $h);
+        }
+
+        // Border slot.
+        $pdf->SetDrawColor(40, 40, 40);
+        $pdf->SetLineWidth(0.3);
+        $pdf->Rect($slotX, $slotY, $slotW, $slotH);
+
+        if ($showClaimNumber && !empty($item['claim_no'])) {
+            $pdf->SetFont('Helvetica', 'B', 10);
+            $pdf->SetTextColor(40, 40, 40);
+            $pdf->SetXY($slotX + $slotW - 30, $slotY - 6);
+            $pdf->Cell(30, 5, 'SN. ' . $item['claim_no'], 0, 0, 'R');
+        }
+    }
+
+    /**
+     * Hapus seluruh file temporary yang dibuat selama export.
+     */
+    private function cleanupTemporaryQueueFiles(array $documentQueue)
+    {
+        $deleted = [];
+
+        foreach ($documentQueue as $item) {
+            if (empty($item['is_temp']) || empty($item['file'])) {
+                continue;
+            }
+
+            $file = $item['file'];
+
+            if (isset($deleted[$file])) {
+                continue;
+            }
+
+            if (file_exists($file)) {
+                @unlink($file);
+            }
+
+            $deleted[$file] = true;
+        }
     }
 
     public function exportExcel(Request $request)
