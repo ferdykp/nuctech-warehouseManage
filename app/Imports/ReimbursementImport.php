@@ -28,7 +28,7 @@ class ReimbursementImport implements ToCollection, WithCalculatedFormulas
         }
 
         // Mulai membaca dari baris indeks ke-2 (Baris ke-3 di Excel)
-        foreach ($rows->slice(2) as $row) {
+        foreach ($rows->slice(2) as $rowIndex => $row) {
 
             $rowArray = $row instanceof Collection ? $row->toArray() : (array) $row;
 
@@ -59,13 +59,7 @@ class ReimbursementImport implements ToCollection, WithCalculatedFormulas
                 continue;
             }
 
-            // Bersihkan format angka nominal (menghapus string IDR, Rp, koma, titik)
-            $cleanedAmount = preg_replace('/[^0-9.]/', '', str_replace(',', '.', (string) $rawAmount));
-            $amount = floatval($cleanedAmount);
-
-            if ($amount <= 0) {
-                continue;
-            }
+            $amount = \App\Services\ImportAmount::parse($rawAmount, $rowIndex + 1);
 
             // 4. PARSING TANGGAL
             $rawDate = isset($rowArray[2]) ? $rowArray[2] : null;

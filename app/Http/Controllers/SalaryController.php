@@ -82,7 +82,7 @@ class SalaryController extends Controller
         $salaries = $query->latest('created_at')->paginate(10)->appends($request->all());
 
         foreach ($salaries as $salary) {
-            $calc = $this->calculateSalaryDetails($salary->employee_id, $monthPeriod);
+            $calc = $this->calculateSalaryDetails($salary->employee_id, $monthPeriod, (float) $salary->amount);
 
             if ($calc['holiday_overtime_days'] > 0) {
                 $salary->calculated_before_after =
@@ -203,7 +203,8 @@ class SalaryController extends Controller
 
             $calc = $this->calculateSalaryDetails(
                 $salary->employee_id,
-                $monthPeriod
+                $monthPeriod,
+                (float) $salary->amount
             );
 
             if ($calc['holiday_overtime_days'] > 0) {
@@ -327,100 +328,9 @@ class SalaryController extends Controller
      * CALCULATE SALARY DETAILS
      * ============================================================
      */
-    private function calculateSalaryDetails($employeeId, $monthPeriod = null)
+    private function calculateSalaryDetails($employeeId, $monthPeriod = null, ?float $amount = null)
     {
-        $monthPeriod = $monthPeriod ?? date('Y-m');
-
-        $startOfMonth = Carbon::parse($monthPeriod . '-01')->startOfMonth();
-        $endOfMonth = Carbon::parse($monthPeriod . '-01')->endOfMonth();
-        $daysInMonth = $startOfMonth->daysInMonth;
-
-        $rawHolidays = $this->holidayService->getHolidaysForMonth($monthPeriod);
-
-        $nationalHolidays = [];
-        if (!empty($rawHolidays)) {
-            foreach ($rawHolidays as $key => $val) {
-                if ($key instanceof Carbon) {
-                    $dateKey = $key->format('Y-m-d');
-                } else {
-                    $dateKey = (string) $key;
-                }
-                $nationalHolidays[$dateKey] = $val;
-            }
-        }
-
-        $effectiveWorkingDays = 0;
-        for ($d = 1; $d <= $daysInMonth; $d++) {
-            $date = Carbon::parse(sprintf('%s-%02d', $monthPeriod, $d));
-            $dateStr = $date->format('Y-m-d');
-
-            $isWeekend = $date->isWeekend();
-            $isNationalHoliday = isset($nationalHolidays[$dateStr]);
-
-            if (!$isWeekend && !$isNationalHoliday) {
-                $effectiveWorkingDays++;
-            }
-        }
-
-        $schedules = EmployeeSchedule::where('employee_id', $employeeId)
-            ->whereBetween('date', [
-                $startOfMonth->format('Y-m-d'),
-                $endOfMonth->format('Y-m-d'),
-            ])
-            ->with('shift')
-            ->get();
-
-        $regularWorkDays = 0;
-        $holidayOvertimeDays = 0;
-        $holidayDates = [];
-
-        foreach ($schedules as $sched) {
-            if ($sched->shift && !$sched->shift->is_off) {
-                $dateStr = $sched->date instanceof Carbon
-                    ? $sched->date->format('Y-m-d')
-                    : (string) $sched->date;
-
-                $isNationalHoliday = isset($nationalHolidays[$dateStr]);
-
-                if ($isNationalHoliday) {
-                    $holidayOvertimeDays++;
-                    $holidayDates[] = [
-                        'date' => $dateStr,
-                        'name' => $nationalHolidays[$dateStr],
-                    ];
-                } else {
-                    $regularWorkDays++;
-                }
-            }
-        }
-
-        $salaryMaster = Salary::where('employee_id', $employeeId)
-            ->orderByDesc('created_at')
-            ->first();
-
-        $monthlySalary = $salaryMaster ? $salaryMaster->amount : 0;
-
-        $dailyRate = $effectiveWorkingDays > 0 ? ($monthlySalary / $effectiveWorkingDays) : 0;
-
-        $baseCalculatedSalary = ($effectiveWorkingDays > 0 && $regularWorkDays < $effectiveWorkingDays)
-            ? ($regularWorkDays / $effectiveWorkingDays) * $monthlySalary
-            : $monthlySalary;
-
-        $holidayOvertimePay = $holidayOvertimeDays * $dailyRate;
-        $totalSalaryToPay = $monthlySalary + $holidayOvertimePay;
-
-        return [
-            'monthly_salary'         => $monthlySalary,
-            'effective_working_days' => $effectiveWorkingDays,
-            'total_attended_days'    => $regularWorkDays + $holidayOvertimeDays,
-            'regular_work_days'      => $regularWorkDays,
-            'holiday_overtime_days'  => $holidayOvertimeDays,
-            'holiday_dates'          => $holidayDates,
-            'daily_rate'             => $dailyRate,
-            'base_calculated_salary' => $baseCalculatedSalary,
-            'holiday_overtime_pay'   => $holidayOvertimePay,
-            'total_salary_to_pay'    => $totalSalaryToPay,
-        ];
+        return app(\App\Services\PayrollCalculation::class)->calculate($employeeId, $monthPeriod, $amount);
     }
 
     /**
@@ -434,7 +344,7 @@ class SalaryController extends Controller
         $user = Auth::user();
 
         $request->validate([
-            'month' => 'required',
+            'month' => 'required|integer|between:1,12',
             'year'  => 'required|integer|min:2000|max:2100',
         ]);
 
@@ -447,39 +357,12 @@ class SalaryController extends Controller
 
         $targetTimestamp = Carbon::create($year, (int) $month, 15, 12, 0, 0);
 
-        /*
-        |--------------------------------------------------------------------------
-        | 1. PEMBERSIHAN AUTOMATIS (CLEANUP RESIGNED / INACTIVE EMPLOYEES)
-        |--------------------------------------------------------------------------
-        | Hapus record gaji pada periode ini milik karyawan yang berstatus Resigned
-        | atau non-aktif (is_active = false)
-        */
-        $resignedEmployeeIds = Employee::where('is_active', false)
-            ->orWhere('status', 'Resigned')
-            ->pluck('id');
-
-        $deletedCount = Salary::whereIn('employee_id', $resignedEmployeeIds)
-            ->whereBetween('created_at', [
-                $startOfMonth->format('Y-m-d H:i:s'),
-                $endOfMonth->format('Y-m-d H:i:s'),
-            ])
-            ->delete();
-
-        /*
-        |--------------------------------------------------------------------------
-        | 2. QUERY KARYAWAN AKTIF PERIODE INI
-        |--------------------------------------------------------------------------
-        */
-        $query = Employee::where('is_active', true)
-            ->where('status', '!=', 'Resigned')
-            ->with([
-                'site.branch',
-                'branch',
-            ]);
-
-        if ($user->role === 'employee_role') {
-            $query->where('site_id', $user->site_id);
-        }
+        // Eligibility belongs to the payroll period, not today's employment status.
+        // Never delete existing payroll as a side effect of regeneration.
+        $query = Employee::where(fn ($q) => $q->whereNull('join_date')->orWhereDate('join_date', '<=', $endOfMonth))
+            ->where(fn ($q) => $q->whereDate('resign_date', '>=', $startOfMonth)
+                ->orWhere(fn ($active) => $active->whereNull('resign_date')->where('is_active', true)->where('status', '!=', 'Resigned')))
+            ->with(['site.branch', 'branch']);
 
         $employees = $query->get();
 
@@ -515,6 +398,12 @@ class SalaryController extends Controller
                 ])
                 ->first();
 
+            if ($existingSalary && $endOfMonth->lt(now()->startOfMonth())) {
+                // Historical payroll is a snapshot; edits must be explicit.
+                $processedCount++;
+                continue;
+            }
+
             if ($existingSalary) {
                 $existingSalary->employee_id      = $emp->id;
                 $existingSalary->name             = $emp->name;
@@ -522,7 +411,7 @@ class SalaryController extends Controller
                 $existingSalary->placement        = $placementName;
                 $existingSalary->bank             = $emp->bank_name ?? 'BCA';
                 $existingSalary->account_no       = $emp->bank_account_number ?? '-';
-                $existingSalary->amount           = $emp->basic_salary ?? 0;
+                // Preserve the agreed salary snapshot for an existing period.
                 $existingSalary->information      = $calculatedInfo;
                 $existingSalary->more_information = $moreInformation;
                 $existingSalary->updated_at       = now();
@@ -539,7 +428,7 @@ class SalaryController extends Controller
                 $newSalary->placement        = $placementName;
                 $newSalary->bank             = $emp->bank_name ?? 'BCA';
                 $newSalary->account_no       = $emp->bank_account_number ?? '-';
-                $newSalary->amount           = $emp->basic_salary ?? 0;
+                $newSalary->amount           = app(\App\Services\PayrollCalculation::class)->salaryAt($emp, $endOfMonth);
                 $newSalary->information      = $calculatedInfo;
                 $newSalary->more_information = $moreInformation;
 
@@ -554,9 +443,6 @@ class SalaryController extends Controller
         }
 
         $message = "Sukses memproses data gaji untuk {$processedCount} karyawan aktif pada periode {$month}/{$year}. (Dibuat: {$createdCount}, diperbarui: {$updatedCount})";
-        if ($deletedCount > 0) {
-            $message .= " Serta menghapus {$deletedCount} data gaji karyawan yang telah Resigned.";
-        }
 
         return redirect()
             ->route('salary.index', [
@@ -574,7 +460,7 @@ class SalaryController extends Controller
     public function resetMonthlySalaries(Request $request)
     {
         $request->validate([
-            'month' => 'required',
+            'month' => 'required|integer|between:1,12',
             'year'  => 'required|integer|min:2000|max:2100',
         ]);
 
@@ -600,7 +486,7 @@ class SalaryController extends Controller
 
         return redirect()
             ->route('salary.index', ['month' => $month, 'year' => $year])
-            ->with('success', "Berhasil mereset {$deletedCount} data payroll untuk periode {$month}/{$year}.");
+            ->with('success', "Berhasil mereset {$deletedCount} data penggajian untuk periode {$month}/{$year}.");
     }
     /**
      * ============================================================

@@ -16,7 +16,7 @@
         {{-- Site Machine --}}
         <td class="px-6 py-4">
             <div class="text-sm font-bold leading-snug text-slate-900">{{ $item->site_machine }}</div>
-            <div class="text-[11px] font-mono text-slate-400 mt-0.5">Series: {{ $item->series_machine ?? 'N/A' }}</div>
+            <div class="text-[11px] font-mono text-slate-400 mt-0.5">Seri: {{ $item->series_machine ?? 'N/A' }}</div>
         </td>
 
         {{-- Attendant --}}
@@ -35,7 +35,7 @@
             <span
                 class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 border border-slate-200/80 rounded-xl text-xs font-bold text-slate-700">
                 <i class="fa-regular fa-calendar text-[11px] text-slate-400"></i>
-                {{ \Carbon\Carbon::parse($item->failure_date)->format('d M Y') }}
+                {{ \Carbon\Carbon::parse($item->failure_date)->translatedFormat('d M Y') }}
             </span>
         </td>
 
@@ -45,7 +45,7 @@
                 {{-- Detail Button (Selalu Tampil) --}}
                 <button type="button" onclick='openDetailReportModal(@json($item))'
                     class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer text-emerald-600 border-emerald-100 rounded-xl bg-emerald-50 hover:bg-emerald-600 hover:text-white active:scale-95"
-                    title="View Detail Report">
+                    title="Lihat Rincian Laporan">
                     <i class="text-xs fa-solid fa-eye"></i>
                 </button>
 
@@ -53,7 +53,7 @@
                     {{-- Edit --}}
                     <a href="{{ route($routePrefix . '.edit', $item->id) }}"
                         class="flex items-center justify-center w-8 h-8 text-blue-600 transition-all border border-blue-100 rounded-xl bg-blue-50 hover:bg-blue-600 hover:text-white active:scale-95"
-                        title="Edit Report">
+                        title="Ubah Laporan">
                         <i class="text-xs fa-solid fa-pen-to-square"></i>
                     </a>
 
@@ -61,7 +61,7 @@
                     <button type="button"
                         onclick="openDeleteReportModal('{{ route($routePrefix . '.destroy', ['report' => $item->id]) }}', '#REP-{{ str_pad($item->id, 4, '0', STR_PAD_LEFT) }}')"
                         class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
-                        title="Delete Report">
+                        title="Hapus Laporan">
                         <i class="text-xs fa-solid fa-trash-can"></i>
                     </button>
                 @endif
@@ -75,8 +75,8 @@
                 class="flex items-center justify-center w-12 h-12 mx-auto mb-3 text-xl rounded-2xl bg-slate-100 text-slate-400">
                 <i class="fa-solid fa-folder-open"></i>
             </div>
-            <p class="text-sm font-bold text-slate-800">No Failure Reports Found</p>
-            <p class="mt-1 text-xs text-slate-400">There are no component breakdown logs matching your search criteria.
+            <p class="text-sm font-bold text-slate-800">Laporan Kerusakan Tidak Ditemukan</p>
+            <p class="mt-1 text-xs text-slate-400">Tidak ada laporan kerusakan yang sesuai dengan pencarian Anda.
             </p>
         </td>
     </tr>

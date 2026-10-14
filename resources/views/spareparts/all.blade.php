@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Global Inventory Repository')
+@section('title', 'Stok Semua Lokasi')
 
 @section('content')
     <div class="w-full space-y-6">
@@ -10,20 +10,19 @@
             class="flex flex-col justify-between gap-4 p-6 bg-white border shadow-xs md:flex-row md:items-center rounded-3xl border-slate-200/80">
             <div>
                 <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                    <span class="transition-colors cursor-pointer hover:text-blue-600">Warehouse</span>
+                    <span class="transition-colors cursor-pointer hover:text-blue-600">Gudang</span>
                     <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                    <span class="font-extrabold text-blue-600">Global Inventory</span>
+                    <span class="font-extrabold text-blue-600">Inventaris Semua Lokasi</span>
                 </nav>
-                <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">Stock Repository</h1>
-                <p class="mt-0.5 text-xs sm:text-sm font-medium text-slate-500">Real-time overview and asset distribution of
-                    spare parts across all machine sites.</p>
+                <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">Daftar Stok</h1>
+                <p class="mt-0.5 text-xs sm:text-sm font-medium text-slate-500">Lihat stok terkini dan penempatan suku cadang di seluruh lokasi mesin.</p>
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
                 <button type="button" onclick="exportGlobalReport()"
                     class="inline-flex items-center justify-center gap-2 px-5 py-3 text-xs sm:text-sm font-bold text-white transition-all bg-slate-900 shadow-md hover:bg-blue-600 rounded-xl active:scale-[0.98] cursor-pointer">
                     <i class="text-xs fa-solid fa-file-export"></i>
-                    <span>Export Global Report</span>
+                    <span>Ekspor Laporan Semua Lokasi</span>
                 </button>
             </div>
         </div>
@@ -40,7 +39,7 @@
 
                 $quickStats = [
                     [
-                        'label' => 'Unique Parts',
+                        'label' => 'Jenis Suku Cadang',
                         'value' => number_format($statsData['uniqueParts'] ?? 0),
                         'icon' => 'fa-box-archive',
                         'bg' => 'bg-blue-50',
@@ -48,7 +47,7 @@
                         'border' => 'border-blue-100',
                     ],
                     [
-                        'label' => 'Total Units',
+                        'label' => 'Total Unit',
                         'value' => number_format($statsData['totalUnits'] ?? 0),
                         'icon' => 'fa-cubes',
                         'bg' => 'bg-emerald-50',
@@ -56,7 +55,7 @@
                         'border' => 'border-emerald-100',
                     ],
                     [
-                        'label' => 'Low Stock Items',
+                        'label' => 'Stok Menipis',
                         'value' => number_format($statsData['lowStock'] ?? 0),
                         'icon' => 'fa-triangle-exclamation',
                         'bg' => 'bg-amber-50',
@@ -64,7 +63,7 @@
                         'border' => 'border-amber-100',
                     ],
                     [
-                        'label' => 'Damaged Stock',
+                        'label' => 'Stok Rusak',
                         'value' => number_format($statsData['damagedStock'] ?? 0),
                         'icon' => 'fa-heart-crack',
                         'bg' => 'bg-rose-50',
@@ -107,7 +106,7 @@
                         <i class="text-xs fa-solid fa-magnifying-glass"></i>
                     </span>
                     <input type="text" id="global-search" value="{{ request('search') }}" autocomplete="off"
-                        placeholder="Search SN, Part Name, or Site Location..."
+                        placeholder="Cari nomor seri, nama suku cadang, atau lokasi..."
                         class="w-full py-2.5 pl-10 pr-10 text-xs sm:text-sm font-medium text-slate-800 bg-white border border-slate-200 outline-none rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-2xs">
 
                     <button type="button" id="clearSearchBtn" onclick="clearSearch()"
@@ -122,7 +121,7 @@
 
                 <div class="flex items-center self-end gap-2 text-xs font-semibold text-slate-500 sm:self-center">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span>Live Global Query</span>
+                    <span>Pencarian Semua Lokasi</span>
                 </div>
             </div>
 
@@ -159,7 +158,7 @@
                 .catch(error => {
                     console.error('Error fetching global inventory:', error);
                     container.innerHTML =
-                        '<div class="p-12 text-xs font-bold text-center text-rose-500">Failed to load inventory data. Please try again.</div>';
+                        '<div class="p-12 text-xs font-bold text-center text-rose-500">Data stok gagal dimuat. Silakan coba lagi.</div>';
                 })
                 .finally(() => {
                     if (loader) loader.classList.add('hidden');

@@ -1,13 +1,13 @@
 <div class="w-full overflow-x-auto">
-    <table class="w-full text-left border-collapse min-w-[650px]">
+    <table data-mobile-cards class="w-full text-left border-collapse min-w-[650px]">
         <thead
             class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
             <tr>
-                <th class="px-6 py-3.5 text-center w-16">No</th>
-                <th class="px-6 py-3.5 w-36">Branch Code</th>
-                <th class="px-6 py-3.5">Branch Name & Details</th>
+                <th class="px-6 py-3.5 text-center w-16">Nomor</th>
+                <th class="px-6 py-3.5 w-36">Kode Cabang</th>
+                <th class="px-6 py-3.5">Nama dan Rincian Cabang</th>
                 @if (Auth::user()?->role === 'superadmin')
-                    <th class="px-6 py-3.5 text-center w-40">Actions</th>
+                    <th class="px-6 py-3.5 text-center w-40">Aksi</th>
                 @endif
             </tr>
         </thead>
@@ -32,7 +32,7 @@
                                     <i class="mr-1 fa-solid fa-location-dot text-slate-300"></i>{{ $b->branch_address }}
                                 </p>
                             @else
-                                <p class="text-slate-300 text-[11px] italic font-normal mt-0.5">No address specified</p>
+                                <p class="text-slate-300 text-[11px] italic font-normal mt-0.5">Alamat belum diisi</p>
                             @endif
                         </div>
                     </td>
@@ -42,18 +42,18 @@
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ route('branches.edit', $b->id) }}"
                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-600 hover:text-white transition-all active:scale-95"
-                                    title="Edit Branch">
+                                    title="Ubah Cabang">
                                     <i class="fa-solid fa-pen-to-square text-[11px]"></i>
-                                    <span>Edit</span>
+                                    <span>Ubah</span>
                                 </a>
 
                                 {{-- DELETE CONFIRMATION MODAL --}}
                                 <div x-data="{ open: false }">
                                     <button @click="open = true" type="button"
                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-600 hover:text-white transition-all active:scale-95"
-                                        title="Delete Branch">
+                                        title="Hapus Cabang">
                                         <i class="fa-solid fa-trash-can text-[11px]"></i>
-                                        <span>Delete</span>
+                                        <span>Hapus</span>
                                     </button>
 
                                     <div x-show="open" x-cloak x-transition.opacity
@@ -67,34 +67,32 @@
                                                     <i class="text-base fa-solid fa-triangle-exclamation"></i>
                                                 </div>
                                                 <div>
-                                                    <h3 class="text-base font-extrabold text-slate-900">Confirm Deletion
+                                                    <h3 class="text-base font-extrabold text-slate-900">Konfirmasi Penghapusan
                                                     </h3>
-                                                    <p class="text-xs font-medium text-slate-400">Permanent action
-                                                        warning</p>
+                                                    <p class="text-xs font-medium text-slate-400">Penghapusan permanen</p>
                                                 </div>
                                             </div>
 
                                             <p
                                                 class="mb-6 text-xs font-medium leading-relaxed sm:text-sm text-slate-600">
-                                                Are you sure you want to delete branch
+                                                Yakin ingin menghapus cabang
                                                 <strong
                                                     class="font-bold text-slate-900">"{{ $b->branch_name }}"</strong>?
-                                                <span class="block mt-1 text-xs font-semibold text-rose-600">This action
-                                                    cannot be undone.</span>
+                                                <span class="block mt-1 text-xs font-semibold text-rose-600">Aksi ini tidak dapat dibatalkan.</span>
                                             </p>
 
                                             <div
                                                 class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                                                 <button @click="open = false" type="button"
                                                     class="px-4 py-2 text-xs font-bold transition-colors text-slate-600 hover:text-slate-800">
-                                                    Cancel
+                                                    Batal
                                                 </button>
                                                 <form action="{{ route('branches.destroy', $b->id) }}" method="POST">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
                                                         class="px-5 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 active:scale-[0.98] transition-all rounded-xl shadow-md shadow-rose-600/20">
-                                                        Yes, Delete
+                                                        Ya, Hapus
                                                     </button>
                                                 </form>
                                             </div>
@@ -113,8 +111,8 @@
                             class="flex items-center justify-center w-12 h-12 mx-auto mb-3 text-xl rounded-2xl bg-slate-100 text-slate-400">
                             <i class="fa-solid fa-building-circle-xmark"></i>
                         </div>
-                        <p class="text-sm font-bold text-slate-800">No Branches Found</p>
-                        <p class="mt-1 text-xs text-slate-400">There are no records matching your query.</p>
+                        <p class="text-sm font-bold text-slate-800">Cabang Tidak Ditemukan</p>
+                        <p class="mt-1 text-xs text-slate-400">Tidak ada data yang sesuai dengan pencarian Anda.</p>
                     </td>
                 </tr>
             @endforelse

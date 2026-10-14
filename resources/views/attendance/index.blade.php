@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Attendance Recap Dashboard')
+@section('title', 'Rekap Absensi')
 
 @section('content')
     <div class="w-full space-y-6">
@@ -10,20 +10,20 @@
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                        <span class="transition-colors cursor-pointer hover:text-blue-600">Attendance & Roster</span>
+                        <span class="transition-colors cursor-pointer hover:text-blue-600">Absensi dan Jadwal</span>
                         <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                        <span class="font-extrabold text-blue-600">Attendance Recap</span>
+                        <span class="font-extrabold text-blue-600">Rekap Absensi</span>
                     </nav>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                        Attendance Recap
+                        Rekap Absensi
                     </h1>
                     <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
-                        Manage and monitor employee attendance sessions per site location and operational period.
+                        Kelola dan pantau absensi karyawan berdasarkan lokasi dan periode.
                     </p>
                     @if (in_array(Auth::user()?->role, ['team_leader', 'administration']))
                         <p
                             class="mt-2 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200/80 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
-                            <i class="fa-solid fa-building-user"></i> Site Admin:
+                            <i class="fa-solid fa-building-user"></i> Lokasi Admin:
                             {{ Auth::user()->site->machine_name ?? '-' }}
                         </p>
                     @endif
@@ -37,7 +37,7 @@
                 <h5 class="flex items-center gap-2.5 text-xs font-extrabold tracking-wider uppercase text-slate-700">
                     <span
                         class="flex items-center justify-center w-5 h-5 text-[10px] font-black text-white bg-blue-600 rounded-full shrink-0">1</span>
-                    Select Site &amp; Period
+                    Pilih Lokasi dan Periode
                 </h5>
             </div>
 
@@ -48,16 +48,16 @@
                     <div class="md:col-span-5 space-y-1.5">
                         <label for="main_branch_select"
                             class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Target Site Location / Branch
+                            Lokasi
                         </label>
 
                         @if (in_array(Auth::user()?->role, ['superadmin', 'administration']))
                             <select name="site_id" id="main_branch_select"
                                 class="w-full p-2.5 text-xs sm:text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-slate-800 outline-none transition-all"
                                 required onchange="handleFilterChange()">
-                                <option value="">-- Select Branch Site --</option>
+                                <option value="">-- Pilih Lokasi --</option>
                                 <option value="all" {{ request('site_id', $siteId) === 'all' ? 'selected' : '' }}>
-                                    🌐 -- Display All Sites / Branches --
+                                    🌐 -- Semua Lokasi / Cabang --
                                 </option>
                                 @foreach ($sites as $site)
                                     <option value="{{ $site->id }}"
@@ -69,35 +69,35 @@
                         @else
                             <input type="hidden" name="site_id" id="main_branch_select"
                                 value="{{ Auth::user()->site_id }}">
-                            <input type="text" value="{{ Auth::user()->site->machine_name ?? 'Registered Site' }}"
+                            <input type="text" value="{{ Auth::user()->site->machine_name ?? 'Lokasi Terdaftar' }}"
                                 class="w-full p-2.5 text-xs sm:text-sm font-bold text-slate-700 bg-slate-100 border border-slate-200 rounded-xl cursor-not-allowed"
                                 readonly>
                         @endif
                     </div>
 
                     <div class="md:col-span-4 space-y-1.5">
-                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Recap Period</label>
+                        <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Periode Rekap</label>
                         <div class="flex gap-2">
                             @php
                                 $requestMonthRaw = request('month', date('Y-m'));
                                 $selectedMonth = date('m', strtotime($requestMonthRaw . '-01'));
                                 $selectedYear = date('Y', strtotime($requestMonthRaw . '-01'));
                                 $monthList = [
-                                    '01' => 'January',
-                                    '02' => 'February',
-                                    '03' => 'March',
+                                    '01' => 'Januari',
+                                    '02' => 'Februari',
+                                    '03' => 'Maret',
                                     '04' => 'April',
-                                    '05' => 'May',
-                                    '06' => 'June',
-                                    '07' => 'July',
-                                    '08' => 'August',
+                                    '05' => 'Mei',
+                                    '06' => 'Juni',
+                                    '07' => 'Juli',
+                                    '08' => 'Agustus',
                                     '09' => 'September',
-                                    '10' => 'October',
+                                    '10' => 'Oktober',
                                     '11' => 'November',
-                                    '12' => 'December',
+                                    '12' => 'Desember',
                                 ];
                             @endphp
-                            <select id="filter_bulan" aria-label="Month"
+                            <select id="filter_bulan" aria-label="Bulan"
                                 class="w-full p-2.5 text-xs sm:text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-slate-800 outline-none transition-all"
                                 onchange="handleFilterChange()" required>
                                 @foreach ($monthList as $code => $name)
@@ -106,7 +106,7 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <select id="filter_tahun" aria-label="Year"
+                            <select id="filter_tahun" aria-label="Tahun"
                                 class="w-full p-2.5 text-xs sm:text-sm font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-slate-800 outline-none transition-all"
                                 onchange="handleFilterChange()" required>
                                 @for ($year = date('Y') - 2; $year <= date('Y') + 2; $year++)
@@ -122,14 +122,14 @@
                     <div class="flex gap-2 md:col-span-3">
                         <button type="submit"
                             class="flex-grow flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95">
-                            <i class="fa-solid fa-folder-open"></i> Load Data
+                            <i class="fa-solid fa-folder-open"></i> Tampilkan Data
                         </button>
                         @php $activeSiteId = request('site_id', $siteId); @endphp
                         <a id="exportBtn"
                             href="{{ route('attendance.export', ['site_id' => $activeSiteId, 'month' => request('month', date('Y-m'))]) }}"
-                            title="Export to Excel" up-follow="false" download
+                            title="Ekspor ke Excel" up-follow="false" download
                             class="px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center transition-all active:scale-95 {{ empty($activeSiteId) ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed pointer-events-none' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20' }}">
-                            <i class="mr-1 fa-solid fa-file-excel"></i> Export
+                            <i class="mr-1 fa-solid fa-file-excel"></i> Ekspor
                         </a>
                     </div>
                 </form>
@@ -140,7 +140,7 @@
         @if (!empty($holidays))
             <div class="p-4 border border-rose-200/80 rounded-2xl bg-rose-50/60">
                 <h6 class="flex items-center gap-2 mb-2 text-xs font-extrabold tracking-wider uppercase text-rose-700">
-                    <i class="fa-solid fa-circle-exclamation"></i> National Holidays & Red Dates This Month
+                    <i class="fa-solid fa-circle-exclamation"></i> Hari Libur Nasional dan Tanggal Merah Bulan Ini
                 </h6>
                 <ul class="grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($holidays as $date => $name)
@@ -164,10 +164,10 @@
                         <h5 class="flex items-center gap-2.5 text-sm sm:text-base font-extrabold text-slate-800">
                             <span
                                 class="flex items-center justify-center w-6 h-6 text-xs font-black text-white bg-blue-600 rounded-full shrink-0">2</span>
-                            Record Employee Attendance {{ $currentSiteId === 'all' ? '(All Sites)' : '' }}
+                            Catat Absensi Karyawan {{ $currentSiteId === 'all' ? '(Semua Lokasi)' : '' }}
                         </h5>
                         <p class="mt-1 text-xs font-medium text-slate-500 ms-8">
-                            Auto-fill follows saved schedules. Dates after Last Date are unavailable; dates without a schedule remain empty.
+                            Pengisian otomatis mengikuti jadwal tersimpan. Tanggal setelah hari terakhir bekerja tidak dapat diisi; tanggal tanpa jadwal tetap kosong.
                         </p>
                     </div>
                     <div
@@ -180,7 +180,7 @@
                                 class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600">
                             </div>
                             <span class="text-xs font-bold select-none text-slate-700 ms-2">
-                                Auto-Fill From Schedule
+                                Isi Otomatis dari Jadwal
                             </span>
                         </label>
                     </div>
@@ -189,8 +189,7 @@
                 <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
                     <p class="text-xs font-semibold text-slate-500 flex items-center gap-1.5">
                         <i class="text-blue-600 fa-solid fa-circle-info"></i>
-                        When enabled: employees are automatically marked present according to the shift rotas set in the
-                        Schedule module.
+                        Jika diaktifkan, kehadiran karyawan diisi sesuai shift pada modul Jadwal.
                     </p>
 
                     <div class="flex flex-wrap items-center gap-4 pt-1 text-xs font-extrabold text-slate-600">
@@ -201,7 +200,7 @@
                         <span class="flex items-center gap-1.5"><span class="font-black text-rose-600">S3</span> = Shift
                             3</span>
                         <span class="flex items-center gap-1.5 text-rose-600">
-                            <i class="fa-solid fa-circle-exclamation"></i> National Holiday / Off
+                            <i class="fa-solid fa-circle-exclamation"></i> Libur Nasional / Libur
                         </span>
                     </div>
                 </div>
@@ -216,7 +215,7 @@
 
                     <div id="employee_loading"
                         class="flex items-center justify-center gap-2 py-12 text-xs font-bold sm:text-sm text-slate-400">
-                        <i class="text-base text-blue-600 animate-spin fa-solid fa-spinner"></i> Loading employee data...
+                        <i class="text-base text-blue-600 animate-spin fa-solid fa-spinner"></i> Memuat data karyawan...
                     </div>
 
                     <div id="employee_fields" class="space-y-3"></div>
@@ -225,7 +224,7 @@
                         <span class="text-xs font-bold text-slate-400" id="employeeCountLabel"></span>
                         <button type="submit"
                             class="flex items-center gap-2 px-6 py-2.5 ml-auto text-xs font-bold text-white transition-all bg-blue-600 rounded-xl shadow-md shadow-blue-600/20 hover:bg-blue-700 active:scale-95">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> Save &amp; Update Attendance
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Simpan Absensi
                         </button>
                     </div>
                 </form>
@@ -239,12 +238,12 @@
                 <div class="overflow-hidden bg-white border shadow-2xl border-slate-100 rounded-3xl">
                     <div class="flex items-center justify-between px-6 py-5 text-white bg-slate-900">
                         <h5 class="flex items-center gap-2 text-xs font-extrabold tracking-wide uppercase sm:text-sm">
-                            <i class="text-blue-400 fa-solid fa-calendar-days"></i> Plot Sessions:
+                            <i class="text-blue-400 fa-solid fa-calendar-days"></i> Isi Sesi:
                             <span id="modalEmployeeName" class="text-blue-200"></span>
                         </h5>
                         <button type="button"
                             class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700"
-                            onclick="closeModal('plotCalendarModal')" aria-label="Close">&times;</button>
+                            onclick="closeModal('plotCalendarModal')" aria-label="Tutup">&times;</button>
                     </div>
                     <div class="p-5 bg-slate-50">
                         <div
@@ -253,7 +252,7 @@
                                 <thead
                                     class="sticky top-0 font-extrabold tracking-wider uppercase border-b text-slate-600 bg-slate-100/90 border-slate-200">
                                     <tr>
-                                        <th class="px-4 py-3 text-left">Date</th>
+                                        <th class="px-4 py-3 text-left">Tanggal</th>
                                         <th class="px-3 py-3 font-black text-blue-600">S1</th>
                                         <th class="px-3 py-3 font-black text-amber-600">S2</th>
                                         <th class="px-3 py-3 font-black text-rose-600">S3</th>
@@ -268,7 +267,7 @@
                         <button type="button"
                             class="flex items-center justify-center w-full gap-2 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 rounded-xl hover:bg-blue-700 active:scale-95 shadow-md shadow-blue-600/20"
                             onclick="closeModal('plotCalendarModal')">
-                            <i class="fa-solid fa-check"></i> Done Plotting
+                            <i class="fa-solid fa-check"></i> Selesai
                         </button>
                     </div>
                 </div>
@@ -285,9 +284,8 @@
                         3
                     </span>
                     <div>
-                        <h5 class="text-base font-extrabold text-slate-900">Review Attendance Summary</h5>
-                        <p class="text-xs font-medium text-slate-500">Overview of effective working days and total attended
-                            sessions.</p>
+                        <h5 class="text-base font-extrabold text-slate-900">Ringkasan Absensi</h5>
+                        <p class="text-xs font-medium text-slate-500">Ringkasan hari kerja efektif dan jumlah sesi kehadiran.</p>
                     </div>
                 </div>
 
@@ -295,14 +293,14 @@
                     <div class="relative min-w-[200px]">
                         <select id="recapMonthFilter" onchange="filterRecapTable()"
                             class="block w-full py-2.5 pl-3.5 pr-8 text-xs font-bold transition-all bg-white border cursor-pointer text-slate-800 border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 shadow-2xs">
-                            <option value="all">-- All Months --</option>
+                            <option value="all">-- Semua Bulan --</option>
                             @php
                                 $availableMonths = $attendances->pluck('month')->unique()->sortDesc();
                             @endphp
                             @foreach ($availableMonths as $m)
                                 <option value="{{ $m }}"
                                     {{ request('month', date('Y-m')) == $m ? 'selected' : '' }}>
-                                    {{ \Carbon\Carbon::parse($m)->format('F Y') }}
+                                    {{ \Carbon\Carbon::parse($m)->translatedFormat('F Y') }}
                                 </option>
                             @endforeach
                         </select>
@@ -310,7 +308,7 @@
 
                     <span id="recapCountBadge"
                         class="items-center hidden px-3 py-2 text-xs font-extrabold text-blue-800 border md:inline-flex bg-blue-50 border-blue-200/80 rounded-xl">
-                        0 Records
+                        0 Data
                     </span>
                 </div>
             </div>
@@ -320,13 +318,13 @@
                     <thead>
                         <tr
                             class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider bg-slate-50 border-b border-slate-100">
-                            <th scope="col" class="px-6 py-4">Branch / Site Location</th>
-                            <th scope="col" class="px-6 py-4">Employee Name</th>
-                            <th scope="col" class="px-6 py-4 text-center">Month Period</th>
-                            <th scope="col" class="px-6 py-4 text-center">Effective Work Days</th>
-                            <th scope="col" class="px-6 py-4 text-center">Total Attended Sessions</th>
-                            <th scope="col" class="px-6 py-4 text-right">Attendance Ratio</th>
-                            <th scope="col" class="w-24 px-6 py-4 text-center">Action</th>
+                            <th scope="col" class="px-6 py-4">Cabang / Lokasi Mesin</th>
+                            <th scope="col" class="px-6 py-4">Nama Karyawan</th>
+                            <th scope="col" class="px-6 py-4 text-center">Periode Bulan</th>
+                            <th scope="col" class="px-6 py-4 text-center">Hari Kerja Efektif</th>
+                            <th scope="col" class="px-6 py-4 text-center">Total Sesi Kehadiran</th>
+                            <th scope="col" class="px-6 py-4 text-right">Persentase Kehadiran</th>
+                            <th scope="col" class="w-24 px-6 py-4 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="recapTableBody" class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
@@ -358,25 +356,25 @@
 
                                     <td class="px-6 py-4">
                                         <div class="text-xs font-extrabold sm:text-sm text-slate-900">
-                                            {{ $row->employee->name ?? 'Deleted Employee' }}
+                                            {{ $row->employee->name ?? 'Karyawan yang Dihapus' }}
                                         </div>
                                         <div class="text-[10px] text-slate-400 font-semibold mt-0.5">
-                                            {{ $row->employee->position ?? 'Staff' }}
+                                            {{ $row->employee->position ?? 'Karyawan' }}
                                         </div>
                                     </td>
 
                                     <td class="px-6 py-4 font-bold text-center text-slate-600">
-                                        {{ \Carbon\Carbon::parse($row->month)->format('F Y') }}
+                                        {{ \Carbon\Carbon::parse($row->month)->translatedFormat('F Y') }}
                                     </td>
 
                                     <td class="px-6 py-4 font-bold text-center text-slate-600">
-                                        {{ $row->working_days }} Days
+                                        {{ $row->working_days }} Hari
                                     </td>
 
                                     <td class="px-6 py-4 text-center">
                                         <span
                                             class="px-3 py-1 text-xs font-bold text-blue-800 border border-blue-200 rounded-lg bg-blue-50">
-                                            {{ $row->attendance_count }} Sessions
+                                            {{ $row->attendance_count }} Sesi
                                         </span>
                                     </td>
 
@@ -394,12 +392,12 @@
 
                                     <td class="px-6 py-4 text-center">
                                         <form action="{{ route('attendance.destroy', $row->id) }}" method="POST"
-                                            onsubmit="return confirm('Are you sure you want to delete this attendance recap log?')">
+                                            onsubmit="return confirm('Yakin ingin menghapus rekap absensi ini?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
                                                 class="flex items-center justify-center w-8 h-8 mx-auto transition-all border rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
-                                                title="Delete Attendance Record">
+                                                title="Hapus Data Absensi">
                                                 <i class="text-xs fa-solid fa-trash-can"></i>
                                             </button>
                                         </form>
@@ -413,9 +411,8 @@
                                         class="flex items-center justify-center w-12 h-12 mx-auto mb-3 text-xl rounded-2xl bg-slate-100 text-slate-400">
                                         <i class="fa-solid fa-inbox"></i>
                                     </div>
-                                    <p class="text-sm font-bold text-slate-800">No Attendance Logs Recorded Yet</p>
-                                    <p class="mt-1 text-xs text-slate-400">Use the panel above to submit attendance
-                                        records.</p>
+                                    <p class="text-sm font-bold text-slate-800">Belum Ada Catatan Absensi</p>
+                                    <p class="mt-1 text-xs text-slate-400">Pilih lokasi dan periode di atas untuk mulai mengisi absensi.</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -426,7 +423,7 @@
                                     class="flex items-center justify-center w-12 h-12 mx-auto mb-3 text-xl rounded-2xl bg-slate-100 text-slate-400">
                                     <i class="fa-solid fa-filter-circle-xmark"></i>
                                 </div>
-                                <p class="text-sm font-bold text-slate-800">No Attendance Data Found for Month Filter</p>
+                                <p class="text-sm font-bold text-slate-800">Data Absensi Tidak Ditemukan untuk Bulan Ini</p>
                             </td>
                         </tr>
                     </tbody>
@@ -582,7 +579,7 @@
             fetch('/api/branches/' + siteId + '/employees?month=' + monthVal)
                 .then(async response => {
                     if (!response.ok) {
-                        let errText = 'Failed to load employee data (' + response.status + ')';
+                        let errText = 'Data karyawan gagal dimuat (' + response.status + ')';
                         try {
                             let errJson = await response.json();
                             if (errJson.message) errText = errJson.message;
@@ -599,7 +596,7 @@
                         fieldContainer.innerHTML = `
                             <div class="py-12 text-center text-slate-400">
                                 <i class="block mb-2 text-3xl opacity-50 fa-solid fa-user-xmark"></i>
-                                <span class="text-xs font-bold sm:text-sm text-slate-700">No employees registered yet.</span>
+                                <span class="text-xs font-bold sm:text-sm text-slate-700">Belum ada karyawan yang terdaftar.</span>
                             </div>`;
                         if (countLabel) countLabel.innerText = '';
                         return;
@@ -608,6 +605,9 @@
                     let isAutoFull = document.getElementById('autoFullAttendance') ?
                         document.getElementById('autoFullAttendance').checked : false;
 
+                    const escapeEmployeeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+                        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+                    }[char]));
                     data.forEach(emp => {
 
                         let hasSavedData = emp.attendances && emp.attendances.length > 0 && emp.attendances[0]
@@ -646,14 +646,14 @@
                         }
 
                         let siteBadge = emp.site ?
-                            `<span class="px-2 py-0.5 text-[10px] font-extrabold bg-slate-100 text-slate-700 rounded-md border border-slate-200 me-2">${emp.site.machine_name}</span>` :
+                            `<span class="px-2 py-0.5 text-[10px] font-extrabold bg-slate-100 text-slate-700 rounded-md border border-slate-200 me-2">${escapeEmployeeHtml(emp.site.machine_name)}</span>` :
                             '';
 
                         fieldContainer.insertAdjacentHTML('beforeend', `
                             <div class="grid items-center grid-cols-1 gap-3 p-4 transition-all border border-slate-200/80 rounded-2xl md:grid-cols-12 hover:border-slate-300 bg-slate-50/50">
                                 <div class="md:col-span-4">
-                                    <span class="flex items-center gap-2 text-xs font-extrabold truncate text-slate-900 sm:text-sm" title="${emp.name}">
-                                        <i class="text-sm text-slate-400 fa-solid fa-circle-user"></i>${siteBadge}${emp.name}
+                                    <span class="flex items-center gap-2 text-xs font-extrabold truncate text-slate-900 sm:text-sm" title="${escapeEmployeeHtml(emp.name)}">
+                                        <i class="text-sm text-slate-400 fa-solid fa-circle-user"></i>${siteBadge}${escapeEmployeeHtml(emp.name)}
                                     </span>
                                 </div>
                                 <div class="grid items-center grid-cols-4 gap-2 md:col-span-8">
@@ -670,7 +670,7 @@
                                         <input type="text" id="counter_s3_${emp.id}" class="w-full py-1 text-xs font-bold text-center bg-white text-rose-600 focus:outline-none" readonly>
                                     </div>
                                     <button type="button" class="w-full px-2 py-2 text-xs font-bold text-blue-600 transition-colors border bg-blue-50 border-blue-200/80 rounded-xl hover:bg-blue-600 hover:text-white" onclick="openPlotCalendar(${emp.id})">
-                                        <i class="fa-solid fa-pen-to-square"></i> Plot / Edit
+                                        <i class="fa-solid fa-pen-to-square"></i> Isi / Ubah
                                     </button>
                                 </div>
                                 <input type="hidden" name="calendar_raw_data[${emp.id}]" id="raw_data_${emp.id}">
@@ -679,12 +679,12 @@
                         updateLiveCounters(emp.id);
                     });
 
-                    if (countLabel) countLabel.innerText = data.length + ' employee(s) loaded';
+                    if (countLabel) countLabel.innerText = data.length + ' karyawan dimuat';
                 })
                 .catch(err => {
                     fieldContainer.innerHTML = `
                         <div class="flex items-center gap-2.5 p-4 text-xs sm:text-sm font-semibold text-rose-800 border border-rose-200 bg-rose-50 rounded-2xl">
-                            <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> ${err.message || 'Failed to load employee records.'}
+                            <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> ${err.message || 'Data karyawan gagal dimuat. Silakan coba lagi.'}
                         </div>`;
                 })
                 .finally(() => setLoading(false));
@@ -739,7 +739,7 @@
             for (let d = 1; d <= totalDays; d++) {
                 let dayData = attendanceState[employeeId].shifts[d];
                 if (isAfterLastDate(employeeId, d)) {
-                    rows += `<tr class="border-b border-slate-100 bg-slate-100"><td class="px-4 py-2.5 text-xs text-slate-400">Date ${d}</td><td colspan="3" class="px-3 py-2.5 text-xs font-bold text-slate-400">N/A — After Last Date</td></tr>`;
+                    rows += `<tr class="border-b border-slate-100 bg-slate-100"><td class="px-4 py-2.5 text-xs text-slate-400">Tanggal ${d}</td><td colspan="3" class="px-3 py-2.5 text-xs font-bold text-slate-400">Tidak tersedia — setelah hari terakhir bekerja</td></tr>`;
                     continue;
                 }
                 let holidayName = getHolidayName(d);
@@ -749,7 +749,7 @@
                     '';
                 rows += `
                     <tr class="border-b border-slate-100 hover:bg-slate-50">
-                        <td class="px-4 py-2.5 text-xs font-bold text-left text-slate-700">Date ${d}${weekendBadge}</td>
+                        <td class="px-4 py-2.5 text-xs font-bold text-left text-slate-700">Tanggal ${d}${weekendBadge}</td>
                         <td class="px-3 py-2.5"><input type="checkbox" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500" onchange="toggleDateShift(${d}, 's1', this.checked)" ${dayData.s1 ? 'checked' : ''}></td>
                         <td class="px-3 py-2.5"><input type="checkbox" class="w-4 h-4 rounded text-amber-600 border-slate-300 focus:ring-amber-500" onchange="toggleDateShift(${d}, 's2', this.checked)" ${dayData.s2 ? 'checked' : ''}></td>
                         <td class="px-3 py-2.5"><input type="checkbox" class="w-4 h-4 rounded text-rose-600 border-slate-300 focus:ring-rose-500" onchange="toggleDateShift(${d}, 's3', this.checked)" ${dayData.s3 ? 'checked' : ''}></td>
@@ -788,7 +788,7 @@
             }
 
             if (countBadge) {
-                countBadge.textContent = `${visibleCount} Records Displayed`;
+                countBadge.textContent = `${visibleCount} data ditampilkan`;
             }
         }
 

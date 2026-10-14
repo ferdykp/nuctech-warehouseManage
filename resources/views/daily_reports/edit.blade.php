@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Edit Daily Activity Report')
+@section('title', 'Ubah Laporan Harian')
 
 @section('content')
     <div class="w-full max-w-4xl mx-auto space-y-6">
@@ -10,21 +10,20 @@
             <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
                     <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                        <a href="{{ route('daily_reports.index') }}" class="transition-colors hover:text-emerald-600">Daily
-                            Activity Reports</a>
+                        <a href="{{ route('daily_reports.index') }}" class="transition-colors hover:text-emerald-600">Laporan Harian</a>
                         <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                        <span class="font-extrabold text-emerald-600">Edit Report</span>
+                        <span class="font-extrabold text-emerald-600">Ubah Laporan</span>
                     </nav>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                        Edit Activity Report
+                        Ubah Laporan Kegiatan
                     </h1>
                     <p class="mt-1 text-xs font-medium sm:text-sm text-slate-500">
-                        Update site inspection details and manage photo documentations.
+                        Perbarui hasil pemeriksaan lokasi dan dokumentasi foto.
                     </p>
                 </div>
                 <a href="{{ route('daily_reports.index') }}"
                     class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all rounded-xl active:scale-95 shrink-0">
-                    <i class="fa-solid fa-arrow-left"></i> Back
+                    <i class="fa-solid fa-arrow-left"></i> Kembali
                 </a>
             </div>
         </div>
@@ -43,7 +42,7 @@
             @method('PUT')
 
             <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Report Details</h2>
+                <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Rincian Laporan</h2>
             </div>
 
             <div class="p-6 space-y-6 sm:p-8">
@@ -52,7 +51,7 @@
                     {{-- SITE LOCATION --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Machine Site <span class="text-rose-500">*</span>
+                            Lokasi Mesin <span class="text-rose-500">*</span>
                         </label>
                         @if (in_array(auth()->user()->role, ['superadmin', 'administration']))
                             <select name="site_id"
@@ -75,7 +74,7 @@
                     {{-- REPORT DATE --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Report Date <span class="text-rose-500">*</span>
+                            Tanggal Laporan <span class="text-rose-500">*</span>
                         </label>
                         <input type="date" name="report_date"
                             value="{{ old('report_date', $report->report_date->format('Y-m-d')) }}"
@@ -87,18 +86,18 @@
                 {{-- LOG NOTES --}}
                 <div class="space-y-1.5">
                     <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                        Log Notes / Description <span class="text-rose-500">*</span>
+                        Catatan / Keterangan <span class="text-rose-500">*</span>
                     </label>
                     <textarea name="description" rows="5"
                         class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
-                        placeholder="Write activity descriptions or inspection details..." required>{{ old('description', $report->description) }}</textarea>
+                        placeholder="Tuliskan kegiatan atau hasil pemeriksaan..." required>{{ old('description', $report->description) }}</textarea>
                 </div>
 
                 {{-- EXISTING PHOTOS --}}
                 @if ($report->photos->count() > 0)
                     <div class="pt-4 space-y-3 border-t border-slate-100">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Existing Documentation Photos
+                            Foto yang Sudah Tersimpan
                         </label>
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             @foreach ($report->photos as $photo)
@@ -109,12 +108,12 @@
                                             class="object-cover w-full h-36" />
                                         <button type="button" onclick="deleteExistingPhoto({{ $photo->id }})"
                                             class="absolute flex items-center justify-center text-xs text-white transition-all rounded-lg shadow-md cursor-pointer top-2 right-2 w-7 h-7 bg-rose-600 hover:bg-rose-700"
-                                            title="Delete Photo">
+                                            title="Hapus Foto">
                                             <i class="fa-solid fa-trash-can"></i>
                                         </button>
                                     </div>
                                     <input type="text" name="existing_captions[{{ $photo->id }}]"
-                                        value="{{ $photo->caption }}" placeholder="Caption..."
+                                        value="{{ $photo->caption }}" placeholder="Keterangan..."
                                         class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white outline-none focus:border-emerald-500 text-slate-700">
                                 </div>
                             @endforeach
@@ -126,11 +125,11 @@
                 <div class="pt-4 space-y-3 border-t border-slate-100">
                     <div class="flex items-center justify-between">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Add New Photos (Optional)
+                            Tambah Foto Baru (Opsional)
                         </label>
                         <button type="button" onclick="addPhotoField()"
                             class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-all cursor-pointer">
-                            <i class="fa-solid fa-plus"></i> Add More Photo
+                            <i class="fa-solid fa-plus"></i> Tambah Foto
                         </button>
                     </div>
 
@@ -139,15 +138,15 @@
                             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <div>
                                     <label
-                                        class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Upload
-                                        Photo</label>
+                                        class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Unggah
+                                        Foto</label>
                                     <input type="file" name="photos[]" accept="image/*"
                                         class="w-full text-xs cursor-pointer text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
                                 </div>
                                 <div>
                                     <label
-                                        class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Caption</label>
-                                    <input type="text" name="captions[]" placeholder="Photo caption..."
+                                        class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Keterangan</label>
+                                    <input type="text" name="captions[]" placeholder="Keterangan foto..."
                                         class="w-full px-3 py-2 text-xs bg-white border outline-none border-slate-200 rounded-xl focus:border-emerald-500 text-slate-700">
                                 </div>
                             </div>
@@ -159,16 +158,16 @@
 
             <div class="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
                 <div class="text-xs font-medium text-slate-400">
-                    Fields marked with (<span class="text-rose-500">*</span>) are required.
+                    Kolom bertanda (<span class="text-rose-500">*</span>) wajib diisi.
                 </div>
                 <div class="flex items-center gap-3">
                     <a href="{{ route('daily_reports.index') }}"
                         class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
-                        Cancel
+                        Batal
                     </a>
                     <button type="submit"
                         class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer">
-                        <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Save Changes
+                        <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Simpan Perubahan
                     </button>
                 </div>
             </div>
@@ -215,7 +214,7 @@
                     const card = document.getElementById(`photo_card_${photoId}`);
                     if (card) card.remove();
                 })
-                .catch(err => alert('Gagal menghapus foto.'));
+                .catch(err => (window.showUiMessage || window.alert)('Gagal menghapus foto.'));
         }
     </script>
 @endpush

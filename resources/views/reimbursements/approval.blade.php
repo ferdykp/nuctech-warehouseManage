@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Review Claim #' . $reimbursement->id)
+@section('title', 'Periksa Klaim #' . $reimbursement->id)
 
 @section('content')
     @php
@@ -30,14 +30,14 @@
                 <div>
                     <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
                         <a href="{{ route('reimbursements.index') }}"
-                            class="transition-colors hover:text-amber-600">Reimbursement Logs</a>
+                            class="transition-colors hover:text-amber-600">Riwayat Klaim</a>
                         <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                        <span class="font-extrabold text-amber-600">Approval Review</span>
+                        <span class="font-extrabold text-amber-600">Pemeriksaan Persetujuan</span>
                     </nav>
                     <h1 class="flex items-center gap-3 text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
                         <span
                             class="w-3 h-3 rounded-full bg-amber-500 @if ($reimbursement->status != 'approved' && $reimbursement->status != 'rejected') animate-pulse @endif"></span>
-                        Review & Sign Claim #{{ $reimbursement->id }}
+                        Periksa dan Tandatangani Klaim #{{ $reimbursement->id }}
                     </h1>
                 </div>
 
@@ -46,24 +46,24 @@
                     @if ($reimbursement->status == 'approved')
                         <span
                             class="px-3.5 py-1.5 text-xs font-extrabold tracking-wider uppercase border text-emerald-800 bg-emerald-50 border-emerald-200 rounded-xl">
-                            Approved / Final
+                            Disetujui / Selesai
                         </span>
                     @elseif($reimbursement->status == 'rejected')
                         <span
                             class="px-3.5 py-1.5 text-xs font-extrabold tracking-wider uppercase border text-rose-800 bg-rose-50 border-rose-200 rounded-xl">
-                            Rejected
+                            Ditolak
                         </span>
                     @else
                         <span
                             class="px-3.5 py-1.5 text-xs font-extrabold tracking-wider uppercase border text-amber-800 bg-amber-50 border-amber-200 rounded-xl animate-pulse">
                             @if ($reimbursement->status == 'pending')
-                                Awaiting Staff Sign
+                                Awaiting Staff Tanda Tangan
                             @elseif($reimbursement->status == 'pending_leader')
-                                Awaiting Leader Sign
+                                Awaiting Leader Tanda Tangan
                             @elseif($reimbursement->status == 'pending_station')
-                                Awaiting Station Master Sign
+                                Awaiting Kepala Stasiun Tanda Tangan
                             @elseif($reimbursement->status == 'pending_manager')
-                                Awaiting Manager Sign
+                                Menunggu Tanda Tangan Manajer
                             @endif
                         </span>
                     @endif
@@ -81,19 +81,18 @@
                 <div class="p-6 space-y-4 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
                     <h4
                         class="flex items-center gap-2 pb-3 text-xs font-extrabold tracking-wider uppercase border-b text-slate-800 border-slate-100">
-                        <i class="text-sm fa-solid fa-receipt text-amber-600"></i> Claim Specifications
+                        <i class="text-sm fa-solid fa-receipt text-amber-600"></i> Rincian Klaim
                     </h4>
 
                     <div class="grid grid-cols-2 gap-4 text-xs">
                         <div>
-                            <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Requester
-                                Name</span>
+                            <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Diajukan oleh</span>
                             <span
                                 class="font-bold text-slate-900 text-sm block mt-0.5">{{ $reimbursement->person_name }}</span>
                         </div>
                         <div>
                             <span
-                                class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Category</span>
+                                class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Kategori</span>
                             <span
                                 class="px-2.5 py-1 inline-block text-[10px] font-extrabold rounded-lg bg-amber-50 text-amber-800 uppercase mt-0.5 tracking-wide border border-amber-200">
                                 {{ $reimbursement->category }}
@@ -103,8 +102,7 @@
 
                     @if (in_array($reimbursement->category, ['transportation', 'delivery']))
                         <div class="pt-3 text-xs border-t border-slate-100">
-                            <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider mb-1">Route
-                                Info</span>
+                            <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider mb-1">Informasi Rute</span>
                             <p class="font-bold text-slate-800">
                                 <i
                                     class="mr-1 fa-solid fa-location-dot text-rose-500"></i>{{ $reimbursement->from_location }}
@@ -115,19 +113,17 @@
                     @endif
 
                     <div class="pt-3 text-xs border-t border-slate-100">
-                        <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Amount
-                            Claimed</span>
+                        <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Nominal yang Diajukan</span>
                         <span class="font-black text-rose-600 text-xl block mt-0.5">
                             Rp {{ number_format((float) $reimbursement->amount, 0, ',', '.') }}
                         </span>
                     </div>
 
                     <div class="pt-3 text-xs border-t border-slate-100">
-                        <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Comment /
-                            Remarks</span>
+                        <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Catatan / Keterangan</span>
                         <p
                             class="p-3.5 mt-1.5 italic font-medium leading-relaxed border text-slate-700 bg-amber-50/40 rounded-2xl border-amber-200/60">
-                            "{{ $reimbursement->comment ?? 'No extra notes provided.' }}"
+                            "{{ $reimbursement->comment ?? 'Belum ada catatan tambahan.' }}"
                         </p>
                     </div>
                 </div>
@@ -139,13 +135,13 @@
                             class="flex items-center gap-2 pb-3 text-xs font-extrabold tracking-wider uppercase border-b text-slate-800 border-slate-100">
                             <i class="text-sm fa-solid fa-signature text-emerald-600"></i>
                             @if ($reimbursement->status == 'pending')
-                                Step 1: Staff Requester Sign
+                                Step 1: Karyawan Pengaju Tanda Tangan
                             @elseif($reimbursement->status == 'pending_leader')
-                                Step 2: Team Leader Sign
+                                Step 2: Ketua Tim Tanda Tangan
                             @elseif($reimbursement->status == 'pending_station')
-                                Step 3: Station Master Sign
+                                Tahap 3: Tanda Tangan Kepala Stasiun
                             @else
-                                Step 4: Final Manager Sign
+                                Tahap 4: Persetujuan Akhir Manajer
                             @endif
                         </h4>
 
@@ -153,11 +149,11 @@
                         <div class="flex gap-1.5 p-1 bg-slate-100 rounded-xl">
                             <button type="button" onclick="switchSignatureTab('draw')" id="btn-tab-draw"
                                 class="flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all bg-white text-slate-800 shadow-2xs cursor-pointer">
-                                <i class="mr-1 fa-solid fa-pen"></i> Draw Sign
+                                <i class="mr-1 fa-solid fa-pen"></i> Gambar Tanda Tangan
                             </button>
                             <button type="button" onclick="switchSignatureTab('upload')" id="btn-tab-upload"
                                 class="flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all text-slate-500 hover:text-slate-700 cursor-pointer">
-                                <i class="mr-1 fa-solid fa-upload"></i> Upload File
+                                <i class="mr-1 fa-solid fa-upload"></i> Unggah File
                             </button>
                         </div>
 
@@ -169,7 +165,7 @@
                             </div>
                             <button type="button" onclick="clearSignature()"
                                 class="text-[10px] text-rose-600 font-bold uppercase tracking-wider inline-block hover:text-rose-700 transition-colors px-1 cursor-pointer">
-                                <i class="fa-solid fa-trash-can mr-0.5"></i> Clear Canvas
+                                <i class="fa-solid fa-trash-can mr-0.5"></i> Hapus Tanda Tangan
                             </button>
                         </div>
 
@@ -182,23 +178,21 @@
                                     class="absolute inset-0 opacity-0 cursor-pointer">
                                 <i
                                     class="block mb-1 text-2xl transition-colors fa-solid fa-cloud-arrow-up text-slate-400 group-hover:text-amber-600"></i>
-                                <p class="text-xs font-bold text-slate-700" id="dropzone-text">Drag & drop signature image
-                                    or click</p>
-                                <p class="text-[10px] text-slate-400 mt-0.5">Supports PNG or JPG formats</p>
+                                <p class="text-xs font-bold text-slate-700" id="dropzone-text">Tarik gambar tanda tangan atau klik</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">Mendukung file PNG atau JPG</p>
                             </div>
                         </div>
 
                         {{-- SIGNER INPUTS --}}
                         <div class="grid grid-cols-2 gap-3 text-xs">
                             <div class="space-y-1">
-                                <label class="text-slate-700 font-bold block uppercase text-[10px] tracking-wider">Signer
-                                    Name <span class="text-rose-500">*</span></label>
-                                <input type="text" id="signer-name" placeholder="e.g. Budi S."
+                                <label class="text-slate-700 font-bold block uppercase text-[10px] tracking-wider">Nama Penanda Tangan <span class="text-rose-500">*</span></label>
+                                <input type="text" id="signer-name" placeholder="Contoh: Budi S."
                                     value="{{ auth()->user()->name }}"
                                     class="w-full px-3.5 py-2 font-bold transition-all border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800" />
                             </div>
                             <div class="space-y-1">
-                                <label class="text-slate-700 font-bold block uppercase text-[10px] tracking-wider">Date
+                                <label class="text-slate-700 font-bold block uppercase text-[10px] tracking-wider">Tanggal
                                     <span class="text-rose-500">*</span></label>
                                 <input type="date" id="signer-date" value="{{ now()->format('Y-m-d') }}"
                                     class="w-full px-3.5 py-2 font-bold transition-all border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800" />
@@ -209,19 +203,18 @@
                         <div class="pt-2 space-y-2">
                             <button type="button" onclick="applySignatureToPreview()"
                                 class="flex items-center justify-center w-full gap-2 py-3 text-xs font-bold text-white uppercase transition-all bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md shadow-amber-600/20 active:scale-[0.98] cursor-pointer">
-                                <i class="fa-solid fa-stamp"></i> Lock & Place Stamp on Document
+                                <i class="fa-solid fa-stamp"></i> Letakkan Tanda Tangan pada Dokumen
                             </button>
 
                             <button type="button" onclick="duplicateLastStamp()"
                                 class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
-                                <i class="fa-solid fa-copy"></i> Duplicate Last Stamp
+                                <i class="fa-solid fa-copy"></i> Gandakan Tanda Tangan Terakhir
                             </button>
                         </div>
 
                         <div class="flex items-center justify-between px-1 text-[10px] font-bold text-slate-400 pt-1">
-                            <span>Status Stamp:</span>
-                            <span id="stamp-count-info" class="tracking-wide uppercase text-amber-600">0 signature(s)
-                                placed</span>
+                            <span>Status Tanda Tangan:</span>
+                            <span id="stamp-count-info" class="tracking-wide uppercase text-amber-600">0 tanda tangan ditempatkan</span>
                         </div>
 
                         {{-- SUBMIT FORM --}}
@@ -239,7 +232,7 @@
 
                             <button type="submit"
                                 class="w-full py-3 text-xs font-bold text-white uppercase transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-[0.98] cursor-pointer">
-                                Approve & Save Document
+                                Setujui dan Simpan Dokumen
                             </button>
                         </form>
 
@@ -251,9 +244,9 @@
                                 <input type="hidden" name="rejected_reason"
                                     value="Claim rejected via review workspace.">
                                 <button type="submit"
-                                    onclick="return confirm('Are you sure you want to reject this operational claim?')"
+                                    onclick="return confirm('Yakin ingin menolak klaim ini?')"
                                     class="block w-full py-2.5 text-xs font-bold tracking-wider text-center uppercase transition-colors text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl cursor-pointer">
-                                    <i class="mr-1 fa-solid fa-xmark"></i> Reject Claim
+                                    <i class="mr-1 fa-solid fa-xmark"></i> Tolak Klaim
                                 </button>
                             </form>
                         @endif
@@ -268,21 +261,21 @@
                                 style="animation-duration: 4s"></i>
                         </div>
                         <div>
-                            <h5 class="text-xs font-extrabold tracking-wider uppercase text-slate-800">Document In Queue
+                            <h5 class="text-xs font-extrabold tracking-wider uppercase text-slate-800">Dokumen Menunggu Persetujuan
                             </h5>
                             <p class="max-w-xs mx-auto mt-1 text-xs font-medium leading-relaxed text-slate-500">
                                 @if ($reimbursement->status == 'pending')
-                                    Waiting for first signature from <strong>Staff Requester</strong>.
+                                    Menunggu tanda tangan pertama dari <strong>Karyawan Pengaju</strong>.
                                 @elseif($reimbursement->status == 'pending_leader')
-                                    Waiting for review & sign from <strong>Team Leader</strong>.
+                                    Menunggu pemeriksaan dan tanda tangan dari <strong>Ketua Tim</strong>.
                                 @elseif($reimbursement->status == 'pending_station')
-                                    Waiting for document verification & sign from <strong>Station Master</strong>.
+                                    Menunggu verifikasi dokumen dan tanda tangan dari <strong>Kepala Stasiun</strong>.
                                 @elseif($reimbursement->status == 'pending_manager')
-                                    Waiting for final approval from <strong>Operational Manager</strong>.
+                                    Menunggu persetujuan akhir dari <strong>Manajer Operasional</strong>.
                                 @elseif($reimbursement->status == 'approved')
-                                    ✅ This claim document has been fully validated and approved.
+                                    ✅ Klaim ini telah diperiksa dan disetujui.
                                 @else
-                                    ❌ This operational reimbursement claim has been rejected.
+                                    ❌ Klaim reimbursement ini ditolak.
                                 @endif
                             </p>
                         </div>
@@ -295,11 +288,11 @@
                 <div class="flex items-center justify-between px-1">
                     <span
                         class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider flex items-center gap-1.5">
-                        <i class="fa-solid fa-file-lines text-slate-500"></i> Document Live Canvas Area
+                        <i class="fa-solid fa-file-lines text-slate-500"></i> Pratinjau Dokumen
                     </span>
                     <span
                         class="text-[10px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-md uppercase tracking-wider">
-                        <i class="fa-solid fa-scroll mr-0.5"></i> Multi-Page PDF Canvas
+                        <i class="fa-solid fa-scroll mr-0.5"></i> Dokumen PDF Beberapa Halaman
                     </span>
                 </div>
 
@@ -311,7 +304,7 @@
                         @if (pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf')
                             <div id="pdf-loading-indicator"
                                 class="py-4 text-xs font-bold tracking-widest text-white uppercase animate-pulse">
-                                <i class="fa-solid fa-spinner animate-spin mr-1.5"></i> Rendering PDF Pages via PDF.js...
+                                <i class="fa-solid fa-spinner animate-spin mr-1.5"></i> Memuat halaman PDF...
                             </div>
 
                             <div id="invoice-target-img" class="flex flex-col items-center w-full gap-4"></div>
@@ -320,14 +313,13 @@
                                 class="relative w-full max-w-full overflow-hidden transition-all duration-200 bg-white shadow-xl rounded-2xl">
                                 <img src="{{ asset('storage/' . $reimbursement->receipt_attachment) }}"
                                     class="block object-contain w-full h-auto pointer-events-none"
-                                    alt="Invoice Attachment" />
+                                    alt="Invoice Lampiran" />
                             </div>
                         @endif
                     @else
                         <div
                             class="w-full py-40 text-xs italic font-semibold text-center bg-white border border-dashed text-slate-400 rounded-2xl border-slate-200">
-                            <i class="block mb-2 text-xl fa-solid fa-triangle-exclamation text-slate-300"></i> No
-                            attachment loaded.
+                            <i class="block mb-2 text-xl fa-solid fa-triangle-exclamation text-slate-300"></i> Belum ada lampiran yang dimuat.
                         </div>
                     @endif
 
@@ -339,8 +331,7 @@
                     <div class="flex items-start gap-2.5 px-4 py-3 border bg-slate-50 rounded-2xl border-slate-200/80">
                         <i class="fa-solid fa-circle-info text-amber-500 text-xs mt-0.5"></i>
                         <p class="text-xs font-medium leading-normal text-slate-600">
-                            <strong>Instructions:</strong> Click "Lock & Place" to place signature onto document &bull; Drag
-                            signature freely across canvas &bull; Use blue handle at bottom right corner to resize stamp.
+                            <strong>Petunjuk:</strong> Klik "Letakkan Tanda Tangan" untuk menempatkannya pada dokumen. Geser tanda tangan untuk mengatur posisi. Tarik sudut kanan bawah untuk mengubah ukurannya.
                         </p>
                     </div>
                 @endif
@@ -427,7 +418,7 @@
             }).catch(function(err) {
                 console.error("PDF.js Error: ", err);
                 const indicator = document.getElementById('pdf-loading-indicator');
-                if (indicator) indicator.innerText = "❌ Failed to load PDF document.";
+                if (indicator) indicator.innerText = "Dokumen PDF gagal dimuat. Silakan coba lagi.";
             });
         }
 
@@ -513,13 +504,13 @@
 
         function processFile(file) {
             if (!file.type.match('image.*')) {
-                alert("File format must be a valid PNG or JPG image!");
+                (window.showUiMessage || window.alert)("Gunakan gambar PNG atau JPG yang valid.");
                 return;
             }
             const reader = new FileReader();
             reader.onload = function(e) {
                 loadedSignatureBase64 = e.target.result;
-                document.getElementById('dropzone-text').innerText = "✓ Uploaded: " + file.name;
+                document.getElementById('dropzone-text').innerText = "✓ Diunggah: " + file.name;
                 document.getElementById('dropzone').classList.add('border-emerald-500', 'bg-emerald-50/50');
             };
             reader.readAsDataURL(file);
@@ -539,7 +530,7 @@
             }
 
             if (!base64Image) {
-                alert("Please draw or upload a signature image first!");
+                (window.showUiMessage || window.alert)("Gambar atau unggah tanda tangan terlebih dahulu.");
                 return;
             }
 
@@ -547,7 +538,7 @@
             const dateVal = document.getElementById('signer-date')?.value || '';
 
             if (!name) {
-                alert("Signer name is required!");
+                (window.showUiMessage || window.alert)("Nama penanda tangan wajib diisi.");
                 return;
             }
 
@@ -556,7 +547,7 @@
 
         function duplicateLastStamp() {
             if (activeStampsArray.length === 0) {
-                alert("No signature stamp available to duplicate.");
+                (window.showUiMessage || window.alert)("Belum ada tanda tangan yang dapat digandakan.");
                 return;
             }
             const lastStamp = activeStampsArray[activeStampsArray.length - 1];
@@ -582,7 +573,7 @@
             let formattedDate = signerDate;
             if (signerDate) {
                 const d = new Date(signerDate);
-                formattedDate = d.toLocaleDateString('en-US', {
+                formattedDate = d.toLocaleDateString('id-ID', {
                     day: '2-digit',
                     month: '2-digit',
                     year: 'numeric'
@@ -620,7 +611,7 @@
             });
 
             const infoText = document.getElementById('stamp-count-info');
-            if (infoText) infoText.textContent = `${activeStampsArray.length} signature(s) placed on document`;
+            if (infoText) infoText.textContent = `${activeStampsArray.length} tanda tangan ditempatkan pada dokumen`;
 
             bindDragEvents(stampEl);
             bindResizeEvents(stampEl);
@@ -633,7 +624,7 @@
                 return item.stampEl !== stampWrapper;
             });
             const infoText = document.getElementById('stamp-count-info');
-            if (infoText) infoText.textContent = `${activeStampsArray.length} signature(s) placed on document`;
+            if (infoText) infoText.textContent = `${activeStampsArray.length} tanda tangan ditempatkan pada dokumen`;
             stampWrapper.remove();
         }
 
@@ -741,7 +732,7 @@
         function prepareFinalApproval(event) {
             event.preventDefault();
             if (activeStampsArray.length === 0) {
-                alert("Please place at least one signature stamp on the invoice canvas!");
+                (window.showUiMessage || window.alert)("Letakkan setidaknya satu tanda tangan pada dokumen nota.");
                 return false;
             }
 

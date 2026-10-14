@@ -34,11 +34,11 @@ test('auto-fill keeps the final shift and leaves unscheduled/post-resignation da
     assert.equal(fields.counter_s2_1.value, 1);
 });
 
-test('calendar marks dates after Last Date N/A and manual toggles cannot add attendance', () => {
+test('calendar marks dates after Last Date unavailable and manual toggles cannot add attendance', () => {
     const { context, fields } = page();
     context.toggleManualInput(true);
     context.openPlotCalendar(1);
-    assert.match(fields.calendarGridBody.innerHTML, /Date 12<\/td><td[^>]+>N\/A — After Last Date/);
+    assert.match(fields.calendarGridBody.innerHTML, /Tanggal 12<\/td><td[^>]+>Tidak tersedia — setelah hari terakhir bekerja/);
     assert.match(fields.calendarGridBody.innerHTML, /toggleDateShift\(11, 's2'/);
     assert.doesNotMatch(fields.calendarGridBody.innerHTML, /toggleDateShift\(12,/);
     context.toggleDateShift(12, 's1', true);

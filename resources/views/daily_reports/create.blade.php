@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Create Daily Activity Report')
+@section('title', 'Buat Laporan Harian')
 
 @section('content')
     <div class="w-full space-y-6" x-data="dailyReportForm()">
@@ -10,22 +10,21 @@
             <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
                     <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                        <a href="{{ route('daily_reports.index') }}" class="transition-colors hover:text-emerald-600">Daily
-                            Activity Logs</a>
+                        <a href="{{ route('daily_reports.index') }}" class="transition-colors hover:text-emerald-600">Catatan Kegiatan Harian</a>
                         <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                        <span class="font-extrabold text-emerald-600">Create Report</span>
+                        <span class="font-extrabold text-emerald-600">Buat Laporan</span>
                     </nav>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                        New Daily Activity Report
+                        Laporan Harian Baru
                     </h1>
                     <p class="mt-1 text-xs font-medium sm:text-sm text-slate-500">
-                        Record daily machine site activities and attached photo documentations.
+                        Catat kegiatan harian di lokasi mesin dan lampirkan dokumentasi foto.
                     </p>
                 </div>
                 <a href="{{ route('daily_reports.index') }}"
                     class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all rounded-xl active:scale-95 shrink-0">
                     <i class="fa-solid fa-arrow-left"></i>
-                    <span>Back</span>
+                    <span>Kembali</span>
                 </a>
             </div>
         </div>
@@ -51,7 +50,7 @@
             @csrf
 
             <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Report Details</h2>
+                <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Rincian Laporan</h2>
             </div>
 
             <div class="p-6 space-y-6 sm:p-8">
@@ -60,15 +59,15 @@
                     {{-- MACHINE SITE --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Machine Site <span class="text-rose-500">*</span>
+                            Lokasi Mesin <span class="text-rose-500">*</span>
                         </label>
                         <select name="site_id" required
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
-                            <option value="">-- Select Machine Site --</option>
+                            <option value="">-- Pilih Lokasi Mesin --</option>
                             @foreach ($sites as $site)
                                 <option value="{{ $site->id }}"
                                     {{ old('site_id', auth()->user()->site_id) == $site->id ? 'selected' : '' }}>
-                                    {{ $site->machine_name }} ({{ $site->location ?? 'Site Location' }})
+                                    {{ $site->machine_name }} ({{ $site->location ?? 'Lokasi Mesin' }})
                                 </option>
                             @endforeach
                         </select>
@@ -77,7 +76,7 @@
                     {{-- REPORT DATE --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Report Date <span class="text-rose-500">*</span>
+                            Tanggal Laporan <span class="text-rose-500">*</span>
                         </label>
                         <input type="date" name="report_date" value="{{ old('report_date', date('Y-m-d')) }}" required
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
@@ -86,7 +85,7 @@
                     {{-- CATATAN LAPORAN HARIAN --}}
                     <div class="space-y-1.5 md:col-span-2">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Daily Report Notes <span class="text-rose-500">*</span>
+                            Catatan Laporan Harian <span class="text-rose-500">*</span>
                         </label>
                         <textarea name="description" rows="6" required
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
@@ -98,14 +97,13 @@
                 <div class="pt-6 space-y-4 border-t border-slate-100">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Photo Documentations
-                                (Optional)</h3>
-                            <p class="text-[11px] font-medium text-slate-400">Attach photos of activity with optional
-                                captions.</p>
+                            <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Dokumentasi Foto
+                                (Opsional)</h3>
+                            <p class="text-[11px] font-medium text-slate-400">Lampirkan foto kegiatan. Keterangan foto dapat dikosongkan.</p>
                         </div>
                         <button type="button" @click="addPhotoRow()"
                             class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-all cursor-pointer">
-                            <i class="fa-solid fa-plus"></i> Add Photo
+                            <i class="fa-solid fa-plus"></i> Tambah Foto
                         </button>
                     </div>
 
@@ -128,11 +126,11 @@
                                 </div>
                                 <div class="flex items-center w-full gap-2 sm:w-2/3">
                                     <input type="text" name="captions[]"
-                                        placeholder="Photo caption (e.g., Kondisi mesin jam 09:00, Ganti oli)"
+                                        placeholder="Keterangan foto (Contoh: Kondisi mesin jam 09:00, Ganti oli)"
                                         class="w-full px-3.5 py-2 text-xs font-medium border border-slate-200 rounded-xl outline-none focus:border-emerald-500 bg-white text-slate-800">
                                     <button type="button" @click="removePhotoRow(index)" x-show="photos.length > 1"
                                         class="p-2 transition-colors cursor-pointer text-rose-600 hover:bg-rose-50 rounded-xl shrink-0"
-                                        title="Remove Photo">
+                                        title="Hapus Foto">
                                         <i class="fa-solid fa-trash-can"></i>
                                     </button>
                                 </div>
@@ -144,16 +142,15 @@
 
             {{-- FORM FOOTER --}}
             <div class="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
-                <span class="text-xs font-medium text-slate-400">Fields marked with (<span class="text-rose-500">*</span>)
-                    are mandatory.</span>
+                <span class="text-xs font-medium text-slate-400">Kolom bertanda (<span class="text-rose-500">*</span>) wajib diisi.</span>
                 <div class="flex items-center gap-3">
                     <a href="{{ route('daily_reports.index') }}"
                         class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
-                        Cancel
+                        Batal
                     </a>
                     <button type="submit"
                         class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer">
-                        <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Save Activity Report
+                        <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Simpan Laporan Kegiatan
                     </button>
                 </div>
             </div>
@@ -183,7 +180,7 @@
                     if (file) {
                         const maxSizeInBytes = 5 * 1024 * 1024; // 5 MB dalam Bytes
                         if (file.size > maxSizeInBytes) {
-                            alert('Ukuran foto melebihi 5 MB! Harap pilih gambar dengan ukuran yang lebih kecil.');
+                            (window.showUiMessage || window.alert)('Ukuran foto melebihi 5 MB! Harap pilih gambar dengan ukuran yang lebih kecil.');
                             event.target.value = ''; // Reset input gambar
                         }
                     }

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Daily Activity Report Log</title>
+    <title>Catatan Laporan Harian</title>
     <style>
         @page {
             size: a4 portrait;
@@ -182,15 +182,15 @@
 <body>
 
     <div class="header">
-        <h2>Daily Activity Report Log</h2>
-        <p>Period: {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} -
-            {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}</p>
+        <h2>Catatan Laporan Harian</h2>
+        <p>Periode: {{ \Carbon\Carbon::parse($startDate)->translatedFormat('d M Y') }} -
+            {{ \Carbon\Carbon::parse($endDate)->translatedFormat('d M Y') }}</p>
     </div>
 
     @forelse($groupedReports as $siteId => $reports)
         @php
             $firstReport = $reports->first();
-            $siteName = $firstReport->site->machine_name ?? 'Unknown Site';
+            $siteName = $firstReport->site->machine_name ?? 'Lokasi Tidak Diketahui';
             $branchName = $firstReport->site->branch->branch_name ?? '-';
         @endphp
 
@@ -205,7 +205,7 @@
                         SITE: {{ strtoupper($siteName) }}
                     </td>
                     <td style="text-align: right; width: 90px;">
-                        <span class="badge">{{ $reports->count() }} Report(s)</span>
+                        <span class="badge">{{ $reports->count() }} Laporan</span>
                     </td>
                 </tr>
             </table>
@@ -215,11 +215,11 @@
                 @foreach ($reports as $report)
                     <div class="log-entry">
                         <div class="log-date-box">
-                            {{ $report->report_date->format('l, d F Y') }}
+                            {{ $report->report_date->translatedFormat('l, d F Y') }}
                         </div>
 
                         <div class="description">
-                            <strong>Note:</strong><br>
+                            <strong>Catatan:</strong><br>
                             @php
                                 // CLEANUP: Membersihkan emoji & simbol non-ASCII yang menyebabkan tanda tanya (?) di DomPDF
                                 $cleanDescription = preg_replace('/[^\x20-\x7E\r\n\t]/u', '', $report->description);
@@ -245,7 +245,7 @@
                         @endif
                         <td class="photo-td">
                             <div class="photo-box">
-                                <img src="{{ public_path('storage/' . $photo->photo_path) }}" alt="Photo Documentation">
+                                <img src="{{ public_path('storage/' . $photo->photo_path) }}" alt="Foto Documentation">
                                 @if ($photo->caption)
                                     @php
                                         $cleanCaption = preg_replace('/[^\x20-\x7E\r\n\t]/u', '', $photo->caption);
@@ -277,7 +277,7 @@
         <table class="signature-table">
             <tr>
                 <td style="width: 35%; text-align: left;">
-                    <div class="signature-title">Knowing,</div>
+                    <div class="signature-title">Mengetahui,</div>
                     <div class="signature-name">Rangga</div>
                 </td>
                 <td style="width: 65%;"></td>

@@ -2,58 +2,57 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
-/**
- * Sumber tunggal data hari libur nasional & cuti bersama Indonesia,
- * dipakai bersama oleh ScheduleController dan AttendanceController
- * supaya tanggal merah yang tampil di kedua halaman selalu konsisten.
- */
 class IndonesianHolidayService
 {
-    /**
-     * @return array<string, string> ['Y-m-d' => 'Nama Hari Libur']
-     */
     public function getHolidays(int $year): array
     {
-        return Cache::remember("id_holidays_{$year}", now()->addDay(), function () use ($year) {
+        $key = "id_holidays_{$year}";
+        if (Cache::has($key)) {
+            return Cache::get($key);
+        }
+        if (! Cache::has($key.'_retry')) {
             try {
-                $response = Http::timeout(5)->get('https://api-hari-libur.vercel.app/api', [
-                    'year' => $year,
-                ]);
-
-                if ($response->successful()) {
-                    $holidays = [];
-                    $items = $response->json('data', []);
-                    foreach ($items as $item) {
-                        $date = $item['date'] ?? null;
-                        if (!$date) continue;
-                        $holidays[$date] = $item['description'] ?? ($item['name'] ?? 'Hari Libur Nasional');
-                    }
-                    return $holidays;
+                $response = Http::timeout(5)->get('https://api-hari-libur.vercel.app/api', ['year' => $year]);
+                $items = $response->json('data');
+                if (! $response->successful() || ! is_array($items) || $items === []) {
+                    throw new \RuntimeException('Holiday service returned no valid calendar.');
                 }
-            } catch (\Throwable $e) {
-                // API eksternal gagal diakses (timeout/down) -> fallback ke array kosong,
-                // tanggal merah tetap jalan normal untuk Sabtu/Minggu saja.
-            }
+                $holidays = [];
+                foreach ($items as $item) {
+                    $date = $item['date'] ?? null;
+                    if (! is_string($date) || ! preg_match('/^'.$year.'-\d{2}-\d{2}$/', $date)) {
+                        continue;
+                    }
+                    $holidays[$date] = $item['description'] ?? $item['name'] ?? 'Hari Libur Nasional';
+                }
+                if (! $holidays) {
+                    throw new \RuntimeException('Holiday calendar is empty.');
+                }
+                Cache::put($key, $holidays, now()->addDay());
+                Cache::forever($key.'_last_good', $holidays);
+                Cache::forget($key.'_warning');
 
-            return [];
-        });
+                return $holidays;
+            } catch (\Throwable $e) {
+                Cache::put($key.'_retry', true, now()->addMinutes(5));
+                Cache::put($key.'_warning', true, now()->addMinutes(10));
+                Log::warning('Holiday synchronization failed; using last valid calendar.', ['year' => $year]);
+            }
+        }
+        if (app()->bound('session') && request()->hasSession()) {
+            session()->flash('warning', 'Sinkronisasi hari libur gagal. Kalender memakai data terakhir jika tersedia; periksa sebelum memproses penggajian.');
+        }
+
+        return Cache::get($key.'_last_good', []);
     }
 
-    /**
-     * Ambil hari libur yang jatuh di satu bulan tertentu saja (format month: "Y-m").
-     * @return array<string, string> ['Y-m-d' => 'Nama Hari Libur']
-     */
     public function getHolidaysForMonth(string $monthString): array
     {
-        $year = (int) substr($monthString, 0, 4);
-
-        return array_filter(
-            $this->getHolidays($year),
-            fn($date) => str_starts_with($date, $monthString),
-            ARRAY_FILTER_USE_KEY
-        );
+        return array_filter($this->getHolidays((int) substr($monthString, 0, 4)),
+            fn ($date) => str_starts_with($date, $monthString), ARRAY_FILTER_USE_KEY);
     }
 }

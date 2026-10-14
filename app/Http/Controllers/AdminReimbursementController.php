@@ -25,7 +25,7 @@ class AdminReimbursementController extends Controller
     public function index(Request $request)
     {
         $role = strtolower(auth()->user()->role ?? 'employee_role');
-        $pageTitle = 'Reimbursement Claims';
+        $pageTitle = 'Klaim Penggantian Biaya';
 
         $query = \App\Services\ReimbursementAccess::query()->with('user');
         $pdfBase64 = null;
@@ -148,7 +148,7 @@ class AdminReimbursementController extends Controller
             'status' => $initialStatus
         ]);
 
-        return redirect()->route('reimbursements.index')->with('success', 'Claim filed successfully.');
+        return redirect()->route('reimbursements.index')->with('success', 'Klaim berhasil diajukan.');
     }
 
     public function approval($id)
@@ -392,7 +392,7 @@ class AdminReimbursementController extends Controller
             }
             $reimbursement->save();
 
-            return redirect()->route('reimbursements.index')->with('success', 'The document has been successfully signed. Current status: ' . strtoupper($nextStatus));
+            return redirect()->route('reimbursements.index')->with('success', 'Dokumen berhasil ditandatangani. Status: ' . \App\Support\UiText::label($nextStatus));
         });
     }
 
@@ -412,19 +412,13 @@ class AdminReimbursementController extends Controller
                 'rejected_reason' => $request->rejected_reason
             ]);
 
-            return redirect()->route('reimbursements.index')->with('success', 'Claim rejected successfully.');
+            return redirect()->route('reimbursements.index')->with('success', 'Klaim berhasil ditolak.');
         });
     }
 
     public function trash(Request $request)
     {
-        $role = strtolower(auth()->user()->role ?? 'employee_role');
-
-        $query = Reimbursement::onlyTrashed()->with('user');
-
-        if (!in_array($role, ['superadmin', 'manager'])) {
-            $query->where('user_id', auth()->id());
-        }
+        $query = \App\Services\ReimbursementAccess::manageableQuery()->onlyTrashed()->with('user');
 
         $reimbursements = $query->orderBy('deleted_at', 'desc')->paginate(10);
 
@@ -440,7 +434,7 @@ class AdminReimbursementController extends Controller
         \App\Services\ReimbursementAccess::manage($reimbursement);
         $reimbursement->restore();
 
-        return redirect()->route('reimbursements.trash')->with('success', 'Claim record successfully restored.');
+        return redirect()->route('reimbursements.trash')->with('success', 'Klaim berhasil dipulihkan.');
     }
 
     /**
@@ -448,16 +442,13 @@ class AdminReimbursementController extends Controller
      */
     public function forceDelete($id)
     {
-        $reimbursement = Reimbursement::onlyTrashed()->findOrFail($id);
-        \App\Services\ReimbursementAccess::manage($reimbursement);
-
-        if ($reimbursement->receipt_attachment) {
-            Storage::disk('public')->delete($reimbursement->receipt_attachment);
-        }
-
-        $reimbursement->forceDelete();
-
-        return redirect()->route('reimbursements.trash')->with('success', 'Claim record permanently deleted.');
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
+            $claim = Reimbursement::onlyTrashed()->lockForUpdate()->findOrFail($id);
+            \App\Services\ReimbursementAccess::manage($claim);
+            $claim->forceDelete();
+            \App\Jobs\DeletePublicFiles::dispatch([$claim->receipt_attachment])->afterCommit();
+            return redirect()->route('reimbursements.trash')->with('success', 'Klaim berhasil dihapus permanen.');
+        });
     }
 
     public function destroy($id)
@@ -469,7 +460,7 @@ class AdminReimbursementController extends Controller
         // Soft Delete (File fisik tidak langsung dihapus agar bisa di-restore)
         $reimbursement->delete();
 
-        return redirect()->route('reimbursements.index')->with('success', 'Claim moved to Recycle Bin.');
+        return redirect()->route('reimbursements.index')->with('success', 'Klaim dipindahkan ke sampah.');
     }
     public function show($id)
     {
@@ -513,7 +504,7 @@ class AdminReimbursementController extends Controller
             ->get();
 
         if ($reimbursements->isEmpty()) {
-            return redirect()->back()->with('error', 'Tidak ada data reimbursement APPROVED untuk bulan yang dipilih.');
+            return redirect()->back()->with('error', 'Tidak ada klaim yang disetujui pada bulan terpilih.');
         }
 
         $pdf = new Fpdi('L', 'mm', 'A4');
@@ -623,7 +614,7 @@ class AdminReimbursementController extends Controller
             }
 
             if (empty($documentQueue)) {
-                return redirect()->back()->with('error', 'Tidak ada berkas nota yang dapat diproses ke PDF Summary.');
+                return redirect()->back()->with('error', 'Tidak ada bukti nota yang dapat dibuat menjadi ringkasan PDF.');
             }
 
             $this->renderDocumentQueueToA4(
@@ -1115,46 +1106,11 @@ class AdminReimbursementController extends Controller
     /**
      * TAMPILKAN FORM EDIT REIMBURSEMENT
      */
-    // public function edit($id)
-    // {
-    //     $reimbursement = Reimbursement::findOrFail($id);
-    //     \App\Services\ReimbursementAccess::view($reimbursement);
-    //     $user = auth()->user();
-
-    //     abort_unless(in_array($reimbursement->status, ['pending', 'rejected']), 409, 'Klaim yang sudah masuk persetujuan tidak dapat diubah.');
-    //     if ($user->role !== 'superadmin' && $reimbursement->user_id !== $user->id) {
-    //         abort(403, 'Unauthorized action.');
-    //     }
-
-    //     $employeesQuery = Employee::query();
-    //     if ($user && $user->role === 'employee_role') {
-    //         $employeesQuery->where('site_id', $user->site_id);
-    //     }
-    //     $employees = $employeesQuery->orderBy('name', 'asc')->get();
-
-    //     return view('reimbursements.edit', compact('reimbursement', 'employees'));
-    // }
-    /**
-     * TAMPILKAN FORM EDIT REIMBURSEMENT
-     */
     public function edit($id)
     {
         $reimbursement = Reimbursement::findOrFail($id);
-        \App\Services\ReimbursementAccess::view($reimbursement);
+        \App\Services\ReimbursementAccess::edit($reimbursement);
         $user = auth()->user();
-
-        // 🟢 FIX: Masukkan status pending_leader, pending_station, dan pending_manager
-        $editableStatuses = ['pending', 'pending_leader', 'pending_station', 'pending_manager', 'rejected'];
-
-        abort_unless(
-            in_array($reimbursement->status, $editableStatuses),
-            409,
-            'Klaim yang sudah disetujui (Approved) tidak dapat diubah.'
-        );
-
-        if ($user->role !== 'superadmin' && $reimbursement->user_id !== $user->id) {
-            abort(403, 'Unauthorized action.');
-        }
 
         $employeesQuery = Employee::query();
         if ($user && in_array($user->role, ['employee_role', 'team_leader'])) {
@@ -1170,216 +1126,109 @@ class AdminReimbursementController extends Controller
     /**
      * SIMPAN PERUBAHAN EDIT REIMBURSEMENT
      */
-    // public function update(Request $request, $id)
-    // {
-    //     $reimbursement = Reimbursement::findOrFail($id);
-    //     \App\Services\ReimbursementAccess::view($reimbursement);
-    //     $user = auth()->user();
-
-    //     abort_unless(in_array($reimbursement->status, ['pending', 'rejected']), 409, 'Klaim yang sudah masuk persetujuan tidak dapat diubah.');
-    //     if ($user->role !== 'superadmin' && $reimbursement->user_id !== $user->id) {
-    //         abort(403, 'Unauthorized action.');
-    //     }
-
-    //     if ($request->has('amount')) {
-    //         $cleanedAmount = str_replace('.', '', $request->amount);
-    //         $request->merge(['amount' => $cleanedAmount]);
-    //     }
-
-    //     $request->validate([
-    //         'person_name'        => 'required|string|max:255',
-    //         'date'               => 'required|date',
-    //         'category'           => 'required|in:transportation,delivery,office',
-    //         'amount'             => 'required|numeric|min:0',
-    //         'from_location'      => 'nullable|required_if:category,transportation,delivery|string|max:255',
-    //         'to_location'        => 'nullable|required_if:category,transportation,delivery|string|max:255',
-    //         'comment'            => 'nullable|string',
-    //         'receipt_attachment' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:4096',
-    //     ]);
-
-    //     $dataToUpdate = [
-    //         'person_name'   => $request->person_name,
-    //         'date'          => $request->date,
-    //         'category'      => $request->category,
-    //         'from_location' => in_array($request->category, ['transportation', 'delivery']) ? $request->from_location : null,
-    //         'to_location'   => in_array($request->category, ['transportation', 'delivery']) ? $request->to_location : null,
-    //         'amount'        => $request->amount,
-    //         'comment'       => $request->comment,
-    //     ];
-
-    //     if ($request->hasFile('receipt_attachment')) {
-
-    //         $file = $request->file('receipt_attachment');
-    //         $extension = strtolower($file->getClientOriginalExtension());
-    //         $excludedPages = json_decode($request->excluded_pages, true) ?? [];
-
-    //         if ($extension === 'pdf' && !empty($excludedPages)) {
-    //             try {
-    //                 $tempPath = $file->getRealPath();
-    //                 $pdfData = $this->convertPdfToVersion14($tempPath);
-    //                 $targetPdf = $pdfData['path'];
-
-    //                 $pdf = new Fpdi();
-    //                 $pageCount = $pdf->setSourceFile($targetPdf);
-
-    //                 $pagesProcessed = 0;
-    //                 for ($i = 1; $i <= $pageCount; $i++) {
-    //                     if (!in_array($i, $excludedPages)) {
-    //                         $templateId = $pdf->importPage($i);
-    //                         $size = $pdf->getTemplateSize($templateId);
-    //                         $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-    //                         $pdf->useTemplate($templateId);
-    //                         $pagesProcessed++;
-    //                     }
-    //                 }
-
-    //                 if ($pdfData['is_temp'] && file_exists($targetPdf)) {
-    //                     @unlink($targetPdf);
-    //                 }
-
-    //                 if ($pagesProcessed === 0) {
-    //                     return redirect()->back()->with('error', 'Anda tidak boleh menghapus semua halaman PDF.');
-    //                 }
-
-    //                 $fileName = 'receipts/processed_' . time() . '_' . uniqid() . '.pdf';
-    //                 Storage::disk('public')->put($fileName, $pdf->Output('S'));
-    //                 $dataToUpdate['receipt_attachment'] = $fileName;
-    //             } catch (\Exception $e) {
-    //                 Log::error("Gagal memproses PDF Slicing saat edit: " . $e->getMessage());
-    //                 return redirect()->back()->with('error', 'Gagal memproses lampiran PDF.');
-    //             }
-    //         } else {
-    //             $dataToUpdate['receipt_attachment'] = $file->store('receipts', 'public');
-    //         }
-    //     }
-
-    //     $oldReceipt = $reimbursement->receipt_attachment;
-    //     $reimbursement->update($dataToUpdate);
-    //     if (isset($dataToUpdate['receipt_attachment']) && $oldReceipt !== $dataToUpdate['receipt_attachment']) {
-    //         Storage::disk('public')->delete($oldReceipt);
-    //     }
-
-    //     return redirect()->route('reimbursements.index')->with('success', 'Reimbursement claim updated successfully.');
-    // }
-    /**
-     * SIMPAN PERUBAHAN EDIT REIMBURSEMENT
-     */
     public function update(Request $request, $id)
     {
-        $reimbursement = Reimbursement::findOrFail($id);
-        \App\Services\ReimbursementAccess::view($reimbursement);
-        $user = auth()->user();
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $id) {
+            $reimbursement = Reimbursement::lockForUpdate()->findOrFail($id);
+            \App\Services\ReimbursementAccess::edit($reimbursement);
+            $user = auth()->user();
 
-        // 🟢 FIX: Masukkan status pending_leader, pending_station, dan pending_manager
-        $editableStatuses = ['pending', 'pending_leader', 'pending_station', 'pending_manager', 'rejected'];
-
-        abort_unless(
-            in_array($reimbursement->status, $editableStatuses),
-            409,
-            'Klaim yang sudah disetujui (Approved) tidak dapat diubah.'
-        );
-
-        if ($user->role !== 'superadmin' && $reimbursement->user_id !== $user->id) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        if ($request->has('amount')) {
-            $cleanedAmount = str_replace('.', '', $request->amount);
-            $request->merge(['amount' => $cleanedAmount]);
-        }
-
-        $request->validate([
-            'person_name'        => 'required|string|max:255',
-            'date'               => 'required|date',
-            'category'           => 'required|in:transportation,delivery,office',
-            'amount'             => 'required|numeric|min:0',
-            'from_location'      => 'nullable|required_if:category,transportation,delivery|string|max:255',
-            'to_location'        => 'nullable|required_if:category,transportation,delivery|string|max:255',
-            'comment'            => 'nullable|string',
-            'receipt_attachment' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:4096',
-        ]);
-
-        $dataToUpdate = [
-            'person_name'   => $request->person_name,
-            'date'          => $request->date,
-            'category'      => $request->category,
-            'from_location' => in_array($request->category, ['transportation', 'delivery']) ? $request->from_location : null,
-            'to_location'   => in_array($request->category, ['transportation', 'delivery']) ? $request->to_location : null,
-            'amount'        => $request->amount,
-            'comment'       => $request->comment,
-        ];
-
-        if ($request->hasFile('receipt_attachment')) {
-
-            $file = $request->file('receipt_attachment');
-            $extension = strtolower($file->getClientOriginalExtension());
-            $excludedPages = json_decode($request->excluded_pages, true) ?? [];
-
-            if ($extension === 'pdf' && !empty($excludedPages)) {
-                try {
-                    $tempPath = $file->getRealPath();
-                    $pdfData = $this->convertPdfToVersion14($tempPath);
-                    $targetPdf = $pdfData['path'];
-
-                    $pdf = new Fpdi();
-                    $pageCount = $pdf->setSourceFile($targetPdf);
-
-                    $pagesProcessed = 0;
-                    for ($i = 1; $i <= $pageCount; $i++) {
-                        if (!in_array($i, $excludedPages)) {
-                            $templateId = $pdf->importPage($i);
-                            $size = $pdf->getTemplateSize($templateId);
-                            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                            $pdf->useTemplate($templateId);
-                            $pagesProcessed++;
-                        }
-                    }
-
-                    if ($pdfData['is_temp'] && file_exists($targetPdf)) {
-                        @unlink($targetPdf);
-                    }
-
-                    if ($pagesProcessed === 0) {
-                        return redirect()->back()->with('error', 'Anda tidak boleh menghapus semua halaman PDF.');
-                    }
-
-                    $fileName = 'receipts/processed_' . time() . '_' . uniqid() . '.pdf';
-                    Storage::disk('public')->put($fileName, $pdf->Output('S'));
-                    $dataToUpdate['receipt_attachment'] = $fileName;
-                } catch (\Exception $e) {
-                    Log::error("Gagal memproses PDF Slicing saat edit: " . $e->getMessage());
-                    return redirect()->back()->with('error', 'Gagal memproses lampiran PDF.');
-                }
-            } else {
-                $dataToUpdate['receipt_attachment'] = $file->store('receipts', 'public');
+            if ($request->has('amount')) {
+                $cleanedAmount = str_replace('.', '', $request->amount);
+                $request->merge(['amount' => $cleanedAmount]);
             }
-        }
 
-        $oldReceipt = $reimbursement->receipt_attachment;
-        $reimbursement->update($dataToUpdate);
-        if (isset($dataToUpdate['receipt_attachment']) && $oldReceipt !== $dataToUpdate['receipt_attachment']) {
-            Storage::disk('public')->delete($oldReceipt);
-        }
+            $request->validate([
+                'person_name'        => 'required|string|max:255',
+                'date'               => 'required|date',
+                'category'           => 'required|in:transportation,delivery,office',
+                'amount'             => 'required|numeric|min:0',
+                'from_location'      => 'nullable|required_if:category,transportation,delivery|string|max:255',
+                'to_location'        => 'nullable|required_if:category,transportation,delivery|string|max:255',
+                'comment'            => 'nullable|string',
+                'receipt_attachment' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:4096',
+            ]);
 
-        return redirect()->route('reimbursements.index')->with('success', 'Reimbursement claim updated successfully.');
+            $dataToUpdate = [
+                'person_name'   => $request->person_name,
+                'date'          => $request->date,
+                'category'      => $request->category,
+                'from_location' => in_array($request->category, ['transportation', 'delivery']) ? $request->from_location : null,
+                'to_location'   => in_array($request->category, ['transportation', 'delivery']) ? $request->to_location : null,
+                'amount'        => $request->amount,
+                'comment'       => $request->comment,
+            ];
+
+            if ($request->hasFile('receipt_attachment')) {
+
+                $file = $request->file('receipt_attachment');
+                $extension = strtolower($file->getClientOriginalExtension());
+                $excludedPages = json_decode($request->excluded_pages, true) ?? [];
+
+                if ($extension === 'pdf' && !empty($excludedPages)) {
+                    try {
+                        $tempPath = $file->getRealPath();
+                        $pdfData = $this->convertPdfToVersion14($tempPath);
+                        $targetPdf = $pdfData['path'];
+
+                        $pdf = new Fpdi();
+                        $pageCount = $pdf->setSourceFile($targetPdf);
+
+                        $pagesProcessed = 0;
+                        for ($i = 1; $i <= $pageCount; $i++) {
+                            if (!in_array($i, $excludedPages)) {
+                                $templateId = $pdf->importPage($i);
+                                $size = $pdf->getTemplateSize($templateId);
+                                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                                $pdf->useTemplate($templateId);
+                                $pagesProcessed++;
+                            }
+                        }
+
+                        if ($pdfData['is_temp'] && file_exists($targetPdf)) {
+                            @unlink($targetPdf);
+                        }
+
+                        if ($pagesProcessed === 0) {
+                            return redirect()->back()->with('error', 'Anda tidak boleh menghapus semua halaman PDF.');
+                        }
+
+                        $fileName = 'receipts/processed_' . time() . '_' . uniqid() . '.pdf';
+                        Storage::disk('public')->put($fileName, $pdf->Output('S'));
+                        $dataToUpdate['receipt_attachment'] = $fileName;
+                    } catch (\Exception $e) {
+                        Log::error("Gagal memproses PDF Slicing saat edit: " . $e->getMessage());
+                        return redirect()->back()->with('error', 'Gagal memproses lampiran PDF.');
+                    }
+                } else {
+                    $dataToUpdate['receipt_attachment'] = $file->store('receipts', 'public');
+                }
+            }
+
+            if ($reimbursement->status === 'rejected') {
+                $dataToUpdate['status'] = \App\Services\ReimbursementAccess::approvalStatus($reimbursement->user->role);
+                $dataToUpdate['rejected_reason'] = null;
+            }
+            $oldReceipt = $reimbursement->receipt_attachment;
+            $reimbursement->update($dataToUpdate);
+            if (isset($dataToUpdate['receipt_attachment']) && $oldReceipt !== $dataToUpdate['receipt_attachment']) {
+                \App\Jobs\DeletePublicFiles::dispatch([$oldReceipt])->afterCommit();
+            }
+
+            return redirect()->route('reimbursements.index')->with('success', 'Klaim berhasil diperbarui.');
+        });
     }
 
     public function fastApprove($id)
     {
-        $reimbursement = Reimbursement::findOrFail($id);
-        $user = auth()->user();
-
-        // Pastikan hanya role tertentu yang bisa melakukan fast-track
-        if (!in_array($user->role, ['superadmin', 'team_leader', 'station_master', 'manager'])) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        $reimbursement->update([
-            'status' => 'approved',
-            'approved_by' => $user->id,
-        ]);
-
-        return redirect()->route('reimbursements.index')->with('success', 'Klaim berhasil ditandai sebagai disetujui (Fast-Track Approved).');
+        // Fast-track bypasses intermediate signatures and is reserved for superadmin.
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
+            $claim = Reimbursement::lockForUpdate()->findOrFail($id);
+            \App\Services\ReimbursementAccess::approve($claim);
+            $claim->update(['status' => 'approved', 'approved_by' => auth()->id()]);
+            return redirect()->route('reimbursements.index')->with('success', 'Klaim disetujui oleh superadmin.');
+        });
     }
 
     public function importExcel(Request $request)
@@ -1396,7 +1245,7 @@ class AdminReimbursementController extends Controller
 
             if ($count > 0) {
                 return redirect()->route('reimbursements.index')
-                    ->with('success', "Berhasil mengimpor {$count} data klaim reimbursement.");
+                    ->with('success', "Berhasil mengimpor {$count} data klaim penggantian biaya.");
             }
 
             return redirect()->route('reimbursements.index')
@@ -1407,5 +1256,92 @@ class AdminReimbursementController extends Controller
             return redirect()->back()
                 ->with('error', 'Gagal mengimpor Excel: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * HAPUS BANYAK DATA KLAIM SEKALIGUS (BULK DELETE / MOVE TO TRASH)
+     */
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'required|integer|exists:reimbursements,id'
+        ]);
+
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+            $reimbursements = Reimbursement::whereIn('id', $request->ids)->lockForUpdate()->get();
+
+            foreach ($reimbursements as $reimbursement) {
+                \App\Services\ReimbursementAccess::manage($reimbursement);
+                // Soft delete data
+                $reimbursement->delete();
+            }
+
+            return redirect()->route('reimbursements.index')->with('success', 'Klaim terpilih dipindahkan ke sampah.');
+        });
+    }
+
+    /**
+     * RESTORE BANYAK DATA KLAIM SEKALIGUS
+     */
+    public function bulkRestore(Request $request)
+    {
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            // Gunakan Rule::exists()->whereNotNull('deleted_at') untuk memeriksa data di Recycle Bin
+            'ids.*' => [
+                'required',
+                'integer',
+                \Illuminate\Validation\Rule::exists('reimbursements', 'id')->whereNotNull('deleted_at')
+            ]
+        ]);
+
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+            $reimbursements = Reimbursement::onlyTrashed()->whereIn('id', $request->ids)->lockForUpdate()->get();
+
+            foreach ($reimbursements as $reimbursement) {
+                \App\Services\ReimbursementAccess::manage($reimbursement);
+                $reimbursement->restore();
+            }
+
+            return redirect()->route('reimbursements.trash')->with('success', 'Klaim terpilih berhasil dipulihkan.');
+        });
+    }
+
+    /**
+     * HAPUS PERMANEN BANYAK DATA KLAIM SEKALIGUS
+     */
+    public function bulkForceDelete(Request $request)
+    {
+        $request->validate([
+            'ids'   => 'required|array|min:1',
+            // Gunakan Rule::exists()->whereNotNull('deleted_at') untuk memeriksa data di Recycle Bin
+            'ids.*' => [
+                'required',
+                'integer',
+                \Illuminate\Validation\Rule::exists('reimbursements', 'id')->whereNotNull('deleted_at')
+            ]
+        ]);
+
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+            $reimbursements = Reimbursement::onlyTrashed()->whereIn('id', $request->ids)->lockForUpdate()->get();
+
+            foreach ($reimbursements as $reimbursement) {
+                \App\Services\ReimbursementAccess::manage($reimbursement);
+            }
+            $paths = [];
+            foreach ($reimbursements as $reimbursement) {
+                \App\Services\ReimbursementAccess::manage($reimbursement);
+
+                if ($reimbursement->receipt_attachment) {
+                    $paths[] = $reimbursement->receipt_attachment;
+                }
+
+                $reimbursement->forceDelete();
+            }
+
+            \App\Jobs\DeletePublicFiles::dispatch($paths)->afterCommit();
+            return redirect()->route('reimbursements.trash')->with('success', 'Klaim terpilih berhasil dihapus permanen.');
+        });
     }
 }

@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Edit Employee Data')
+@section('title', 'Ubah Data Karyawan')
 
 @section('content')
     <div class="w-full max-w-3xl mx-auto space-y-6">
@@ -10,22 +10,21 @@
             <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
                     <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                        <a href="{{ route('employee.index') }}" class="transition-colors hover:text-blue-600">Employee
-                            Directory</a>
+                        <a href="{{ route('employee.index') }}" class="transition-colors hover:text-blue-600">Daftar Karyawan</a>
                         <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                        <span class="font-extrabold text-blue-600">Edit Record</span>
+                        <span class="font-extrabold text-blue-600">Ubah Data</span>
                     </nav>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                        Edit Employee Record
+                        Ubah Data Karyawan
                     </h1>
                     <p class="mt-1 text-xs font-medium sm:text-sm text-slate-500">
-                        Update employment parameters, salary allocation, and placement information.
+                        Perbarui data kepegawaian, gaji, dan penempatan.
                     </p>
                 </div>
                 <a href="{{ route('employee.index') }}"
                     class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all rounded-xl active:scale-95 shrink-0">
                     <i class="fa-solid fa-arrow-left"></i>
-                    <span>Back</span>
+                    <span>Kembali</span>
                 </a>
             </div>
         </div>
@@ -37,7 +36,7 @@
             @method('PUT')
 
             <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Employment Details</h2>
+                <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Informasi Kepegawaian</h2>
             </div>
 
             <div class="p-6 space-y-6 sm:p-8">
@@ -45,27 +44,27 @@
                     {{-- FULL NAME --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Full Name <span class="text-rose-500">*</span>
+                            Nama Lengkap <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" name="name" value="{{ old('name', $employee->name) }}"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
-                            placeholder="Full name as per ID..." required>
+                            placeholder="Nama lengkap sesuai KTP..." required>
                     </div>
 
                     {{-- NIK --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            NIK (National ID / KTP)
+                            NIK (Nomor KTP)
                         </label>
                         <input type="text" name="nik" value="{{ old('nik', $employee->nik) }}" maxlength="16"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400 font-mono"
-                            placeholder="16-digit NIK...">
+                            placeholder="NIK 16 digit...">
                     </div>
 
                     {{-- EMAIL --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Email Address
+                            Alamat Email
                         </label>
                         <input type="email" name="email" value="{{ old('email', $employee->email) }}"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
@@ -75,28 +74,28 @@
                     {{-- PHONE NUMBER --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Phone Number <span class="text-rose-500">*</span>
+                            Nomor Telepon <span class="text-rose-500">*</span>
                         </label>
                         <input type="text" name="phone_number" id="phone_number"
                             value="{{ old('phone_number', $employee->phone_number) }}"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
-                            placeholder="Phone number..." required>
+                            placeholder="Nomor telepon..." required>
                     </div>
 
                     {{-- SITE LOCATION --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Site Placement <span class="text-rose-500">*</span>
+                            Penempatan Lokasi <span class="text-rose-500">*</span>
                         </label>
                         @if (Auth::user()?->role === 'superadmin' || Auth::user()?->role === 'admin')
                             <select name="site_id"
                                 class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer"
                                 required>
-                                <option value="">-- Select Site Location --</option>
+                                <option value="">-- Pilih Lokasi Mesin --</option>
                                 @foreach ($sites as $site)
                                     <option value="{{ $site->id }}"
                                         {{ old('site_id', $employee->site_id) == $site->id ? 'selected' : '' }}>
-                                        {{ $site->machine_name }} (Branch: {{ $site->branch->branch_name ?? '-' }})
+                                        {{ $site->machine_name }} (Cabang: {{ $site->branch->branch_name ?? '-' }})
                                     </option>
                                 @endforeach
                             </select>
@@ -104,7 +103,7 @@
                             <input type="hidden" name="site_id"
                                 value="{{ old('site_id', Auth::user()->site_id ?? $employee->site_id) }}">
                             <input type="text"
-                                value="{{ $employee->site->machine_name ?? (Auth::user()->site->machine_name ?? 'Registered Site') }} (Branch: {{ $employee->site->branch->branch_name ?? (Auth::user()->site->branch->branch_name ?? '-') }})"
+                                value="{{ $employee->site->machine_name ?? (Auth::user()->site->machine_name ?? 'Lokasi Terdaftar') }} (Branch: {{ $employee->site->branch->branch_name ?? (Auth::user()->site->branch->branch_name ?? '-') }})"
                                 class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-600 bg-slate-100 border border-slate-200 rounded-xl cursor-not-allowed"
                                 readonly>
                         @endif
@@ -113,37 +112,37 @@
                     {{-- STATUS --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Employment Status <span class="text-rose-500">*</span>
+                            Status Kepegawaian <span class="text-rose-500">*</span>
                         </label>
                         <select name="status" id="status_select"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
                             <option value="Probation"
-                                {{ old('status', $employee->status) == 'Probation' ? 'selected' : '' }}>Probation</option>
+                                {{ old('status', $employee->status) == 'Probation' ? 'selected' : '' }}>Masa Percobaan</option>
                             <option value="Contract"
-                                {{ old('status', $employee->status) == 'Contract' ? 'selected' : '' }}>Contract</option>
+                                {{ old('status', $employee->status) == 'Contract' ? 'selected' : '' }}>Kontrak</option>
                             <option value="Permanent"
-                                {{ old('status', $employee->status) == 'Permanent' ? 'selected' : '' }}>Permanent</option>
+                                {{ old('status', $employee->status) == 'Permanent' ? 'selected' : '' }}>Tetap</option>
                             <option value="Daily" {{ old('status', $employee->status) == 'Daily' ? 'selected' : '' }}>
-                                Daily</option>
+                                Harian</option>
                             <option value="Resigned" class="font-bold text-rose-600"
-                                {{ old('status', $employee->status) == 'Resigned' ? 'selected' : '' }}>🔴 Resigned</option>
+                                {{ old('status', $employee->status) == 'Resigned' ? 'selected' : '' }}>🔴 Berhenti Bekerja</option>
                         </select>
                     </div>
 
                     {{-- POSITION --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Position / Job Title
+                            Jabatan
                         </label>
                         <input type="text" name="position" value="{{ old('position', $employee->position) }}"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
-                            placeholder="e.g. Supervisor, Operator, Admin">
+                            placeholder="Contoh: Supervisor, Operator, Admin">
                     </div>
 
                     {{-- GAJI POKOK --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Basic Salary (Gaji Pokok)
+                            Gaji Pokok
                         </label>
                         <input type="text" id="basic_salary_display"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-black border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-emerald-700 placeholder-slate-400"
@@ -155,11 +154,11 @@
                     {{-- BANK NAME --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Bank Name
+                            Nama Bank
                         </label>
                         <select name="bank_name"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
-                            <option value="">-- Select Bank --</option>
+                            <option value="">-- Pilih Bank --</option>
                             @php
                                 $bankList = [
                                     'BCA',
@@ -195,23 +194,23 @@
                     {{-- BANK ACCOUNT NUMBER --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Bank Account Number
+                            Nomor Rekening
                         </label>
                         <input type="text" name="bank_account_number"
                             value="{{ old('bank_account_number', $employee->bank_account_number) }}"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400 font-mono"
-                            placeholder="e.g. 8830123456">
+                            placeholder="Contoh: 8830123456">
                     </div>
 
                     {{-- MCU STATUS --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            MCU Passed
+                            Lulus MCU
                         </label>
                         <select name="mcu"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
-                            <option value="no" {{ old('mcu', $employee->mcu) == 'no' ? 'selected' : '' }}>NO</option>
-                            <option value="yes" {{ old('mcu', $employee->mcu) == 'yes' ? 'selected' : '' }}>YES
+                            <option value="no" {{ old('mcu', $employee->mcu) == 'no' ? 'selected' : '' }}>TIDAK</option>
+                            <option value="yes" {{ old('mcu', $employee->mcu) == 'yes' ? 'selected' : '' }}>YA
                             </option>
                         </select>
                     </div>
@@ -219,12 +218,12 @@
                     {{-- TLD BADGE --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            TLD Badge
+                            Kartu TLD
                         </label>
                         <select name="tld"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
-                            <option value="no" {{ old('tld', $employee->tld) == 'no' ? 'selected' : '' }}>NO</option>
-                            <option value="yes" {{ old('tld', $employee->tld) == 'yes' ? 'selected' : '' }}>YES
+                            <option value="no" {{ old('tld', $employee->tld) == 'no' ? 'selected' : '' }}>TIDAK</option>
+                            <option value="yes" {{ old('tld', $employee->tld) == 'yes' ? 'selected' : '' }}>YA
                             </option>
                         </select>
                     </div>
@@ -236,13 +235,13 @@
                         </label>
                         <input type="text" name="salary_change_reason"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
-                            placeholder="e.g. Promosi Jabatan, Penyesuaian UMK">
+                            placeholder="Contoh: Promosi Jabatan, Penyesuaian UMK">
                     </div>
 
                     {{-- JOIN DATE --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Join Date <span class="text-rose-500">*</span>
+                            Tanggal Bergabung <span class="text-rose-500">*</span>
                         </label>
                         <input type="date" name="join_date"
                             value="{{ old('join_date', isset($employee->join_date) ? \Carbon\Carbon::parse($employee->join_date)->format('Y-m-d') : '') }}"
@@ -253,7 +252,7 @@
                     {{-- CONTRACT START DATE --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Contract Start Date
+                            Tanggal Mulai Kontrak
                         </label>
                         <input type="date" name="contract_start_date"
                             value="{{ old('contract_start_date', isset($employee->contract_start_date) ? \Carbon\Carbon::parse($employee->contract_start_date)->format('Y-m-d') : '') }}"
@@ -266,7 +265,7 @@
                         <div class="flex items-center gap-2 text-rose-800">
                             <i class="text-sm fa-solid fa-calendar-xmark"></i>
                             <label class="text-xs font-extrabold tracking-wider uppercase">
-                                Last Working Day (Tanggal Resign) <span class="text-rose-600">*</span>
+                                Hari Terakhir Bekerja <span class="text-rose-600">*</span>
                             </label>
                         </div>
                         <p class="text-[11px] text-slate-500 font-medium leading-relaxed">
@@ -284,16 +283,16 @@
 
             <div class="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
                 <div class="text-xs font-medium text-slate-400">
-                    Asterisk (<span class="text-rose-500">*</span>) fields are required.
+                    Kolom bertanda (<span class="text-rose-500">*</span>) wajib diisi.
                 </div>
                 <div class="flex items-center gap-3">
                     <a href="{{ route('employee.index') }}"
                         class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
-                        Discard
+                        Batal
                     </a>
                     <button type="submit"
                         class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-600/20 active:scale-[0.98] cursor-pointer">
-                        <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Update Employee
+                        <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Perbarui Karyawan
                     </button>
                 </div>
             </div>

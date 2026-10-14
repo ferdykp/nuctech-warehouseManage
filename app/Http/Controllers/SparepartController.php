@@ -151,7 +151,7 @@ class SparepartController extends Controller
                 'note'         => "Created by " . Auth::user()->name,
             ]);
 
-            return redirect()->route('sparepart.index', $slug)->with('success', 'Sparepart berhasil ditambahkan');
+            return redirect()->route('sparepart.index', $slug)->with('success', 'Suku cadang berhasil ditambahkan.');
         });
     }
 
@@ -245,7 +245,7 @@ class SparepartController extends Controller
                 }
             }
 
-            return redirect()->route('sparepart.index', $site)->with('success', 'Data sparepart dan stok berhasil diperbarui.');
+            return redirect()->route('sparepart.index', $site)->with('success', 'Data suku cadang dan stok berhasil diperbarui.');
         });
     }
 
@@ -263,7 +263,7 @@ class SparepartController extends Controller
         if ($sparepart->image) Storage::disk('public')->delete($sparepart->image);
         $sparepart->delete();
 
-        return redirect()->route('sparepart.index', $site)->with('success', 'Sparepart dihapus');
+        return redirect()->route('sparepart.index', $site)->with('success', 'Suku cadang berhasil dihapus.');
     }
 
     public function destroyStock(string $site, int $stockId)

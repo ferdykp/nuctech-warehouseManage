@@ -26,7 +26,8 @@ class AttendanceController extends Controller
         $month = $this->sanitizeMonth($monthInput);
 
         // KONTROL AKSES SITE SESUAI LOGIN:
-        if ($user->role === 'employee_role') {
+        if (!in_array($user->role, ['superadmin', 'administration'], true)) {
+            \App\Services\SiteAccess::authorize($user->site_id);
             $sites = Site::where('id', $user->site_id)->get();
             $siteId = $user->site_id; // Paksa siteId ke site milik employee_role
         } else {
@@ -99,7 +100,7 @@ class AttendanceController extends Controller
             $user = Auth::user();
 
             // Hak akses multi-tenant
-            if ($user && $user->role === 'employee_role' && (int)$user->site_id !== (int)$siteId) {
+            if ($user && !in_array($user->role, ['superadmin', 'administration'], true) && (!$user->site_id || (int)$user->site_id !== (int)$siteId)) {
                 return response()->json(['message' => 'Akses ditolak untuk site ini.'], 403);
             }
 
@@ -127,7 +128,15 @@ class AttendanceController extends Controller
             $employees = $employeesQuery->get();
             $this->prepareEmployees($employees, $month);
 
-            return response()->json($employees);
+            return response()->json($employees->map(fn ($employee) => [
+                'id' => $employee->id,
+                'name' => $employee->name,
+                'site' => $employee->site?->only(['id', 'machine_name']),
+                'last_working_date' => $employee->last_working_date,
+                'scheduled_attendance' => $employee->scheduled_attendance,
+                'attendances' => $employee->attendances->map(fn ($row) => $row->only(['month', 'matrix_details', 'attendance_count', 'working_days'])),
+                'schedules' => $employee->schedules->map(fn ($row) => $row->only(['date', 'shift_id'])),
+            ]));
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Gagal memuat data karyawan: ' . $e->getMessage()
@@ -147,7 +156,8 @@ class AttendanceController extends Controller
         $siteId = $request->site_id;
 
         // Security check employee_role
-        if ($user->role === 'employee_role') {
+        if (!in_array($user->role, ['superadmin', 'administration'], true)) {
+            \App\Services\SiteAccess::authorize($user->site_id);
             $siteId = $user->site_id; // Paksa admin site hanya bisa ekspor site milik sendiri
         }
 
@@ -170,13 +180,14 @@ class AttendanceController extends Controller
             'calendar_raw_data.*' => 'required|json',
         ]);
         $user = Auth::user();
-        abort_if($user->role === 'employee_role' && (int) $user->site_id !== (int) $data['site_id'], 403);
+        if (!in_array($user->role, ['superadmin', 'administration'], true)) \App\Services\SiteAccess::authorize($user->site_id);
+        abort_if(!in_array($user->role, ['superadmin', 'administration'], true) && (int) $user->site_id !== (int) $data['site_id'], 403);
         $calendar = new AttendanceCalendar();
         $daysInMonth = Carbon::createFromFormat('!Y-m', $data['month'])->daysInMonth;
         $rows = [];
         foreach ($data['calendar_raw_data'] as $employeeId => $json) {
             $employee = Employee::with(['schedules' => fn ($q) => $q->whereBetween('date', [$data['month'].'-01', $data['month'].'-'.$daysInMonth])->with('shift')])->findOrFail($employeeId);
-            abort_if($user->role === 'employee_role' && (int) $employee->site_id !== (int) $user->site_id, 403);
+            abort_if(!in_array($user->role, ['superadmin', 'administration'], true) && (int) $employee->site_id !== (int) $user->site_id, 403);
             abort_if($data['site_id'] !== 'all' && (int) $employee->site_id !== (int) $data['site_id'], 403);
             $matrix = json_decode($json, true);
             \Illuminate\Support\Facades\Validator::make(['matrix' => $matrix], [
@@ -191,7 +202,7 @@ class AttendanceController extends Controller
                 }
                 $date = Carbon::createFromFormat('!Y-m', $data['month'])->day((int) $day);
                 if ($employee->resign_date && $date->gt($employee->resign_date) && array_sum($sessions) > 0) {
-                    throw \Illuminate\Validation\ValidationException::withMessages(['calendar_raw_data' => 'Absensi tidak boleh diisi setelah Last Date '.$employee->resign_date->format('d-m-Y').'.']);
+                    throw \Illuminate\Validation\ValidationException::withMessages(['calendar_raw_data' => 'Absensi tidak boleh diisi setelah hari terakhir bekerja '.$employee->resign_date->format('d-m-Y').'.']);
                 }
             }
             $normalized = $calendar->matrix($employee, $data['month'], $matrix);
@@ -207,7 +218,7 @@ class AttendanceController extends Controller
             }
         });
         return redirect()->route('attendance.index', ['site_id' => $data['site_id'], 'month' => $data['month'], 'auto_full' => $request->input('auto_full', 'true')])
-            ->with('success', 'Data absensi berhasil disimpan sesuai batas Last Date.');
+            ->with('success', 'Data absensi berhasil disimpan sesuai batas hari terakhir bekerja.');
     }
 
     private function prepareEmployees($employees, string $month): void
@@ -246,12 +257,12 @@ class AttendanceController extends Controller
         $attendance = Attendance::findOrFail($id);
         $user = Auth::user();
 
-        if ($user->role === 'employee_role' && (int)$attendance->employee->site_id !== (int)$user->site_id) {
+        if (!in_array($user->role, ['superadmin', 'administration'], true) && (!$user->site_id || (int)$attendance->employee->site_id !== (int)$user->site_id)) {
             abort(403, 'Anda tidak memiliki akses untuk menghapus data rekap absensi site ini.');
         }
 
         $attendance->delete();
 
-        return redirect()->back()->with('success', 'The employee attendance summary data has been successfully deleted.');
+        return redirect()->back()->with('success', 'Rekap absensi karyawan berhasil dihapus.');
     }
 }

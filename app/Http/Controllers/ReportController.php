@@ -43,7 +43,7 @@ class ReportController extends Controller
         $this->authorizeSiteAccess($siteData);
 
         // 🟢 Filter laporan berdasarkan nama mesin/site yang cocok dengan siteData->machine_name
-        $report = Report::where('site_machine', $siteData->machine_name)
+        $report = Report::where('site_id', $siteData->id)
             ->latest()
             ->paginate(10);
 
@@ -69,13 +69,14 @@ class ReportController extends Controller
         if ($request->filled('stock_id')) {
             $selectedStock = SparepartStock::with(['sparepart', 'site'])->find($request->stock_id);
             if ($selectedStock) {
+                \App\Services\SiteAccess::authorize($selectedStock->site_id);
                 $selectedSiteSlug = $selectedStock->site?->slug;
                 $selectedSubsystem = $selectedStock->sparepart?->item_name;
             }
         }
 
         // PERBAIKAN: Hanya mengambil Site yang MEMILIKI data di tabel sparepart_stocks (qty > 0)
-        $sites = Site::whereHas('sparepartStocks', function ($query) {
+        $sites = \App\Services\SiteAccess::sites(auth()->user())->whereHas('sparepartStocks', function ($query) {
             $query->where('qty', '>', 0);
         })->get();
 
@@ -119,11 +120,12 @@ class ReportController extends Controller
             ? $request->file('image')->store('report', 'public')
             : null;
 
-        return \DB::transaction(function () use ($request, $failureNote, $imagePath) {
+        return \DB::transaction(function () use ($request, $failureNote, $imagePath, $site) {
 
             Report::create([
                 'attendant'    => $request->attendant,
-                'site_machine' => $request->site_machine,
+                'site_id' => $site->id,
+                'site_machine' => $site->machine_name,
                 'failure_date' => $request->failure_date,
                 'failure_note' => $failureNote,
                 'ts_procedure' => $request->ts_procedure,
@@ -142,7 +144,7 @@ class ReportController extends Controller
                 }
             }
 
-            return redirect()->route('report.index')->with('success', 'Report Successfully Created and Queue Updated');
+            return redirect()->route('report.index')->with('success', 'Laporan berhasil dibuat dan antrean diperbarui.');
         });
     }
 
@@ -155,10 +157,9 @@ class ReportController extends Controller
 
         $report = Report::findOrFail($id);
         if (!auth()->user()->isSuperAdmin()) {
-            $site = Site::where('slug', $report->site_machine)->firstOrFail();
-            \App\Services\SiteAccess::authorize($site->id);
+            \App\Services\SiteAccess::authorize($report->site_id);
         }
-        $sites = Site::all();
+        $sites = \App\Services\SiteAccess::sites(auth()->user())->get();
 
         return view('report.edit', compact('report', 'sites'));
     }
@@ -192,13 +193,13 @@ class ReportController extends Controller
 
         $report = Report::findOrFail($id);
         if (!auth()->user()->isSuperAdmin()) {
-            $site = Site::where('slug', $report->site_machine)->firstOrFail();
-            \App\Services\SiteAccess::authorize($site->id);
+            \App\Services\SiteAccess::authorize($report->site_id);
         }
 
         $data = [
             'attendant'    => $request->attendant,
-            'site_machine' => $request->site_machine,
+            'site_id' => $site->id,
+                'site_machine' => $site->machine_name,
             'failure_date' => $request->failure_date,
             'failure_note' => $failureNote,
             'ts_procedure' => $request->ts_procedure,
@@ -213,20 +214,16 @@ class ReportController extends Controller
 
         $report->update($data);
 
-        return redirect()->route('report.index')->with('success', 'Report Successfully Updated');
+        return redirect()->route('report.index')->with('success', 'Laporan berhasil diperbarui.');
     }
 
     public function destroy(string $id)
     {
-        if (!Auth::check() || Auth::user()->role !== 'superadmin') {
-            return redirect()->route('report.index')
-                ->with('error', 'Anda tidak memiliki akses.');
-        }
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
 
         $report = Report::findOrFail($id);
         if (!auth()->user()->isSuperAdmin()) {
-            $site = Site::where('slug', $report->site_machine)->firstOrFail();
-            \App\Services\SiteAccess::authorize($site->id);
+            \App\Services\SiteAccess::authorize($report->site_id);
         }
 
         if ($report->image) {
@@ -241,46 +238,21 @@ class ReportController extends Controller
 
     public function search(Request $request)
     {
-        try {
-            $query = $request->input('query');
-            $data = Report::query();
-
-            if (!empty($query)) {
-                $data->where(function ($q) use ($query) {
-                    $q->where('attendant', 'LIKE', "%{$query}%")
-                        ->orWhere('site_machine', 'LIKE', "%{$query}%")
-                        ->orWhere('failure_note', 'LIKE', "%{$query}%");
-                });
-            }
-
-            $report = $data->latest()->paginate(10)->withQueryString();
-
-            if ($request->ajax()) {
-                $html = view('report.table', [
-                    'data' => $report,
-                    'routePrefix' => 'report',
-                ])->render();
-
-                return response()->json(['html' => $html]);
-            }
-
-            $failureQueue = SparepartStock::where('condition', 'damaged')->where('qty', '>', 0)->with(['sparepart', 'site'])->get();
-            return view('report.index', compact('report', 'failureQueue'));
-        } catch (\Exception $e) {
-            \Log::error('report search error: ' . $e->getMessage());
-
-            if ($request->ajax()) {
-                $html = view('report.table', [
-                    'data' => collect(),
-                    'routePrefix' => 'report',
-                ])->render();
-
-                return response()->json(['html' => $html]);
-            }
-
-            return redirect()->route('report.index')
-                ->with('error', 'Terjadi kesalahan saat search');
+        $data = Report::accessible();
+        if ($request->filled('site_id')) {
+            \App\Services\SiteAccess::authorize($request->site_id);
+            $data->where('site_id', $request->site_id);
         }
+        $search = $request->input('query', $request->input('search'));
+        if ($search) {
+            $data->where(fn ($q) => $q->where('attendant', 'like', "%{$search}%")
+                ->orWhere('site_machine', 'like', "%{$search}%")
+                ->orWhere('failure_note', 'like', "%{$search}%"));
+        }
+        if (!$request->ajax()) return redirect()->route('report.index');
+        return response()->json(['html' => view('report.table', [
+            'data' => $data->latest()->paginate(10)->withQueryString(), 'routePrefix' => 'report',
+        ])->render()]);
     }
 
     public function export()

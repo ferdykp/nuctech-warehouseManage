@@ -19,18 +19,21 @@ class SiteController extends Controller
 
     public function create()
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
         $branches = Branch::all();
         return view('site.create', compact('branches'));
     }
 
     public function store(Request $request)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
         $request->validate([
             'branch_id'    => 'required|exists:branches,id',
-            'machine_name' => 'required',
+            'machine_name' => 'required|string|max:255',
+            'location' => 'required|string|max:255',
         ]);
 
-        Site::create([
+        $site = Site::create([
             'branch_id'    => $request->branch_id,
             'machine_name' => $request->machine_name,
             'slug'         => Str::slug($request->machine_name) . '-' . Str::random(5),
@@ -41,7 +44,11 @@ class SiteController extends Controller
         Cache::forget('global_sidebar_sites');
         Cache::forget('dashboard_counters');
 
-        return redirect()->route('site.index')->with('success', 'Site successfully created.');
+        if ($request->expectsJson()) {
+            return response()->json(['site' => $site, 'message' => 'Lokasi berhasil ditambahkan.'], 201);
+        }
+
+        return redirect()->route('site.index')->with('success', 'Lokasi berhasil ditambahkan.');
     }
 
     public function show($slug)
@@ -51,6 +58,7 @@ class SiteController extends Controller
 
     public function edit($id)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
         $site = Site::findOrFail($id);
         $branches = Branch::all();
         return view('site.siteEdit', compact('site', 'branches'));
@@ -58,26 +66,28 @@ class SiteController extends Controller
 
     public function update(Request $request, Site $site)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
         $request->validate([
             'branch_id'    => 'required|exists:branches,id',
             'machine_name' => 'required|string|max:255',
+            'location' => 'required|string|max:255',
         ]);
 
         $site->update([
             'branch_id'    => $request->branch_id,
             'machine_name' => $request->machine_name,
-            'slug'         => Str::slug($request->machine_name) . '-' . Str::random(5),
             'location'     => $request->location,
         ]);
 
         // <--- 3. Hapus Cache Sidebar saat ada update data site
         Cache::forget('global_sidebar_sites');
 
-        return redirect()->route('site.index')->with('success', 'Site Successfully Updated');
+        return redirect()->route('site.index')->with('success', 'Lokasi berhasil diperbarui.');
     }
 
     public function destroy($id)
     {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
         $site = Site::findOrFail($id);
         $site->delete();
 
@@ -85,6 +95,6 @@ class SiteController extends Controller
         Cache::forget('global_sidebar_sites');
         Cache::forget('dashboard_counters');
 
-        return redirect()->route('site.index')->with('success', 'Site successfully Deleted.');
+        return redirect()->route('site.index')->with('success', 'Lokasi berhasil dihapus.');
     }
 }

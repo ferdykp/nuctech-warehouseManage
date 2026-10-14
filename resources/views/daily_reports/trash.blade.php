@@ -1,17 +1,17 @@
 @extends('layout.master')
 
-@section('title', 'Recycle Bin - Daily Reports')
+@section('title', 'Sampah - Laporan Harian')
 
 @section('content')
     <div class="w-full space-y-6">
         <div class="flex items-center justify-between p-6 bg-white border shadow-xs rounded-3xl border-slate-200/80">
             <div>
-                <h1 class="text-2xl font-extrabold text-slate-900">Recycle Bin (Archived Reports)</h1>
-                <p class="text-xs font-medium text-slate-500">Restore deleted data or delete them permanently.</p>
+                <h1 class="text-2xl font-extrabold text-slate-900">Sampah Laporan</h1>
+                <p class="text-xs font-medium text-slate-500">Pulihkan data yang dihapus atau hapus secara permanen.</p>
             </div>
             <a href="{{ route('daily_reports.index') }}"
                 class="px-4 py-2.5 text-xs font-bold bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200">
-                Back to Active Reports
+                Kembali ke Laporan Aktif
             </a>
         </div>
 
@@ -22,13 +22,13 @@
         @endif
 
         <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
-            <table class="w-full text-left border-collapse">
+            <table data-mobile-cards class="w-full text-left border-collapse">
                 <thead>
                     <tr class="text-[10px] font-extrabold uppercase text-slate-500 bg-slate-50 border-b border-slate-100">
-                        <th class="px-6 py-4">Deleted Date</th>
-                        <th class="px-6 py-4">Site & Report Date</th>
-                        <th class="px-6 py-4">Notes</th>
-                        <th class="px-6 py-4 text-center">Actions</th>
+                        <th class="px-6 py-4">Tanggal Dihapus</th>
+                        <th class="px-6 py-4">Lokasi dan Tanggal Laporan</th>
+                        <th class="px-6 py-4">Catatan</th>
+                        <th class="px-6 py-4 text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
@@ -39,7 +39,7 @@
                             </td>
                             <td class="px-6 py-4">
                                 <strong>{{ $report->site->machine_name ?? '-' }}</strong><br>
-                                <span class="text-slate-400">{{ $report->report_date->format('d M Y') }}</span>
+                                <span class="text-slate-400">{{ $report->report_date->translatedFormat('d M Y') }}</span>
                             </td>
                             <td class="max-w-xs px-6 py-4 truncate">
                                 {{ $report->description }}
@@ -51,7 +51,7 @@
                                         @csrf
                                         <button type="submit"
                                             class="px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100">
-                                            <i class="mr-1 fa-solid fa-rotate-left"></i> Restore
+                                            <i class="mr-1 fa-solid fa-rotate-left"></i> Pulihkan
                                         </button>
                                     </form>
 
@@ -62,7 +62,7 @@
                                         @method('DELETE')
                                         <button type="submit"
                                             class="px-3 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl hover:bg-rose-100">
-                                            <i class="mr-1 fa-solid fa-ban"></i> Delete Permanently
+                                            <i class="mr-1 fa-solid fa-ban"></i> Hapus Permanen
                                         </button>
                                     </form>
                                 </div>
@@ -71,7 +71,7 @@
                     @empty
                         <tr>
                             <td colspan="4" class="p-8 font-bold text-center text-slate-400">
-                                Recycle bin kosong. Tidak ada data yang dihapus.
+                                Sampah kosong. Tidak ada data yang dihapus.
                             </td>
                         </tr>
                     @endforelse

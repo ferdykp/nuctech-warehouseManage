@@ -45,19 +45,9 @@ class ScheduleController extends Controller
         $employeeQuery = Employee::with('site')->whereIn('site_id', $siteIds);
         $employeeQuery->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $startDate->format('Y-m-d')));
 
-        // PERBAIKAN: Validasi site_id untuk team_leader agar aman dan tidak error 403
-        // PERBAIKAN: Validasi site_id untuk team_leader agar aman dan tidak error 403
         if ($selectedSiteId !== 'all') {
-            if (in_array($user->role, ['superadmin', 'administration'])) {
-                $employeeQuery->where('site_id', $selectedSiteId);
-            } else {
-                // Pastikan site yang dipilih termasuk ke dalam list site yang diizinkan untuk team_leader
-                if ($siteIds->contains($selectedSiteId)) {
-                    $employeeQuery->where('site_id', $selectedSiteId);
-                } else {
-                    $employeeQuery->where('site_id', $user->site_id); // Fallback ke site utama jika tidak valid
-                }
-            }
+            \App\Services\SiteAccess::authorize($selectedSiteId, true);
+            $employeeQuery->where('site_id', $selectedSiteId);
         }
 
         $employees = $employeeQuery->orderBy('name', 'asc')->get();
@@ -113,22 +103,17 @@ class ScheduleController extends Controller
         $scheduleType  = $request->schedule_type;
         $startDay      = (int) $request->start_day;
 
-        $user = Auth::user();
-        if (!in_array($user->role, ['superadmin', 'administration'])) {
-            foreach ($siteIds as $siteId) {
-                if ($user->site_id && $user->site_id != $siteId) {
-                    abort(403, 'Unauthorized site access.');
-                }
-            }
+        foreach ($siteIds as $siteId) {
+            \App\Services\SiteAccess::authorize($siteId, true);
         }
 
-        abort_if(Employee::whereIn('id', $employeeIds)->whereNotIn('site_id', $siteIds)->exists(), 403);
+        abort_if(Employee::whereIn('id', $employeeIds)->where(fn ($q) => $q->whereNotIn('site_id', $siteIds)->orWhereNull('site_id'))->exists(), 403);
 
         if (!checkdate((int) $month, $startDay, (int) $year)) {
             throw \Illuminate\Validation\ValidationException::withMessages(['start_day' => 'Tanggal mulai tidak valid untuk bulan ini.']);
         }
         if (!Shift::where('is_off', true)->exists() || !Shift::where('is_off', false)->exists()) {
-            throw \Illuminate\Validation\ValidationException::withMessages(['shift' => 'Buat shift kerja dan shift OFF sebelum membuat jadwal.']);
+            throw \Illuminate\Validation\ValidationException::withMessages(['shift' => 'Buat giliran kerja dan giliran libur sebelum membuat jadwal.']);
         }
 
         DB::beginTransaction();
@@ -205,7 +190,7 @@ class ScheduleController extends Controller
                 $offDays        = (int) ($request->off_days ?? 2);
 
                 if (empty($activeShiftIds)) {
-                    throw \Illuminate\Validation\ValidationException::withMessages(['active_shifts' => 'Pilih minimal satu shift kerja aktif.']);
+                    throw \Illuminate\Validation\ValidationException::withMessages(['active_shifts' => 'Pilih minimal satu giliran kerja aktif.']);
                 }
 
                 $activeShiftsCount = count($activeShiftIds);
@@ -355,10 +340,10 @@ class ScheduleController extends Controller
             }
 
             DB::commit();
-            return redirect()->back()->with('success', 'Work schedules successfully generated for the selected sites and employees!');
+            return redirect()->back()->with('success', 'Jadwal berhasil dibuat untuk lokasi dan karyawan terpilih.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withErrors(['error' => 'Failed to generate schedules: ' . $e->getMessage()]);
+            return redirect()->back()->withErrors(['error' => 'Jadwal gagal dibuat: ' . $e->getMessage()]);
         }
     }
 
@@ -372,12 +357,7 @@ class ScheduleController extends Controller
 
         $employee = Employee::findOrFail($request->employee_id);
 
-        $user = Auth::user();
-        if (!in_array($user->role, ['superadmin', 'administration'])) {
-            if ($user->site_id && $user->site_id != $employee->site_id) {
-                return response()->json(['success' => false, 'message' => 'Unauthorized site access.'], 403);
-            }
-        }
+        \App\Services\SiteAccess::authorize($employee->site_id, true);
 
         try {
             if ($employee?->resign_date && Carbon::parse($request->date)->greaterThan(Carbon::parse($employee->resign_date)->endOfDay())) {
@@ -399,13 +379,13 @@ class ScheduleController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Shift updated successfully.',
+                'message' => 'Giliran kerja berhasil diperbarui.',
                 'data'    => $schedule,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update shift: ' . $e->getMessage(),
+                'message' => 'Giliran kerja gagal diperbarui: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -430,13 +410,9 @@ class ScheduleController extends Controller
         $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
         $endDate   = Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
 
-        $user = Auth::user();
-        if (!in_array($user->role, ['superadmin', 'administration'])) {
-            $siteId = $user->site_id;
-        }
-
-        $employeeQuery = Employee::query();
+        $employeeQuery = Employee::whereIn('site_id', \App\Services\SiteAccess::sites(auth()->user(), true)->select('id'));
         if ($siteId !== 'all') {
+            \App\Services\SiteAccess::authorize($siteId, true);
             $employeeQuery->where('site_id', $siteId);
         }
         $empIds = $employeeQuery->pluck('id');
@@ -445,7 +421,7 @@ class ScheduleController extends Controller
             ->whereBetween('date', [$startDate, $endDate])
             ->delete();
 
-        return redirect()->back()->with('success', 'Schedule logs for the selected period have been reset.');
+        return redirect()->back()->with('success', 'Jadwal pada periode terpilih berhasil dihapus.');
     }
 
     // public function export(Request $request)
@@ -462,7 +438,7 @@ class ScheduleController extends Controller
     //         );
     //     }
 
-    //     return redirect()->back()->with('success', 'Export triggered successfully.');
+    //     return redirect()->back()->with('success', 'Ekspor berhasil dimulai.');
     // }
     public function export(Request $request)
     {
@@ -477,13 +453,9 @@ class ScheduleController extends Controller
         $year   = $request->get('year', date('Y'));
         $siteId = $request->get('site_id', 'all');
 
-        // Jika team_leader mengeksport dengan opsi 'all' atau site miliknya sendiri
-        if (!in_array($user->role, ['superadmin', 'administration'])) {
-            if ($siteId === 'all' && $user->site_id) {
-                $siteId = $user->site_id; // Batasi ke site milik team_leader jika 'all'
-            }
+        if ($siteId !== 'all') {
+            \App\Services\SiteAccess::authorize($siteId, true);
         }
-
         if (class_exists('\App\Exports\ScheduleExport')) {
             return \Maatwebsite\Excel\Facades\Excel::download(
                 new \App\Exports\ScheduleExport($siteId, $month, $year),
@@ -491,11 +463,12 @@ class ScheduleController extends Controller
             );
         }
 
-        return redirect()->back()->with('success', 'Export triggered successfully.');
+        return redirect()->back()->with('success', 'Ekspor berhasil dimulai.');
     }
 
     public function updateSitePattern(Request $request, Site $site)
     {
+        \App\Services\SiteAccess::authorize($site->id, true);
         $data = $request->validate([
             'schedule_type' => 'required|in:office_hour,shift_rotation',
             'work_days'     => 'required|integer|between:1,31',
@@ -507,28 +480,7 @@ class ScheduleController extends Controller
 
     private function getNationalHolidays($year, $month)
     {
-        $holidays = [];
-        try {
-            $apiUrl = "https://dayoffapi.vercel.app/api?month={$month}&year={$year}";
-            $response = \Illuminate\Support\Facades\Http::timeout(3)->get($apiUrl);
-
-            if ($response->successful()) {
-                $data = $response->json();
-                if (is_array($data)) {
-                    foreach ($data as $item) {
-                        if (isset($item['is_cuti']) && $item['is_cuti']) {
-                            continue;
-                        }
-                        if (isset($item['tanggal']) && isset($item['keterangan'])) {
-                            $holidays[$item['tanggal']] = $item['keterangan'];
-                        }
-                    }
-                }
-            }
-        } catch (\Exception $e) {
-            // Fallback
-        }
-
-        return $holidays;
+        return app(\App\Services\IndonesianHolidayService::class)
+            ->getHolidaysForMonth(sprintf('%04d-%02d', $year, $month));
     }
 }

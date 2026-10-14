@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Edit Failure Report')
+@section('title', 'Ubah Laporan Kerusakan')
 
 @section('content')
     <div class="w-full max-w-3xl mx-auto space-y-6">
@@ -10,22 +10,21 @@
             <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
                     <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                        <a href="{{ route('report.index') }}" class="transition-colors hover:text-rose-600">Failure
-                            Reports</a>
+                        <a href="{{ route('report.index') }}" class="transition-colors hover:text-rose-600">Laporan Kerusakan</a>
                         <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                        <span class="font-extrabold text-rose-600">Update Log Record</span>
+                        <span class="font-extrabold text-rose-600">Perbarui Catatan</span>
                     </nav>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                        Edit Failure Report
+                        Ubah Laporan Kerusakan
                     </h1>
                     <p class="mt-1 text-xs font-medium sm:text-sm text-slate-500">
-                        Update component breakdown logs and field observations.
+                        Perbarui catatan kerusakan dan hasil pemeriksaan lapangan.
                     </p>
                 </div>
                 <a href="{{ route('report.index') }}"
                     class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all rounded-xl active:scale-95 shrink-0">
                     <i class="fa-solid fa-arrow-left"></i>
-                    <span>Back</span>
+                    <span>Kembali</span>
                 </a>
             </div>
         </div>
@@ -33,7 +32,7 @@
         {{-- 2. FORM CARD --}}
         <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
             <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Report Information</h2>
+                <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Informasi Laporan</h2>
                 <span
                     class="px-3 py-1 text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200/60 rounded-xl uppercase">
                     ID: #REP-{{ str_pad($report->id, 4, '0', STR_PAD_LEFT) }}
@@ -48,7 +47,7 @@
                 {{-- ATTENDANT --}}
                 <div class="space-y-1.5">
                     <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                        Attendant / Reporter <span class="text-rose-500">*</span>
+                        Petugas / Pelapor <span class="text-rose-500">*</span>
                     </label>
                     <input type="text" name="attendant" value="{{ old('attendant', $report->attendant) }}"
                         class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 @error('attendant') border-rose-500 @enderror"
@@ -62,15 +61,15 @@
                     {{-- SITE MACHINE --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Site Machine <span class="text-rose-500">*</span>
+                            Lokasi Mesin <span class="text-rose-500">*</span>
                         </label>
                         <select name="site_machine" id="site_machine"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 @error('site_machine') border-rose-500 @enderror"
                             required>
-                            <option value="" disabled>-- Select Site Machine --</option>
+                            <option value="" disabled>-- Pilih Lokasi Mesin --</option>
                             @foreach ($sites as $site)
                                 <option value="{{ $site->slug }}"
-                                    {{ old('site_machine', $report->site_machine) == $site->slug ? 'selected' : '' }}>
+                                    {{ old('site_machine', $report->site?->slug) == $site->slug ? 'selected' : '' }}>
                                     {{ $site->machine_name }}
                                 </option>
                             @endforeach
@@ -80,7 +79,7 @@
                     {{-- FAILURE DATE --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Failure Date <span class="text-rose-500">*</span>
+                            Tanggal Kerusakan <span class="text-rose-500">*</span>
                         </label>
                         <input type="date" name="failure_date"
                             value="{{ old('failure_date', $report->failure_date ? \Carbon\Carbon::parse($report->failure_date)->format('Y-m-d') : '') }}"
@@ -108,7 +107,7 @@
                     {{-- FAILED SUB SYSTEM --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Failed Sub-System
+                            Komponen yang Rusak
                         </label>
                         <textarea name="failed_subsystem" rows="3"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">{{ old('failed_subsystem', $subsystem) }}</textarea>
@@ -117,7 +116,7 @@
                     {{-- FAILURE PHENOMENON --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Failure Phenomenon
+                            Gejala Kerusakan
                         </label>
                         <textarea name="failure_phenomenon" rows="3"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">{{ old('failure_phenomenon', $phenomenon) }}</textarea>
@@ -127,7 +126,7 @@
                 {{-- TS PROCEDURE --}}
                 <div class="space-y-1.5">
                     <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                        Troubleshoot Procedure
+                        Langkah Penanganan
                     </label>
                     <textarea name="ts_procedure" rows="3"
                         class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">{{ old('ts_procedure', $report->ts_procedure) }}</textarea>
@@ -136,7 +135,7 @@
                 {{-- IMAGE --}}
                 <div class="space-y-1.5">
                     <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                        Image Evidence
+                        Foto Bukti
                     </label>
 
                     @if ($report->image)
@@ -154,11 +153,11 @@
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                     <a href="{{ route('report.index') }}"
                         class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
-                        Discard
+                        Batal
                     </a>
                     <button type="submit"
                         class="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-600/20 active:scale-[0.98] transition-all cursor-pointer">
-                        Update Report
+                        Perbarui Laporan
                     </button>
                 </div>
             </form>

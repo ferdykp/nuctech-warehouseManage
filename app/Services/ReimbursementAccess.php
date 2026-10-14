@@ -25,7 +25,7 @@ class ReimbursementAccess
                 $q->orWhere(function ($review) use ($user, $status) {
                     $review->where('status', $status);
                     if ($user->role !== 'manager') {
-                        $review->whereHas('user', fn($owner) => $owner->where('site_id', $user->site_id ?? 0));
+                        $review->whereHas('user', fn ($owner) => $owner->where('site_id', $user->site_id ?? 0));
                     }
                 });
             }
@@ -49,6 +49,30 @@ class ReimbursementAccess
         );
     }
 
+    public static function manageableQuery(): Builder
+    {
+        $query = Reimbursement::query();
+
+        return in_array(auth()->user()->role, ['superadmin', 'administration'], true)
+            ? $query : $query->where('user_id', auth()->id());
+    }
+
+    public static function canEdit(Reimbursement $claim): bool
+    {
+        $canManage = in_array(auth()->user()->role, ['superadmin', 'administration'], true)
+            || (int) $claim->user_id === (int) auth()->id();
+
+        return $canManage && in_array($claim->status, ['pending', 'pending_leader', 'pending_station', 'pending_manager', 'rejected'], true)
+            && empty($claim->signatures_json) && empty($claim->digital_signature) && ! $claim->approved_by;
+    }
+
+    public static function edit(Reimbursement $claim): void
+    {
+        self::manage($claim);
+        abort_unless(self::canEdit($claim), 409,
+            'Klaim yang sudah ditandatangani atau disetujui tidak dapat diubah. Buat pengajuan baru.');
+    }
+
     public static function approve(Reimbursement $claim): void
     {
         self::view($claim);
@@ -57,7 +81,7 @@ class ReimbursementAccess
 
         // 🟢 UBAH DI SINI:
         // Menggunakan !in_array agar superadmin & administration bebas melakukan aksi
-        if (!in_array($role, ['superadmin', 'administration'])) {
+        if (! in_array($role, ['superadmin', 'administration'])) {
             abort_unless($claim->status === self::approvalStatus($role), 403, 'Klaim belum berada pada tahap persetujuan Anda.');
         }
     }

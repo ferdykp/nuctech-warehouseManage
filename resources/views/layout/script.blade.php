@@ -36,6 +36,7 @@
                 error: function(err) {
                     if (err.statusText !== 'abort') {
                         $('#table-container').removeClass('opacity-50 pointer-events-none');
+                        window.showUiMessage?.('Pencarian gagal dimuat. Periksa koneksi dan coba lagi.');
                     }
                 }
             });
@@ -61,11 +62,11 @@
             }).get();
 
             if (ids.length === 0) {
-                alert('Pilih minimal 1 data untuk dihapus.');
+                (window.showUiMessage || window.alert)('Pilih minimal 1 data untuk dihapus.');
                 return;
             }
 
-            if (!confirm(`Apakah Anda yakin ingin menghapus ${ids.length} data terpilih?`)) return;
+            if (!confirm(`Yakin ingin menghapus ${ids.length} data terpilih?`)) return;
 
             $.ajax({
                 url: `/${site}/sparepart/bulk-delete`,
@@ -78,11 +79,11 @@
                     if (res.success) {
                         fetchFilteredData();
                     } else {
-                        alert(res.message || 'Gagal menghapus data.');
+                        (window.showUiMessage || window.alert)(res.message || 'Gagal menghapus data.');
                     }
                 },
                 error: function() {
-                    alert('Terjadi kesalahan pada sistem.');
+                    (window.showUiMessage || window.alert)('Terjadi kesalahan pada sistem.');
                 }
             });
         });

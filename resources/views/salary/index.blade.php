@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Employee Salary List')
+@section('title', 'Penggajian')
 
 @section('content')
     <div class="w-full space-y-6">
@@ -10,37 +10,37 @@
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                        <span class="transition-colors cursor-pointer hover:text-emerald-600">Finance & Payroll</span>
+                        <span class="transition-colors cursor-pointer hover:text-emerald-600">Keuangan dan Penggajian</span>
                         <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                        <span class="font-extrabold text-emerald-600">Salary Management</span>
+                        <span class="font-extrabold text-emerald-600">Manajemen Penggajian</span>
                     </nav>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                        Salary Management
+                        Manajemen Penggajian
                     </h1>
                     <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
-                        Manage and monitor employee payroll processing automatically.
+                        Kelola dan pantau penggajian karyawan.
                     </p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2.5 shrink-0">
                     <button type="button" onclick="exportExcel()"
                         class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 rounded-xl hover:bg-emerald-100 active:scale-95 transition-all shadow-2xs cursor-pointer">
-                        <i class="fa-solid fa-file-excel text-emerald-600"></i> Export Excel
+                        <i class="fa-solid fa-file-excel text-emerald-600"></i> Ekspor Excel
                     </button>
 
                     <button type="button" onclick="openResetModal()"
                         class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200/80 rounded-xl hover:bg-rose-100 active:scale-95 transition-all shadow-2xs cursor-pointer">
-                        <i class="fa-solid fa-rotate-left text-rose-600"></i> Reset Payroll
+                        <i class="fa-solid fa-rotate-left text-rose-600"></i> Hapus Penggajian
                     </button>
 
                     <button type="button" onclick="openGenerateModal()"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold text-white transition-all bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Payroll
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Buat Penggajian
                     </button>
 
                     <a href="{{ route('salary.create') }}"
                         class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-700 transition-all bg-white border border-slate-200 rounded-xl hover:bg-slate-50 active:scale-95 shadow-2xs">
-                        <i class="fa-solid fa-plus text-slate-400"></i> Add Manual
+                        <i class="fa-solid fa-plus text-slate-400"></i> Tambah Manual
                     </a>
                 </div>
             </div>
@@ -69,18 +69,18 @@
             <div class="p-5 space-y-4 border-b sm:p-6 border-slate-100 bg-slate-50/50">
                 @php
                     $monthList = [
-                        '01' => 'January',
-                        '02' => 'February',
-                        '03' => 'March',
+                        '01' => 'Januari',
+                        '02' => 'Februari',
+                        '03' => 'Maret',
                         '04' => 'April',
-                        '05' => 'May',
-                        '06' => 'June',
-                        '07' => 'July',
-                        '08' => 'August',
+                        '05' => 'Mei',
+                        '06' => 'Juni',
+                        '07' => 'Juli',
+                        '08' => 'Agustus',
                         '09' => 'September',
-                        '10' => 'October',
+                        '10' => 'Oktober',
                         '11' => 'November',
-                        '12' => 'December',
+                        '12' => 'Desember',
                     ];
                 @endphp
 
@@ -109,7 +109,7 @@
                             <i class="text-xs fa-solid fa-magnifying-glass"></i>
                         </div>
                         <input type="text" id="filter-search"
-                            placeholder="Search employee name, position, or account number..."
+                            placeholder="Cari nama karyawan, jabatan, atau nomor rekening..."
                             class="block w-full py-2.5 pl-9 pr-3.5 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 shadow-2xs text-slate-800 placeholder-slate-400">
                     </div>
                 </div>
@@ -120,7 +120,7 @@
                     <div>
                         <select id="filter-branch"
                             class="block w-full px-3.5 py-2 text-xs font-semibold transition-all bg-white border outline-none border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-700 shadow-2xs cursor-pointer">
-                            <option value="">All Branches</option>
+                            <option value="">Semua Cabang</option>
                             @foreach ($branches as $br)
                                 <option value="{{ $br->id }}">{{ $br->branch_name }}</option>
                             @endforeach
@@ -131,11 +131,11 @@
                     <div>
                         <select id="filter-information"
                             class="block w-full px-3.5 py-2 text-xs font-semibold transition-all bg-white border outline-none border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-700 shadow-2xs cursor-pointer">
-                            <option value="">All Salary Statuses</option>
-                            <option value="1st probation">1st Probation</option>
-                            <option value="2nd probation">2nd Probation</option>
-                            <option value="3rd probation">3rd Probation</option>
-                            <option value="regular salary">Regular Salary</option>
+                            <option value="">Semua Status Gaji</option>
+                            <option value="1st probation">Masa Percobaan 1</option>
+                            <option value="2nd probation">Masa Percobaan 2</option>
+                            <option value="3rd probation">Masa Percobaan 3</option>
+                            <option value="regular salary">Gaji Reguler</option>
                         </select>
                     </div>
 
@@ -143,7 +143,7 @@
                     <div>
                         <select id="filter-bank"
                             class="block w-full px-3.5 py-2 text-xs font-semibold transition-all bg-white border outline-none border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-700 shadow-2xs cursor-pointer">
-                            <option value="">All Banks</option>
+                            <option value="">Semua Bank</option>
                             @foreach ($banks as $b)
                                 <option value="{{ $b }}">{{ $b }}</option>
                             @endforeach
@@ -170,9 +170,8 @@
                         <i class="text-base fa-solid fa-wand-magic-sparkles"></i>
                     </div>
                     <div>
-                        <h3 class="text-sm font-extrabold text-slate-900">Generate / Re-sync Monthly Payroll</h3>
-                        <p class="text-[11px] font-medium text-slate-500">Select period for bulk employee payroll
-                            generation.</p>
+                        <h3 class="text-sm font-extrabold text-slate-900">Buat / Perbarui Penggajian Bulanan</h3>
+                        <p class="text-[11px] font-medium text-slate-500">Pilih periode untuk membuat penggajian karyawan.</p>
                     </div>
                 </div>
                 <button type="button" onclick="closeGenerateModal()"
@@ -184,7 +183,7 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label
-                            class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Month</label>
+                            class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Bulan</label>
                         <select name="month" id="modal_gen_month"
                             class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
                             @foreach ($monthList as $k => $v)
@@ -194,7 +193,7 @@
                     </div>
                     <div>
                         <label
-                            class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Year</label>
+                            class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Tahun</label>
                         <select name="year" id="modal_gen_year"
                             class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
                             @for ($y = date('Y') - 2; $y <= date('Y') + 2; $y++)
@@ -207,18 +206,17 @@
                 <div
                     class="p-3.5 text-xs leading-relaxed text-amber-800 bg-amber-50/80 border border-amber-200/80 rounded-2xl flex items-start gap-2.5 font-medium">
                     <i class="fa-solid fa-circle-info text-amber-600 mt-0.5 shrink-0"></i>
-                    <span>Sistem akan otomatis mengupdate gaji karyawan aktif dan <strong>menghapus data gaji karyawan yang
-                            sudah Resigned</strong> pada periode ini.</span>
+                    <span>Sistem membuat penggajian untuk karyawan yang memenuhi periode terpilih. Gaji pokok yang sudah tersimpan dipertahankan. Penggajian periode lampau tidak ditimpa, dan data karyawan yang berhenti bekerja tidak dihapus otomatis.</span>
                 </div>
 
                 <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                     <button type="button" onclick="closeGenerateModal()"
                         class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">
-                        Cancel
+                        Batal
                     </button>
                     <button type="submit"
                         class="px-5 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95 cursor-pointer">
-                        <i class="mr-1.5 fa-solid fa-wand-magic-sparkles"></i> Process Generation
+                        <i class="mr-1.5 fa-solid fa-wand-magic-sparkles"></i> Proses Penggajian
                     </button>
                 </div>
             </form>
@@ -236,7 +234,7 @@
                         <i class="text-base fa-solid fa-rotate-left"></i>
                     </div>
                     <div>
-                        <h3 class="text-sm font-extrabold text-slate-900">Reset Period Payroll</h3>
+                        <h3 class="text-sm font-extrabold text-slate-900">Hapus Penggajian Periode</h3>
                         <p class="text-[11px] font-medium text-slate-500">Kosongkan seluruh data gaji pada bulan terpilih.
                         </p>
                     </div>
@@ -250,7 +248,7 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label
-                            class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Month</label>
+                            class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Bulan</label>
                         <select name="month" id="modal_reset_month"
                             class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 text-slate-800 cursor-pointer">
                             @foreach ($monthList as $k => $v)
@@ -260,7 +258,7 @@
                     </div>
                     <div>
                         <label
-                            class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Year</label>
+                            class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Tahun</label>
                         <select name="year" id="modal_reset_year"
                             class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 text-slate-800 cursor-pointer">
                             @for ($y = date('Y') - 2; $y <= date('Y') + 2; $y++)
@@ -273,8 +271,8 @@
                 <div
                     class="p-3.5 text-xs leading-relaxed text-rose-800 bg-rose-50/80 border border-rose-200/80 rounded-2xl flex items-start gap-2.5 font-medium">
                     <i class="fa-solid fa-triangle-exclamation text-rose-600 mt-0.5 shrink-0"></i>
-                    <span>Tindakan ini akan <strong>menghapus seluruh data penggajian</strong> pada bulan & tahun yang
-                        dipilih agar Anda dapat meng-generate ulang dari awal.</span>
+                    <span>Aksi ini akan <strong>menghapus seluruh data penggajian</strong> pada bulan & tahun yang
+                        dipilih agar Anda dapat membuat ulang data dari awal.</span>
                 </div>
 
                 <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
@@ -284,7 +282,7 @@
                     </button>
                     <button type="submit"
                         class="px-5 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-rose-600 hover:bg-rose-700 rounded-xl shadow-rose-600/20 active:scale-95 cursor-pointer">
-                        <i class="mr-1.5 fa-solid fa-rotate-left"></i> Reset Payroll Periode Ini
+                        <i class="mr-1.5 fa-solid fa-rotate-left"></i> Hapus Penggajian Periode Ini
                     </button>
                 </div>
             </form>
@@ -298,7 +296,7 @@
             class="w-full max-w-2xl bg-white border border-slate-100 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
             <div class="flex items-center justify-between px-6 py-5 text-white border-b border-slate-800 bg-slate-900">
                 <h5 class="flex items-center gap-2.5 text-sm font-extrabold sm:text-base">
-                    <i class="text-emerald-400 fa-solid fa-money-check-dollar"></i> Employee Salary Details
+                    <i class="text-emerald-400 fa-solid fa-money-check-dollar"></i> Rincian Gaji Karyawan
                 </h5>
                 <button type="button" onclick="closeSalaryModal()"
                     class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700">&times;</button>
@@ -321,39 +319,33 @@
                 <div class="grid grid-cols-1 gap-3 text-xs md:grid-cols-2">
                     <div class="p-3.5 border border-slate-100 rounded-2xl bg-slate-50/60">
                         <span
-                            class="block mb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Placement
-                            / Branch</span>
+                            class="block mb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Penempatan / Cabang</span>
                         <strong class="text-xs text-slate-800" id="detail_placement">-</strong>
                     </div>
 
                     <div class="p-3.5 border border-slate-100 rounded-2xl bg-slate-50/60">
-                        <span class="block mb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Salary
-                            Information Status</span>
+                        <span class="block mb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Jenis Gaji</span>
                         <span id="detail_information_badge">-</span>
                     </div>
 
                     <div class="p-3.5 border border-slate-100 rounded-2xl bg-slate-50/60">
-                        <span class="block mb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Bank
-                            Name</span>
+                        <span class="block mb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Nama Bank</span>
                         <strong class="text-xs text-slate-800" id="detail_bank">-</strong>
                     </div>
 
                     <div class="p-3.5 border border-slate-100 rounded-2xl bg-slate-50/60">
-                        <span class="block mb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Account
-                            Number</span>
+                        <span class="block mb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Nomor Rekening</span>
                         <strong class="font-mono text-xs text-slate-900" id="detail_account_no">-</strong>
                     </div>
 
                     <div class="p-3.5 border border-emerald-100 rounded-2xl bg-emerald-50/40">
                         <span
-                            class="block mb-1 text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider">Monthly
-                            Basic Salary</span>
+                            class="block mb-1 text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider">Gaji Pokok Bulanan</span>
                         <strong class="text-sm font-extrabold text-emerald-700" id="detail_amount">-</strong>
                     </div>
 
                     <div class="p-3.5 border border-blue-100 rounded-2xl bg-blue-50/40">
-                        <span class="block mb-1 text-[10px] font-extrabold text-blue-600 uppercase tracking-wider">Before /
-                            After (Overtime Adjustment)</span>
+                        <span class="block mb-1 text-[10px] font-extrabold text-blue-600 uppercase tracking-wider">Sebelum / Sesudah (Penyesuaian Lembur)</span>
                         <strong class="text-xs font-bold text-blue-800" id="detail_before_after">-</strong>
                     </div>
                 </div>
@@ -361,25 +353,25 @@
                 <!-- OVERTIME CALCULATION SUMMARY -->
                 <div class="p-4 space-y-2 border border-rose-100 rounded-2xl bg-rose-50/50">
                     <h6 class="text-xs font-extrabold text-rose-700 flex items-center gap-1.5 uppercase tracking-wider">
-                        <i class="fa-solid fa-circle-exclamation"></i> National Holiday Overtime Details (<span
-                            id="detail_period_label">Period</span>)
+                        <i class="fa-solid fa-circle-exclamation"></i> Rincian Lembur Hari Libur Nasional (<span
+                            id="detail_period_label">Periode</span>)
                     </h6>
                     <div class="grid grid-cols-3 gap-2 pt-1 text-xs">
                         <div>
-                            <span class="block text-[10px] font-semibold text-slate-400">Effective Work Days:</span>
-                            <strong class="text-slate-800" id="detail_effective_days">0 Days</strong>
+                            <span class="block text-[10px] font-semibold text-slate-400">Hari Kerja Efektif:</span>
+                            <strong class="text-slate-800" id="detail_effective_days">0 Hari</strong>
                         </div>
                         <div>
-                            <span class="block text-[10px] font-semibold text-slate-400">Holiday Overtime:</span>
-                            <strong class="text-rose-600" id="detail_holiday_days">0 Days</strong>
+                            <span class="block text-[10px] font-semibold text-slate-400">Lembur Hari Libur:</span>
+                            <strong class="text-rose-600" id="detail_holiday_days">0 Hari</strong>
                         </div>
                         <div>
-                            <span class="block text-[10px] font-semibold text-slate-400">Overtime Bonus:</span>
+                            <span class="block text-[10px] font-semibold text-slate-400">Tambahan Lembur:</span>
                             <strong class="text-emerald-600" id="detail_holiday_pay">Rp 0</strong>
                         </div>
                     </div>
                     <div class="flex items-center justify-between pt-2.5 border-t border-rose-200/60">
-                        <span class="text-xs font-bold text-slate-700">Total Net Salary Received:</span>
+                        <span class="text-xs font-bold text-slate-700">Total Gaji Bersih:</span>
                         <strong class="text-sm font-black text-blue-700" id="detail_total_pay">Rp 0</strong>
                     </div>
                 </div>
@@ -387,15 +379,13 @@
                 <!-- More Info & Get Info -->
                 <div class="pt-1 space-y-3 text-xs">
                     <div class="p-3.5 border border-slate-100 rounded-2xl bg-slate-50/60">
-                        <span class="block mb-1 font-extrabold text-slate-400 uppercase text-[10px] tracking-wider">More
-                            Information:</span>
+                        <span class="block mb-1 font-extrabold text-slate-400 uppercase text-[10px] tracking-wider">Informasi Tambahan:</span>
                         <p class="font-medium leading-relaxed whitespace-pre-line text-slate-700"
                             id="detail_more_information">-</p>
                     </div>
 
                     <div class="p-3.5 border border-slate-100 rounded-2xl bg-slate-50/60">
-                        <span class="block mb-1 font-extrabold text-slate-400 uppercase text-[10px] tracking-wider">Get
-                            Information (Note):</span>
+                        <span class="block mb-1 font-extrabold text-slate-400 uppercase text-[10px] tracking-wider">Informasi Gaji:</span>
                         <p class="font-medium leading-relaxed whitespace-pre-line text-slate-700"
                             id="detail_get_information">-</p>
                     </div>
@@ -405,7 +395,7 @@
             <div class="flex justify-end px-6 py-4 border-t border-slate-100 bg-slate-50">
                 <button type="button" onclick="closeSalaryModal()"
                     class="px-5 py-2.5 text-xs font-bold transition-colors bg-white border text-slate-600 border-slate-200 rounded-xl hover:bg-slate-100 active:scale-95 shadow-2xs cursor-pointer">
-                    Close
+                    Tutup
                 </button>
             </div>
         </div>
@@ -545,7 +535,7 @@
                 })
                 .then(async res => {
                     if (!res.ok) {
-                        let errMsg = 'Failed to fetch salary details (' + res.status + ')';
+                        let errMsg = 'Rincian gaji gagal dimuat (' + res.status + ')';
                         try {
                             let errJson = await res.json();
                             if (errJson.message) errMsg = errJson.message;
@@ -563,22 +553,22 @@
                     document.getElementById('detail_amount').innerText = data.amount_formatted || 'Rp 0';
                     document.getElementById('detail_before_after').innerText = data.before_after || '-';
                     document.getElementById('detail_more_information').innerText = data.more_information ||
-                        'No additional information provided.';
+                        'Belum ada keterangan tambahan.';
                     document.getElementById('detail_get_information').innerText = data.get_information ||
-                        'No notes available.';
+                        'Belum ada catatan.';
 
                     document.getElementById('detail_period_label').innerText = month + '/' + year;
 
                     document.getElementById('detail_effective_days').innerText = (data.calculation ? data.calculation
-                        .effective_days : 0) + ' Days';
+                        .effective_days : 0) + ' Hari';
                     document.getElementById('detail_holiday_days').innerText = (data.calculation ? data.calculation
-                        .holiday_overtime_days : 0) + ' Days';
+                        .holiday_overtime_days : 0) + ' Hari';
                     document.getElementById('detail_holiday_pay').innerText = data.calculation ? data.calculation
                         .holiday_overtime_pay : 'Rp 0';
                     document.getElementById('detail_total_pay').innerText = data.calculation ? data.calculation
                         .total_salary_to_pay : 'Rp 0';
 
-                    let infoText = (data.information || '').toUpperCase();
+                    let infoText = window.uiLabel(data.information || '-');
                     let isProbation = (data.information || '').includes('probation');
                     let badgeClass = isProbation ?
                         'px-2.5 py-1 text-xs font-extrabold text-amber-800 bg-amber-50 border border-amber-200 rounded-full' :
@@ -594,7 +584,7 @@
                         document.body.classList.add('overflow-hidden');
                     }
                 })
-                .catch(err => alert(err.message));
+                .catch(err => (window.showUiMessage || window.alert)(err.message));
         }
 
         function closeSalaryModal() {

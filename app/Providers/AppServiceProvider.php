@@ -52,18 +52,5 @@ class AppServiceProvider extends ServiceProvider
                 ->with('globalBranches', $globalBranches);
         });
 
-        // HANYA SHARE COUNTERS KE DASHBOARD VIEW
-        View::composer('dashboard.index', function ($view) {
-            $dataCounts = Cache::remember('dashboard_counters', 60, function () {
-                return [
-                    'totalMachine'   => Site::count(),
-                    'totalSparepart' => Sparepart::count(),
-                    'totalReport'    => Report::count(),
-                    'totalBranch'    => Branch::count()
-                ];
-            });
-
-            $view->with($dataCounts);
-        });
     }
 }

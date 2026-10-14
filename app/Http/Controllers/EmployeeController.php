@@ -43,15 +43,14 @@ class EmployeeController extends Controller
         $upcomingEmployeesQuery = Employee::with(['site'])
             ->where('status', '!=', 'Resigned')
             ->whereNotNull('join_date')
-            ->whereRaw('MONTH(join_date) = ?', [$bannerMonth]);
+            ->whereMonth('join_date', $bannerMonth);
 
         if ($user->role === 'employee_role') {
             $upcomingEmployeesQuery->where('site_id', $user->site_id);
         }
 
         $upcomingEmployees = $upcomingEmployeesQuery
-            ->orderByRaw('DAY(join_date) ASC')
-            ->get();
+            ->get()->sortBy(fn ($employee) => $employee->join_date->day)->values();
 
         // 3. Query Utama untuk Tabel Karyawan
         $employeesQuery = Employee::with(['site.branch']);
@@ -81,12 +80,12 @@ class EmployeeController extends Controller
 
         // FILTER JOIN MONTH PADA TABEL
         if ($request->filled('join_month')) {
-            $employeesQuery->whereRaw('MONTH(join_date) = ?', [$request->join_month]);
+            $employeesQuery->whereMonth('join_date', $request->join_month);
         }
 
         // FILTER JOIN DAY PADA TABEL
         if ($request->filled('join_day')) {
-            $employeesQuery->whereRaw('DAY(join_date) = ?', [$request->join_day]);
+            $employeesQuery->whereDay('join_date', $request->join_day);
         }
 
         // FILTER STATUS PEKERJAAN
@@ -181,7 +180,7 @@ class EmployeeController extends Controller
             ]);
         }
 
-        return redirect()->route('employee.index')->with('success', 'The new employee has been successfully registered!');
+        return redirect()->route('employee.index')->with('success', 'Karyawan berhasil didaftarkan.');
     }
 
     public function update(Request $request, $id)
@@ -238,7 +237,7 @@ class EmployeeController extends Controller
 
         $employee->update($validatedData);
 
-        return redirect()->route('employee.index')->with('success', 'Employee data successfully updated!');
+        return redirect()->route('employee.index')->with('success', 'Data karyawan berhasil diperbarui.');
     }
 
     public function show($id)
@@ -326,7 +325,7 @@ class EmployeeController extends Controller
         $employee->salaryHistories()->delete();
         $employee->delete();
 
-        return redirect()->route('employee.index')->with('success', 'The employee and their entire work history have been successfully deleted.');
+        return redirect()->route('employee.index')->with('success', 'Data karyawan dan seluruh riwayat kerjanya berhasil dihapus.');
     }
 
     public function export(Request $request)
@@ -346,9 +345,9 @@ class EmployeeController extends Controller
 
         try {
             Excel::import(new EmployeesImport($siteId), $request->file('file'));
-            return redirect()->back()->with('success', 'Employee data imported successfully!');
+            return redirect()->back()->with('success', 'Data karyawan berhasil diimpor.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to import employee data: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Data karyawan gagal diimpor: ' . $e->getMessage());
         }
     }
 

@@ -73,13 +73,13 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         // });
         Route::prefix('report')->name('report.')->group(function () {
             // Route index utama menangani opsional slug atau wajib slug
-            Route::get('/{slug?}', [ReportController::class, 'index'])->name('index');
 
             Route::get('/create', [ReportController::class, 'create'])->name('create');
             Route::post('/', [ReportController::class, 'store'])->name('store');
             Route::get('/export', [ReportController::class, 'export'])->name('export');
             Route::get('/global/export', [ReportController::class, 'exportAll'])->name('export_all');
             Route::post('/search', [ReportController::class, 'search'])->name('search');
+            Route::get('/{slug?}', [ReportController::class, 'index'])->name('index');
 
             Route::get('/{report}/edit', [ReportController::class, 'edit'])->name('edit');
             Route::put('/{report}', [ReportController::class, 'update'])->name('update');
@@ -192,6 +192,9 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::delete('/{id}/force-delete', [AdminReimbursementController::class, 'forceDelete'])->name('force_delete');
         });
         Route::post('/reimbursements/{id}/fast-approve', [AdminReimbursementController::class, 'fastApprove'])->name('reimbursements.fast_approve');
+        Route::delete('/reimbursements/bulk-delete', [AdminReimbursementController::class, 'bulkDelete'])->name('reimbursements.bulk_delete');
+        Route::post('/reimbursements/recycle-bin/bulk-restore', [AdminReimbursementController::class, 'bulkRestore'])->name('reimbursements.bulk_restore');
+        Route::delete('/reimbursements/recycle-bin/bulk-force-delete', [AdminReimbursementController::class, 'bulkForceDelete'])->name('reimbursements.bulk_force_delete');
     });
 
     // Filter Khusus Pemeriksa Berwenang

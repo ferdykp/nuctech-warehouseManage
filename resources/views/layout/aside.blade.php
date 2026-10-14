@@ -20,159 +20,198 @@
                 </div>
                 <span class="text-base font-bold tracking-tight text-white">NUCINDO</span>
             </div>
-            <button @click="sidebarOpen = false" type="button"
+            <button @click="sidebarOpen = false" aria-label="Tutup menu utama" type="button"
                 class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 lg:hidden cursor-pointer">
                 <i class="text-lg fa-solid fa-xmark"></i>
             </button>
         </div>
 
-        <!-- NAVIGATION MENU -->
-        <nav class="p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-8rem)]">
-
+        <nav aria-label="Menu utama" class="p-4 space-y-5 overflow-y-auto max-h-[calc(100dvh-8rem)]">
             @php
                 $baseItemClass =
-                    'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150';
-                $defaultClass = 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60';
+                    'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150';
+                $defaultClass = 'text-slate-300 hover:text-white hover:bg-slate-800/60';
                 $activeClass = 'bg-blue-600 text-white shadow-md shadow-blue-600/30';
             @endphp
-
-            <!-- MENU GROUP: GENERAL -->
             <div>
-                <p class="px-3 mb-2 text-[10px] font-bold tracking-wider uppercase text-slate-500">General</p>
+                <p class="px-3 mb-2 text-xs font-bold tracking-wide text-slate-400">Beranda</p>
                 <div class="space-y-1">
-                    <a href="{{ route('dashboard') }}"
+<a href="{{ route('dashboard') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('dashboard') ? $activeClass : $defaultClass }}">
-                        <i class="w-5 text-sm text-center fa-solid fa-chart-pie"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    @if (Auth::user()?->role === 'superadmin')
-                        <a href="{{ route('branches.index') }}"
-                            class="{{ $baseItemClass }} {{ request()->routeIs('branches.*') ? $activeClass : $defaultClass }}">
-                            <i class="w-5 text-sm text-center fa-solid fa-building"></i>
-                            <span>Branches</span>
-                        </a>
-                    @endif
-                </div>
+<i
+                            class="w-5 text-sm text-center fa-solid fa-chart-pie"
+                            aria-hidden="true">
+</i>
+<span>Dashboard</span>
+</a>
+</div>
             </div>
-
-            <!-- MENU GROUP: MACHINE MANAGEMENT -->
             @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader']))
-
                 <div>
-                    <p class="px-3 mb-2 text-[10px] font-bold tracking-wider uppercase text-slate-500">Assets &
-                        Operations
-                    </p>
-                    <div x-data="{ open: {{ request()->routeIs('sites.*') || request()->routeIs('sparepart.index') ? 'true' : 'false' }} }">
-                        <button @click="open = !open" type="button"
-                            class="w-full {{ $baseItemClass }} {{ $defaultClass }} justify-between cursor-pointer">
-                            <div class="flex items-center gap-3">
-                                <i class="w-5 text-sm text-center fa-solid fa-gears"></i>
-                                <span>Machine Sites</span>
-                            </div>
-                            <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"
-                                :class="{ 'rotate-180': open }"></i>
-                        </button>
+                    <p class="px-3 mb-2 text-xs font-bold tracking-wide text-slate-400">Inventaris</p>
+                    <div class="space-y-1">
+<a href="{{ route('sparepart.all') }}"
+                            class="{{ $baseItemClass }} {{ request()->routeIs('sparepart.all') ? $activeClass : $defaultClass }}">
+<i
+                                class="w-5 text-sm text-center fa-solid fa-boxes-stacked"
+                                aria-hidden="true">
+</i>
+<span>Semua Stok</span>
+</a>
+                        <div x-data="{ open: {{ request()->routeIs('sites.*') || request()->routeIs('sparepart.index') ? 'true' : 'false' }} }">
+                            <button @click="open = !open" :aria-expanded="open" aria-controls="sidebar-machine-list"
+                                type="button"
+                                class="w-full {{ $baseItemClass }} {{ $defaultClass }} justify-between cursor-pointer">
+                                <div class="flex items-center gap-3">
+                                    <i class="w-5 text-sm text-center fa-solid fa-gears">
+</i>
+                                    <span>Stok per Lokasi</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"
+                                    :class="{ 'rotate-180': open }">
+</i>
+                            </button>
 
-                        <div x-show="open" x-cloak x-collapse
-                            class="pl-3 mt-1 ml-4 space-y-1 border-l border-slate-800" id="sidebar-machine-list">
-                            @foreach ($sidebarSites as $site)
-                                <a href="{{ route('sparepart.index', $site->slug) }}"
-                                    class="block px-3 py-1.5 text-xs font-medium rounded-lg transition-colors truncate
+                            <div x-show="open" x-cloak x-collapse
+                                class="pl-3 mt-1 ml-4 space-y-1 border-l border-slate-800" id="sidebar-machine-list">
+                                @foreach ($sidebarSites as $site)
+                                    <a href="{{ route('sparepart.index', $site->slug) }}"
+                                        class="block px-3 py-1.5 text-xs font-medium rounded-lg transition-colors truncate
                                 {{ request()->segment(2) == $site->slug ? 'text-blue-400 font-bold bg-blue-500/10' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40' }}">
-                                    {{ $site->machine_name }}
-                                </a>
-                            @endforeach
+                                        {{ $site->machine_name }}
+                                    </a>
+                                @endforeach
 
-                            @if (Auth::user()?->role === 'superadmin')
-                                <button @click="$dispatch('open-add-machine'); sidebarOpen = false" type="button"
-                                    class="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-bold text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all mt-1 cursor-pointer">
-                                    <i class="fa-solid fa-circle-plus"></i> New Machine
-                                </button>
-                            @endif
+                                @if (Auth::user()?->role === 'superadmin')
+                                    <button @click="$dispatch('open-add-machine'); sidebarOpen = false" type="button"
+                                        class="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-bold text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all mt-1 cursor-pointer">
+                                        <i class="fa-solid fa-circle-plus">
+</i> Mesin Baru
+                                    </button>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
             @endif
-            <!-- MENU GROUP: INVENTORY -->
             <div>
-                <p class="px-3 mb-2 text-[10px] font-bold tracking-wider uppercase text-slate-500">Logistics &
-                    Support
-                </p>
+                <p class="px-3 mb-2 text-xs font-bold tracking-wide text-slate-400">Laporan</p>
                 <div class="space-y-1">
                     @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader']))
-                        <a href="{{ route('categories.index') }}"
-                            class="{{ $baseItemClass }} {{ request()->routeIs('categories.*') ? $activeClass : $defaultClass }}">
-                            <i class="w-5 text-sm text-center fa-solid fa-layer-group"></i>
-                            <span>Categories</span>
-                        </a>
-                        <a href="{{ route('site.index') }}"
-                            class="{{ $baseItemClass }} {{ request()->routeIs('site.index') ? $activeClass : $defaultClass }}">
-                            <i class="w-5 text-sm text-center fa-solid fa-map-pin"></i>
-                            <span>All Sites</span>
-                        </a>
-                        <a href="{{ route('sparepart.all') }}"
-                            class="{{ $baseItemClass }} {{ request()->routeIs('sparepart.all') ? $activeClass : $defaultClass }}">
-                            <i class="w-5 text-sm text-center fa-solid fa-boxes-stacked"></i>
-                            <span>Spareparts</span>
-                        </a>
                         <a href="{{ route('report.index') }}"
                             class="{{ $baseItemClass }} {{ request()->routeIs('report.*') ? $activeClass : $defaultClass }}">
-                            <i class="w-5 text-sm text-center fa-solid fa-triangle-exclamation"></i>
-                            <span>Failure Reports</span>
-                        </a>
+<i
+                                class="w-5 text-sm text-center fa-solid fa-triangle-exclamation"
+                                aria-hidden="true">
+</i>
+<span>Laporan Kerusakan</span>
+</a>
                     @endif
-
                     <a href="{{ route('daily_reports.index') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('daily_reports.*') ? $activeClass : $defaultClass }}">
-                        <i class="w-5 text-sm text-center fa-solid fa-calendar"></i>
-                        <span>Daily Reports</span>
-                    </a>
+<i
+                            class="w-5 text-sm text-center fa-solid fa-calendar" aria-hidden="true">
+</i>
+<span>Laporan
+                            Harian</span>
+</a>
                 </div>
             </div>
-            <!-- MENU GROUP: HR & FINANCE -->
             <div>
-                <p class="px-3 mb-2 text-[10px] font-bold tracking-wider uppercase text-slate-500">HR & Finance</p>
+                <p class="px-3 mb-2 text-xs font-bold tracking-wide text-slate-400">Kepegawaian</p>
                 <div class="space-y-1">
-                    <a href="{{ route('reimbursements.index') }}"
-                        class="{{ $baseItemClass }} justify-between {{ request()->routeIs('reimbursements.*') ? $activeClass : $defaultClass }}">
-                        <div class="flex items-center gap-3">
-                            <i class="w-5 text-sm text-center fa-solid fa-receipt"></i>
-                            <span>Reimbursements</span>
-                        </div>
-                    </a>
-                    {{-- @if (in_array(Auth::user()?->role, ['superadmin', 'administration'])) --}}
-                    @if (in_array(Auth::user()?->role, ['superadmin']))
+                    @if (Auth::user()?->role === 'superadmin')
                         <a href="{{ route('employee.index') }}"
                             class="{{ $baseItemClass }} {{ request()->routeIs('employee.*') ? $activeClass : $defaultClass }}">
-                            <i class="w-5 text-sm text-center fa-solid fa-users"></i>
-                            <span>Employees</span>
-                        </a>
+<i
+                                class="w-5 text-sm text-center fa-solid fa-users"
+                                aria-hidden="true">
+</i>
+<span>Karyawan</span>
+</a>
                     @endif
                     <a href="{{ route('schedule.index') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('schedule.*') ? $activeClass : $defaultClass }}">
-                        <i class="w-5 text-sm text-center fa-solid fa-calendar-days"></i>
-                        <span>Schedules</span>
-                    </a>
-                    <a href="{{ route('attendance.index') }}"
+<i
+                            class="w-5 text-sm text-center fa-solid fa-calendar-days"
+                            aria-hidden="true">
+</i>
+<span>Jadwal Kerja</span>
+</a>
+<a
+                        href="{{ route('attendance.index') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('attendance.*') ? $activeClass : $defaultClass }}">
-                        <i class="w-5 text-sm text-center fa-solid fa-user-check"></i>
-                        <span>Attendance</span>
-                    </a>
-                    @if (in_array(Auth::user()?->role, ['superadmin']))
-                        <a href="{{ route('salary.index') }}"
-                            class="{{ $baseItemClass }} {{ request()->routeIs('salary.*') ? $activeClass : $defaultClass }}">
-                            <i class="w-5 text-sm text-center fa-solid fa-wallet"></i>
-                            <span>Payroll / Salary</span>
-                        </a>
-                    @endif
-                    <a href="{{ route('leave.index') }}"
+<i
+                            class="w-5 text-sm text-center fa-solid fa-user-check"
+                            aria-hidden="true">
+</i>
+<span>Absensi</span>
+</a>
+<a href="{{ route('leave.index') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('leave.*') ? $activeClass : $defaultClass }}">
-                        <i class="w-5 text-sm text-center fa-solid fa-person-walking-arrow-right"></i>
-                        <span>Leave</span>
-                    </a>
+<i
+                            class="w-5 text-sm text-center fa-solid fa-person-walking-arrow-right"
+                            aria-hidden="true">
+</i>
+<span>Cuti dan Izin</span>
+</a>
                 </div>
             </div>
-
+            <div>
+                <p class="px-3 mb-2 text-xs font-bold tracking-wide text-slate-400">Keuangan</p>
+                <div class="space-y-1">
+<a href="{{ route('reimbursements.index') }}"
+                        class="{{ $baseItemClass }} {{ request()->routeIs('reimbursements.*') ? $activeClass : $defaultClass }}">
+<i
+                            class="w-5 text-sm text-center fa-solid fa-receipt" aria-hidden="true">
+</i>
+<span>Reimbursement</span>
+</a>
+                    @if (Auth::user()?->role === 'superadmin')
+                        <a href="{{ route('salary.index') }}"
+                            class="{{ $baseItemClass }} {{ request()->routeIs('salary.*') ? $activeClass : $defaultClass }}">
+<i
+                                class="w-5 text-sm text-center fa-solid fa-wallet"
+                                aria-hidden="true">
+</i>
+<span>Penggajian</span>
+</a>
+                    @endif
+                </div>
+            </div>
+            @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader']))
+                <div>
+                    <p class="px-3 mb-2 text-xs font-bold tracking-wide text-slate-400">Data Master</p>
+                    <div class="space-y-1">
+<a href="{{ route('site.index') }}"
+                            class="{{ $baseItemClass }} {{ request()->routeIs('site.*') ? $activeClass : $defaultClass }}">
+<i
+                                class="w-5 text-sm text-center fa-solid fa-map-pin" aria-hidden="true">
+</i>
+<span>Daftar
+                                Lokasi Mesin</span>
+</a>
+<a href="{{ route('categories.index') }}"
+                            class="{{ $baseItemClass }} {{ request()->routeIs('categories.*') ? $activeClass : $defaultClass }}">
+<i
+                                class="w-5 text-sm text-center fa-solid fa-layer-group"
+                                aria-hidden="true">
+</i>
+<span>Kategori Sparepart</span>
+</a>
+                        @if (Auth::user()?->role === 'superadmin')
+                            <a href="{{ route('branches.index') }}"
+                                class="{{ $baseItemClass }} {{ request()->routeIs('branches.*') ? $activeClass : $defaultClass }}">
+<i
+                                    class="w-5 text-sm text-center fa-solid fa-building"
+                                    aria-hidden="true">
+</i>
+<span>Cabang</span>
+</a>
+                        @endif
+                    </div>
+                </div>
+            @endif
         </nav>
     </div>
 
@@ -184,9 +223,9 @@
                 {{ strtoupper(substr(auth()->user()?->username ?? 'U', 0, 2)) }}
             </div>
             <div class="flex-1 min-w-0">
-                <p class="text-xs font-bold truncate text-slate-200">{{ auth()->user()?->username ?? 'Guest' }}</p>
+                <p class="text-xs font-bold truncate text-slate-200">{{ auth()->user()?->username ?? 'Tamu' }}</p>
                 <p class="text-[10px] font-semibold text-slate-400 capitalize truncate">
-                    {{ auth()->user()?->role ?? 'User' }}</p>
+                    {{ \App\Support\UiText::label(auth()->user()?->role) }}</p>
             </div>
         </div>
     </div>
@@ -196,12 +235,15 @@
 <div x-data="{
     show: false,
     loading: false,
+    error: '',
     machine_name: '',
     branch_id: '',
     location: '',
     submitMachine() {
         if (!this.machine_name || !this.branch_id || !this.location) return;
+        if (this.loading) return;
         this.loading = true;
+        this.error = '';
 
         fetch('{{ route('sites.store') }}', {
                 method: 'POST',
@@ -216,22 +258,18 @@
                     location: this.location
                 })
             })
-            .then(res => res.json())
-            .then(data => {
-                this.loading = false;
-                if (data.status === 'success' || data.site) {
-                    // Skenario 1: Reload halaman jika sukses agar semua state Blade segar
-                    window.location.reload();
-                } else {
-                    // Fallback reload untuk memastikan data sync
-                    window.location.reload();
+            .then(async res => {
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    const messages = Object.values(data.errors || {}).flat();
+                    throw new Error(messages.join(' ') || data.message || 'Lokasi gagal disimpan. Periksa isian dan coba lagi.');
                 }
+                window.location.reload();
             })
             .catch(err => {
-                this.loading = false;
-                // Jika backend membalas redirect HTML standar
-                window.location.reload();
-            });
+                this.error = err.message || 'Koneksi terputus. Coba lagi; isian Anda tetap tersimpan di formulir ini.';
+            })
+            .finally(() => { this.loading = false; });
     }
 }" x-on:open-add-machine.window="show = true" x-show="show" x-cloak
     class="fixed inset-0 z-[70] flex items-center justify-center p-4">
@@ -244,8 +282,8 @@
 
         <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
             <div>
-                <h3 class="text-base font-bold text-slate-800">New Machine Site</h3>
-                <p class="text-xs text-slate-500">Register a new unit to the tracking system.</p>
+                <h3 class="text-base font-bold text-slate-800">Lokasi Mesin Baru</h3>
+                <p class="text-xs text-slate-500">Daftarkan unit mesin baru.</p>
             </div>
             <button @click="show = false" type="button"
                 class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer">
@@ -254,17 +292,19 @@
         </div>
 
         <form @submit.prevent="submitMachine()" class="p-6 space-y-4">
+            <p x-show="error" x-text="error" role="alert"
+                class="p-3 text-sm border rounded-xl border-rose-200 bg-rose-50 text-rose-800"></p>
             <div>
-                <label class="block mb-1 text-xs font-bold text-slate-700">Machine Name</label>
+                <label class="block mb-1 text-xs font-bold text-slate-700">Nama Mesin</label>
                 <input type="text" x-model="machine_name" required
                     class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none transition-all"
-                    placeholder="e.g., FS6000 Jakarta Main">
+                    placeholder="Contoh: FS6000 Jakarta Main">
             </div>
             <div>
-                <label class="block mb-1 text-xs font-bold text-slate-700">Branch Location</label>
+                <label class="block mb-1 text-xs font-bold text-slate-700">Lokasi Cabang</label>
                 <select x-model="branch_id" required
                     class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none transition-all cursor-pointer">
-                    <option value="" disabled selected>Choose a branch...</option>
+                    <option value="" disabled selected>Pilih cabang...</option>
                     {{-- Ambil data branch langsung secara fresh dari DB --}}
                     @foreach (\App\Models\Branch::orderBy('branch_name', 'asc')->get() as $branch)
                         <option value="{{ $branch->id }}">{{ $branch->branch_name }}</option>
@@ -272,19 +312,19 @@
                 </select>
             </div>
             <div>
-                <label class="block mb-1 text-xs font-bold text-slate-700">Detailed Address</label>
-                <textarea x-model="location" rows="3" required
+                <label class="block mb-1 text-xs font-bold text-slate-700">Alamat Lengkap</label>
+                <textarea x-model="location" rows="3" maxlength="255" required
                     class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none transition-all"
-                    placeholder="Street name, Floor, or specific coordinates..."></textarea>
+                    placeholder="Nama jalan, lantai, atau koordinat lokasi..."></textarea>
             </div>
 
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <button type="button" @click="show = false"
-                    class="px-4 py-2 text-xs font-semibold cursor-pointer text-slate-600 hover:text-slate-800">Cancel</button>
+                    class="px-4 py-2 text-xs font-semibold cursor-pointer text-slate-600 hover:text-slate-800">Batal</button>
                 <button type="submit" :disabled="loading"
                     class="flex items-center gap-2 px-5 py-2 text-xs font-bold text-white transition-all bg-blue-600 shadow-md cursor-pointer hover:bg-blue-700 shadow-blue-500/20 rounded-xl">
                     <span x-show="loading" class="animate-spin"><i class="fa-solid fa-circle-notch"></i></span>
-                    <span x-text="loading ? 'Registering...' : 'Register Machine'"></span>
+                    <span x-text="loading ? 'Menyimpan...' : 'Simpan Mesin'"></span>
                 </button>
             </div>
         </form>

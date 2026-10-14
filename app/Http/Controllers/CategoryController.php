@@ -22,7 +22,7 @@ class CategoryController extends Controller
 
         Category::create($request->all());
 
-        return redirect()->route('categories.index')->with('success', 'Kategori Successfully Added.');
+        return redirect()->route('categories.index')->with('success', 'Kategori berhasil ditambahkan.');
     }
 
     public function update(Request $request, Category $category)
@@ -34,7 +34,7 @@ class CategoryController extends Controller
 
         $category->update($request->all());
 
-        return redirect()->route('categories.index')->with('success', 'Kategori Successfully Updated.');
+        return redirect()->route('categories.index')->with('success', 'Kategori berhasil diperbarui.');
     }
 
     public function destroy(Category $category)
@@ -42,11 +42,11 @@ class CategoryController extends Controller
         // Prevent deleting if it's used by spareparts (we'll implement the check or cascade).
         // Let's just do a simple delete for now.
         if ($category->spareparts()->count() > 0) {
-            return redirect()->route('categories.index')->with('error', 'Kategori tidak bisa dihapus karena masih digunakan oleh sparepart.');
+            return redirect()->route('categories.index')->with('error', 'Kategori tidak bisa dihapus karena masih digunakan oleh suku cadang.');
         }
 
         $category->delete();
 
-        return redirect()->route('categories.index')->with('success', 'Kategori Successfully Deleted.');
+        return redirect()->route('categories.index')->with('success', 'Kategori berhasil dihapus.');
     }
 }

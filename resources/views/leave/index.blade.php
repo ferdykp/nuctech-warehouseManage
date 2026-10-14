@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Leave & Time-Off Management')
+@section('title', 'Manajemen Cuti dan Izin')
 
 @section('content')
     <div class="w-full space-y-6">
@@ -10,23 +10,22 @@
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                        <span class="transition-colors cursor-pointer hover:text-emerald-600">HR & Attendance</span>
+                        <span class="transition-colors cursor-pointer hover:text-emerald-600">Kepegawaian dan Kehadiran</span>
                         <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                        <span class="font-extrabold text-emerald-600">Leave Management</span>
+                        <span class="font-extrabold text-emerald-600">Manajemen Cuti</span>
                     </nav>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                        Leave & Time-Off Management
+                        Manajemen Cuti dan Izin
                     </h1>
                     <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
-                        Manage employee leave requests, quota tracking, and approvals seamlessly.
-                        untuk notes saja, tidak masuk ke data integrasi
+                        Catat pengajuan cuti dan persetujuannya. Data ini hanya sebagai catatan dan belum terhubung ke perhitungan absensi atau gaji.
                     </p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2.5 shrink-0">
                     <a href="{{ route('leave.create') }}"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold text-white transition-all bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer">
-                        <i class="fa-solid fa-plus"></i> Apply Leave
+                        <i class="fa-solid fa-plus"></i> Ajukan Cuti
                     </a>
                 </div>
             </div>
@@ -59,19 +58,19 @@
                             <i class="text-xs fa-solid fa-magnifying-glass"></i>
                         </div>
                         <input type="text" name="search" value="{{ request('search') }}"
-                            placeholder="Search employee name..."
+                            placeholder="Cari nama karyawan..."
                             class="block w-full py-2.5 pl-9 pr-3.5 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 shadow-2xs text-slate-800 placeholder-slate-400">
                     </div>
 
                     <div class="sm:col-span-4 md:col-span-3">
                         <select name="status" onchange="this.form.submit()"
                             class="block w-full px-3.5 py-2.5 text-xs font-bold transition-all bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 shadow-2xs cursor-pointer">
-                            <option value="">All Approval Statuses</option>
-                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending Approval
+                            <option value="">Semua Status Persetujuan</option>
+                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Menunggu Persetujuan
                             </option>
-                            <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved
+                            <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Disetujui
                             </option>
-                            <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected
+                            <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Ditolak
                             </option>
                         </select>
                     </div>
@@ -79,7 +78,7 @@
                     <div class="flex justify-end sm:col-span-2 md:col-span-1">
                         <a href="{{ route('leave.index') }}"
                             class="inline-flex items-center justify-center w-full px-3 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-2xs">
-                            Reset
+                            Atur Ulang
                         </a>
                     </div>
                 </form>
@@ -87,17 +86,17 @@
 
             <!-- TABLE CONTENT -->
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse min-w-[700px]">
+                <table data-mobile-cards class="w-full text-left border-collapse min-w-[700px]">
                     <thead>
                         <tr
                             class="border-b border-slate-100 bg-slate-50/60 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                            <th scope="col" class="px-6 py-4">Employee</th>
-                            <th scope="col" class="px-4 py-4">Leave Type</th>
-                            <th scope="col" class="px-4 py-4">Date Range</th>
-                            <th scope="col" class="px-4 py-4">Duration</th>
-                            <th scope="col" class="px-4 py-4">Reason</th>
+                            <th scope="col" class="px-6 py-4">Karyawan</th>
+                            <th scope="col" class="px-4 py-4">Jenis Cuti</th>
+                            <th scope="col" class="px-4 py-4">Rentang Tanggal</th>
+                            <th scope="col" class="px-4 py-4">Durasi</th>
+                            <th scope="col" class="px-4 py-4">Alasan</th>
                             <th scope="col" class="px-4 py-4">Status</th>
-                            <th scope="col" class="px-6 py-4 text-center">Action</th>
+                            <th scope="col" class="px-6 py-4 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
@@ -116,9 +115,9 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-4 font-semibold text-slate-800 whitespace-nowrap">
-                                    {{ $req->start_date ? \Carbon\Carbon::parse($req->start_date)->format('d M Y') : '-' }}
+                                    {{ $req->start_date ? \Carbon\Carbon::parse($req->start_date)->translatedFormat('d M Y') : '-' }}
                                     -
-                                    {{ $req->end_date ? \Carbon\Carbon::parse($req->end_date)->format('d M Y') : '-' }}
+                                    {{ $req->end_date ? \Carbon\Carbon::parse($req->end_date)->translatedFormat('d M Y') : '-' }}
                                 </td>
                                 <td class="px-4 py-4 font-black text-slate-900 whitespace-nowrap">
                                     {{ $req->total_days }} {{ Str::plural('Day', $req->total_days) }}
@@ -131,17 +130,17 @@
                                     @if ($req->status === 'approved')
                                         <span
                                             class="px-2.5 py-1 text-xs font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-full">
-                                            Approved
+                                            Disetujui
                                         </span>
                                     @elseif ($req->status === 'rejected')
                                         <span
                                             class="px-2.5 py-1 text-xs font-extrabold text-rose-800 bg-rose-50 border border-rose-200 rounded-full">
-                                            Rejected
+                                            Ditolak
                                         </span>
                                     @else
                                         <span
                                             class="px-2.5 py-1 text-xs font-extrabold text-amber-800 bg-amber-50 border border-amber-200 rounded-full">
-                                            Pending
+                                            Menunggu
                                         </span>
                                     @endif
                                 </td>
@@ -149,33 +148,33 @@
                                     <div class="flex items-center justify-center gap-1.5">
                                         @if ($req->status === 'pending')
                                             <form action="{{ route('leave.approve', $req->id) }}" method="POST"
-                                                onsubmit="return confirm('Approve this leave request?')">
+                                                onsubmit="return confirm('Setujui pengajuan cuti ini?')">
                                                 @csrf
                                                 <button type="submit"
                                                     class="px-3 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl active:scale-95 transition-all shadow-xs cursor-pointer">
-                                                    Approve
+                                                    Setujui
                                                 </button>
                                             </form>
 
                                             <button type="button" onclick="openRejectModal({{ $req->id }})"
                                                 class="px-3 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-all active:scale-95 cursor-pointer">
-                                                Reject
+                                                Tolak
                                             </button>
 
                                             <a href="{{ route('leave.edit', $req->id) }}"
                                                 class="p-2 text-xs font-bold transition-all text-slate-600 hover:text-emerald-600 bg-slate-100 hover:bg-slate-200 rounded-xl"
-                                                title="Edit Request">
+                                                title="Ubah Pengajuan">
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </a>
                                         @endif
 
                                         <form action="{{ route('leave.destroy', $req->id) }}" method="POST"
-                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus data pengajuan cuti ini?')">
+                                            onsubmit="return confirm('Yakin ingin menghapus data pengajuan cuti ini?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
                                                 class="p-2 text-xs font-bold transition-all cursor-pointer text-slate-400 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 rounded-xl"
-                                                title="Delete Request">
+                                                title="Hapus Pengajuan">
                                                 <i class="fa-solid fa-trash-can"></i>
                                             </button>
                                         </form>
@@ -185,7 +184,7 @@
                         @empty
                             <tr>
                                 <td colspan="7" class="py-12 font-medium text-center text-slate-400">
-                                    No leave requests found.
+                                    Pengajuan cuti tidak ditemukan.
                                 </td>
                             </tr>
                         @endforelse
@@ -210,8 +209,8 @@
                         <i class="text-base fa-solid fa-circle-xmark"></i>
                     </div>
                     <div>
-                        <h3 class="text-sm font-extrabold text-slate-900">Reject Leave Request</h3>
-                        <p class="text-[11px] font-medium text-slate-500">Provide a reason for rejecting this leave.</p>
+                        <h3 class="text-sm font-extrabold text-slate-900">Tolak Pengajuan Cuti</h3>
+                        <p class="text-[11px] font-medium text-slate-500">Tuliskan alasan penolakan cuti ini.</p>
                     </div>
                 </div>
                 <button type="button" onclick="closeRejectModal()"
@@ -221,21 +220,20 @@
             <form id="rejectForm" method="POST" class="p-6 space-y-4">
                 @csrf
                 <div>
-                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Rejection
-                        Reason</label>
+                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Alasan Penolakan</label>
                     <textarea name="rejection_reason" required rows="3"
                         class="w-full p-3 text-xs font-medium border outline-none bg-slate-50 border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 text-slate-800 placeholder-slate-400"
-                        placeholder="State reason for rejection..."></textarea>
+                        placeholder="Tuliskan alasan penolakan..."></textarea>
                 </div>
 
                 <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                     <button type="button" onclick="closeRejectModal()"
                         class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">
-                        Cancel
+                        Batal
                     </button>
                     <button type="submit"
                         class="px-5 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-rose-600 hover:bg-rose-700 rounded-xl shadow-rose-600/20 active:scale-95 cursor-pointer">
-                        Confirm Rejection
+                        Konfirmasi Penolakan
                     </button>
                 </div>
             </form>

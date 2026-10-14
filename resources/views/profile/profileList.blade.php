@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'User Account Management')
+@section('title', 'Manajemen Akun Pengguna')
 
 @section('content')
     <div class="w-full space-y-6">
@@ -12,25 +12,25 @@
                     <a href="{{ route('profile.profile') }}"
                         class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all rounded-xl active:scale-95 shrink-0">
                         <i class="fa-solid fa-arrow-left"></i>
-                        <span>Back</span>
+                        <span>Kembali</span>
                     </a>
 
                     <div
                         class="inline-flex items-center gap-2 px-3 py-2.5 mb-2 text-xs font-bold text-blue-700 border border-blue-100 rounded-full bg-blue-50">
-                        <i class="fa-solid fa-users-gear text-[10px]"></i> Access Control
+                        <i class="fa-solid fa-users-gear text-[10px]"></i> Pengaturan Akses
                     </div>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                        User Management
+                        Manajemen Pengguna
                     </h1>
                     <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
-                        Manage system user accounts, assign access roles, and set site permissions.
+                        Kelola akun pengguna, peran, dan akses lokasi.
                     </p>
                 </div>
 
                 <a href="{{ route('profile.create') }}"
                     class="inline-flex items-center justify-center gap-2 px-5 py-3 text-xs font-bold text-white transition-all bg-blue-600 shadow-md sm:text-sm hover:bg-blue-700 rounded-xl shadow-blue-600/20 active:scale-95 shrink-0">
                     <i class="text-xs fa-solid fa-user-plus"></i>
-                    <span>Add New User</span>
+                    <span>Tambah Pengguna</span>
                 </a>
             </div>
         </div>
@@ -38,16 +38,16 @@
         {{-- 2. TABLE CARD CONTAINER --}}
         <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
             <div class="overflow-x-auto">
-                <table id="datatable" class="w-full text-left border-collapse min-w-[700px]">
+                <table data-mobile-cards id="datatable" class="w-full text-left border-collapse min-w-[700px]">
                     <thead>
                         <tr
                             class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
                             <th scope="col" class="w-16 px-6 py-4 text-center">#</th>
-                            <th scope="col" class="px-6 py-4">User Information</th>
+                            <th scope="col" class="px-6 py-4">Informasi Pengguna</th>
                             <th scope="col" class="px-6 py-4">Email</th>
-                            <th scope="col" class="px-6 py-4">Role</th>
-                            <th scope="col" class="px-6 py-4">Site Assignment</th>
-                            <th scope="col" class="w-32 px-6 py-4 text-center">Actions</th>
+                            <th scope="col" class="px-6 py-4">Peran</th>
+                            <th scope="col" class="px-6 py-4">Penempatan Lokasi</th>
+                            <th scope="col" class="w-32 px-6 py-4 text-center">Aksi</th>
                         </tr>
                     </thead>
 
@@ -85,7 +85,7 @@
                                     @endphp
                                     <span
                                         class="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider border rounded-full {{ $roleClasses }}">
-                                        {{ str_replace('_', ' ', $user->role) }}
+                                        {{ \App\Support\UiText::label($user->role) }}
                                     </span>
                                 </td>
 
@@ -99,7 +99,7 @@
                                     @else
                                         <span
                                             class="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200/60 rounded-full">
-                                            All Sites (Head Office)
+                                            Semua Lokasi (Kantor Pusat)
                                         </span>
                                     @endif
                                 </td>
@@ -108,18 +108,18 @@
                                     <div class="flex items-center justify-center gap-1.5">
                                         <a href="{{ route('profile.profileEdit', $user->id) }}"
                                             class="flex items-center justify-center w-8 h-8 transition-all border rounded-xl text-amber-600 bg-amber-50 border-amber-100 hover:bg-amber-600 hover:text-white active:scale-95"
-                                            title="Edit User">
+                                            title="Ubah Pengguna">
                                             <i class="text-xs fa-solid fa-pen-to-square"></i>
                                         </a>
 
                                         <form action="{{ route('profile.destroy', $user->id) }}" method="POST"
-                                            onsubmit="return confirm('Are you sure you want to delete this user account?');"
+                                            onsubmit="return confirm('Yakin ingin menghapus akun pengguna ini?');"
                                             class="inline">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
                                                 class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
-                                                title="Delete User">
+                                                title="Hapus Pengguna">
                                                 <i class="text-xs fa-solid fa-trash-can"></i>
                                             </button>
                                         </form>
@@ -133,9 +133,8 @@
                                         class="flex items-center justify-center w-12 h-12 mx-auto mb-3 text-xl rounded-2xl bg-slate-100 text-slate-400">
                                         <i class="fa-solid fa-users-slash"></i>
                                     </div>
-                                    <p class="text-sm font-bold text-slate-800">No Registered Users Found</p>
-                                    <p class="mt-1 text-xs text-slate-400">Start by registering a new account for system
-                                        access.</p>
+                                    <p class="text-sm font-bold text-slate-800">Belum Ada Pengguna</p>
+                                    <p class="mt-1 text-xs text-slate-400">Tambahkan akun baru untuk memberikan akses sistem.</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -145,7 +144,7 @@
 
             <div class="p-4 border-t sm:p-6 bg-slate-50/50 border-slate-100">
                 <p class="text-xs font-bold tracking-wider uppercase text-slate-400">
-                    Showing {{ $users->count() }} Total User(s)
+                    Menampilkan {{ $users->count() }} Jumlah Pengguna
                 </p>
             </div>
         </div>

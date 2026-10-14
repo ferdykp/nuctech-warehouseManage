@@ -18,7 +18,7 @@ class ShiftController extends Controller
     {
         // Proteksi Role: Hanya Superadmin yang boleh membuat Shift baru
         if (Auth::user()->role !== 'superadmin') {
-            abort(403, 'Hanya Superadmin yang diizinkan menambah Master Shift.');
+            abort(403, 'Hanya Superadmin yang diizinkan menambah data induk giliran kerja.');
         }
 
         $request->validate([
@@ -36,14 +36,14 @@ class ShiftController extends Controller
             'is_off'     => $isOff,
         ]);
 
-        return redirect()->route('shift.index')->with('success', 'Master Shift berhasil ditambahkan!');
+        return redirect()->route('shift.index')->with('success', 'Giliran kerja berhasil ditambahkan.');
     }
 
     public function update(Request $request, Shift $shift)
     {
         // Proteksi Role: Hanya Superadmin yang boleh mengedit Shift
         if (Auth::user()->role !== 'superadmin') {
-            abort(403, 'Hanya Superadmin yang diizinkan mengedit Master Shift.');
+            abort(403, 'Hanya Superadmin yang diizinkan mengubah data induk giliran kerja.');
         }
 
         $request->validate([
@@ -61,17 +61,17 @@ class ShiftController extends Controller
             'is_off'     => $isOff,
         ]);
 
-        return redirect()->route('shift.index')->with('success', 'Master Shift berhasil diperbarui!');
+        return redirect()->route('shift.index')->with('success', 'Giliran kerja berhasil diperbarui.');
     }
 
     public function destroy(Shift $shift)
     {
         // Proteksi Role: Hanya Superadmin yang boleh menghapus Shift
         if (Auth::user()->role !== 'superadmin') {
-            abort(403, 'Hanya Superadmin yang diizinkan menghapus Master Shift.');
+            abort(403, 'Hanya Superadmin yang diizinkan menghapus data induk giliran kerja.');
         }
 
         $shift->delete();
-        return redirect()->route('shift.index')->with('success', 'Master Shift berhasil dihapus.');
+        return redirect()->route('shift.index')->with('success', 'Giliran kerja berhasil dihapus.');
     }
 }

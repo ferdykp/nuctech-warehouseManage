@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Branch Management')
+@section('title', 'Manajemen Cabang')
 
 @section('content')
     <div class="w-full space-y-6">
@@ -11,18 +11,17 @@
             <div>
                 <div
                     class="inline-flex items-center gap-2 px-3 py-1 mb-2 text-xs font-bold text-blue-700 border border-blue-100 rounded-full bg-blue-50">
-                    <i class="fa-solid fa-building text-[10px]"></i> Business Locations
+                    <i class="fa-solid fa-building text-[10px]"></i> Lokasi Usaha
                 </div>
-                <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">Branch Management</h1>
-                <p class="mt-1 text-xs font-medium sm:text-sm text-slate-500">Organize and monitor all business branch
-                    locations from a centralized dashboard.</p>
+                <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">Manajemen Cabang</h1>
+                <p class="mt-1 text-xs font-medium sm:text-sm text-slate-500">Kelola dan pantau seluruh lokasi cabang dalam satu halaman.</p>
             </div>
 
             @if (Auth::user()?->role === 'superadmin')
                 <button id="openModal" type="button"
                     class="inline-flex items-center justify-center gap-2 px-5 py-3 text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition-all rounded-xl shadow-lg shadow-blue-600/20 shrink-0 cursor-pointer">
                     <i class="text-sm fa-solid fa-plus"></i>
-                    <span>Add New Branch</span>
+                    <span>Tambah Cabang</span>
                 </button>
             @endif
         </div>
@@ -41,7 +40,7 @@
                             <i class="text-xs fa-solid fa-magnifying-glass"></i>
                         </span>
                         <input type="text" name="search" id="branchSearchInput"
-                            placeholder="Search branch name or code..." value="{{ request('search') }}" autocomplete="off"
+                            placeholder="Cari nama atau kode cabang..." value="{{ request('search') }}" autocomplete="off"
                             class="w-full pl-10 pr-8 py-2.5 text-xs sm:text-sm font-medium text-slate-800 bg-white border border-slate-200 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none transition-all placeholder:text-slate-400 shadow-2xs">
 
                         <button type="button" id="clearSearchBtn" onclick="clearSearch()"
@@ -52,7 +51,7 @@
 
                     <div class="flex items-center self-end gap-2 text-xs font-semibold text-slate-500 sm:self-center">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span>Live Data Sync</span>
+                        <span>Data Terkini</span>
                     </div>
                 </div>
             </div>
@@ -76,8 +75,8 @@
             {{-- MODAL HEADER --}}
             <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100">
                 <div>
-                    <h3 class="text-base font-extrabold text-slate-900">Create New Branch</h3>
-                    <p class="text-xs font-medium text-slate-500">Fill in the details to register a new location.</p>
+                    <h3 class="text-base font-extrabold text-slate-900">Tambah Cabang</h3>
+                    <p class="text-xs font-medium text-slate-500">Lengkapi informasi untuk mendaftarkan lokasi baru.</p>
                 </div>
                 <button id="closeModal" type="button"
                     class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-slate-600 hover:bg-slate-100">
@@ -93,7 +92,7 @@
                     {{-- BRANCH NAME --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Branch Name <span class="text-rose-500">*</span>
+                            Nama Cabang <span class="text-rose-500">*</span>
                         </label>
                         <div class="relative flex items-center">
                             <span
@@ -102,14 +101,14 @@
                             </span>
                             <input type="text" name="branch_name" required
                                 class="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-800 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none transition-all placeholder:text-slate-400"
-                                placeholder="e.g. Jakarta HQ">
+                                placeholder="Contoh: Jakarta HQ">
                         </div>
                     </div>
 
                     {{-- BRANCH CODE --}}
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Branch Code <span class="text-rose-500">*</span>
+                            Kode Cabang <span class="text-rose-500">*</span>
                         </label>
                         <div class="relative flex items-center">
                             <span
@@ -118,21 +117,21 @@
                             </span>
                             <input type="text" name="branch_code" required
                                 class="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm uppercase font-bold text-slate-800 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none transition-all placeholder:text-slate-400"
-                                placeholder="e.g. JKT01">
+                                placeholder="Contoh: JKT01">
                         </div>
                     </div>
                 </div>
 
                 {{-- BRANCH ADDRESS --}}
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Detailed Address</label>
+                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Alamat Lengkap</label>
                     <div class="relative">
                         <span class="absolute top-3 left-3.5 text-slate-400 pointer-events-none z-10">
                             <i class="text-xs fa-solid fa-location-dot"></i>
                         </span>
                         <textarea name="branch_address" rows="3"
                             class="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-800 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none transition-all placeholder:text-slate-400"
-                            placeholder="Street name, Building, City..."></textarea>
+                            placeholder="Nama jalan, gedung, kota..."></textarea>
                     </div>
                 </div>
 
@@ -140,12 +139,12 @@
                 <div class="flex items-center justify-end gap-3 pt-4 mt-6 border-t border-slate-100">
                     <button type="button" id="cancelModal"
                         class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">
-                        Discard
+                        Batal
                     </button>
 
                     <button type="submit"
                         class="px-5 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition-all rounded-xl shadow-md shadow-blue-600/20 cursor-pointer">
-                        <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Confirm & Save
+                        <i class="mr-1.5 fa-solid fa-floppy-disk"></i> Simpan
                     </button>
                 </div>
             </form>

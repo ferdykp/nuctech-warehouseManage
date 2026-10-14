@@ -1,13 +1,13 @@
 <div class="w-full overflow-x-auto">
-    <table class="w-full text-left border-collapse min-w-[700px]">
+    <table data-mobile-cards class="w-full text-left border-collapse min-w-[700px]">
         <thead>
             <tr
                 class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
-                <th class="px-6 py-4">Spare Part Information</th>
-                <th class="px-6 py-4">Site Location</th>
-                <th class="px-6 py-4 text-center">Stock</th>
-                <th class="px-6 py-4 text-center">Condition</th>
-                <th class="w-32 px-6 py-4 text-center">Action</th>
+                <th class="px-6 py-4">Informasi Suku Cadang</th>
+                <th class="px-6 py-4">Lokasi Mesin</th>
+                <th class="px-6 py-4 text-center">Stok</th>
+                <th class="px-6 py-4 text-center">Kondisi</th>
+                <th class="w-32 px-6 py-4 text-center">Aksi</th>
             </tr>
         </thead>
         <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
@@ -18,7 +18,7 @@
                     <td class="px-6 py-4">
                         <div class="flex flex-col max-w-[240px] sm:max-w-[320px]">
                             <span
-                                class="text-sm font-bold leading-snug text-slate-900">{{ $stock->sparepart?->item_name ?? 'Unnamed Item' }}</span>
+                                class="text-sm font-bold leading-snug text-slate-900">{{ $stock->sparepart?->item_name ?? 'Barang Tanpa Nama' }}</span>
                             <span
                                 class="font-mono text-[11px] text-slate-400 mt-0.5 tracking-wide flex items-center gap-1">
                                 <i class="fa-solid fa-barcode text-[10px] text-slate-300"></i>
@@ -36,9 +36,9 @@
                             </div>
                             <div class="flex flex-col min-w-0">
                                 <span
-                                    class="font-bold truncate text-slate-800">{{ $stock->site?->machine_name ?? 'Unassigned Site' }}</span>
+                                    class="font-bold truncate text-slate-800">{{ $stock->site?->machine_name ?? 'Lokasi Belum Ditentukan' }}</span>
                                 <span
-                                    class="text-[10px] font-semibold text-slate-400 uppercase truncate mt-0.5">{{ $stock->site?->branch?->branch_name ?? 'Branch HQ' }}</span>
+                                    class="text-[10px] font-semibold text-slate-400 uppercase truncate mt-0.5">{{ $stock->site?->branch?->branch_name ?? 'Kantor Pusat' }}</span>
                             </div>
                         </div>
                     </td>
@@ -65,7 +65,7 @@
                         @endphp
                         <span
                             class="inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-extrabold uppercase border tracking-wider {{ $colors[$stock->condition] ?? 'bg-slate-50 border-slate-200 text-slate-600' }}">
-                            {{ str_replace('-', ' ', $stock->condition) }}
+                            {{ \App\Support\UiText::label($stock->condition) }}
                         </span>
                     </td>
 
@@ -74,11 +74,11 @@
                         @if ($stock->site?->slug)
                             <a href="{{ route('sparepart.index', $stock->site->slug) }}"
                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-600 hover:text-white transition-all active:scale-95 shrink-0">
-                                <span>View Site</span>
+                                <span>Lihat Lokasi</span>
                                 <i class="fa-solid fa-arrow-right text-[10px]"></i>
                             </a>
                         @else
-                            <span class="text-xs italic font-semibold text-slate-300">No Site</span>
+                            <span class="text-xs italic font-semibold text-slate-300">Tidak Ada Lokasi</span>
                         @endif
                     </td>
                 </tr>
@@ -89,8 +89,8 @@
                             class="flex items-center justify-center w-12 h-12 mx-auto mb-3 text-xl rounded-2xl bg-slate-100 text-slate-400">
                             <i class="fa-solid fa-boxes-stacked"></i>
                         </div>
-                        <p class="text-sm font-bold text-slate-800">No Spareparts Found</p>
-                        <p class="mt-1 text-xs text-slate-400">There are no inventory records matching your query.</p>
+                        <p class="text-sm font-bold text-slate-800">Suku Cadang Tidak Ditemukan</p>
+                        <p class="mt-1 text-xs text-slate-400">Tidak ada stok yang sesuai dengan pencarian Anda.</p>
                     </td>
                 </tr>
             @endforelse

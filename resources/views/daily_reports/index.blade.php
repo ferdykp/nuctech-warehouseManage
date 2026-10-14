@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Daily Activity Reports')
+@section('title', 'Laporan Harian')
 
 @section('content')
     <div class="w-full space-y-6">
@@ -10,15 +10,15 @@
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                        <span class="transition-colors cursor-pointer hover:text-emerald-600">Infrastructure</span>
+                        <span class="transition-colors cursor-pointer hover:text-emerald-600">Lokasi dan Mesin</span>
                         <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                        <span class="font-extrabold text-emerald-600">Daily Activity Logs</span>
+                        <span class="font-extrabold text-emerald-600">Catatan Kegiatan Harian</span>
                     </nav>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                        Daily Activity Reports
+                        Laporan Harian
                     </h1>
                     <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
-                        Monitor daily machine site logs, inspection notes, and photo documentations.
+                        Pantau kegiatan harian, hasil pemeriksaan, dan dokumentasi foto di lokasi mesin.
                     </p>
                 </div>
 
@@ -26,17 +26,17 @@
                     {{-- TOMBOL RECYCLE BIN / ARCHIVE --}}
                     <a href="{{ route('daily_reports.trash') }}"
                         class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200/80 rounded-xl hover:bg-amber-100 active:scale-95 transition-all shadow-2xs cursor-pointer">
-                        <i class="fa-solid fa-box-archive text-amber-600"></i> Recycle Bin
+                        <i class="fa-solid fa-box-archive text-amber-600"></i> Sampah
                     </a>
 
                     <button type="button" onclick="openExportModal()"
                         class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 rounded-xl hover:bg-emerald-100 active:scale-95 transition-all shadow-2xs cursor-pointer">
-                        <i class="fa-solid fa-file-pdf text-emerald-600"></i> Export Report (PDF)
+                        <i class="fa-solid fa-file-pdf text-emerald-600"></i> Ekspor Laporan PDF
                     </button>
 
                     <a href="{{ route('daily_reports.create') }}"
                         class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold text-white transition-all bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer">
-                        <i class="fa-solid fa-plus"></i> New Report
+                        <i class="fa-solid fa-plus"></i> Laporan Baru
                     </a>
                 </div>
             </div>
@@ -53,11 +53,10 @@
                         {{-- SEARCH --}}
                         <div class="lg:col-span-3">
                             <label
-                                class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Search
-                                Notes</label>
+                                class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Cari Catatan</label>
                             <div class="relative">
                                 <input type="text" name="search" value="{{ request('search') }}"
-                                    placeholder="Search description..."
+                                    placeholder="Cari keterangan..."
                                     class="block w-full py-2.5 pl-9 pr-3.5 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-slate-800">
                                 <i class="absolute text-xs fa-solid fa-magnifying-glass left-3 top-3 text-slate-400"></i>
                             </div>
@@ -67,10 +66,10 @@
                         @if (in_array(auth()->user()->role, ['superadmin', 'administration']))
                             <div class="lg:col-span-2">
                                 <label
-                                    class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Branch</label>
+                                    class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Cabang</label>
                                 <select name="branch_id" id="filter_branch_id" onchange="filterSitesByBranch()"
                                     class="block w-full py-2.5 px-3 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-slate-800 cursor-pointer">
-                                    <option value="">All Branches</option>
+                                    <option value="">Semua Cabang</option>
                                     @foreach ($branches as $b)
                                         <option value="{{ $b->id }}"
                                             {{ request('branch_id') == $b->id ? 'selected' : '' }}>
@@ -82,11 +81,10 @@
 
                             <div class="lg:col-span-3">
                                 <label
-                                    class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Site
-                                    Location</label>
+                                    class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Lokasi Mesin</label>
                                 <select name="site_id" id="filter_site_id"
                                     class="block w-full py-2.5 px-3 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-slate-800 cursor-pointer">
-                                    <option value="">All Machine Sites</option>
+                                    <option value="">Semua Lokasi Mesin</option>
                                     @foreach ($sites as $s)
                                         <option value="{{ $s->id }}" data-branch="{{ $s->branch_id }}"
                                             {{ request('site_id') == $s->id ? 'selected' : '' }}>
@@ -99,10 +97,9 @@
                             {{-- NON-SUPERADMIN VIEW --}}
                             <div class="lg:col-span-5">
                                 <label
-                                    class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Site
-                                    Location</label>
+                                    class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Lokasi Mesin</label>
                                 <input type="text" disabled
-                                    value="{{ auth()->user()->site->machine_name ?? 'Your Assigned Site' }}"
+                                    value="{{ auth()->user()->site->machine_name ?? 'Lokasi Penempatan Anda' }}"
                                     class="block w-full py-2.5 px-3.5 text-xs font-semibold bg-slate-100 border border-slate-200 rounded-xl text-slate-500 cursor-not-allowed">
                             </div>
                         @endif
@@ -111,8 +108,7 @@
                         <div
                             class="{{ in_array(auth()->user()->role, ['superadmin', 'administration']) ? 'lg:col-span-2' : 'lg:col-span-2' }}">
                             <label
-                                class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Start
-                                Date</label>
+                                class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Tanggal Mulai</label>
                             <input type="date" name="start_date" value="{{ request('start_date') }}"
                                 class="block w-full py-2.5 px-3 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-slate-800 cursor-pointer">
                         </div>
@@ -120,8 +116,7 @@
                         {{-- END DATE --}}
                         <div
                             class="{{ in_array(auth()->user()->role, ['superadmin', 'administration']) ? 'lg:col-span-2' : 'lg:col-span-2' }}">
-                            <label class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">End
-                                Date</label>
+                            <label class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Tanggal Selesai</label>
                             <input type="date" name="end_date" value="{{ request('end_date') }}"
                                 class="block w-full py-2.5 px-3 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-slate-800 cursor-pointer">
                         </div>
@@ -131,7 +126,7 @@
                     <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200/60">
                         <a href="{{ route('daily_reports.index') }}"
                             class="px-4 py-2 text-xs font-bold transition-colors bg-white border text-slate-600 border-slate-200 rounded-xl hover:bg-slate-50">
-                            Reset Filters
+                            Atur Ulang Filters
                         </a>
                         <button type="submit"
                             class="px-5 py-2 text-xs font-bold text-white transition-colors shadow-xs cursor-pointer bg-emerald-600 rounded-xl hover:bg-emerald-700">
@@ -142,15 +137,15 @@
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse min-w-[700px]">
+                <table data-mobile-cards class="w-full text-left border-collapse min-w-[700px]">
                     <thead>
                         <tr
                             class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
-                            <th class="px-6 py-4">Date & Site</th>
-                            <th class="px-6 py-4">Reporter</th>
-                            <th class="px-6 py-4">Log Notes</th>
-                            <th class="px-6 py-4">Photos</th>
-                            <th class="px-6 py-4 text-center">Actions</th>
+                            <th class="px-6 py-4">Tanggal dan Lokasi</th>
+                            <th class="px-6 py-4">Pelapor</th>
+                            <th class="px-6 py-4">Catatan Kegiatan</th>
+                            <th class="px-6 py-4">Foto</th>
+                            <th class="px-6 py-4 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
@@ -158,7 +153,7 @@
                             <tr class="transition-colors hover:bg-slate-50/60">
                                 <td class="px-6 py-4">
                                     <span
-                                        class="block text-xs font-extrabold text-slate-900">{{ $report->report_date->format('d M Y') }}</span>
+                                        class="block text-xs font-extrabold text-slate-900">{{ $report->report_date->translatedFormat('d M Y') }}</span>
                                     <span
                                         class="block text-[11px] text-slate-400 font-semibold mt-0.5">{{ $report->site->machine_name ?? '-' }}
                                         ({{ $report->site->branch->branch_name ?? '-' }})
@@ -173,7 +168,7 @@
                                 <td class="px-6 py-4">
                                     <span
                                         class="px-2.5 py-1 text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 rounded-full">
-                                        {{ $report->photos->count() }} Photo(s)
+                                        {{ $report->photos->count() }} Foto
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
@@ -182,22 +177,22 @@
                                         <button type="button"
                                             onclick="showDetailModal({{ json_encode($report->load(['site.branch', 'user', 'photos'])) }})"
                                             class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-emerald-600 bg-emerald-50 border-emerald-100 hover:bg-emerald-600 hover:text-white active:scale-95"
-                                            title="View Details">
+                                            title="Lihat Rincian">
                                             <i class="text-xs fa-solid fa-eye"></i>
                                         </button>
 
                                         {{-- TOMBOL EDIT --}}
                                         <a href="{{ route('daily_reports.edit', $report->id) }}"
                                             class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-amber-600 bg-amber-50 border-amber-100 hover:bg-amber-600 hover:text-white active:scale-95"
-                                            title="Edit Report">
+                                            title="Ubah Laporan">
                                             <i class="text-xs fa-solid fa-pen-to-square"></i>
                                         </a>
 
                                         {{-- TOMBOL DELETE (DENGAN POPUP MODAL ARCHIVE) --}}
                                         <button type="button"
-                                            onclick="openDeleteModal({{ $report->id }}, '{{ $report->report_date->format('d M Y') }}', '{{ $report->site->machine_name ?? 'Site' }}')"
+                                            onclick="openDeleteModal({{ $report->id }}, '{{ $report->report_date->translatedFormat('d M Y') }}', '{{ $report->site->machine_name ?? 'Site' }}')"
                                             class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
-                                            title="Delete to Recycle Bin">
+                                            title="Hapus to Sampah">
                                             <i class="text-xs fa-solid fa-trash-can"></i>
                                         </button>
                                     </div>
@@ -208,7 +203,7 @@
                                 <td colspan="5" class="p-12 text-center text-slate-400">
                                     <p class="text-sm font-bold text-slate-800">Belum ada laporan harian</p>
                                     <p class="text-xs text-slate-400 mt-0.5">Coba ubah kata kunci atau rentang tanggal
-                                        filter Anda.</p>
+                                        filter yang dipilih.</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -232,10 +227,10 @@
                     <i class="text-xl fa-solid fa-box-archive"></i>
                 </div>
                 <div>
-                    <h3 class="text-base font-extrabold text-slate-900">Pindahkan ke Recycle Bin?</h3>
+                    <h3 class="text-base font-extrabold text-slate-900">Pindahkan ke Sampah?</h3>
                     <p class="mt-1 text-xs font-medium leading-relaxed text-slate-500">
                         Laporan <strong id="delete_report_info" class="text-slate-800"></strong> akan dipindahkan ke menu
-                        <strong class="text-amber-600">Recycle Bin / Archive</strong>. Data tidak langsung terhapus
+                        <strong class="text-amber-600">Sampah</strong>. Data tidak langsung terhapus
                         permanen dan bisa dikembalikan (*restore*) kapan saja.
                     </p>
                 </div>
@@ -251,7 +246,7 @@
                     </button>
                     <button type="submit"
                         class="px-5 py-2.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md shadow-amber-600/20 active:scale-95 transition-all cursor-pointer">
-                        <i class="mr-1 fa-solid fa-box-archive"></i> Ya, Archieve
+                        <i class="mr-1 fa-solid fa-box-archive"></i> Ya, Pindahkan
                     </button>
                 </div>
             </form>
@@ -270,7 +265,7 @@
                         <i class="text-base fa-solid fa-clipboard-list"></i>
                     </div>
                     <div>
-                        <h3 class="text-sm font-extrabold text-slate-900">Daily Report Detail</h3>
+                        <h3 class="text-sm font-extrabold text-slate-900">Rincian Laporan Harian</h3>
                         <p id="detail_meta" class="text-[11px] font-medium text-slate-500">-</p>
                     </div>
                 </div>
@@ -280,8 +275,7 @@
 
             <div class="p-6 space-y-5 overflow-y-auto">
                 <div>
-                    <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Log
-                        Note</label>
+                    <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Catatan Kegiatan</label>
                     <div id="detail_description"
                         class="p-4 text-xs font-medium leading-relaxed whitespace-pre-line border border-slate-200/80 rounded-2xl bg-slate-50 text-slate-800">
                         -
@@ -289,8 +283,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Photo
-                        Documentations</label>
+                    <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Dokumentasi Foto</label>
                     <div id="detail_photos_container" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <!-- Foto dinamis diinjeksi via JS -->
                     </div>
@@ -300,7 +293,7 @@
             <div class="flex items-center justify-end px-6 py-4 border-t border-slate-100 bg-slate-50/50 shrink-0">
                 <button type="button" onclick="closeDetailModal()"
                     class="px-5 py-2 text-xs font-bold transition-all cursor-pointer text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl">
-                    Close
+                    Tutup
                 </button>
             </div>
         </div>
@@ -317,7 +310,7 @@
                         <i class="text-base fa-solid fa-file-export"></i>
                     </div>
                     <div>
-                        <h3 class="text-sm font-extrabold text-slate-900">Export Daily Reports</h3>
+                        <h3 class="text-sm font-extrabold text-slate-900">Ekspor Laporan Harian</h3>
                         <p class="text-[11px] font-medium text-slate-500">Pilih rentang tanggal ekspor laporan.</p>
                     </div>
                 </div>
@@ -349,11 +342,11 @@
                 @if (in_array(auth()->user()->role, ['superadmin', 'administration']))
                     <div>
                         <label class="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
-                            Branch Location
+                            Lokasi Cabang
                         </label>
                         <select name="branch_id" id="export_branch_id" onchange="filterExportSitesByBranch()"
                             class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none text-slate-800 cursor-pointer focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
-                            <option value="all">🌐 All Branches</option>
+                            <option value="all">🌐 Semua Cabang</option>
                             @foreach ($branches as $b)
                                 <option value="{{ $b->id }}">{{ $b->branch_name }}</option>
                             @endforeach
@@ -362,11 +355,11 @@
 
                     <div>
                         <label class="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
-                            Machine Site <span class="font-extrabold text-emerald-600">(Superadmin Access)</span>
+                            Lokasi Mesin <span class="font-extrabold text-emerald-600">(Superadmin Access)</span>
                         </label>
                         <select name="site_id" id="export_site_id"
                             class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none text-slate-800 cursor-pointer focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
-                            <option value="all" class="font-bold text-emerald-700">🌐 All Machine Sites (Global Export)
+                            <option value="all" class="font-bold text-emerald-700">🌐 Semua Lokasi Mesin (Semua Lokasi Ekspor)
                             </option>
                             @foreach ($sites as $s)
                                 <option value="{{ $s->id }}" data-branch="{{ $s->branch_id }}">
@@ -400,7 +393,7 @@
                     <button type="button" onclick="closeExportModal()"
                         class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 cursor-pointer transition-colors">Batal</button>
                     <button type="submit" onclick="setTimeout(closeExportModal, 500)"
-                        class="px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer">Export
+                        class="px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer">Ekspor
                         PDF</button>
                 </div>
             </form>
@@ -440,7 +433,7 @@
             const options = siteSelect.querySelectorAll('option');
 
             options.forEach(option => {
-                if (!option.value) return; // Skip "All Machine Sites"
+                if (!option.value) return; // Skip "Semua Lokasi Mesin"
                 const optionBranch = option.getAttribute('data-branch');
                 if (!branchId || optionBranch === branchId) {
                     option.style.display = '';

@@ -35,11 +35,11 @@ class AuthController extends Controller
             $request->session()->put('last_activity_at', now()->timestamp);
 
             return redirect()->route('dashboard')
-                ->with('success', 'Login successful');
+                ->with('success', 'Berhasil masuk.');
         }
 
         return back()
-            ->withErrors(['username' => 'Username atau password salah'])
+            ->withErrors(['username' => 'Nama pengguna atau kata sandi salah.'])
             ->withInput($request->only('username'));
     }
 
@@ -51,6 +51,6 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login')
-            ->with('success', 'Logout successful');
+            ->with('success', 'Berhasil keluar.');
     }
 }

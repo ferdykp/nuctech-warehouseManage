@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Schedule Management')
+@section('title', 'Jadwal Kerja')
 
 @section('content')
     <div class="w-full space-y-6">
@@ -10,12 +10,12 @@
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                        <span class="transition-colors cursor-pointer hover:text-amber-600">Attendance & Roster</span>
+                        <span class="transition-colors cursor-pointer hover:text-amber-600">Absensi dan Jadwal</span>
                         <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                        <span class="font-extrabold text-amber-600">Work Schedules</span>
+                        <span class="font-extrabold text-amber-600">Jadwal Kerja</span>
                     </nav>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                        Employee Work Schedules
+                        Jadwal Kerja Karyawan
                     </h1>
                     <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
                         Kelola jadwal kerja, atur pola kerja site, dan buat rotasi tim secara otomatis dan efisien.
@@ -25,19 +25,19 @@
                     @if (in_array(Auth::user()?->role, ['superadmin', 'administration']))
                         <p
                             class="mt-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
-                            <i class="fa-solid fa-shield-halved"></i> Access Mode: System Administrator (All Sites Access)
+                            <i class="fa-solid fa-shield-halved"></i> Akses: Administrator Sistem (Semua Lokasi)
                         </p>
                     @elseif (Auth::user()?->role === 'team_leader')
                         <p
                             class="mt-2 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200/80 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
-                            <i class="fa-solid fa-user-gear"></i> Access Mode: Team Leader
-                            ({{ Auth::user()->site->machine_name ?? 'Registered Site' }})
+                            <i class="fa-solid fa-user-gear"></i> Akses: Ketua Tim
+                            ({{ Auth::user()->site->machine_name ?? 'Lokasi Terdaftar' }})
                         </p>
                     @else
                         <p
                             class="mt-2 text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200/80 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
-                            <i class="fa-solid fa-location-dot"></i> Site:
-                            {{ Auth::user()->site->machine_name ?? 'Registered Site' }}
+                            <i class="fa-solid fa-location-dot"></i> Lokasi:
+                            {{ Auth::user()->site->machine_name ?? 'Lokasi Terdaftar' }}
                         </p>
                     @endif
                 </div>
@@ -46,29 +46,29 @@
                 <div class="flex flex-wrap items-center gap-2.5 shrink-0">
                     <button type="button" onclick="openGenerateModal()"
                         class="inline-flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-amber-600 hover:bg-amber-700 rounded-xl shadow-amber-600/20 active:scale-95 cursor-pointer">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Rotas
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Buat Jadwal
                     </button>
 
                     {{-- EXPORT EXCEL BUTTON --}}
                     @if (in_array(Auth::user()?->role, ['superadmin', 'administration']))
                         <button type="button" onclick="openModal('modal-export-excel')"
                             class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95 cursor-pointer"
-                            title="Export schedule options">
-                            <i class="fa-solid fa-file-excel"></i> Export Excel
+                            title="Pilihan ekspor jadwal">
+                            <i class="fa-solid fa-file-excel"></i> Ekspor Excel
                         </button>
                     @else
                         <a href="{{ route('schedule.export', ['site_id' => Auth::user()->site_id, 'month' => $month, 'year' => $year]) }}"
                             up-follow="false" download
                             class="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95"
-                            title="Export schedule to Excel">
-                            <i class="fa-solid fa-file-excel"></i> Export Excel
+                            title="Ekspor jadwal ke Excel">
+                            <i class="fa-solid fa-file-excel"></i> Ekspor Excel
                         </a>
                     @endif
 
                     <!-- RESET SCHEDULE BUTTON -->
                     <button type="button" onclick="openModal('modal-clear')"
                         class="inline-flex items-center gap-2 px-3.5 py-2.5 text-xs font-bold text-rose-600 transition-all border border-rose-200/80 bg-rose-50 hover:bg-rose-100 rounded-xl active:scale-95 cursor-pointer">
-                        <i class="fa-solid fa-trash-can"></i> Reset Schedule
+                        <i class="fa-solid fa-trash-can"></i> Hapus Jadwal
                     </button>
                 </div>
             </div>
@@ -87,8 +87,7 @@
             <div
                 class="p-4 space-y-1.5 text-xs sm:text-sm border text-rose-800 border-rose-200/80 bg-rose-50 rounded-2xl shadow-2xs">
                 <div class="flex items-center gap-2 font-extrabold">
-                    <i class="fa-solid fa-triangle-exclamation text-rose-600 shrink-0"></i> Failed to process schedule
-                    update, please verify:
+                    <i class="fa-solid fa-triangle-exclamation text-rose-600 shrink-0"></i> Jadwal gagal diperbarui. Periksa isian berikut:
                 </div>
                 <ul class="list-disc pl-5 space-y-0.5 font-semibold">
                     @foreach ($errors->all() as $error)
@@ -111,7 +110,7 @@
                                 <i class="text-lg fa-solid fa-file-excel"></i>
                             </div>
                             <div>
-                                <h3 class="text-base font-extrabold text-slate-900">Export Schedule to Excel</h3>
+                                <h3 class="text-base font-extrabold text-slate-900">Ekspor Jadwal ke Excel</h3>
                                 <p class="text-xs font-medium text-slate-500 mt-0.5">Pilih cakupan site dan periode jadwal
                                     yang ingin diexport.</p>
                             </div>
@@ -122,12 +121,11 @@
 
                     <form action="{{ route('schedule.export') }}" method="GET" class="p-6 space-y-4">
                         <div class="space-y-1.5">
-                            <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Select Site
-                                Scope</label>
+                            <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Pilih Cakupan Lokasi</label>
                             <select name="site_id" id="export_site_id"
                                 class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all text-slate-800 cursor-pointer">
                                 <option value="all" {{ ($selectedSiteId ?? 'all') == 'all' ? 'selected' : '' }}>
-                                    🌐 All Sites (Semua Site)
+                                    🌐 Semua Lokasi (Semua Lokasi)
                                 </option>
                                 @foreach ($sites as $st)
                                     <option value="{{ $st->id }}"
@@ -140,19 +138,19 @@
 
                         <div class="grid grid-cols-2 gap-3">
                             <div class="space-y-1.5">
-                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Month</label>
+                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Bulan</label>
                                 <select name="month"
                                     class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all text-slate-800 cursor-pointer">
                                     @for ($m = 1; $m <= 12; $m++)
                                         <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
-                                            {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                                            {{ \Carbon\Carbon::create(2000, $m, 1)->translatedFormat('F') }}
                                         </option>
                                     @endfor
                                 </select>
                             </div>
 
                             <div class="space-y-1.5">
-                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Year</label>
+                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Tahun</label>
                                 <select name="year"
                                     class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all text-slate-800 cursor-pointer">
                                     @for ($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
@@ -165,10 +163,10 @@
 
                         <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                             <button type="button" onclick="closeModal('modal-export-excel')"
-                                class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">Cancel</button>
+                                class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">Batal</button>
                             <button type="submit" onclick="closeModal('modal-export-excel')"
                                 class="inline-flex items-center gap-2 px-6 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 rounded-xl hover:bg-emerald-700 shadow-emerald-600/20 active:scale-95 cursor-pointer">
-                                <i class="fa-solid fa-download"></i> Download Excel
+                                <i class="fa-solid fa-download"></i> Unduh Excel
                             </button>
                         </div>
                     </form>
@@ -187,12 +185,12 @@
                     {{-- FILTER SITE LOCATION --}}
                     <div class="w-full sm:w-64">
                         <label class="block mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-                            Site Location
+                            Lokasi Mesin
                         </label>
                         <select name="site_id" id="main_site_select"
                             class="w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all outline-none cursor-pointer">
                             <option value="all" {{ ($selectedSiteId ?? 'all') == 'all' ? 'selected' : '' }}>
-                                -- {{ Auth::user()?->role === 'team_leader' ? 'All Assigned Sites' : 'All Sites' }} --
+                                -- {{ Auth::user()?->role === 'team_leader' ? 'Semua Lokasi Penempatan' : 'Semua Lokasi' }} --
                             </option>
                             @foreach ($sites as $st)
                                 <option value="{{ $st->id }}"
@@ -205,12 +203,12 @@
 
                     <div class="w-1/2 sm:w-44">
                         <label
-                            class="block mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Month</label>
+                            class="block mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Bulan</label>
                         <select name="month" id="main_month_select"
                             class="w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all outline-none cursor-pointer">
                             @for ($m = 1; $m <= 12; $m++)
                                 <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
-                                    {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                                    {{ \Carbon\Carbon::create(2000, $m, 1)->translatedFormat('F') }}
                                 </option>
                             @endfor
                         </select>
@@ -218,7 +216,7 @@
 
                     <div class="w-1/2 sm:w-36">
                         <label
-                            class="block mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Year</label>
+                            class="block mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Tahun</label>
                         <select name="year" id="main_year_select"
                             class="w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all outline-none cursor-pointer">
                             @for ($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
@@ -239,7 +237,7 @@
             @if (!empty($holidays))
                 <div class="p-4 mx-5 border sm:mx-6 border-rose-200/80 rounded-2xl bg-rose-50/60">
                     <h6 class="flex items-center gap-2 mb-2 text-xs font-extrabold tracking-wider uppercase text-rose-700">
-                        <i class="fa-solid fa-circle-exclamation"></i> National Holidays & Red Dates This Month
+                        <i class="fa-solid fa-circle-exclamation"></i> Hari Libur Nasional dan Tanggal Merah Bulan Ini
                     </h6>
                     <ul class="grid grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-2 lg:grid-cols-3">
                         @foreach ($holidays as $date => $name)
@@ -262,11 +260,11 @@
             <div>
                 <div class="flex flex-col justify-between gap-3 px-5 pb-4 sm:px-6 lg:flex-row lg:items-center">
                     <div class="flex flex-wrap items-center gap-2">
-                        <h3 class="text-sm font-extrabold text-slate-900 sm:text-base">Monthly Schedule Grid</h3>
+                        <h3 class="text-sm font-extrabold text-slate-900 sm:text-base">Jadwal Bulanan</h3>
                         @if (Auth::user()?->role === 'team_leader')
                             <span
                                 class="px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200/80 rounded-md uppercase">
-                                Team Leader: {{ Auth::user()->site->machine_name ?? 'Registered' }}
+                                Ketua Tim: {{ Auth::user()->site->machine_name ?? 'Terdaftar' }}
                             </span>
                         @endif
                         <span
@@ -288,15 +286,15 @@
                             Shift 3</span>
                         <span class="flex items-center gap-1.5"><span
                                 class="inline-block w-2.5 h-2.5 rounded-xs bg-emerald-50 border border-emerald-200"></span>
-                            Other / OH</span>
+                            Lainnya / Jam Kantor</span>
                         <span class="flex items-center gap-1.5"><span
                                 class="inline-block w-2.5 h-2.5 rounded-xs bg-rose-50 border border-rose-200"></span>
-                            OFF</span>
+                            LIBUR</span>
                         <span class="flex items-center gap-1.5"><span
                                 class="inline-block w-2.5 h-2.5 rounded-xs bg-slate-100 border border-slate-300"></span>
-                            Resigned (N/A)</span>
+                            Sudah Berhenti</span>
                         <span class="flex items-center gap-1 font-extrabold text-rose-600"><i
-                                class="fa-solid fa-circle-exclamation"></i> National Holiday</span>
+                                class="fa-solid fa-circle-exclamation"></i> Libur Nasional</span>
                     </div>
                 </div>
 
@@ -307,7 +305,7 @@
                                 class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-y border-slate-100">
                                 <th
                                     class="w-48 px-4 py-3.5 text-left sticky left-0 top-0 bg-slate-50 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
-                                    Employee / Site
+                                    Karyawan / Lokasi
                                 </th>
 
                                 @foreach ($datesInMonth as $date)
@@ -331,13 +329,13 @@
 
                                 <th
                                     class="py-2.5 font-extrabold text-center text-blue-800 border-l border-slate-100 w-14 bg-blue-50/60">
-                                    <div>WORK</div>
-                                    <div class="text-[7px] text-blue-600 uppercase">(Days)</div>
+                                    <div>KERJA</div>
+                                    <div class="text-[7px] text-blue-600 uppercase">(Hari)</div>
                                 </th>
                                 <th
                                     class="py-2.5 font-extrabold text-center border-l text-rose-800 border-slate-100 w-14 bg-rose-50/60">
-                                    <div>OFF</div>
-                                    <div class="text-[7px] text-rose-600 uppercase">(Days)</div>
+                                    <div>LIBUR</div>
+                                    <div class="text-[7px] text-rose-600 uppercase">(Hari)</div>
                                 </th>
                             </tr>
                         </thead>
@@ -351,7 +349,7 @@
                                             @if ($emp->last_date)
                                                 <span
                                                     class="px-1.5 py-0.2 text-[8px] font-black text-rose-700 bg-rose-50 border border-rose-200 rounded-md shrink-0">
-                                                    Resigned
+                                                    Berhenti Bekerja
                                                 </span>
                                             @endif
                                         </div>
@@ -423,14 +421,14 @@
                                             class="p-1 text-center border-l border-slate-100 {{ $isAfterResign ? 'bg-slate-100/70' : '' }}">
                                             @if ($isAfterResign)
                                                 <span class="text-[9px] font-bold text-slate-300 select-none"
-                                                    title="Employee Resigned on {{ \Carbon\Carbon::parse($emp->last_date)->format('d M Y') }}">
+                                                    title="Hari terakhir bekerja: {{ \Carbon\Carbon::parse($emp->last_date)->translatedFormat('d M Y') }}">
                                                     N/A
                                                 </span>
                                             @else
                                                 <button type="button"
                                                     onclick="openEditShiftModal({{ $emp->id }}, '{{ addslashes($emp->name) }}', '{{ $date->format('Y-m-d') }}', '{{ $schedule?->shift_id ?? '' }}')"
                                                     class="w-full py-1 text-[9px] font-black border rounded-md transition-transform active:scale-95 cursor-pointer {{ $badgeColor }}"
-                                                    title="Click to edit shift ({{ $shiftName ?? 'Unassigned' }})">
+                                                    title="Klik untuk mengubah shift ({{ $shiftName ?? 'Belum Ditentukan' }})">
                                                     {{ $label }}
                                                 </button>
                                             @endif
@@ -453,12 +451,12 @@
                                             class="flex items-center justify-center w-12 h-12 mx-auto mb-3 text-xl rounded-2xl bg-slate-100 text-slate-400">
                                             <i class="fa-solid fa-calendar-xmark"></i>
                                         </div>
-                                        <p class="text-sm font-bold text-slate-800">No Schedule Data Found</p>
-                                        <p class="mt-1 text-xs text-slate-400">No rotas generated for this site & period.
+                                        <p class="text-sm font-bold text-slate-800">Jadwal Tidak Ditemukan</p>
+                                        <p class="mt-1 text-xs text-slate-400">Belum ada jadwal untuk lokasi dan periode ini.
                                         </p>
                                         <button type="button" onclick="openGenerateModal()"
                                             class="inline-flex items-center gap-1 mt-3 text-xs font-bold cursor-pointer text-amber-600 hover:underline">
-                                            Generate rotas now &rarr;
+                                            Buat jadwal sekarang &rarr;
                                         </button>
                                     </td>
                                 </tr>
@@ -478,7 +476,7 @@
                         <i class="text-lg fa-solid fa-calendar-day"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-extrabold text-slate-900">National Holiday Duty Roster</h3>
+                        <h3 class="text-base font-extrabold text-slate-900">Jadwal Tugas Hari Libur Nasional</h3>
                         <p class="text-xs font-medium text-slate-500 mt-0.5">Daftar karyawan yang memiliki jadwal
                             piket/masuk kerja khusus pada tanggal merah & hari libur nasional.</p>
                     </div>
@@ -494,12 +492,12 @@
                     <thead>
                         <tr
                             class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
-                            <th class="px-6 py-3.5">Employee Name</th>
-                            <th class="px-6 py-3.5">Site Location</th>
-                            <th class="px-6 py-3.5">Date & Day</th>
-                            <th class="px-6 py-3.5">National Holiday Event</th>
+                            <th class="px-6 py-3.5">Nama Karyawan</th>
+                            <th class="px-6 py-3.5">Lokasi Mesin</th>
+                            <th class="px-6 py-3.5">Tanggal dan Hari</th>
+                            <th class="px-6 py-3.5">Hari Libur Nasional</th>
                             <th class="px-6 py-3.5">Assigned Shift</th>
-                            <th class="px-6 py-3.5 text-center">Status Badge</th>
+                            <th class="px-6 py-3.5 text-center">Label Status</th>
                         </tr>
                     </thead>
                     <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
@@ -529,7 +527,7 @@
                                     <td class="px-6 py-3.5 text-center">
                                         <span
                                             class="px-2.5 py-0.5 text-[10px] font-extrabold text-rose-800 bg-rose-50 border border-rose-200/80 rounded-full">
-                                            National Holiday Duty
+                                            Tugas Hari Libur Nasional
                                         </span>
                                     </td>
                                 </tr>
@@ -563,7 +561,7 @@
             <div
                 class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50 shrink-0 sm:px-8">
                 <div>
-                    <h3 class="text-lg font-extrabold text-slate-900">Generate Team Rota Schedule</h3>
+                    <h3 class="text-lg font-extrabold text-slate-900">Buat Jadwal Rotasi Tim</h3>
                     <p class="mt-1 text-xs font-medium sm:text-sm text-slate-500">Atur pola kerja site dan generate jadwal
                         dalam satu alur secara terpadu.</p>
                 </div>
@@ -585,8 +583,7 @@
                                     <span
                                         class="flex items-center justify-center w-6 h-6 text-xs font-black text-white bg-teal-500 rounded-full shrink-0">1</span>
                                     <span
-                                        class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">Target
-                                        Sites & Periode</span>
+                                        class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">Lokasi dan Periode</span>
                                 </div>
 
                                 <div class="space-y-4">
@@ -595,14 +592,14 @@
                                         <div class="flex items-center justify-between mb-2">
                                             <label
                                                 class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                                Select Target Sites (Bisa Pilih Banyak Site Sekaligus)
+                                                Pilih Lokasi (Bisa Lebih dari Satu)
                                             </label>
                                             <label
                                                 class="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 cursor-pointer">
                                                 <input type="checkbox" id="check-all-sites"
                                                     onchange="toggleAllGenSites(this.checked)"
                                                     class="w-3.5 h-3.5 text-teal-600 border-slate-300 rounded focus:ring-teal-500 cursor-pointer">
-                                                Select All
+                                                Pilih Semua
                                             </label>
                                         </div>
 
@@ -625,8 +622,7 @@
                                     <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
                                         <div class="col-span-1">
                                             <label
-                                                class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Start
-                                                Day</label>
+                                                class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Hari Mulai</label>
                                             <input type="number" name="start_day" value="{{ old('start_day', 1) }}"
                                                 min="1" max="31"
                                                 class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all"
@@ -635,13 +631,13 @@
 
                                         <div class="col-span-1 sm:col-span-2">
                                             <label
-                                                class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Month</label>
+                                                class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Bulan</label>
                                             <select name="month" id="gen_month"
                                                 class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all cursor-pointer">
                                                 @for ($m = 1; $m <= 12; $m++)
                                                     <option value="{{ $m }}"
                                                         {{ $month == $m ? 'selected' : '' }}>
-                                                        {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                                                        {{ \Carbon\Carbon::create(2000, $m, 1)->translatedFormat('F') }}
                                                     </option>
                                                 @endfor
                                             </select>
@@ -649,7 +645,7 @@
 
                                         <div class="col-span-1">
                                             <label
-                                                class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Year</label>
+                                                class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tahun</label>
                                             <select name="year" id="gen_year"
                                                 class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all cursor-pointer">
                                                 @for ($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
@@ -669,36 +665,33 @@
                                         class="flex items-center justify-center w-6 h-6 text-xs font-black text-white rounded-full bg-amber-500 shrink-0">2</span>
                                     <span
                                         class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">Pola
-                                        Kerja Site</span>
+                                        Kerja Lokasi</span>
                                 </div>
                                 <p class="mb-4 text-[10px] font-medium leading-relaxed text-slate-500 ml-[34px]">
-                                    Pola ini akan otomatis disimpan untuk site yang dipilih saat Anda menekan Generate.
+                                    Pola ini akan otomatis disimpan untuk site yang dipilih saat Anda menekan Buat.
                                 </p>
 
                                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                     <div class="sm:col-span-1">
                                         <label
-                                            class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pattern
-                                            Type</label>
+                                            class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Jenis Pola</label>
                                         <select name="schedule_type" id="gen_schedule_type"
                                             onchange="onScheduleTypeChange()"
                                             class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all cursor-pointer">
-                                            <option value="office_hour">Office Hours (Mon - Fri)</option>
-                                            <option value="shift_rotation">Dynamic Shift Rotation</option>
+                                            <option value="office_hour">Jam Kantor (Senin–Jumat)</option>
+                                            <option value="shift_rotation">Rotasi Shift</option>
                                         </select>
                                     </div>
                                     <div id="gen_work_days_wrapper">
                                         <label
-                                            class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Work
-                                            Days</label>
+                                            class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Hari Kerja</label>
                                         <input type="number" name="work_days" id="gen_work_days" value="6"
                                             min="1"
                                             class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all">
                                     </div>
                                     <div id="gen_off_days_wrapper">
                                         <label
-                                            class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Off
-                                            Days</label>
+                                            class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Hari Libur</label>
                                         <input type="number" name="off_days" id="gen_off_days" value="2"
                                             min="1"
                                             class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all">
@@ -716,24 +709,24 @@
                                         <span
                                             class="flex items-center justify-center w-6 h-6 text-xs font-black text-white bg-blue-500 rounded-full shrink-0">3</span>
                                         <span
-                                            class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">Select
+                                            class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">Pilih
                                             Staff</span>
                                     </div>
                                     <label
                                         class="flex items-center gap-1.5 text-xs font-bold text-slate-600 cursor-pointer">
                                         <input type="checkbox" onchange="toggleAllEmployees(this.checked)"
                                             class="w-3.5 h-3.5 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
-                                        Select All
+                                        Pilih Semua
                                     </label>
                                 </div>
 
                                 <input type="text" id="employee-search" oninput="filterEmployees()"
-                                    placeholder="Search employee name..."
+                                    placeholder="Cari nama karyawan..."
                                     class="w-full p-2.5 mb-3 text-xs font-medium bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-slate-800 placeholder-slate-400 transition-all">
 
                                 <div id="employee-empty-notice"
                                     class="hidden p-3 mb-3 text-xs font-semibold text-center border border-dashed text-slate-400 border-slate-300 rounded-xl">
-                                    Centang minimal 1 Target Site di Step 1 untuk menampilkan daftar staff.
+                                    Pilih minimal satu lokasi pada tahap 1 untuk menampilkan daftar karyawan.
                                 </div>
 
                                 <div
@@ -752,12 +745,12 @@
                                                     @if ($emp->last_date)
                                                         <span
                                                             class="px-1.5 py-0.2 text-[8px] font-black text-rose-700 bg-rose-50 border border-rose-200 rounded-md shrink-0">
-                                                            Last:
+                                                            Terakhir:
                                                             {{ \Carbon\Carbon::parse($emp->last_date)->format('d M') }}
                                                         </span>
                                                     @endif
                                                 </div>
-                                                <span class="text-[10px] block text-slate-400 font-semibold">Site:
+                                                <span class="text-[10px] block text-slate-400 font-semibold">Lokasi:
                                                     {{ $emp->site->machine_name ?? '-' }}</span>
                                             </div>
                                         </label>
@@ -773,22 +766,21 @@
                             <span
                                 class="flex items-center justify-center w-6 h-6 text-xs font-black text-white bg-purple-500 rounded-full shrink-0">4</span>
                             <span class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">
-                                Set Shift Rotation & Custom Sequence
+                                Atur Rotasi dan Urutan Shift
                             </span>
                         </div>
 
                         <div id="oh-notice-banner"
                             class="hidden p-4 mb-4 text-xs font-medium leading-relaxed text-blue-800 border border-blue-200/80 bg-blue-50 rounded-xl">
                             <i class="mr-1.5 fa-solid fa-circle-info"></i>
-                            Pola dikonfigurasi untuk <strong>Office Hours</strong>. Jadwal akan otomatis dibuat untuk hari
+                            Pola dikonfigurasi untuk <strong>Jam Kantor</strong>. Jadwal akan otomatis dibuat untuk hari
                             kerja normal (Senin–Jumat) tanpa rotasi shift.
                         </div>
 
                         <div class="grid grid-cols-1 gap-5 lg:grid-cols-12">
                             <div class="lg:col-span-8">
                                 <div class="flex items-center justify-between mb-2">
-                                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Active
-                                        Shift Sequence</label>
+                                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Urutan Shift Aktif</label>
                                     <span class="text-[10px] text-slate-400 font-medium">Gunakan tombol <i
                                             class="fa-solid fa-arrow-up text-slate-500"></i> <i
                                             class="fa-solid fa-arrow-down text-slate-500"></i> untuk mengatur urutan
@@ -819,19 +811,19 @@
                                                 <span>{{ $sf->shift_name }} {{ $sf->is_off ? '(OFF/Libur)' : '' }}</span>
                                                 <span
                                                     class="start-badge hidden items-center gap-1 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white uppercase bg-purple-600 rounded-full">
-                                                    <i class="fa-solid fa-flag text-[8px]"></i> Start
+                                                    <i class="fa-solid fa-flag text-[8px]"></i> Mulai
                                                 </span>
                                             </label>
 
                                             <div class="flex items-center gap-1">
                                                 <button type="button" onclick="moveShiftItem(this, 'up')"
                                                     class="p-1.5 transition-colors rounded-lg text-slate-400 hover:text-purple-600 hover:bg-slate-200 cursor-pointer"
-                                                    title="Move Up">
+                                                    title="Geser ke Atas">
                                                     <i class="text-xs fa-solid fa-arrow-up"></i>
                                                 </button>
                                                 <button type="button" onclick="moveShiftItem(this, 'down')"
                                                     class="p-1.5 transition-colors rounded-lg text-slate-400 hover:text-purple-600 hover:bg-slate-200 cursor-pointer"
-                                                    title="Move Down">
+                                                    title="Geser ke Bawah">
                                                     <i class="text-xs fa-solid fa-arrow-down"></i>
                                                 </button>
                                             </div>
@@ -843,8 +835,7 @@
                             <div class="flex flex-col gap-5 lg:col-span-4">
                                 <div>
                                     <label
-                                        class="block mb-2 text-xs font-bold tracking-wider uppercase text-slate-700">Rotation
-                                        Starts With</label>
+                                        class="block mb-2 text-xs font-bold tracking-wider uppercase text-slate-700">Rotasi Dimulai dari</label>
                                     <input type="hidden" name="start_shift_id" id="gen_start_shift_id">
                                     <div id="start_shift_display"
                                         class="flex items-center gap-2 w-full p-2.5 text-xs font-bold bg-purple-50 border border-purple-200 rounded-xl text-purple-800 transition-colors">
@@ -852,14 +843,13 @@
                                         <span id="start_shift_display_text">—</span>
                                     </div>
                                     <p class="mt-2.5 text-[10px] text-slate-400 leading-relaxed font-medium">
-                                        Otomatis mengikuti shift paling atas di Active Shift Sequence.
+                                        Otomatis mengikuti shift paling atas di Urutan Shift Aktif.
                                     </p>
                                 </div>
 
                                 <div id="gen_shift_duration_wrapper">
                                     <label
-                                        class="block mb-2 text-xs font-bold tracking-wider uppercase text-slate-700">Shift
-                                        Duration (Days)</label>
+                                        class="block mb-2 text-xs font-bold tracking-wider uppercase text-slate-700">Durasi Shift (Hari)</label>
                                     <input type="number" name="shift_duration" id="gen_shift_duration"
                                         value="{{ old('shift_duration', 2) }}" min="1"
                                         class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 text-slate-800 transition-all">
@@ -875,13 +865,13 @@
                 {{-- STICKY FOOTER --}}
                 <div
                     class="flex flex-col-reverse items-center justify-between gap-3 px-6 py-4 border-t sm:flex-row border-slate-100 bg-slate-50/70 shrink-0 sm:px-8">
-                    <p id="employee-count" class="text-xs font-bold text-slate-500">No employees selected</p>
+                    <p id="employee-count" class="text-xs font-bold text-slate-500">Belum ada karyawan yang dipilih</p>
                     <div class="flex items-center gap-3">
                         <button type="button" onclick="closeModal('modal-generate')"
-                            class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">Cancel</button>
+                            class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">Batal</button>
                         <button type="submit" id="btn-submit-generate"
                             class="px-6 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-amber-600 hover:bg-amber-700 rounded-xl shadow-amber-600/20 active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                            <i class="mr-1.5 fa-solid fa-wand-magic-sparkles"></i> Save Pattern & Generate Schedules
+                            <i class="mr-1.5 fa-solid fa-wand-magic-sparkles"></i> Simpan Pola dan Buat Jadwal
                         </button>
                     </div>
                 </div>
@@ -896,7 +886,7 @@
         <div class="w-full max-w-sm overflow-hidden bg-white border shadow-2xl border-slate-100 rounded-3xl">
             <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50">
                 <div>
-                    <h3 class="text-base font-extrabold text-slate-900">Change Employee Shift</h3>
+                    <h3 class="text-base font-extrabold text-slate-900">Ubah Shift Karyawan</h3>
                     <p id="edit-shift-subtitle" class="text-xs font-medium text-slate-500 mt-0.5"></p>
                 </div>
                 <button type="button" onclick="closeModal('modal-edit-shift')"
@@ -909,7 +899,7 @@
                 <input type="hidden" id="edit_date" name="date">
 
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Select Shift</label>
+                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Pilih Shift</label>
                     <select id="edit_shift_id" name="shift_id"
                         class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-slate-800 cursor-pointer"
                         required>
@@ -923,9 +913,9 @@
 
                 <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                     <button type="button" onclick="closeModal('modal-edit-shift')"
-                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">Cancel</button>
+                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">Batal</button>
                     <button type="submit"
-                        class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 shadow-md rounded-xl hover:bg-blue-700 shadow-blue-600/20 active:scale-95 cursor-pointer">Save
+                        class="px-6 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 shadow-md rounded-xl hover:bg-blue-700 shadow-blue-600/20 active:scale-95 cursor-pointer">Simpan
                         Shift</button>
                 </div>
             </form>
@@ -944,8 +934,8 @@
                         <i class="text-base fa-solid fa-triangle-exclamation"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-extrabold text-slate-900">Reset Period Schedule</h3>
-                        <p class="text-xs font-medium text-slate-500 mt-0.5">Tindakan ini akan menghapus log jadwal pada
+                        <h3 class="text-base font-extrabold text-slate-900">Hapus Jadwal Periode</h3>
+                        <p class="text-xs font-medium text-slate-500 mt-0.5">Aksi ini akan menghapus log jadwal pada
                             site terpilih.</p>
                     </div>
                 </div>
@@ -963,16 +953,15 @@
 
                 <div
                     class="p-3.5 text-xs text-rose-800 border border-rose-200/80 bg-rose-50/80 rounded-2xl font-semibold leading-relaxed">
-                    Apakah Anda yakin ingin menghapus seluruh log jadwal untuk periode
+                    Yakin ingin menghapus seluruh log jadwal untuk periode
                     <strong>{{ date('F Y', mktime(0, 0, 0, $month, 1, $year)) }}</strong>?
                 </div>
 
                 <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                     <button type="button" onclick="closeModal('modal-clear')"
-                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">Cancel</button>
+                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">Batal</button>
                     <button type="submit"
-                        class="px-6 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-rose-600 rounded-xl hover:bg-rose-700 shadow-rose-600/20 active:scale-95 cursor-pointer">Yes,
-                        Delete Schedule</button>
+                        class="px-6 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-rose-600 rounded-xl hover:bg-rose-700 shadow-rose-600/20 active:scale-95 cursor-pointer">Ya, Hapus Jadwal</button>
                 </div>
             </form>
         </div>
@@ -1115,7 +1104,7 @@
                 badge?.classList.add('inline-flex');
             } else {
                 startShiftInput.value = '';
-                if (startShiftDisplayText) startShiftDisplayText.textContent = 'No active shift selected';
+                if (startShiftDisplayText) startShiftDisplayText.textContent = 'Belum ada shift yang dipilih';
             }
         }
 
@@ -1189,7 +1178,7 @@
             const btnSubmit = document.getElementById('btn-submit-generate');
 
             if (countEl) {
-                countEl.textContent = total > 0 ? `${total} employee(s) selected` : 'No employees selected';
+                countEl.textContent = total > 0 ? `${total} karyawan dipilih` : 'Belum ada karyawan yang dipilih';
             }
 
             if (btnSubmit) {
@@ -1265,11 +1254,11 @@
                     if (data.success) {
                         window.location.reload();
                     } else {
-                        alert(data.message || 'Failed to update shift');
+                        (window.showUiMessage || window.alert)(data.message || 'Giliran kerja gagal diperbarui');
                     }
                 })
                 .catch(err => {
-                    alert('A network error occurred.');
+                    (window.showUiMessage || window.alert)('Koneksi terputus. Periksa jaringan dan coba lagi.');
                 });
         }
     </script>

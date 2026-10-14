@@ -10,7 +10,9 @@ Sistem manajemen inventaris dan sparepart berbasis web yang dirancang khusus unt
 - **Bulk Import Excel (Smart Mapping)**: Fitur cerdas untuk mengimpor data sparepart secara massal melalui file Excel (.xlsx, .xls, .csv). Sistem akan secara otomatis mendeteksi kolom yang relevan dan menggunakan antarmuka AJAX dengan progress *real-time toast*.
 - **Export Excel dengan Gambar**: Mengekspor daftar inventaris sparepart pada suatu site ke dalam format Excel, lengkap dengan gambar (thumbnail) barang.
 - **Reporting System**: Pencatatan pelaporan (report) harian/berkala yang dilengkapi dengan dokumentasi foto.
-- **Role-based Access**: Hak akses yang dibedakan antara `Admin` (akses penuh untuk CRUD dan pemindahan stok) dan `User` (hanya melihat/read-only).
+- **Role-based Access**: `superadmin`, `administration`, `team_leader`, `station_master`, `manager`, dan `employee_role`, dengan pembatasan site dan tahap approval.
+- **HR & Payroll**: Data karyawan, jadwal, absensi, cuti, dan payroll bulanan.
+- **Reimbursement**: Pengajuan klaim, tanda tangan bertahap, import/export, dan recycle bin.
 
 ## 🛠️ Teknologi yang Digunakan
 
@@ -58,7 +60,13 @@ Pastikan Anda sudah menginstal:
    ```
 5. Buka file `.env` dan atur koneksi database Anda:
    ```env
-
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=nuctech_warehouse
+   DB_USERNAME=your_local_user
+   DB_PASSWORD=your_local_password
+   QUEUE_CONNECTION=database
    ```
 6. Buat tautan storage (agar gambar yang diupload bisa diakses publik):
    ```bash
@@ -83,3 +91,36 @@ Aplikasi sekarang dapat diakses di browser pada: `http://127.0.0.1:8000`
 
 ## 📄 Lisensi
 Aplikasi ini bersifat tertutup (Proprietary) dan ditujukan khusus untuk keperluan manajemen internal Nuctech. Menggandakan atau mendistribusikan source code tanpa izin tidak diperkenankan.
+
+## Pengujian
+
+```sh
+php artisan test
+node --test tests/Frontend/*.test.mjs
+npm run build
+```
+
+GitHub Actions menjalankan ketiga pemeriksaan pada push dan pull request. Tes backend menggunakan SQLite in-memory, storage palsu, dan HTTP fake. Tidak menggunakan database operasional atau mengirim notifikasi Telegram.
+
+## Perbaikan audit Oktober 2026
+
+- Fast approve hanya untuk superadmin; approval biasa tetap bertahap. Klaim yang sudah memiliki tanda tangan tidak dapat diedit. Pengajuan revisi dibuat sebagai klaim baru.
+- Pengelolaan master site hanya untuk superadmin. Slug site tetap stabil setelah nama diubah.
+- Seluruh aksi jadwal memakai scope site yang sama, termasuk kelompok mesin team leader yang sudah digunakan aplikasi. Akun tanpa site tidak memperoleh akses global.
+- Endpoint absensi hanya mengirim atribut yang dibutuhkan kalender.
+- Payroll historis tidak dihapus atau ditimpa saat generate ulang. Gaji periode yang sudah ada dipertahankan; pembuatan periode baru memakai histori gaji jika tersedia. Lembur hari libur berdasarkan absensi yang sudah disimpan, dengan kalkulasi yang sama pada halaman dan Excel. Rumus tarif dasar yang sudah ada dipertahankan.
+- Import reimbursement mendukung cell numerik dan teks Indonesia seperti `1.000.000,50`; format ambigu ditolak dengan nomor baris.
+- Kegagalan sinkronisasi kalender memakai data valid terakhir dan menampilkan peringatan; percobaan ulang paling cepat lima menit.
+
+### Penerapan ke database yang sudah ada
+
+```sh
+php artisan migrate
+php artisan queue:restart
+```
+
+Migrasi menambahkan `reports.site_id` dan memetakan slug/nama site lama yang cocok secara unik. Nilai lama yang ambigu/tidak cocok tetap disimpan dengan `site_id = null`; superadmin perlu meninjaunya melalui pencarian/ekspor laporan dan menetapkan site lewat edit. Jangan menebak pemetaan site lama.
+
+Penghapusan lampiran dijalankan oleh job setelah transaksi berhasil. Jalankan worker dengan supervisor pada server, misalnya `php artisan queue:work --tries=5`. Pantau `php artisan queue:failed` dan gunakan `queue:retry` setelah masalah storage diperbaiki. Migrasi dan worker harus diterapkan bersama perubahan kode.
+
+Periode payroll saat ini tetap mengikuti `created_at` sesuai skema lama; jangan mengubah timestamp histori secara manual. Pengujian MySQL produksi, beban besar, dan dokumen PDF kompleks tetap diperlukan sebelum rilis.

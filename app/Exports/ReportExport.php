@@ -10,7 +10,7 @@ class ReportExport implements FromCollection, WithHeadings
 {
     public function collection()
     {
-        return Report::orderByDesc('failure_date')->get(['id', 'attendant', 'site_machine', 'failure_date', 'failure_note', 'ts_procedure']);
+        return Report::accessible()->orderByDesc('failure_date')->get(['id', 'attendant', 'site_machine', 'failure_date', 'failure_note', 'ts_procedure']);
     }
 
     public function headings(): array

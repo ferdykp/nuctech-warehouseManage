@@ -1,16 +1,16 @@
 <div class="w-full overflow-x-auto bg-white">
-    <table class="w-full border-collapse min-w-[750px] text-left">
+    <table data-mobile-cards class="w-full border-collapse min-w-[750px] text-left">
         <thead>
             <tr
                 class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
-                <th class="w-16 px-6 py-4 text-center">No</th>
-                <th class="px-6 py-4">Item Information</th>
-                <th class="px-6 py-4 text-center">Serial Number</th>
-                <th class="px-6 py-4 text-center">Quantity</th>
-                <th class="px-6 py-4 text-center">Condition</th>
+                <th class="w-16 px-6 py-4 text-center">Nomor</th>
+                <th class="px-6 py-4">Informasi Barang</th>
+                <th class="px-6 py-4 text-center">Nomor Seri</th>
+                <th class="px-6 py-4 text-center">Jumlah</th>
+                <th class="px-6 py-4 text-center">Kondisi</th>
                 @if (Auth::user()?->role === 'superadmin' ||
                         (Auth::user()?->role === 'team_leader' && Auth::user()?->site_id === $siteData->id))
-                    <th class="px-6 py-4 text-right w-52">Actions</th>
+                    <th class="px-6 py-4 text-right w-52">Aksi</th>
                 @endif
             </tr>
         </thead>
@@ -27,9 +27,9 @@
                     <td class="px-6 py-4">
                         <div class="flex flex-col">
                             <span
-                                class="text-sm font-bold leading-snug text-slate-900">{{ $item->sparepart?->item_name ?? 'Unnamed Item' }}</span>
+                                class="text-sm font-bold leading-snug text-slate-900">{{ $item->sparepart?->item_name ?? 'Barang Tanpa Nama' }}</span>
                             <span class="text-[11px] text-slate-400 font-normal mt-0.5"><i
-                                    class="fa-solid fa-cube text-[10px] mr-1 text-slate-300"></i>{{ $item->sparepart?->type ?? 'Standard Model' }}</span>
+                                    class="fa-solid fa-cube text-[10px] mr-1 text-slate-300"></i>{{ $item->sparepart?->type ?? 'Model Standar' }}</span>
                         </div>
                     </td>
 
@@ -64,7 +64,7 @@
                         @endphp
                         <span
                             class="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider border rounded-lg shadow-2xs {{ $style }}">
-                            {{ str_replace('-', ' ', $item->condition) }}
+                            {{ \App\Support\UiText::label($item->condition) }}
                         </span>
                     </td>
 
@@ -77,7 +77,7 @@
                                 <button type="button"
                                     onclick="openAdjustModal({{ $item->id }}, '{{ addslashes($item->sparepart?->item_name ?? '') }}', {{ $item->qty }}, '{{ $item->condition }}')"
                                     class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-amber-600 bg-amber-50 border-amber-100 hover:bg-amber-600 hover:text-white active:scale-95"
-                                    title="Adjust Stock & Condition">
+                                    title="Sesuaikan Stok dan Kondisi">
                                     <i class="text-xs fa-solid fa-sliders"></i>
                                 </button>
 
@@ -85,7 +85,7 @@
                                 <button type="button" onclick="openEditModal(this)"
                                     data-item='@json($item->sparepart)'
                                     class="flex items-center justify-center w-8 h-8 text-blue-600 transition-all border border-blue-100 cursor-pointer rounded-xl bg-blue-50 hover:bg-blue-600 hover:text-white active:scale-95"
-                                    title="Edit Sparepart Info">
+                                    title="Ubah Informasi Suku Cadang">
                                     <i class="text-xs fa-solid fa-pen-to-square"></i>
                                 </button>
 
@@ -93,7 +93,7 @@
                                 <button type="button"
                                     onclick='openDetailModal(@json($item->sparepart), @json($all_sites))'
                                     class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-slate-600 bg-slate-100 border-slate-200 hover:bg-slate-900 hover:text-white active:scale-95"
-                                    title="View Full Details">
+                                    title="Lihat Rincian">
                                     <i class="text-xs fa-solid fa-eye"></i>
                                 </button>
 
@@ -101,14 +101,14 @@
                                 <button type="button"
                                     onclick="openMoveModal({{ $item->id }}, '{{ addslashes($item->sparepart?->item_name ?? '') }}', {{ $item->qty }}, '{{ $item->condition }}')"
                                     class="px-2.5 py-1.5 text-[10px] font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs transition-all active:scale-95 flex items-center gap-1 cursor-pointer">
-                                    <i class="fa-solid fa-truck-fast text-[10px]"></i> Move
+                                    <i class="fa-solid fa-truck-fast text-[10px]"></i> Pindahkan
                                 </button>
 
                                 {{-- DELETE --}}
                                 <button type="button"
-                                    onclick="openDeleteModal('{{ route('sparepart.stock.destroy', [$slug, $item->id]) }}', '{{ addslashes($item->sparepart?->item_name ?? '') }} ({{ strtoupper($item->condition) }})')"
+                                    onclick="openDeleteModal('{{ route('sparepart.stock.destroy', [$slug, $item->id]) }}', '{{ addslashes($item->sparepart?->item_name ?? '') }} ({{ \App\Support\UiText::label($item->condition) }})')"
                                     class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
-                                    title="Delete Condition Stock">
+                                    title="Hapus Stok Kondisi Ini">
                                     <i class="text-xs fa-solid fa-trash-can"></i>
                                 </button>
                             </div>
@@ -123,9 +123,8 @@
                             class="flex items-center justify-center w-12 h-12 mx-auto mb-3 text-xl rounded-2xl bg-slate-100 text-slate-400">
                             <i class="fa-solid fa-boxes-stacked"></i>
                         </div>
-                        <p class="text-sm font-bold text-slate-800">No Spareparts Registered</p>
-                        <p class="mt-1 text-xs text-slate-400">There are no inventory items assigned to this site
-                            location.</p>
+                        <p class="text-sm font-bold text-slate-800">Belum Ada Suku Cadang</p>
+                        <p class="mt-1 text-xs text-slate-400">Belum ada stok yang tercatat di lokasi ini.</p>
                     </td>
                 </tr>
             @endforelse

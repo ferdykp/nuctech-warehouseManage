@@ -52,7 +52,7 @@ class UserController extends Controller
             'site_id'  => $request->role === 'superadmin' ? null : $request->site_id,
         ]);
 
-        return redirect()->route('profile.profile')->with('success', 'User berhasil ditambahkan.');
+        return redirect()->route('profile.profile')->with('success', 'Pengguna berhasil ditambahkan.');
     }
 
     public function show($id)
@@ -119,11 +119,11 @@ class UserController extends Controller
         // Redirect dinamis berdasarkan role
         // if (auth()->user()->role === 'superadmin') {
         //     // Jika diubah oleh superadmin, arahkan kembali ke menu manajemen user terdekat
-        //     return redirect()->route('profile.profileList')->with('success', 'User berhasil diperbarui');
+        //     return redirect()->route('profile.profileList')->with('success', 'Pengguna berhasil diperbarui.');
         // }
         // Di dalam method update(), ubah baris 140 menjadi:
         if (auth()->user()->role === 'superadmin') {
-            return redirect()->route('profile.profile')->with('success', 'User berhasil diperbarui');
+            return redirect()->route('profile.profile')->with('success', 'Pengguna berhasil diperbarui.');
         }
         // Jika akun biasa mengedit profilnya sendiri, kembalikan ke detail profilnya sendiri
         return redirect()->route('profile.profile', $user->id)->with('success', 'Profil Anda berhasil diperbarui');
@@ -143,6 +143,6 @@ class UserController extends Controller
 
         $user->delete();
 
-        return redirect()->route('profile.profile')->with('success', 'User berhasil dihapus.');
+        return redirect()->route('profile.profile')->with('success', 'Pengguna berhasil dihapus.');
     }
 }

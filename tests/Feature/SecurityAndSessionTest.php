@@ -217,14 +217,26 @@ class SecurityAndSessionTest extends TestCase
         $payload['message']['from']['id'] = 123; $payload['message']['text'] = '/help';
         $this->postJson('/telegram/webhook', $payload)->assertOk();
     }
-    public function test_primary_pages_render_for_superadmin(): void
+    public static function primaryPages(): array
+    {
+        return array_map(fn ($url) => [$url], ['/dashboard', '/categories', '/sites', '/branches', '/shift', '/report/create', '/spareparts/all', '/reimbursements', '/reimbursements/create', '/daily-reports', '/daily-reports/create', '/attendance', '/schedules', '/leave', '/leave/create', '/employee', '/employee/create', '/salary', '/salary/create', '/profile/profileList']);
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('primaryPages')]
+    public function test_primary_pages_render_for_superadmin(string $url): void
     {
         $site = $this->site();
         $this->employee($site);
+        $this->actingAs($this->user('superadmin'))->get($url)->assertOk();
+    }
+
+    public function test_site_pages_and_report_redirect(): void
+    {
+        $site = $this->site();
         $this->actingAs($this->user('superadmin'));
-        foreach (['/dashboard', '/categories', '/sites', '/branches', '/shift', '/report', '/report/create', '/spareparts/all', '/inventory/'.$site->slug, '/reimbursements', '/reimbursements/create', '/daily-reports', '/daily-reports/create', '/attendance', '/schedules', '/leave', '/leave/create', '/employee', '/employee/create', '/salary', '/salary/create', '/profile/profileList'] as $url) {
-            $this->get($url)->assertOk();
-        }
+        $this->get('/report')->assertRedirect(route('report.index', $site->slug));
+        $this->get('/report/'.$site->slug)->assertOk();
+        $this->get('/inventory/'.$site->slug)->assertOk();
     }
 
     public function test_invalid_schedule_generation_does_not_write_patterns(): void

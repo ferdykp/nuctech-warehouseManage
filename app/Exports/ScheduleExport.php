@@ -83,16 +83,12 @@ class ScheduleExport implements FromCollection, WithTitle, WithStyles, WithDrawi
                 ->with('shift');
         }]);
 
-        // Perbaikan penanganan hak akses site agar aman untuk team_leader saat proses export
-        if ($user && !in_array($user->role, ['superadmin', 'administration'])) {
-            $allowedSiteId = ($this->siteId === 'all') ? $user->site_id : $this->siteId;
-            if ($allowedSiteId) {
-                $employeesQuery->where('site_id', $allowedSiteId);
-            }
-        } else {
-            if ($this->siteId !== 'all' && !empty($this->siteId)) {
-                $employeesQuery->where('site_id', $this->siteId);
-            }
+        if ($user) {
+            $employeesQuery->whereIn('site_id', \App\Services\SiteAccess::sites($user, true)->select('id'));
+        }
+        if ($this->siteId !== 'all' && !empty($this->siteId)) {
+            if ($user) \App\Services\SiteAccess::authorize($this->siteId, true);
+            $employeesQuery->where('site_id', $this->siteId);
         }
 
         $employeesQuery->where(fn($q) => $q->whereNull('resign_date')->orWhere('resign_date', '>=', $startDate->format('Y-m-d')));

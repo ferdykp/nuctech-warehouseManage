@@ -23,12 +23,12 @@ class GlobalSparepartExport implements FromQuery, WithMapping, WithHeadings, Sho
     {
         $query = SparepartStock::with(['sparepart', 'site.branch']);
 
+        $query->whereIn('site_id', \App\Services\SiteAccess::sites(auth()->user())->select('id'));
         if ($this->search) {
-            $query->whereHas('sparepart', function ($q) {
-                $q->where('item_name', 'like', '%' . $this->search . '%')
-                    ->orWhere('serial_number', 'like', '%' . $this->search . '%');
-            })->orWhereHas('site', function ($q) {
-                $q->where('machine_name', 'like', '%' . $this->search . '%');
+            $query->where(function ($root) {
+                $root->whereHas('sparepart', fn ($q) => $q->where('item_name', 'like', '%'.$this->search.'%')
+                    ->orWhere('serial_number', 'like', '%'.$this->search.'%'))
+                    ->orWhereHas('site', fn ($q) => $q->where('machine_name', 'like', '%'.$this->search.'%'));
             });
         }
 

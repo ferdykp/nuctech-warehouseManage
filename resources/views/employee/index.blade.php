@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Employee Directory')
+@section('title', 'Daftar Karyawan')
 
 @section('content')
     <div class="w-full space-y-6">
@@ -36,30 +36,30 @@
                 <div>
                     <div
                         class="inline-flex items-center gap-2 px-3 py-1 mb-2 text-xs font-bold text-blue-700 border border-blue-100 rounded-full bg-blue-50">
-                        <i class="fa-solid fa-users text-[10px]"></i> Human Resources
+                        <i class="fa-solid fa-users text-[10px]"></i> Kepegawaian
                     </div>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                        Employee Management
+                        Manajemen Karyawan
                     </h1>
                     <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
-                        Directory of site staff, positions, salary allocations, and employment tenures.
+                        Kelola data karyawan, jabatan, gaji, dan masa kerja.
                     </p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2 shrink-0">
                     <button type="button" onclick="openImportModal()"
                         class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-emerald-700 transition-all bg-emerald-50 border border-emerald-200/80 hover:bg-emerald-600 hover:text-white rounded-xl active:scale-95 cursor-pointer">
-                        <i class="fa-solid fa-file-import"></i> Import Excel
+                        <i class="fa-solid fa-file-import"></i> Impor Excel
                     </button>
 
                     <a id="btn-export-excel" href="{{ route('employee.export', request()->query()) }}" download
                         class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-700 transition-all bg-slate-100 border border-slate-200/80 hover:bg-slate-800 hover:text-white rounded-xl active:scale-95">
-                        <i class="fa-solid fa-file-excel"></i> Export Excel
+                        <i class="fa-solid fa-file-excel"></i> Ekspor Excel
                     </a>
 
                     <a href="{{ route('employee.create') }}"
                         class="flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 shadow-md hover:bg-blue-700 rounded-xl shadow-blue-600/20 active:scale-95">
-                        <i class="text-xs fa-solid fa-user-plus"></i> Add Employee
+                        <i class="text-xs fa-solid fa-user-plus"></i> Tambah Karyawan
                     </a>
                 </div>
             </div>
@@ -76,7 +76,7 @@
                     </div>
                     <div>
                         <h3 class="text-xs font-extrabold tracking-wider uppercase text-amber-900 sm:text-sm">
-                            Join Date Karyawan Bulan {{ $monthsList[$bannerMonth] }}
+                            Karyawan yang Bergabung pada Bulan {{ $monthsList[$bannerMonth] }}
                         </h3>
                         <p class="text-[11px] font-medium text-amber-700">
                             Evaluasi Perpanjangan Kontrak Tahunan & Masa Kerja Karyawan
@@ -127,13 +127,13 @@
                                     {{ $emp->name }}
                                 </div>
                                 <div class="text-[10px] font-semibold text-slate-500 truncate">
-                                    {{ $emp->site->machine_name ?? 'Site N/A' }} • {{ $emp->position ?? 'Staff' }}
+                                    {{ $emp->site->machine_name ?? 'Lokasi Belum Ditentukan' }} • {{ $emp->position ?? 'Karyawan' }}
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
                                 <span
                                     class="px-2.5 py-1 text-[11px] font-black text-amber-900 bg-amber-100/90 border border-amber-200 rounded-xl inline-block">
-                                    {{ $joinDate->format('d M Y') }}
+                                    {{ $joinDate->translatedFormat('d M Y') }}
                                 </span>
                             </div>
                         </div>
@@ -162,7 +162,7 @@
                                     <i class="text-xs fa-solid fa-magnifying-glass"></i>
                                 </div>
                                 <input type="text" name="search" id="search"
-                                    placeholder="Search name, NIK, email, position..." value="{{ request('search') }}"
+                                    placeholder="Cari nama, NIK, email, atau jabatan..." value="{{ request('search') }}"
                                     class="block w-full py-2.5 pl-10 pr-8 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-800 placeholder-slate-400 shadow-2xs">
                                 <button type="button" id="clearSearchBtn" onclick="clearSearchInput()"
                                     class="absolute inset-y-0 right-0 flex items-center hidden pr-3 cursor-pointer text-slate-400 hover:text-slate-600">
@@ -172,25 +172,27 @@
 
                             <button type="button" id="btn-reset-filter"
                                 class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-600 transition-colors bg-white border border-slate-200 rounded-xl hover:bg-slate-100 hover:text-slate-800 active:scale-95 shrink-0 shadow-2xs cursor-pointer">
-                                <i class="fa-solid fa-rotate-left text-[11px]"></i> Reset Filter
+                                <i class="fa-solid fa-rotate-left text-[11px]"></i> Atur Ulang Filter
                             </button>
                         </div>
 
+                        <details class="ui-filter-details" {{ collect(request()->only(['join_month', 'join_day', 'status', 'site_id', 'branch_id', 'mcu', 'tld', 'bank_name']))->filter()->isNotEmpty() ? 'open' : '' }}>
+                            <summary class="cursor-pointer py-2 text-sm font-semibold text-slate-700">Filter tambahan (tanggal, status, lokasi, dan bank)</summary>
                         {{-- Filter Grid --}}
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
                             {{-- Filter Join Month --}}
                             <div>
                                 <label
                                     class="block mb-1.5 text-[10px] font-extrabold text-amber-700 uppercase tracking-wider">
-                                    <i class="mr-1 fa-solid fa-calendar-days text-amber-600"></i> Join Month
+                                    <i class="mr-1 fa-solid fa-calendar-days text-amber-600"></i> Bulan Bergabung
                                 </label>
                                 <select name="join_month" id="filter_join_month"
                                     class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border outline-none cursor-pointer border-amber-200 rounded-xl focus:border-amber-500 text-slate-800">
-                                    <option value="">All Months</option>
+                                    <option value="">Semua Bulan</option>
                                     @for ($m = 1; $m <= 12; $m++)
                                         <option value="{{ $m }}"
                                             {{ request('join_month') == $m ? 'selected' : '' }}>
-                                            {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                                            {{ \Carbon\Carbon::create(2000, $m, 1)->translatedFormat('F') }}
                                         </option>
                                     @endfor
                                 </select>
@@ -200,15 +202,15 @@
                             <div>
                                 <label
                                     class="block mb-1.5 text-[10px] font-extrabold text-amber-700 uppercase tracking-wider">
-                                    <i class="mr-1 fa-solid fa-calendar-day text-amber-600"></i> Join Date
+                                    <i class="mr-1 fa-solid fa-calendar-day text-amber-600"></i> Tanggal Bergabung
                                 </label>
                                 <select name="join_day" id="filter_join_day"
                                     class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border outline-none cursor-pointer border-amber-200 rounded-xl focus:border-amber-500 text-slate-800">
-                                    <option value="">All Days</option>
+                                    <option value="">Semua Tanggal</option>
                                     @for ($d = 1; $d <= 31; $d++)
                                         <option value="{{ $d }}"
                                             {{ request('join_day') == $d ? 'selected' : '' }}>
-                                            Date {{ $d }}
+                                            Tanggal {{ $d }}
                                         </option>
                                     @endfor
                                 </select>
@@ -220,27 +222,26 @@
                                     class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Status</label>
                                 <select name="status" id="filter_status"
                                     class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border outline-none cursor-pointer border-slate-200 rounded-xl focus:border-blue-500 text-slate-800">
-                                    <option value="">All Statuses</option>
+                                    <option value="">Semua Status</option>
                                     <option value="Permanent" {{ request('status') == 'Permanent' ? 'selected' : '' }}>
-                                        Permanent</option>
+                                        Tetap</option>
                                     <option value="Contract" {{ request('status') == 'Contract' ? 'selected' : '' }}>
-                                        Contract</option>
+                                        Kontrak</option>
                                     <option value="Probation" {{ request('status') == 'Probation' ? 'selected' : '' }}>
-                                        Probation</option>
-                                    <option value="Daily" {{ request('status') == 'Daily' ? 'selected' : '' }}>Daily
+                                        Masa Percobaan</option>
+                                    <option value="Daily" {{ request('status') == 'Daily' ? 'selected' : '' }}>Harian
                                     </option>
                                     <option value="Resigned" {{ request('status') == 'Resigned' ? 'selected' : '' }}>🔴
-                                        Resigned</option>
+                                        Berhenti Bekerja</option>
                                 </select>
                             </div>
 
                             <div>
                                 <label
-                                    class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Site
-                                    Location</label>
+                                    class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Lokasi Mesin</label>
                                 <select name="site_id" id="filter_site"
                                     class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border outline-none cursor-pointer border-slate-200 rounded-xl focus:border-blue-500 text-slate-800">
-                                    <option value="">All Sites</option>
+                                    <option value="">Semua Lokasi</option>
                                     @foreach ($sites as $site)
                                         <option value="{{ $site->id }}"
                                             {{ request('site_id') == $site->id ? 'selected' : '' }}>
@@ -252,10 +253,10 @@
 
                             <div>
                                 <label
-                                    class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Branch</label>
+                                    class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Cabang</label>
                                 <select name="branch_id" id="filter_branch"
                                     class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border outline-none cursor-pointer border-slate-200 rounded-xl focus:border-blue-500 text-slate-800">
-                                    <option value="">All Branches</option>
+                                    <option value="">Semua Cabang</option>
                                     @foreach ($branches as $branch)
                                         <option value="{{ $branch->id }}"
                                             {{ request('branch_id') == $branch->id ? 'selected' : '' }}>
@@ -267,39 +268,36 @@
 
                             <div>
                                 <label
-                                    class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">MCU
-                                    Status</label>
+                                    class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Status MCU</label>
                                 <select name="mcu" id="filter_mcu"
                                     class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border outline-none cursor-pointer border-slate-200 rounded-xl focus:border-blue-500 text-slate-800">
-                                    <option value="">All MCU</option>
-                                    <option value="yes" {{ request('mcu') == 'yes' ? 'selected' : '' }}>Passed (YES)
+                                    <option value="">Semua Status MCU</option>
+                                    <option value="yes" {{ request('mcu') == 'yes' ? 'selected' : '' }}>Lulus (Ya)
                                     </option>
-                                    <option value="no" {{ request('mcu') == 'no' ? 'selected' : '' }}>Pending (NO)
+                                    <option value="no" {{ request('mcu') == 'no' ? 'selected' : '' }}>Belum (Tidak)
                                     </option>
                                 </select>
                             </div>
 
                             <div>
                                 <label
-                                    class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">TLD
-                                    Badge</label>
+                                    class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Kartu TLD</label>
                                 <select name="tld" id="filter_tld"
                                     class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border outline-none cursor-pointer border-slate-200 rounded-xl focus:border-blue-500 text-slate-800">
-                                    <option value="">All TLD</option>
-                                    <option value="yes" {{ request('tld') == 'yes' ? 'selected' : '' }}>Active (YES)
+                                    <option value="">Semua Status TLD</option>
+                                    <option value="yes" {{ request('tld') == 'yes' ? 'selected' : '' }}>Aktif (Ya)
                                     </option>
-                                    <option value="no" {{ request('tld') == 'no' ? 'selected' : '' }}>None (NO)
+                                    <option value="no" {{ request('tld') == 'no' ? 'selected' : '' }}>Tidak Ada
                                     </option>
                                 </select>
                             </div>
 
                             <div>
                                 <label
-                                    class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Bank
-                                    Name</label>
+                                    class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Nama Bank</label>
                                 <select name="bank_name" id="filter_bank"
                                     class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border outline-none cursor-pointer border-slate-200 rounded-xl focus:border-blue-500 text-slate-800">
-                                    <option value="">All Banks</option>
+                                    <option value="">Semua Bank</option>
                                     @php
                                         $bankList = [
                                             'BCA',
@@ -321,6 +319,7 @@
                                 </select>
                             </div>
                         </div>
+                        </details>
                     </div>
                 </div>
             </form>
@@ -337,7 +336,7 @@
         <div class="w-full max-w-md mx-auto overflow-hidden bg-white border shadow-2xl border-slate-100 rounded-3xl">
             <div class="flex items-center justify-between px-6 py-5 text-white bg-slate-900">
                 <h5 class="flex items-center gap-2.5 text-xs font-extrabold tracking-wider uppercase">
-                    <i class="text-emerald-400 fa-solid fa-file-excel"></i> Import Employees Excel
+                    <i class="text-emerald-400 fa-solid fa-file-excel"></i> Impor Karyawan Excel
                 </h5>
                 <button type="button" onclick="closeImportModal()"
                     class="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">&times;</button>
@@ -346,17 +345,17 @@
                 class="p-6 space-y-4">
                 @csrf
                 <div>
-                    <label class="block mb-1.5 text-xs font-bold uppercase tracking-wider text-slate-700">Select Excel File
+                    <label class="block mb-1.5 text-xs font-bold uppercase tracking-wider text-slate-700">Pilih File Excel
                         (.xlsx, .xls)</label>
                     <input type="file" name="file" required accept=".xlsx, .xls, .csv"
                         class="block w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-200 rounded-xl">
                 </div>
                 <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
                     <button type="button" onclick="closeImportModal()"
-                        class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800">Cancel</button>
+                        class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800">Batal</button>
                     <button type="submit"
-                        class="px-5 py-2 text-xs font-bold text-white shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl">Upload
-                        & Import</button>
+                        class="px-5 py-2 text-xs font-bold text-white shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl">Unggah
+                        & Impor</button>
                 </div>
             </form>
         </div>
@@ -368,7 +367,7 @@
         <div class="w-full max-w-2xl mx-auto overflow-hidden bg-white border shadow-2xl border-slate-100 rounded-3xl">
             <div class="flex items-center justify-between px-6 py-5 text-white bg-slate-900">
                 <h5 class="flex items-center gap-2.5 text-xs font-extrabold tracking-wider uppercase">
-                    <i class="text-blue-400 fa-solid fa-id-card"></i> Employee Specifications
+                    <i class="text-blue-400 fa-solid fa-id-card"></i> Rincian Karyawan
                 </h5>
                 <button type="button" onclick="closeEmployeeModal()"
                     class="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">&times;</button>
@@ -396,17 +395,16 @@
                         <strong class="block text-xs truncate sm:text-sm text-slate-800" id="detail_email">-</strong>
                     </div>
                     <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
-                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Phone</span>
+                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Telepon</span>
                         <strong class="text-xs sm:text-sm text-slate-800" id="detail_phone">-</strong>
                     </div>
                     <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
-                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Site
-                            Location</span>
+                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Lokasi Mesin</span>
                         <strong class="text-xs sm:text-sm text-slate-800" id="detail_site">-</strong>
                     </div>
                     <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
                         <span
-                            class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Branch</span>
+                            class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Cabang</span>
                         <strong class="text-xs sm:text-sm text-slate-800" id="detail_branch">-</strong>
                     </div>
                     <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
@@ -419,7 +417,7 @@
                     <div class="p-3.5 border border-emerald-200/80 rounded-2xl bg-emerald-50/40 col-span-2 md:col-span-1">
                         <div class="flex items-center justify-between mb-1">
                             <span class="font-bold text-emerald-600 uppercase text-[10px] tracking-wider">Gaji Pokok</span>
-                            <button type="button" onclick="toggleSalaryVisibility()" title="Toggle Privasi Gaji"
+                            <button type="button" onclick="toggleSalaryVisibility()" title="Tampilkan atau sembunyikan gaji"
                                 class="transition-colors cursor-pointer text-emerald-700 hover:text-emerald-900 focus:outline-none">
                                 <i id="salary_toggle_icon" class="text-xs fa-solid fa-eye-slash"></i>
                             </button>
@@ -428,8 +426,7 @@
                     </div>
 
                     <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
-                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Bank
-                            Account</span>
+                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Rekening Bank</span>
                         <strong class="block text-xs sm:text-sm text-slate-800" id="detail_bank">-</strong>
                     </div>
                     <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
@@ -437,26 +434,23 @@
                         <span id="detail_mcu_badge">-</span>
                     </div>
                     <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
-                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">TLD
-                            Badge</span>
+                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Kartu TLD</span>
                         <span id="detail_tld_badge">-</span>
                     </div>
                     <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
                         <span
-                            class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Tenure</span>
+                            class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Masa Kerja</span>
                         <strong class="text-xs font-bold text-blue-600 sm:text-sm" id="detail_tenure">-</strong>
                     </div>
                     <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
-                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Join
-                            Date</span>
+                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Tanggal Bergabung</span>
                         <strong class="text-xs sm:text-sm text-slate-800" id="detail_join_date">-</strong>
                     </div>
 
                     {{-- INFORMASI LAST DATE (RESIGN DATE) --}}
                     <div id="detail_last_date_wrapper"
                         class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
-                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Last Date
-                            (Resign)</span>
+                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Hari Terakhir Bekerja</span>
                         <strong class="text-xs sm:text-sm text-slate-800" id="detail_last_date">-</strong>
                     </div>
                 </div>
@@ -489,7 +483,7 @@
             <div class="flex justify-end px-6 py-4 border-t border-slate-100 bg-slate-50/50">
                 <button type="button" onclick="closeEmployeeModal()"
                     class="px-5 py-2.5 text-xs font-bold bg-white border text-slate-700 border-slate-200 rounded-xl hover:bg-slate-100 shadow-2xs">
-                    Close
+                    Tutup
                 </button>
             </div>
         </div>
@@ -537,7 +531,7 @@
                     }
                 })
                 .then(res => {
-                    if (!res.ok) throw new Error('Network error');
+                    if (!res.ok) throw new Error('Koneksi terputus. Periksa jaringan dan coba lagi.');
                     return res.text();
                 })
                 .then(html => {
@@ -701,7 +695,7 @@
                 document.getElementById('detail_nik').innerText = data.nik || '-';
                 document.getElementById('detail_email').innerText = data.email || '-';
                 document.getElementById('detail_phone').innerText = data.phone_number || '-';
-                document.getElementById('detail_position').innerText = data.position || 'Staff';
+                document.getElementById('detail_position').innerText = data.position || 'Karyawan';
                 document.getElementById('detail_site').innerText = data.site ? data.site.machine_name : '-';
                 document.getElementById('detail_branch').innerText = (data.site && data.site.branch) ? data.site
                     .branch.branch_name : '-';
@@ -738,14 +732,14 @@
                 }
 
                 document.getElementById('detail_status_badge').innerHTML =
-                    `<span class="px-2.5 py-1 text-[10px] font-extrabold border rounded-full uppercase ${badgeClass}">${data.status || 'Active'}</span>`;
+                    `<span class="px-2.5 py-1 text-[10px] font-extrabold border rounded-full uppercase ${badgeClass}">${window.uiLabel(data.status || 'Active')}</span>`;
 
                 document.getElementById('detail_mcu_badge').innerHTML = (data.mcu === 'yes') ?
-                    `<span class="px-2 py-0.5 text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md">YES</span>` :
-                    `<span class="px-2 py-0.5 text-[10px] font-black text-slate-500 bg-slate-100 border border-slate-200 rounded-md">NO</span>`;
+                    `<span class="px-2 py-0.5 text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md">YA</span>` :
+                    `<span class="px-2 py-0.5 text-[10px] font-black text-slate-500 bg-slate-100 border border-slate-200 rounded-md">TIDAK</span>`;
                 document.getElementById('detail_tld_badge').innerHTML = (data.tld === 'yes') ?
-                    `<span class="px-2 py-0.5 text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-200 rounded-md">YES</span>` :
-                    `<span class="px-2 py-0.5 text-[10px] font-black text-slate-500 bg-slate-100 border border-slate-200 rounded-md">NO</span>`;
+                    `<span class="px-2 py-0.5 text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-200 rounded-md">YA</span>` :
+                    `<span class="px-2 py-0.5 text-[10px] font-black text-slate-500 bg-slate-100 border border-slate-200 rounded-md">TIDAK</span>`;
 
                 renderSalaryInfo();
 
@@ -756,7 +750,7 @@
                     document.body.classList.add('overflow-hidden');
                 }
             })
-            .catch(err => console.error('Failed to load employee details:', err));
+            .catch(err => console.error('Rincian karyawan gagal dimuat:', err));
     }
 
     function closeEmployeeModal() {

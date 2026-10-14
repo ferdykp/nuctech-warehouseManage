@@ -26,7 +26,7 @@ class DashboardController extends Controller
 
         if ($user->role === 'superadmin') {
             // Metrik Superadmin (Seluruh Site)
-            $totalBranch = Site::count();
+            $totalBranch = \App\Models\Branch::count();
             $totalEmployee = Employee::count();
             $totalSparepart = SparepartStock::sum('qty') ?? 0; //[cite: 1]
             $totalMachine = Site::count();
@@ -60,6 +60,7 @@ class DashboardController extends Controller
                 ->take(6)
                 ->get();
         }
+        $totalReport = \App\Models\Report::accessible()->count();
         $currentMonth = now()->format('Y-m');
 
         $upcomingHolidays = collect(
@@ -80,6 +81,7 @@ class DashboardController extends Controller
             'totalBranch',
             'totalEmployee',
             'totalSparepart',
+            'totalReport',
             'totalMachine',
             'criticalStock',
             'todaysSchedules',

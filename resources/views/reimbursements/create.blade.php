@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'New Reimbursement Claim')
+@section('title', 'Ajukan Reimbursement')
 
 @section('content')
     <div class="w-full space-y-6">
@@ -11,21 +11,21 @@
                 <div>
                     <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
                         <a href="{{ route('reimbursements.index') }}"
-                            class="transition-colors hover:text-amber-600">Reimbursements</a>
+                            class="transition-colors hover:text-amber-600">Reimbursement</a>
                         <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                        <span class="font-extrabold text-amber-600">New Claim Request</span>
+                        <span class="font-extrabold text-amber-600">Pengajuan Klaim Baru</span>
                     </nav>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                        New Reimbursement Claim
+                        Ajukan Reimbursement
                     </h1>
                     <p class="mt-1 text-xs font-medium sm:text-sm text-slate-500">
-                        Fill in operational expense details and upload receipt documentation proof.
+                        Isi rincian biaya operasional dan unggah bukti nota.
                     </p>
                 </div>
                 <a href="{{ route('reimbursements.index') }}"
                     class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all rounded-xl active:scale-95 shrink-0">
                     <i class="fa-solid fa-arrow-left"></i>
-                    <span>Back</span>
+                    <span>Kembali</span>
                 </a>
             </div>
         </div>
@@ -34,7 +34,7 @@
         @if ($errors->any())
             <div class="p-4 space-y-1 text-xs border text-rose-800 border-rose-200 bg-rose-50 rounded-2xl">
                 <div class="flex items-center gap-2 font-extrabold">
-                    <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> Please check form input errors:
+                    <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> Periksa isian berikut:
                 </div>
                 <ul class="list-disc pl-5 font-semibold space-y-0.5">
                     @foreach ($errors->all() as $error)
@@ -59,12 +59,12 @@
                         <div class="flex items-center gap-2.5 pb-3 border-b border-slate-100">
                             <span
                                 class="flex items-center justify-center w-6 h-6 rounded-lg bg-slate-900 text-white text-[10px] font-black">01</span>
-                            <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-800">Requester Information
+                            <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-800">Data Pengaju
                             </h3>
                         </div>
                         <div class="space-y-4">
                             <div class="space-y-1.5">
-                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Person Name
+                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Diajukan oleh
                                     <span class="text-rose-500">*</span></label>
                                 <div class="relative flex items-center">
                                     <span
@@ -73,8 +73,8 @@
                                     </span>
                                     <select name="person_name" required
                                         class="w-full py-2.5 pl-10 pr-10 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none appearance-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
-                                        <option value="" disabled {{ old('person_name') ? '' : 'selected' }}>Select
-                                            Employee...</option>
+                                        <option value="" disabled {{ old('person_name') ? '' : 'selected' }}>Pilih
+                                            Karyawan...</option>
                                         @foreach ($employees as $employee)
                                             <option value="{{ $employee->name }}"
                                                 {{ old('person_name') == $employee->name ? 'selected' : '' }}>
@@ -93,8 +93,7 @@
                                 </div>
                             </div>
                             <div class="space-y-1.5">
-                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Date of
-                                    Expense <span class="text-rose-500">*</span></label>
+                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Tanggal Pengeluaran <span class="text-rose-500">*</span></label>
                                 <div class="relative flex items-center">
                                     <span
                                         class="absolute left-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
@@ -112,13 +111,11 @@
                         <div class="flex items-center gap-2.5 pb-3 border-b border-slate-100">
                             <span
                                 class="flex items-center justify-center w-6 h-6 rounded-lg bg-slate-900 text-white text-[10px] font-black">02</span>
-                            <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-800">Financial Details &
-                                Allocation</h3>
+                            <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-800">Rincian Biaya</h3>
                         </div>
                         <div class="space-y-4">
                             <div class="space-y-1.5">
-                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Expense
-                                    Category <span class="text-rose-500">*</span></label>
+                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Kategori Biaya <span class="text-rose-500">*</span></label>
                                 <div class="relative flex items-center">
                                     <span
                                         class="absolute left-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
@@ -126,13 +123,12 @@
                                     </span>
                                     <select name="category" id="categorySelect" onchange="handleCategoryChange()" required
                                         class="w-full py-2.5 pl-10 pr-10 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none appearance-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
-                                        <option value="office" {{ old('category') == 'office' ? 'selected' : '' }}>Office
-                                            Supplies / Others</option>
+                                        <option value="office" {{ old('category') == 'office' ? 'selected' : '' }}>Perlengkapan Kantor / Lainnya</option>
                                         <option value="transportation"
-                                            {{ old('category') == 'transportation' ? 'selected' : '' }}>Transportation
+                                            {{ old('category') == 'transportation' ? 'selected' : '' }}>Transportasi
                                         </option>
                                         <option value="delivery" {{ old('category') == 'delivery' ? 'selected' : '' }}>
-                                            Delivery / Logistics</option>
+                                            Pengiriman / Logistik</option>
                                     </select>
                                     <span
                                         class="absolute right-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
@@ -142,12 +138,11 @@
                             </div>
 
                             <div class="space-y-1.5">
-                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Total Claim
-                                    Amount (IDR) <span class="text-rose-500">*</span></label>
+                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Total Klaim (Rupiah) <span class="text-rose-500">*</span></label>
                                 <div class="relative flex items-center">
                                     <span
                                         class="absolute left-3.5 z-10 flex items-center justify-center text-xs font-black text-slate-400 pointer-events-none">Rp</span>
-                                    <input type="text" id="currencyMaskInput" required placeholder="e.g. 250.000"
+                                    <input type="text" id="currencyMaskInput" required placeholder="Contoh: 250.000"
                                         class="w-full py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-black border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
                                     <input type="hidden" name="amount" id="actualAmountInput"
                                         value="{{ old('amount') }}">
@@ -160,29 +155,27 @@
                                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                     <div class="space-y-1">
                                         <label
-                                            class="block text-[10px] font-bold uppercase text-slate-500 tracking-wider">From
-                                            (Origin)</label>
+                                            class="block text-[10px] font-bold uppercase text-slate-500 tracking-wider">Dari (Asal)</label>
                                         <div class="relative flex items-center">
                                             <span
                                                 class="absolute z-10 flex items-center justify-center pointer-events-none left-3 text-slate-400">
                                                 <i class="fa-solid fa-circle-dot text-[11px] text-emerald-500"></i>
                                             </span>
                                             <input type="text" name="from_location" id="fromLocation"
-                                                value="{{ old('from_location') }}" placeholder="Origin..."
+                                                value="{{ old('from_location') }}" placeholder="Lokasi asal..."
                                                 class="w-full py-2 pl-8 pr-3 text-xs font-semibold bg-white border outline-none border-slate-200 rounded-xl focus:border-amber-500">
                                         </div>
                                     </div>
                                     <div class="space-y-1">
                                         <label
-                                            class="block text-[10px] font-bold uppercase text-slate-500 tracking-wider">To
-                                            (Destination)</label>
+                                            class="block text-[10px] font-bold uppercase text-slate-500 tracking-wider">Ke (Tujuan)</label>
                                         <div class="relative flex items-center">
                                             <span
                                                 class="absolute z-10 flex items-center justify-center pointer-events-none left-3 text-slate-400">
                                                 <i class="fa-solid fa-location-dot text-[11px] text-rose-500"></i>
                                             </span>
                                             <input type="text" name="to_location" id="toLocation"
-                                                value="{{ old('to_location') }}" placeholder="Destination..."
+                                                value="{{ old('to_location') }}" placeholder="Lokasi tujuan..."
                                                 class="w-full py-2 pl-8 pr-3 text-xs font-semibold bg-white border outline-none border-slate-200 rounded-xl focus:border-amber-500">
                                         </div>
                                     </div>
@@ -190,14 +183,13 @@
                             </div>
 
                             <div class="space-y-1.5">
-                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Invoice No.
-                                    / Remarks</label>
+                                <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Nomor Nota / Keterangan</label>
                                 <div class="relative">
                                     <span
                                         class="absolute top-3 left-3.5 z-10 flex items-center justify-center text-slate-400 pointer-events-none">
                                         <i class="text-xs fa-solid fa-receipt"></i>
                                     </span>
-                                    <textarea name="comment" rows="2" placeholder="Invoice number or remarks..."
+                                    <textarea name="comment" rows="2" placeholder="Nomor nota atau keterangan..."
                                         class="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">{{ old('comment') }}</textarea>
                                 </div>
                             </div>
@@ -209,11 +201,11 @@
                 <div class="flex items-center gap-3 p-4 shadow-md bg-slate-900 rounded-2xl">
                     <button type="submit"
                         class="flex-1 py-3 text-xs font-bold tracking-wider text-white uppercase transition-all shadow-md bg-amber-600 hover:bg-amber-700 rounded-xl shadow-amber-600/20 active:scale-[0.98] cursor-pointer">
-                        Submit Claim Request <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i>
+                        Ajukan Klaim <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i>
                     </button>
                     <a href="{{ route('reimbursements.index') }}"
                         class="px-4 py-3 text-xs font-bold tracking-wider uppercase transition-colors text-slate-400 hover:text-white bg-slate-800 rounded-xl">
-                        Discard
+                        Batal
                     </a>
                 </div>
             </div>
@@ -226,8 +218,7 @@
                         <div class="flex items-center gap-2.5">
                             <span
                                 class="flex items-center justify-center w-6 h-6 rounded-lg bg-slate-900 text-white text-[10px] font-black">03</span>
-                            <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-800">Invoice
-                                Documentation Proof</h3>
+                            <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-800">Bukti Nota</h3>
                         </div>
                         <span id="pageCountBadge"
                             class="hidden text-[10px] font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200"></span>
@@ -245,10 +236,9 @@
                                 <i class="text-xl fa-solid fa-cloud-arrow-up"></i>
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-slate-800">Drag & drop invoice file here, or <span
-                                        class="underline text-amber-600">browse</span></p>
-                                <p class="text-[10px] text-slate-400 mt-0.5">Supports high-res Images & multi-page PDF
-                                    documents (Max 4MB)</p>
+                                <p class="text-xs font-bold text-slate-800">Tarik file nota ke sini, atau <span
+                                        class="underline text-amber-600">pilih file</span></p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">Mendukung gambar dan PDF beberapa halaman (maksimal 4 MB)</p>
                             </div>
                         </div>
                     </div>
@@ -256,8 +246,7 @@
                     {{-- LOADING INDICATOR --}}
                     <div id="rendering-loader"
                         class="items-center justify-center hidden gap-2 py-6 text-xs font-bold tracking-wider uppercase border border-dashed border-slate-200 bg-slate-50/50 rounded-2xl text-slate-500 animate-pulse">
-                        <i class="text-base fa-solid fa-spinner animate-spin text-amber-500"></i> Rendering PDF document
-                        pages...
+                        <i class="text-base fa-solid fa-spinner animate-spin text-amber-500"></i> Memuat halaman PDF...
                     </div>
 
                     {{-- PREVIEW CONTAINER --}}
@@ -270,8 +259,8 @@
                     <div id="emptyPreviewPlaceholder"
                         class="flex flex-col items-center justify-center py-16 border border-dashed border-slate-200 bg-slate-50/50 rounded-2xl text-slate-400">
                         <i class="mb-2 text-3xl opacity-50 fa-solid fa-paste"></i>
-                        <p class="text-xs font-bold text-slate-600">No attachments uploaded yet</p>
-                        <p class="text-[10px] text-slate-400 mt-0.5">Previews will be rendered in this workspace panel</p>
+                        <p class="text-xs font-bold text-slate-600">Belum ada lampiran</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">Pratinjau akan ditampilkan di area ini</p>
                     </div>
 
                 </div>
@@ -333,12 +322,12 @@
                 renderingLoader.classList.add('hidden');
                 previewContainer.classList.replace('hidden', 'grid');
                 pageCountBadge.classList.replace('hidden', 'inline-flex');
-                pageCountBadge.innerHTML = `<i class="fa-solid fa-image mr-1 mt-0.5"></i> Image File`;
+                pageCountBadge.innerHTML = `<i class="fa-solid fa-image mr-1 mt-0.5"></i> File Gambar`;
 
                 previewContainer.innerHTML = `
                     <div class="relative p-2 overflow-hidden bg-white border md:col-span-2 border-slate-200 rounded-xl shadow-2xs">
                         <img src="${e.target.result}" class="w-full h-auto max-h-[400px] object-contain rounded-lg bg-slate-50">
-                        <div class="absolute top-3 left-3 bg-slate-900 text-white text-[8px] px-2 py-0.5 rounded-md font-bold uppercase">Single Image</div>
+                        <div class="absolute top-3 left-3 bg-slate-900 text-white text-[8px] px-2 py-0.5 rounded-md font-bold uppercase">Satu Gambar</div>
                     </div>
                 `;
             }
@@ -354,7 +343,7 @@
 
                 previewContainer.classList.replace('hidden', 'grid');
                 pageCountBadge.classList.replace('hidden', 'inline-flex');
-                pageCountBadge.innerHTML = `<i class="fa-solid fa-file-pdf mr-1 mt-0.5"></i> ${pdf.numPages} Pages`;
+                pageCountBadge.innerHTML = `<i class="fa-solid fa-file-pdf mr-1 mt-0.5"></i> ${pdf.numPages} Halaman`;
 
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
@@ -382,8 +371,8 @@
                         "relative border border-slate-200 rounded-xl p-2 bg-white shadow-2xs transition-all";
                     wrapper.id = `page-wrapper-${i}`;
                     wrapper.innerHTML = `
-                        <div class="absolute top-3 left-3 z-10 bg-slate-900 text-white text-[8px] px-2 py-0.5 rounded-md font-bold uppercase">Page ${i}</div>
-                        <button type="button" onclick="togglePage(${i})" class="absolute z-10 flex items-center justify-center w-6 h-6 transition-colors bg-white border rounded-full cursor-pointer border-slate-200 shadow-2xs text-slate-400 top-3 right-3 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200" title="Exclude Page">
+                        <div class="absolute top-3 left-3 z-10 bg-slate-900 text-white text-[8px] px-2 py-0.5 rounded-md font-bold uppercase">Halaman ${i}</div>
+                        <button type="button" onclick="togglePage(${i})" class="absolute z-10 flex items-center justify-center w-6 h-6 transition-colors bg-white border rounded-full cursor-pointer border-slate-200 shadow-2xs text-slate-400 top-3 right-3 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200" title="Kecualikan Halaman">
                             <i class="fa-solid fa-trash-can text-[9px]"></i>
                         </button>
                         <div class="overflow-hidden rounded-lg bg-slate-50">
@@ -391,7 +380,7 @@
                         </div>
                         <div id="overlay-${i}" class="absolute inset-0 bg-white/95 hidden flex-col gap-1.5 items-center justify-center rounded-xl z-20">
                             <div class="flex items-center justify-center w-6 h-6 border rounded-full bg-rose-50 border-rose-200 text-rose-500"><i class="fa-solid fa-eye-slash text-[9px]"></i></div>
-                            <span class="text-rose-600 font-bold text-[9px] uppercase">Page Excluded</span>
+                            <span class="text-rose-600 font-bold text-[9px] uppercase">Halaman Dikecualikan</span>
                             <button type="button" onclick="togglePage(${i})" class="mt-1 bg-slate-900 hover:bg-slate-800 text-white text-[8px] px-2 py-1 rounded-md font-bold uppercase cursor-pointer">Restore Page</button>
                         </div>
                     `;

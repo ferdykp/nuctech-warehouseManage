@@ -284,56 +284,6 @@ class SalaryExport extends DefaultValueBinder implements FromCollection, WithHea
 
     private function calculateSalaryDetails($employeeId, $monthPeriod, $holidayService, $monthlySalary)
     {
-        $startOfMonth = Carbon::parse($monthPeriod . '-01')->startOfMonth();
-        $endOfMonth = Carbon::parse($monthPeriod . '-01')->endOfMonth();
-        $daysInMonth = $startOfMonth->daysInMonth;
-
-        $rawHolidays = $holidayService->getHolidaysForMonth($monthPeriod);
-
-        $nationalHolidays = [];
-        if (!empty($rawHolidays)) {
-            foreach ($rawHolidays as $key => $val) {
-                $dateKey = ($key instanceof Carbon) ? $key->format('Y-m-d') : (string) $key;
-                $nationalHolidays[$dateKey] = $val;
-            }
-        }
-
-        $effectiveWorkingDays = 0;
-        for ($d = 1; $d <= $daysInMonth; $d++) {
-            $date = Carbon::parse(sprintf('%s-%02d', $monthPeriod, $d));
-            $dateStr = $date->format('Y-m-d');
-
-            if (!$date->isWeekend() && !isset($nationalHolidays[$dateStr])) {
-                $effectiveWorkingDays++;
-            }
-        }
-
-        $schedules = \App\Models\EmployeeSchedule::where('employee_id', $employeeId)
-            ->whereBetween('date', [$startOfMonth->format('Y-m-d'), $endOfMonth->format('Y-m-d')])
-            ->with('shift')
-            ->get();
-
-        $holidayOvertimeDays = 0;
-
-        foreach ($schedules as $sched) {
-            if ($sched->shift && !$sched->shift->is_off) {
-                $dateStr = $sched->date instanceof Carbon
-                    ? $sched->date->format('Y-m-d')
-                    : (string) $sched->date;
-
-                if (isset($nationalHolidays[$dateStr])) {
-                    $holidayOvertimeDays++;
-                }
-            }
-        }
-
-        $dailyRate = $effectiveWorkingDays > 0 ? ($monthlySalary / $effectiveWorkingDays) : 0;
-        $holidayOvertimePay = $holidayOvertimeDays * $dailyRate;
-        $totalSalaryToPay = $monthlySalary + $holidayOvertimePay;
-
-        return [
-            'holiday_overtime_days' => $holidayOvertimeDays,
-            'total_salary_to_pay'   => $totalSalaryToPay,
-        ];
+        return app(\App\Services\PayrollCalculation::class)->calculate($employeeId, $monthPeriod, (float) $monthlySalary);
     }
 }

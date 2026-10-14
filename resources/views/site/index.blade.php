@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Site Management')
+@section('title', 'Manajemen Lokasi')
 
 @section('content')
     <div class="w-full space-y-6">
@@ -10,15 +10,15 @@
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                        <span class="transition-colors cursor-pointer hover:text-blue-600">Infrastructure</span>
+                        <span class="transition-colors cursor-pointer hover:text-blue-600">Lokasi dan Mesin</span>
                         <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                        <span class="font-extrabold text-blue-600">Machine Sites</span>
+                        <span class="font-extrabold text-blue-600">Lokasi Mesin</span>
                     </nav>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                        Site Management
+                        Manajemen Lokasi
                     </h1>
                     <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
-                        Monitor inventory status and machine distribution across all regions.
+                        Pantau stok dan penempatan mesin di seluruh wilayah.
                     </p>
                 </div>
 
@@ -27,7 +27,7 @@
                         <button type="button" onclick="openCreateModal()"
                             class="flex items-center justify-center gap-2 px-5 py-3 text-xs font-bold text-white transition-all bg-blue-600 shadow-md cursor-pointer sm:text-sm hover:bg-blue-700 rounded-xl shadow-blue-600/20 active:scale-95 group shrink-0">
                             <i class="text-xs transition-transform fa-solid fa-plus group-hover:rotate-90"></i>
-                            <span>Register New Site</span>
+                            <span>Tambah Lokasi</span>
                         </button>
                     </div>
                 @endif
@@ -39,19 +39,19 @@
             @php
                 $stats = [
                     [
-                        'label' => 'Registered Machines',
+                        'label' => 'Mesin Terdaftar',
                         'val' => $sites->count(),
                         'color' => 'blue',
                         'icon' => 'fa-solid fa-server',
                     ],
                     [
-                        'label' => 'Operational Branches',
+                        'label' => 'Cabang Operasional',
                         'val' => $sites->unique('branch_id')->count(),
                         'color' => 'emerald',
                         'icon' => 'fa-solid fa-building',
                     ],
                     [
-                        'label' => 'Stock Volume',
+                        'label' => 'Jumlah Stok',
                         'val' => \App\Models\SparepartStock::sum('qty'),
                         'color' => 'amber',
                         'icon' => 'fa-solid fa-boxes-stacked',
@@ -81,14 +81,14 @@
         {{-- 3. MAIN TABLE CARD CONTAINER --}}
         <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse min-w-[700px]">
+                <table data-mobile-cards class="w-full text-left border-collapse min-w-[700px]">
                     <thead>
                         <tr
                             class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
-                            <th scope="col" class="px-6 py-4">Machine Identity</th>
-                            <th scope="col" class="px-6 py-4">Branch</th>
-                            <th scope="col" class="px-6 py-4">Location / Address</th>
-                            <th scope="col" class="px-6 py-4 text-right">Actions</th>
+                            <th scope="col" class="px-6 py-4">Identitas Mesin</th>
+                            <th scope="col" class="px-6 py-4">Cabang</th>
+                            <th scope="col" class="px-6 py-4">Lokasi / Alamat</th>
+                            <th scope="col" class="px-6 py-4 text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="text-xs font-medium divide-y divide-slate-100 text-slate-700">
@@ -116,7 +116,7 @@
                                     <div
                                         class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-[10px] font-extrabold uppercase tracking-wide">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                        <span>{{ $site->branch->branch_name ?? 'Unassigned' }}</span>
+                                        <span>{{ $site->branch->branch_name ?? 'Belum Ditentukan' }}</span>
                                     </div>
                                 </td>
 
@@ -127,7 +127,7 @@
                                             <span class="truncate">{{ $site->location ?? '-' }}</span>
                                         </div>
                                         <span class="text-[11px] text-slate-400 font-medium line-clamp-1">
-                                            {{ $site->address ?? 'No detailed address provided' }}
+                                            {{ $site->address ?? 'Alamat lengkap belum diisi' }}
                                         </span>
                                     </div>
                                 </td>
@@ -138,14 +138,14 @@
                                         <button type="button"
                                             onclick="openDetailModal({{ json_encode($site->load('branch'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) }})"
                                             class="flex items-center justify-center w-8 h-8 transition-colors cursor-pointer rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100"
-                                            title="View Details">
+                                            title="Lihat Rincian">
                                             <i class="text-xs fa-solid fa-eye"></i>
                                         </button>
 
                                         {{-- OPEN VAULT --}}
                                         <a href="{{ route('sparepart.index', $site->slug ?? $site->id) }}"
                                             class="inline-flex items-center px-3 py-1.5 text-xs font-extrabold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-900 hover:text-white transition-all active:scale-95 shrink-0 shadow-2xs">
-                                            Open Vault
+                                            Lihat Stok
                                         </a>
 
                                         @if (auth()->user()?->role === 'superadmin')
@@ -155,7 +155,7 @@
                                             <button type="button"
                                                 onclick="openEditModal({{ json_encode($site, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) }})"
                                                 class="flex items-center justify-center w-8 h-8 text-blue-600 transition-all border border-blue-100 cursor-pointer rounded-xl bg-blue-50 hover:bg-blue-600 hover:text-white active:scale-95"
-                                                title="Edit Site">
+                                                title="Ubah Lokasi">
                                                 <i class="text-xs fa-solid fa-pen-to-square"></i>
                                             </button>
 
@@ -163,7 +163,7 @@
                                             <button type="button"
                                                 onclick="openDeleteModal({{ json_encode($site, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) }})"
                                                 class="flex items-center justify-center w-8 h-8 transition-all border cursor-pointer rounded-xl text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white active:scale-95"
-                                                title="Delete Site">
+                                                title="Hapus Lokasi">
                                                 <i class="text-xs fa-solid fa-trash-can"></i>
                                             </button>
                                         @endif
@@ -177,8 +177,8 @@
                                         class="flex items-center justify-center w-12 h-12 mx-auto mb-3 text-xl rounded-2xl bg-slate-100 text-slate-400">
                                         <i class="fa-solid fa-server"></i>
                                     </div>
-                                    <p class="text-sm font-bold text-slate-800">No Machine Sites Registered Yet</p>
-                                    <p class="mt-1 text-xs text-slate-400">Register a new site to start tracking inventory.
+                                    <p class="text-sm font-bold text-slate-800">Belum Ada Lokasi Mesin</p>
+                                    <p class="mt-1 text-xs text-slate-400">Tambahkan lokasi untuk mulai mencatat stok.
                                     </p>
                                 </td>
                             </tr>
@@ -207,7 +207,7 @@
                         <i class="fa-solid fa-circle-info"></i>
                     </div>
                     <div>
-                        <h3 id="det_title" class="text-base font-extrabold truncate text-slate-900">Site Information</h3>
+                        <h3 id="det_title" class="text-base font-extrabold truncate text-slate-900">Informasi Lokasi</h3>
                         <p id="det_subtitle"
                             class="text-[10px] font-extrabold tracking-widest text-slate-400 uppercase truncate"></p>
                     </div>
@@ -219,20 +219,17 @@
             <div class="p-6 space-y-5 overflow-y-auto text-xs sm:text-sm">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div class="p-3.5 border border-slate-200/80 bg-slate-50/50 rounded-2xl">
-                        <label class="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Branch
-                            Office</label>
+                        <label class="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Kantor Cabang</label>
                         <p id="det_branch" class="font-bold text-slate-800"></p>
                     </div>
                     <div class="p-3.5 border border-slate-200/80 bg-slate-50/50 rounded-2xl">
                         <label
-                            class="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Registration
-                            Date</label>
+                            class="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Tanggal Pendaftaran</label>
                         <p id="det_created" class="font-semibold text-slate-600"></p>
                     </div>
                     <div class="sm:col-span-2 p-3.5 border border-slate-200/80 bg-slate-50/50 rounded-2xl">
                         <label
-                            class="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Detailed
-                            Address</label>
+                            class="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Alamat Lengkap</label>
                         <p id="det_location" class="font-medium leading-relaxed text-slate-700"></p>
                     </div>
                 </div>
@@ -240,10 +237,9 @@
 
             <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50 shrink-0">
                 <button type="button" onclick="closeDetailModal()"
-                    class="px-4 py-2.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 active:scale-95 shadow-2xs cursor-pointer">Close</button>
+                    class="px-4 py-2.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 active:scale-95 shadow-2xs cursor-pointer">Tutup</button>
                 <a id="det_vault_link" href="#"
-                    class="px-5 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95 transition-all">Access
-                    Vault</a>
+                    class="px-5 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95 transition-all">Lihat Stok</a>
             </div>
         </div>
     </div>
@@ -254,8 +250,8 @@
             class="w-full max-w-lg overflow-hidden bg-white border border-slate-100 shadow-2xl rounded-3xl max-h-[90vh] flex flex-col">
             <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
                 <div>
-                    <h3 class="text-base font-extrabold text-slate-900">New Machine Site</h3>
-                    <p class="text-xs font-medium text-slate-500">Define location and machine identification.</p>
+                    <h3 class="text-base font-extrabold text-slate-900">Lokasi Mesin Baru</h3>
+                    <p class="text-xs font-medium text-slate-500">Isi lokasi dan identitas mesin.</p>
                 </div>
                 <button type="button" onclick="closeCreateModal()"
                     class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
@@ -263,35 +259,35 @@
             <form action="{{ route('site.store') }}" method="POST" class="p-6 space-y-4 overflow-y-auto">
                 @csrf
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Site Label <span
+                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Nama Lokasi <span
                             class="text-rose-500">*</span></label>
-                    <input type="text" name="machine_name" required placeholder="e.g. Area 51 - Maintenance"
+                    <input type="text" name="machine_name" required placeholder="Contoh: Area 51 - Maintenance"
                         class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400">
                 </div>
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Assign Branch <span
+                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Pilih Cabang <span
                             class="text-rose-500">*</span></label>
                     <select name="branch_id" required
                         class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
-                        <option value="">Choose regional branch...</option>
+                        <option value="">Pilih cabang...</option>
                         @foreach ($branches as $branch)
                             <option value="{{ $branch->id }}">{{ $branch->branch_name }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Physical Location <span
+                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Alamat Lokasi <span
                             class="text-rose-500">*</span></label>
-                    <textarea name="location" rows="3" placeholder="Full coordinates or address..." required
+                    <textarea name="location" rows="3" placeholder="Koordinat atau alamat lengkap..." required
                         class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"></textarea>
                 </div>
 
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                     <button type="button" onclick="closeCreateModal()"
-                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">Discard</button>
+                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">Batal</button>
                     <button type="submit"
-                        class="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95 transition-all cursor-pointer">Register
-                        Site</button>
+                        class="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95 transition-all cursor-pointer">Daftarkan
+                        Lokasi</button>
                 </div>
             </form>
         </div>
@@ -303,8 +299,8 @@
             class="w-full max-w-lg overflow-hidden bg-white border border-slate-100 shadow-2xl rounded-3xl max-h-[90vh] flex flex-col">
             <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
                 <div>
-                    <h3 class="text-base font-extrabold text-slate-900">Update Machine Site</h3>
-                    <p class="text-xs font-medium text-slate-500">Modify regional site information.</p>
+                    <h3 class="text-base font-extrabold text-slate-900">Perbarui Lokasi Mesin</h3>
+                    <p class="text-xs font-medium text-slate-500">Perbarui informasi lokasi mesin.</p>
                 </div>
                 <button type="button" onclick="closeEditModal()"
                     class="flex items-center justify-center w-8 h-8 transition-colors rounded-lg cursor-pointer text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200">&times;</button>
@@ -313,13 +309,13 @@
                 @csrf
                 @method('PUT')
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Site Label <span
+                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Nama Lokasi <span
                             class="text-rose-500">*</span></label>
                     <input type="text" id="edit_machine_name" name="machine_name" required
                         class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
                 </div>
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Branch Assignment <span
+                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Penempatan Cabang <span
                             class="text-rose-500">*</span></label>
                     <select id="edit_branch_id" name="branch_id" required
                         class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
@@ -329,17 +325,16 @@
                     </select>
                 </div>
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Physical
-                        Location</label>
+                    <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Alamat Lokasi</label>
                     <textarea id="edit_location" name="location" rows="3"
                         class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800"></textarea>
                 </div>
 
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                     <button type="button" onclick="closeEditModal()"
-                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">Cancel</button>
+                        class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors cursor-pointer">Batal</button>
                     <button type="submit"
-                        class="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95 transition-all cursor-pointer">Update
+                        class="px-6 py-2.5 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95 transition-all cursor-pointer">Perbarui
                         Data</button>
                 </div>
             </form>
@@ -354,20 +349,20 @@
                 class="flex items-center justify-center w-12 h-12 mx-auto mb-3 text-xl border text-rose-600 bg-rose-50 border-rose-100 rounded-2xl">
                 <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
-            <h3 class="text-base font-extrabold text-slate-900">Delete Site Location?</h3>
+            <h3 class="text-base font-extrabold text-slate-900">Hapus Lokasi Mesin?</h3>
             <p class="mt-1.5 text-xs font-medium text-slate-500 leading-relaxed">
-                Are you sure you want to delete <strong id="delete_site_name" class="text-slate-900"></strong>?
-                <span class="block mt-1 font-bold text-rose-600">This action cannot be undone.</span>
+                Yakin ingin menghapus <strong id="delete_site_name" class="text-slate-900"></strong>?
+                <span class="block mt-1 font-bold text-rose-600">Aksi ini tidak dapat dibatalkan.</span>
             </p>
 
             <div class="flex items-center justify-end gap-2.5 mt-6 pt-4 border-t border-slate-100">
                 <button type="button" onclick="closeDeleteModal()"
-                    class="w-full py-2.5 text-xs font-bold text-slate-700 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors cursor-pointer">Cancel</button>
+                    class="w-full py-2.5 text-xs font-bold text-slate-700 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors cursor-pointer">Batal</button>
                 <form id="form-delete" method="POST" class="w-full">
                     @csrf
                     @method('DELETE')
                     <button type="submit"
-                        class="w-full py-2.5 text-xs font-bold text-white bg-rose-600 rounded-xl hover:bg-rose-700 shadow-md shadow-rose-600/20 active:scale-95 transition-all cursor-pointer">Delete</button>
+                        class="w-full py-2.5 text-xs font-bold text-white bg-rose-600 rounded-xl hover:bg-rose-700 shadow-md shadow-rose-600/20 active:scale-95 transition-all cursor-pointer">Hapus</button>
                 </form>
             </div>
         </div>
@@ -381,12 +376,12 @@
             if (!modal) return;
             document.getElementById('det_title').innerText = site.machine_name || '-';
             document.getElementById('det_subtitle').innerText = `System ID: #ST-${String(site.id).padStart(4, '0')}`;
-            document.getElementById('det_branch').innerText = site.branch ? site.branch.branch_name : 'Unassigned';
-            document.getElementById('det_location').innerText = site.location || site.address || 'No address specified.';
+            document.getElementById('det_branch').innerText = site.branch ? site.branch.branch_name : 'Belum Ditentukan';
+            document.getElementById('det_location').innerText = site.location || site.address || 'Alamat belum diisi.';
 
             const createdDate = site.created_at ? new Date(site.created_at) : null;
             document.getElementById('det_created').innerText = createdDate && !isNaN(createdDate) ?
-                createdDate.toLocaleDateString('en-US', {
+                createdDate.toLocaleDateString('id-ID', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'

@@ -47,7 +47,7 @@ class BranchController extends Controller
         Branch::create($request->all());
 
         return redirect()->route('branches.index')
-            ->with('success', 'Branch Successfully Added!');
+            ->with('success', 'Cabang berhasil ditambahkan.');
     }
 
     public function edit(string $id)
@@ -69,13 +69,13 @@ class BranchController extends Controller
         $branch->update($validated);
 
         return redirect()->route('branches.index')
-            ->with('success', 'Branch Successfully Updated!');
+            ->with('success', 'Cabang berhasil diperbarui.');
     }
 
     public function destroy(Branch $branch)
     {
         $branch->delete();
         return redirect()->route('branches.index')
-            ->with('success', 'Branch Successfully Deleted!');
+            ->with('success', 'Cabang berhasil dihapus.');
     }
 }

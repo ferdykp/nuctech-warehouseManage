@@ -351,7 +351,7 @@ class DailyReportController extends Controller
         $user = auth()->user();
 
         if (!in_array($user->role, ['superadmin', 'administration']) && $user->site_id !== $photo->dailyReport->site_id) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            return response()->json(['message' => 'Anda tidak memiliki akses.'], 403);
         }
 
         Storage::disk('public')->delete($photo->photo_path);

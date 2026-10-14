@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('title', 'Apply New Leave')
+@section('title', 'Ajukan Cuti')
 
 @section('content')
     <div class="w-full space-y-6">
@@ -10,23 +10,22 @@
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                        <a href="{{ route('leave.index') }}" class="transition-colors hover:text-emerald-600">Leave
-                            Management</a>
+                        <a href="{{ route('leave.index') }}" class="transition-colors hover:text-emerald-600">Manajemen Cuti</a>
                         <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                        <span class="font-extrabold text-emerald-600">Apply New Leave</span>
+                        <span class="font-extrabold text-emerald-600">Ajukan Cuti</span>
                     </nav>
                     <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
-                        Apply New Leave Request
+                        Ajukan Cuti
                     </h1>
                     <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
-                        Fill in the required information to request employee leave or time-off.
+                        Lengkapi informasi untuk mengajukan cuti atau izin karyawan.
                     </p>
                 </div>
 
                 <div class="flex items-center gap-2.5 shrink-0">
                     <a href="{{ route('leave.index') }}"
                         class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-700 transition-all bg-white border border-slate-200 rounded-xl hover:bg-slate-50 active:scale-95 shadow-2xs">
-                        <i class="fa-solid fa-arrow-left text-slate-400"></i> Back to List
+                        <i class="fa-solid fa-arrow-left text-slate-400"></i> Kembali ke Daftar
                     </a>
                 </div>
             </div>
@@ -40,11 +39,11 @@
 
                 {{-- EMPLOYEE SELECTION --}}
                 <div>
-                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Select
-                        Employee <span class="text-rose-500">*</span></label>
+                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Pilih
+                        Karyawan <span class="text-rose-500">*</span></label>
                     <select name="employee_id" required
                         class="w-full px-3.5 py-2.5 text-xs font-bold transition-all bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
-                        <option value="">-- Choose Employee --</option>
+                        <option value="">-- Pilih Karyawan --</option>
                         @foreach ($employees as $emp)
                             <option value="{{ $emp->id }}" {{ old('employee_id') == $emp->id ? 'selected' : '' }}>
                                 {{ $emp->name }} ({{ $emp->position ?? '-' }})
@@ -55,11 +54,10 @@
 
                 {{-- LEAVE TYPE --}}
                 <div>
-                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Leave
-                        Type <span class="text-rose-500">*</span></label>
+                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Jenis Cuti <span class="text-rose-500">*</span></label>
                     <select name="leave_type_id" required
                         class="w-full px-3.5 py-2.5 text-xs font-bold transition-all bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
-                        <option value="">-- Choose Leave Type --</option>
+                        <option value="">-- Pilih Jenis Cuti --</option>
                         @foreach ($leaveTypes as $type)
                             <option value="{{ $type->id }}" {{ old('leave_type_id') == $type->id ? 'selected' : '' }}>
                                 {{ $type->name }}
@@ -70,45 +68,41 @@
 
                 {{-- DURATION TYPE --}}
                 <div>
-                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Duration
-                        Type</label>
-                    <div class="grid grid-cols-2 gap-3">
+                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Jenis Durasi</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <label
                             class="flex items-center gap-2.5 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-all text-xs font-bold text-slate-700 bg-slate-50/50">
                             <input type="radio" name="duration_type" value="single" checked
                                 onclick="toggleDurationType('single')"
                                 class="cursor-pointer text-emerald-600 focus:ring-emerald-500">
-                            <span>Single Day Only (1 Day)</span>
+                            <span>Satu Hari</span>
                         </label>
                         <label
                             class="flex items-center gap-2.5 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-all text-xs font-bold text-slate-700 bg-slate-50/50">
                             <input type="radio" name="duration_type" value="multiple"
                                 onclick="toggleDurationType('multiple')"
                                 class="cursor-pointer text-emerald-600 focus:ring-emerald-500">
-                            <span>Multiple Days (Date Range)</span>
+                            <span>Beberapa Hari</span>
                         </label>
                     </div>
                 </div>
 
                 {{-- SINGLE DATE CONTAINER --}}
                 <div id="single_date_container">
-                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Leave
-                        Date <span class="text-rose-500">*</span></label>
+                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Tanggal Cuti <span class="text-rose-500">*</span></label>
                     <input type="date" id="single_date" onchange="syncSingleDate(this.value)"
                         class="w-full px-3.5 py-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
                 </div>
 
                 {{-- MULTIPLE DATES CONTAINER --}}
-                <div id="multiple_date_container" class="grid hidden grid-cols-2 gap-3">
+                <div id="multiple_date_container" class="grid hidden grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Start
-                            Date <span class="text-rose-500">*</span></label>
+                        <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Tanggal Mulai <span class="text-rose-500">*</span></label>
                         <input type="date" id="start_date" name="start_date" value="{{ old('start_date') }}" required
                             class="w-full px-3.5 py-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
                     </div>
                     <div>
-                        <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">End
-                            Date <span class="text-rose-500">*</span></label>
+                        <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Tanggal Selesai <span class="text-rose-500">*</span></label>
                         <input type="date" id="end_date" name="end_date" value="{{ old('end_date') }}" required
                             class="w-full px-3.5 py-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
                     </div>
@@ -116,17 +110,15 @@
 
                 {{-- REASON --}}
                 <div>
-                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Reason /
-                        Description <span class="text-rose-500">*</span></label>
+                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Alasan / Keterangan <span class="text-rose-500">*</span></label>
                     <textarea name="reason" required rows="3"
                         class="w-full px-3.5 py-2.5 text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 placeholder-slate-400"
-                        placeholder="Detail the purpose of leave request...">{{ old('reason') }}</textarea>
+                        placeholder="Tuliskan alasan pengajuan cuti...">{{ old('reason') }}</textarea>
                 </div>
 
                 {{-- ATTACHMENT --}}
                 <div>
-                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Attachment
-                        (Optional / Doctor's Note)</label>
+                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Lampiran (Opsional / Surat Dokter)</label>
                     <input type="file" name="attachment_file"
                         class="w-full px-3.5 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl text-slate-700">
                 </div>
@@ -135,11 +127,11 @@
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                     <a href="{{ route('leave.index') }}"
                         class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">
-                        Cancel
+                        Batal
                     </a>
                     <button type="submit"
                         class="px-5 py-2.5 text-xs font-bold text-white transition-all shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-emerald-600/20 active:scale-95 cursor-pointer">
-                        <i class="mr-1.5 fa-solid fa-paper-plane"></i> Submit Leave Request
+                        <i class="mr-1.5 fa-solid fa-paper-plane"></i> Ajukan Cuti
                     </button>
                 </div>
             </form>
