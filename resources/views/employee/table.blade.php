@@ -17,8 +17,8 @@
                         </button>
                     </div>
                 </th>
-                <th scope="col" class="px-4 py-4 text-center">MCU</th>
-                <th scope="col" class="px-4 py-4 text-center">TLD</th>
+                {{-- <th scope="col" class="px-4 py-4 text-center">MCU</th>
+                <th scope="col" class="px-4 py-4 text-center">TLD</th> --}}
                 <th scope="col" class="px-6 py-4 text-center">Status</th>
                 <th scope="col" class="px-6 py-4 text-center">Tanggal PKWT</th>
                 <th scope="col" class="w-32 px-6 py-4 text-center">Aksi</th>
@@ -59,7 +59,7 @@
                         <span class="table-salary-text"
                             data-salary="Rp {{ number_format((float) ($employee->basic_salary ?? 0), 0, ',', '.') }}">••••••••</span>
                     </td>
-                    <td class="px-4 py-4 text-center">
+                    {{-- <td class="px-4 py-4 text-center">
                         @if ($employee->mcu === 'yes')
                             <span
                                 class="px-2 py-0.5 text-xs font-black text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md">YA</span>
@@ -67,8 +67,8 @@
                             <span
                                 class="px-2 py-0.5 text-xs font-black text-slate-400 bg-slate-100 border border-slate-200 rounded-md">TIDAK</span>
                         @endif
-                    </td>
-                    <td class="px-4 py-4 text-center">
+                    </td> --}}
+                    {{-- <td class="px-4 py-4 text-center">
                         @if ($employee->tld === 'yes')
                             <span
                                 class="px-2 py-0.5 text-xs font-black text-blue-700 bg-blue-50 border border-blue-200 rounded-md">YA</span>
@@ -76,7 +76,7 @@
                             <span
                                 class="px-2 py-0.5 text-xs font-black text-slate-400 bg-slate-100 border border-slate-200 rounded-md">TIDAK</span>
                         @endif
-                    </td>
+                    </td> --}}
                     <td class="px-6 py-4 text-center">
                         @php
                             $statusClasses = match ($employee->status) {
