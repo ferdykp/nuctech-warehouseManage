@@ -43,9 +43,21 @@ class ReportController extends Controller
         $this->authorizeSiteAccess($siteData);
 
         // 🟢 Filter laporan berdasarkan nama mesin/site yang cocok dengan siteData->machine_name
-        $report = Report::where('site_id', $siteData->id)
-            ->latest()
-            ->paginate(10);
+        $query = Report::where('site_id', $siteData->id);
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(fn ($q) => $q->where('attendant', 'like', "%{$search}%")
+                ->orWhere('site_machine', 'like', "%{$search}%")
+                ->orWhere('failure_note', 'like', "%{$search}%"));
+        }
+        $report = $query->latest()->paginate(10)->withQueryString();
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('report.table', ['data' => $report, 'routePrefix' => 'report'])->render(),
+                'pagination' => $report->links()->toHtml(),
+                'total' => $report->total(),
+            ]);
+        }
 
         // Ambil sparepart berstatus 'damaged' yang qty-nya > 0 untuk antrean di site ini
         $failureQueue = SparepartStock::where('site_id', $siteData->id)
@@ -215,6 +227,23 @@ class ReportController extends Controller
         $report->update($data);
 
         return redirect()->route('report.index')->with('success', 'Laporan berhasil diperbarui.');
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        abort_unless(auth()->user()->isSuperAdmin(), 403);
+        $data = $request->validate([
+            'ids' => 'required|array|min:1|max:100',
+            'ids.*' => 'required|integer|distinct|exists:reports,id',
+        ]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($data) {
+            $reports = Report::whereIn('id', $data['ids'])->lockForUpdate()->get();
+            abort_unless($reports->count() === count($data['ids']), 409, 'Daftar laporan berubah. Muat ulang dan pilih kembali.');
+            $paths = $reports->pluck('image')->filter()->values()->all();
+            foreach ($reports as $report) $report->delete();
+            \App\Jobs\DeletePublicFiles::dispatch($paths)->afterCommit();
+        });
+        return redirect()->route('report.index')->with('success', count($data['ids']).' laporan berhasil dihapus.');
     }
 
     public function destroy(string $id)

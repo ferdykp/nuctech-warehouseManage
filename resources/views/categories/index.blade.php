@@ -37,7 +37,7 @@
                 <table data-mobile-cards class="w-full text-left border-collapse min-w-[600px]">
                     <thead>
                         <tr
-                            class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
+                            class="text-xs font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
                             <th class="w-16 px-6 py-4 text-center">Nomor</th>
                             <th class="px-6 py-4">Rincian Kategori</th>
                             <th class="px-6 py-4">Keterangan</th>
@@ -60,7 +60,7 @@
                                         <span
                                             class="text-sm font-bold leading-snug text-slate-900">{{ $cat->name }}</span>
                                         <span
-                                            class="inline-flex items-center gap-1.5 text-[10px] text-emerald-600 font-extrabold uppercase mt-0.5">
+                                            class="inline-flex items-center gap-1.5 text-xs text-emerald-600 font-extrabold uppercase mt-0.5">
                                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Kategori Aktif
                                         </span>
                                     </div>
@@ -134,7 +134,7 @@
                     </div>
                     <div>
                         <h3 class="text-base font-extrabold text-slate-900">Buat Kategori</h3>
-                        <p class="text-[10px] font-bold tracking-wider uppercase text-slate-400">Pengaturan Inventaris</p>
+                        <p class="text-xs font-bold tracking-wider uppercase text-slate-400">Pengaturan Inventaris</p>
                     </div>
                 </div>
                 <button onclick="closeCreateCategoryModal()" type="button"
@@ -182,7 +182,7 @@
                     </div>
                     <div>
                         <h3 class="text-base font-extrabold text-slate-900">Perbarui Kategori</h3>
-                        <p class="text-[10px] font-bold tracking-wider uppercase text-slate-400">Pengaturan Inventaris</p>
+                        <p class="text-xs font-bold tracking-wider uppercase text-slate-400">Pengaturan Inventaris</p>
                     </div>
                 </div>
                 <button onclick="closeEditCategoryModal()" type="button"

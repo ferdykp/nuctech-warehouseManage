@@ -24,7 +24,7 @@
         <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
             <table data-mobile-cards class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="text-[10px] font-extrabold uppercase text-slate-500 bg-slate-50 border-b border-slate-100">
+                    <tr class="text-xs font-extrabold uppercase text-slate-500 bg-slate-50 border-b border-slate-100">
                         <th class="px-6 py-4">Tanggal Dihapus</th>
                         <th class="px-6 py-4">Lokasi dan Tanggal Laporan</th>
                         <th class="px-6 py-4">Catatan</th>

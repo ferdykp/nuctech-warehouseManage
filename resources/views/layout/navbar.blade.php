@@ -3,7 +3,7 @@
 
         <!-- LEFT SIDE: MOBILE TOGGLE & BREADCRUMB -->
         <div class="flex items-center min-w-0 gap-3">
-            <button @click="sidebarOpen = true" aria-label="Buka menu utama" type="button"
+            <button @click="sidebarOpen = true" aria-label="Buka menu utama" aria-controls="main-sidebar" :aria-expanded="sidebarOpen" type="button"
                 class="p-2 text-slate-600 hover:text-slate-900 rounded-xl hover:bg-slate-100 lg:hidden focus:outline-none">
                 <i class="text-lg fa-solid fa-bars-staggered"></i>
             </button>
@@ -50,7 +50,7 @@
                     <div class="px-4 py-2.5 border-b border-slate-100 bg-slate-50">
                         <p class="text-xs font-bold truncate text-slate-800">{{ auth()->user()?->username ?? 'Tamu' }}
                         </p>
-                        <p class="text-[10px] font-semibold text-slate-500 uppercase">
+                        <p class="text-xs font-semibold text-slate-500 uppercase">
                             {{ \App\Support\UiText::label(auth()->user()?->role) }}</p>
                     </div>
 

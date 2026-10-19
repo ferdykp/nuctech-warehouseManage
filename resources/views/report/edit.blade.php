@@ -34,7 +34,7 @@
             <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
                 <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Informasi Laporan</h2>
                 <span
-                    class="px-3 py-1 text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200/60 rounded-xl uppercase">
+                    class="px-3 py-1 text-xs font-black bg-rose-50 text-rose-700 border border-rose-200/60 rounded-xl uppercase">
                     ID: #REP-{{ str_pad($report->id, 4, '0', STR_PAD_LEFT) }}
                 </span>
             </div>

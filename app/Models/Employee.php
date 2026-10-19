@@ -29,12 +29,15 @@ class Employee extends Model
         'contract_start_date',
         'is_active',
         'more_information', //from salary
-        'last_date'
+        'last_date',
+        'pkwt_date',
+        'pkwt_number',
     ];
 
     protected $casts = [
         'join_date' => 'date',
         'resign_date' => 'date',
+        'pkwt_date' => 'date',
     ];
 
     public function site()

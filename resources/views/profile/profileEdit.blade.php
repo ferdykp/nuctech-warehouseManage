@@ -133,7 +133,7 @@
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Kata Sandi Baru
-                            <span class="text-[10px] font-normal text-slate-400 lowercase">(kosongkan jika tidak diubah)</span>
+                            <span class="text-xs font-normal text-slate-400 lowercase">(kosongkan jika tidak diubah)</span>
                         </label>
                         <div class="relative">
                             <input :type="showPassword ? 'text' : 'password'" name="password" x-model="password"

@@ -2,7 +2,7 @@
     <table data-mobile-cards class="w-full text-left border-collapse min-w-[700px]">
         <thead>
             <tr
-                class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
+                class="text-xs font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
                 <th class="px-6 py-4">Informasi Suku Cadang</th>
                 <th class="px-6 py-4">Lokasi Mesin</th>
                 <th class="px-6 py-4 text-center">Stok</th>
@@ -20,7 +20,7 @@
                             <span
                                 class="text-sm font-bold leading-snug text-slate-900">{{ $stock->sparepart?->item_name ?? 'Barang Tanpa Nama' }}</span>
                             <span
-                                class="font-mono text-[11px] text-slate-400 mt-0.5 tracking-wide flex items-center gap-1">
+                                class="font-mono text-xs text-slate-400 mt-0.5 tracking-wide flex items-center gap-1">
                                 <i class="fa-solid fa-barcode text-[10px] text-slate-300"></i>
                                 {{ $stock->sparepart?->serial_number ?? 'NO SERIAL' }}
                             </span>
@@ -38,7 +38,7 @@
                                 <span
                                     class="font-bold truncate text-slate-800">{{ $stock->site?->machine_name ?? 'Lokasi Belum Ditentukan' }}</span>
                                 <span
-                                    class="text-[10px] font-semibold text-slate-400 uppercase truncate mt-0.5">{{ $stock->site?->branch?->branch_name ?? 'Kantor Pusat' }}</span>
+                                    class="text-xs font-semibold text-slate-400 uppercase truncate mt-0.5">{{ $stock->site?->branch?->branch_name ?? 'Kantor Pusat' }}</span>
                             </div>
                         </div>
                     </td>
@@ -49,7 +49,7 @@
                             class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-black rounded-xl text-slate-800 bg-slate-100 border border-slate-200/80">
                             {{ number_format($stock->qty) }}
                             <small
-                                class="font-extrabold text-[9px] text-slate-400 uppercase tracking-wider">{{ $stock->sparepart?->uom ?? 'PCS' }}</small>
+                                class="font-extrabold text-xs text-slate-400 uppercase tracking-wider">{{ $stock->sparepart?->uom ?? 'PCS' }}</small>
                         </span>
                     </td>
 
@@ -64,7 +64,7 @@
                             ];
                         @endphp
                         <span
-                            class="inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-extrabold uppercase border tracking-wider {{ $colors[$stock->condition] ?? 'bg-slate-50 border-slate-200 text-slate-600' }}">
+                            class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-extrabold uppercase border tracking-wider {{ $colors[$stock->condition] ?? 'bg-slate-50 border-slate-200 text-slate-600' }}">
                             {{ \App\Support\UiText::label($stock->condition) }}
                         </span>
                     </td>

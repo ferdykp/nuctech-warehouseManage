@@ -68,7 +68,7 @@
                             <i class="{{ $s['icon'] }}"></i>
                         </div>
                         <div>
-                            <p class="text-[10px] sm:text-[11px] font-extrabold tracking-widest text-slate-400 uppercase">
+                            <p class="text-xs sm:text-xs font-extrabold tracking-widest text-slate-400 uppercase">
                                 {{ $s['label'] }}
                             </p>
                             <p class="mt-0.5 text-2xl font-black text-slate-900">{{ number_format($s['val']) }}</p>
@@ -84,7 +84,7 @@
                 <table data-mobile-cards class="w-full text-left border-collapse min-w-[700px]">
                     <thead>
                         <tr
-                            class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
+                            class="text-xs font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
                             <th scope="col" class="px-6 py-4">Identitas Mesin</th>
                             <th scope="col" class="px-6 py-4">Cabang</th>
                             <th scope="col" class="px-6 py-4">Lokasi / Alamat</th>
@@ -104,7 +104,7 @@
                                             <span class="block text-sm font-extrabold truncate text-slate-900">
                                                 {{ $site->machine_name }}
                                             </span>
-                                            <span class="block text-[11px] text-slate-400 font-semibold truncate mt-0.5">
+                                            <span class="block text-xs text-slate-400 font-semibold truncate mt-0.5">
                                                 ID: #{{ str_pad($site->id, 4, '0', STR_PAD_LEFT) }} &bull;
                                                 {{ $site->created_at ? $site->created_at->diffForHumans() : '-' }}
                                             </span>
@@ -114,7 +114,7 @@
 
                                 <td class="px-6 py-4">
                                     <div
-                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-[10px] font-extrabold uppercase tracking-wide">
+                                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 text-xs font-extrabold uppercase tracking-wide">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                         <span>{{ $site->branch->branch_name ?? 'Belum Ditentukan' }}</span>
                                     </div>
@@ -126,7 +126,7 @@
                                             <i class="text-xs fa-solid fa-location-dot text-slate-400"></i>
                                             <span class="truncate">{{ $site->location ?? '-' }}</span>
                                         </div>
-                                        <span class="text-[11px] text-slate-400 font-medium line-clamp-1">
+                                        <span class="text-xs text-slate-400 font-medium line-clamp-1">
                                             {{ $site->address ?? 'Alamat lengkap belum diisi' }}
                                         </span>
                                     </div>
@@ -209,7 +209,7 @@
                     <div>
                         <h3 id="det_title" class="text-base font-extrabold truncate text-slate-900">Informasi Lokasi</h3>
                         <p id="det_subtitle"
-                            class="text-[10px] font-extrabold tracking-widest text-slate-400 uppercase truncate"></p>
+                            class="text-xs font-extrabold tracking-widest text-slate-400 uppercase truncate"></p>
                     </div>
                 </div>
                 <button type="button" onclick="closeDetailModal()"
@@ -219,17 +219,17 @@
             <div class="p-6 space-y-5 overflow-y-auto text-xs sm:text-sm">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div class="p-3.5 border border-slate-200/80 bg-slate-50/50 rounded-2xl">
-                        <label class="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Kantor Cabang</label>
+                        <label class="block text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-1">Kantor Cabang</label>
                         <p id="det_branch" class="font-bold text-slate-800"></p>
                     </div>
                     <div class="p-3.5 border border-slate-200/80 bg-slate-50/50 rounded-2xl">
                         <label
-                            class="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Tanggal Pendaftaran</label>
+                            class="block text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-1">Tanggal Pendaftaran</label>
                         <p id="det_created" class="font-semibold text-slate-600"></p>
                     </div>
                     <div class="sm:col-span-2 p-3.5 border border-slate-200/80 bg-slate-50/50 rounded-2xl">
                         <label
-                            class="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1">Alamat Lengkap</label>
+                            class="block text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-1">Alamat Lengkap</label>
                         <p id="det_location" class="font-medium leading-relaxed text-slate-700"></p>
                     </div>
                 </div>

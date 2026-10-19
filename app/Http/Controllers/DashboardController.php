@@ -77,7 +77,11 @@ class DashboardController extends Controller
             })
             ->values();
 
+        $sites = Site::with('branch')->when(!$user->isSuperAdmin(), fn ($query) => $query->whereKey($user->site_id ?? 0))->get();
+        $tasks = app(\App\Services\DashboardTasks::class)->forCurrentUser();
+
         return view('dashboard.index', compact(
+            'tasks', 'sites',
             'totalBranch',
             'totalEmployee',
             'totalSparepart',

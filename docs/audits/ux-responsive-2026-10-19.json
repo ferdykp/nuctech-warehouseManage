@@ -1,0 +1,3598 @@
+{
+  "date": "2026-10-19",
+  "environment": "Isolated SQLite QA database, production build, Chromium in-app browser",
+  "layoutChecks": [
+    {
+      "path": "/dashboard",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Dashboard — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/schedules",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Jadwal Kerja — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/attendance?site_id=1&month=2026-10",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Rekap Absensi — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/reimbursements",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Klaim Reimbursement — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/employee",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Manajemen Karyawan — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/salary",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Penggajian — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/report/qa-jakarta",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Laporan Kerusakan — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/daily-reports",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Laporan Harian — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/leave",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Manajemen Cuti dan Izin — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/site",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Manajemen Lokasi — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/branches",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Manajemen Cabang — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/categories",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Manajemen Kategori — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/spareparts/all",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Stok Semua Lokasi — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/dashboard",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Dashboard — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/schedules",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Jadwal Kerja — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/attendance?site_id=1&month=2026-10",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Rekap Absensi — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/reimbursements",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Klaim Reimbursement — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/employee",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Manajemen Karyawan — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/salary",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Penggajian — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/report/qa-jakarta",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Laporan Kerusakan — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/daily-reports",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Laporan Harian — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/leave",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Manajemen Cuti dan Izin — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/site",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Manajemen Lokasi — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/branches",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Manajemen Cabang — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/categories",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Manajemen Kategori — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/spareparts/all",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Stok Semua Lokasi — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/dashboard",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Dashboard — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/schedules",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Jadwal Kerja — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/attendance?site_id=1&month=2026-10",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Rekap Absensi — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/reimbursements",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Klaim Reimbursement — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/employee",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Manajemen Karyawan — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/salary",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Penggajian — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/report/qa-jakarta",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Laporan Kerusakan — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/daily-reports",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Laporan Harian — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/leave",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Manajemen Cuti dan Izin — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/site",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Manajemen Lokasi — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/branches",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Manajemen Cabang — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/categories",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Manajemen Kategori — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/spareparts/all",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Stok Semua Lokasi — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/dashboard",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Dashboard — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/schedules",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Jadwal Kerja — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/attendance?site_id=1&month=2026-10",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Rekap Absensi — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/reimbursements",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Klaim Reimbursement — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/employee",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Manajemen Karyawan — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/salary",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Penggajian — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/report/qa-jakarta",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Laporan Kerusakan — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/daily-reports",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Laporan Harian — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/leave",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Manajemen Cuti dan Izin — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/site",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Manajemen Lokasi — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/branches",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Manajemen Cabang — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/categories",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Manajemen Kategori — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/spareparts/all",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Stok Semua Lokasi — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/dashboard",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Dashboard — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/schedules",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Jadwal Kerja — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/attendance?site_id=1&month=2026-10",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Rekap Absensi — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/reimbursements",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Klaim Reimbursement — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/employee",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Manajemen Karyawan — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/salary",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Penggajian — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/report/qa-jakarta",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Laporan Kerusakan — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/daily-reports",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Laporan Harian — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/leave",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Manajemen Cuti dan Izin — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/site",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Manajemen Lokasi — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/branches",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Manajemen Cabang — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/categories",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Manajemen Kategori — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/spareparts/all",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Stok Semua Lokasi — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/dashboard",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Dashboard — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/schedules",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Jadwal Kerja — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/attendance?site_id=1&month=2026-10",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Rekap Absensi — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/reimbursements",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Klaim Reimbursement — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/employee",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Manajemen Karyawan — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/salary",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Penggajian — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/report/qa-jakarta",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Laporan Kerusakan — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/daily-reports",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Laporan Harian — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/leave",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Manajemen Cuti dan Izin — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/site",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Manajemen Lokasi — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/branches",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Manajemen Cabang — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/categories",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Manajemen Kategori — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/spareparts/all",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Stok Semua Lokasi — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/dashboard",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Dashboard — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/schedules",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Jadwal Kerja — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/attendance?site_id=1&month=2026-10",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Rekap Absensi — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/reimbursements",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Klaim Reimbursement — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/employee",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Manajemen Karyawan — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/salary",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Penggajian — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/report/qa-jakarta",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Laporan Kerusakan — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/daily-reports",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Laporan Harian — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/leave",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Manajemen Cuti dan Izin — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/site",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Manajemen Lokasi — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/branches",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Manajemen Cabang — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/categories",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Manajemen Kategori — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/spareparts/all",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Stok Semua Lokasi — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/inventory/qa-jakarta",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Stok Sparepart per Lokasi — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/employee/create",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Tambah Karyawan — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/employee/1/edit",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Ubah Data Karyawan — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/salary/create",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Tambah Data Gaji — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/salary/1/edit",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Ubah Data Gaji — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/reimbursements/create",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Ajukan Reimbursement — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/reimbursements/1/edit",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Ubah Klaim Reimbursement — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/reimbursements/1/approval",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Periksa Klaim #1 — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/reimbursements/trash/archive",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Sampah - Klaim Reimbursement — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/daily-reports/create",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Buat Laporan Harian — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/daily-reports/1/edit",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Ubah Laporan Harian — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/daily-reports/trash/archive",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Sampah - Laporan Harian — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/report/create",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Buat Laporan Kerusakan — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/report/1/edit",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Ubah Laporan Kerusakan — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/leave/create",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Ajukan Cuti — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/leave/1/edit",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Ubah Pengajuan Cuti — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/profile/profile/1",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Profil Saya — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/profile/profileEdit/1",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Ubah Akun Pengguna — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/profile/profileList",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Manajemen Akun Pengguna — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/profile/create",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Tambah Pengguna — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/shift",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Manajemen Shift — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/site/create",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Tambah Lokasi — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/site/1/edit",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Ubah Profil Lokasi — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/branches/1/edit",
+      "width": 320,
+      "metrics": {
+        "clipped": [],
+        "content": 314,
+        "main": 314,
+        "root": 320,
+        "title": "Ubah Cabang — Nucindo",
+        "width": 320
+      }
+    },
+    {
+      "path": "/inventory/qa-jakarta",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Stok Sparepart per Lokasi — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/employee/create",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Tambah Karyawan — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/employee/1/edit",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Ubah Data Karyawan — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/salary/create",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Tambah Data Gaji — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/salary/1/edit",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Ubah Data Gaji — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/reimbursements/create",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Ajukan Reimbursement — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/reimbursements/1/edit",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Ubah Klaim Reimbursement — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/reimbursements/1/approval",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Periksa Klaim #1 — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/reimbursements/trash/archive",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Sampah - Klaim Reimbursement — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/daily-reports/create",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Buat Laporan Harian — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/daily-reports/1/edit",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Ubah Laporan Harian — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/daily-reports/trash/archive",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Sampah - Laporan Harian — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/report/create",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Buat Laporan Kerusakan — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/report/1/edit",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Ubah Laporan Kerusakan — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/leave/create",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Ajukan Cuti — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/leave/1/edit",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Ubah Pengajuan Cuti — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/profile/profile/1",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Profil Saya — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/profile/profileEdit/1",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Ubah Akun Pengguna — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/profile/profileList",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Manajemen Akun Pengguna — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/profile/create",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Tambah Pengguna — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/shift",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Manajemen Shift — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/site/create",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Tambah Lokasi — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/site/1/edit",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Ubah Profil Lokasi — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/branches/1/edit",
+      "width": 375,
+      "metrics": {
+        "clipped": [],
+        "content": 369,
+        "main": 369,
+        "root": 375,
+        "title": "Ubah Cabang — Nucindo",
+        "width": 375
+      }
+    },
+    {
+      "path": "/inventory/qa-jakarta",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Stok Sparepart per Lokasi — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/employee/create",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Tambah Karyawan — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/employee/1/edit",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Ubah Data Karyawan — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/salary/create",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Tambah Data Gaji — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/salary/1/edit",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Ubah Data Gaji — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/reimbursements/create",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Ajukan Reimbursement — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/reimbursements/1/edit",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Ubah Klaim Reimbursement — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/reimbursements/1/approval",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Periksa Klaim #1 — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/reimbursements/trash/archive",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Sampah - Klaim Reimbursement — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/daily-reports/create",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Buat Laporan Harian — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/daily-reports/1/edit",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Ubah Laporan Harian — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/daily-reports/trash/archive",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Sampah - Laporan Harian — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/report/create",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Buat Laporan Kerusakan — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/report/1/edit",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Ubah Laporan Kerusakan — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/leave/create",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Ajukan Cuti — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/leave/1/edit",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Ubah Pengajuan Cuti — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/profile/profile/1",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Profil Saya — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/profile/profileEdit/1",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Ubah Akun Pengguna — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/profile/profileList",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Manajemen Akun Pengguna — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/profile/create",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Tambah Pengguna — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/shift",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Manajemen Shift — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/site/create",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Tambah Lokasi — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/site/1/edit",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Ubah Profil Lokasi — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/branches/1/edit",
+      "width": 768,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 768,
+        "title": "Ubah Cabang — Nucindo",
+        "width": 768
+      }
+    },
+    {
+      "path": "/inventory/qa-jakarta",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Stok Sparepart per Lokasi — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/employee/create",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Tambah Karyawan — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/employee/1/edit",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Ubah Data Karyawan — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/salary/create",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Tambah Data Gaji — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/salary/1/edit",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Ubah Data Gaji — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/reimbursements/create",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Ajukan Reimbursement — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/reimbursements/1/edit",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Ubah Klaim Reimbursement — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/reimbursements/1/approval",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Periksa Klaim #1 — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/reimbursements/trash/archive",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Sampah - Klaim Reimbursement — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/daily-reports/create",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Buat Laporan Harian — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/daily-reports/1/edit",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Ubah Laporan Harian — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/daily-reports/trash/archive",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Sampah - Laporan Harian — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/report/create",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Buat Laporan Kerusakan — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/report/1/edit",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Ubah Laporan Kerusakan — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/leave/create",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Ajukan Cuti — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/leave/1/edit",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Ubah Pengajuan Cuti — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/profile/profile/1",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Profil Saya — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/profile/profileEdit/1",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Ubah Akun Pengguna — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/profile/profileList",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Manajemen Akun Pengguna — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/profile/create",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Tambah Pengguna — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/shift",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Manajemen Shift — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/site/create",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Tambah Lokasi — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/site/1/edit",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Ubah Profil Lokasi — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/branches/1/edit",
+      "width": 1024,
+      "metrics": {
+        "clipped": [],
+        "content": 762,
+        "main": 762,
+        "root": 1024,
+        "title": "Ubah Cabang — Nucindo",
+        "width": 1024
+      }
+    },
+    {
+      "path": "/inventory/qa-jakarta",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Stok Sparepart per Lokasi — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/employee/create",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Tambah Karyawan — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/employee/1/edit",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Ubah Data Karyawan — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/salary/create",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Tambah Data Gaji — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/salary/1/edit",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Ubah Data Gaji — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/reimbursements/create",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Ajukan Reimbursement — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/reimbursements/1/edit",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Ubah Klaim Reimbursement — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/reimbursements/1/approval",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Periksa Klaim #1 — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/reimbursements/trash/archive",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Sampah - Klaim Reimbursement — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/daily-reports/create",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Buat Laporan Harian — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/daily-reports/1/edit",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Ubah Laporan Harian — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/daily-reports/trash/archive",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Sampah - Laporan Harian — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/report/create",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Buat Laporan Kerusakan — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/report/1/edit",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Ubah Laporan Kerusakan — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/leave/create",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Ajukan Cuti — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/leave/1/edit",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Ubah Pengajuan Cuti — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/profile/profile/1",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Profil Saya — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/profile/profileEdit/1",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Ubah Akun Pengguna — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/profile/profileList",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Manajemen Akun Pengguna — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/profile/create",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Tambah Pengguna — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/shift",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Manajemen Shift — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/site/create",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Tambah Lokasi — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/site/1/edit",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Ubah Profil Lokasi — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/branches/1/edit",
+      "width": 1440,
+      "metrics": {
+        "clipped": [],
+        "content": 1178,
+        "main": 1178,
+        "root": 1440,
+        "title": "Ubah Cabang — Nucindo",
+        "width": 1440
+      }
+    },
+    {
+      "path": "/inventory/qa-jakarta",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Stok Sparepart per Lokasi — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/employee/create",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Tambah Karyawan — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/employee/1/edit",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Ubah Data Karyawan — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/salary/create",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Tambah Data Gaji — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/salary/1/edit",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Ubah Data Gaji — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/reimbursements/create",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Ajukan Reimbursement — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/reimbursements/1/edit",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Ubah Klaim Reimbursement — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/reimbursements/1/approval",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Periksa Klaim #1 — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/reimbursements/trash/archive",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Sampah - Klaim Reimbursement — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/daily-reports/create",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Buat Laporan Harian — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/daily-reports/1/edit",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Ubah Laporan Harian — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/daily-reports/trash/archive",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Sampah - Laporan Harian — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/report/create",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Buat Laporan Kerusakan — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/report/1/edit",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Ubah Laporan Kerusakan — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/leave/create",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Ajukan Cuti — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/leave/1/edit",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Ubah Pengajuan Cuti — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/profile/profile/1",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Profil Saya — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/profile/profileEdit/1",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Ubah Akun Pengguna — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/profile/profileList",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Manajemen Akun Pengguna — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/profile/create",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Tambah Pengguna — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/shift",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Manajemen Shift — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/site/create",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Tambah Lokasi — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/site/1/edit",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Ubah Profil Lokasi — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/branches/1/edit",
+      "width": 1920,
+      "metrics": {
+        "clipped": [],
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "title": "Ubah Cabang — Nucindo",
+        "width": 1920
+      }
+    },
+    {
+      "path": "/inventory/qa-jakarta",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Stok Sparepart per Lokasi — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/employee/create",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Tambah Karyawan — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/employee/1/edit",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Ubah Data Karyawan — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/salary/create",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Tambah Data Gaji — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/salary/1/edit",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Ubah Data Gaji — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/reimbursements/create",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Ajukan Reimbursement — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/reimbursements/1/edit",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Ubah Klaim Reimbursement — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/reimbursements/1/approval",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Periksa Klaim #1 — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/reimbursements/trash/archive",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Sampah - Klaim Reimbursement — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/daily-reports/create",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Buat Laporan Harian — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/daily-reports/1/edit",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Ubah Laporan Harian — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/daily-reports/trash/archive",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Sampah - Laporan Harian — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/report/create",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Buat Laporan Kerusakan — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/report/1/edit",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Ubah Laporan Kerusakan — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/leave/create",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Ajukan Cuti — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/leave/1/edit",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Ubah Pengajuan Cuti — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/profile/profile/1",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Profil Saya — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/profile/profileEdit/1",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Ubah Akun Pengguna — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/profile/profileList",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Manajemen Akun Pengguna — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/profile/create",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Tambah Pengguna — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/shift",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Manajemen Shift — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/site/create",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Tambah Lokasi — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/site/1/edit",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Ubah Profil Lokasi — Nucindo",
+        "width": 3840
+      }
+    },
+    {
+      "path": "/branches/1/edit",
+      "width": 3840,
+      "metrics": {
+        "clipped": [],
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "title": "Ubah Cabang — Nucindo",
+        "width": 3840
+      }
+    }
+  ],
+  "modalChecks": [
+    {
+      "path": "/reimbursements",
+      "width": 320,
+      "panels": [
+        {
+          "bottom": 584,
+          "left": 12,
+          "right": 308,
+          "top": 16
+        }
+      ]
+    },
+    {
+      "path": "/schedules",
+      "width": 320,
+      "panels": [
+        {
+          "bottom": 584,
+          "left": 12,
+          "right": 308,
+          "top": 16
+        }
+      ]
+    },
+    {
+      "path": "/attendance?site_id=1&month=2026-10",
+      "width": 320,
+      "panels": [
+        {
+          "bottom": 596,
+          "left": 12,
+          "right": 308,
+          "top": 28
+        }
+      ]
+    },
+    {
+      "path": "/employee",
+      "width": 320,
+      "panels": [
+        {
+          "bottom": 584,
+          "left": 12,
+          "right": 308,
+          "top": 16
+        }
+      ]
+    },
+    {
+      "path": "/inventory/qa-jakarta",
+      "width": 320,
+      "panels": [
+        {
+          "bottom": 441,
+          "left": 12,
+          "right": 308,
+          "top": 159
+        }
+      ]
+    },
+    {
+      "path": "/site",
+      "width": 320,
+      "panels": [
+        {
+          "bottom": 537,
+          "left": 12,
+          "right": 308,
+          "top": 63
+        }
+      ]
+    },
+    {
+      "path": "/categories",
+      "width": 320,
+      "panels": [
+        {
+          "bottom": 502,
+          "left": 12,
+          "right": 308,
+          "top": 98
+        }
+      ]
+    },
+    {
+      "path": "/daily-reports",
+      "width": 320,
+      "panels": [
+        {
+          "bottom": 584,
+          "left": 12,
+          "right": 308,
+          "top": 16
+        }
+      ]
+    },
+    {
+      "path": "/leave",
+      "width": 320,
+      "panels": [
+        {
+          "bottom": 459,
+          "left": 12,
+          "right": 308,
+          "top": 141
+        }
+      ]
+    },
+    {
+      "path": "/salary",
+      "width": 320,
+      "panels": [
+        {
+          "bottom": 584,
+          "left": 12,
+          "right": 308,
+          "top": 16
+        }
+      ]
+    },
+    {
+      "path": "/reimbursements",
+      "width": 768,
+      "panels": [
+        {
+          "bottom": 584,
+          "left": 12,
+          "right": 756,
+          "top": 16
+        }
+      ]
+    },
+    {
+      "path": "/schedules",
+      "width": 768,
+      "panels": [
+        {
+          "bottom": 584,
+          "left": 24,
+          "right": 744,
+          "top": 16
+        }
+      ]
+    },
+    {
+      "path": "/attendance?site_id=1&month=2026-10",
+      "width": 768,
+      "panels": [
+        {
+          "bottom": 596,
+          "left": 160,
+          "right": 608,
+          "top": 28
+        }
+      ]
+    },
+    {
+      "path": "/employee",
+      "width": 768,
+      "panels": [
+        {
+          "bottom": 584,
+          "left": 48,
+          "right": 720,
+          "top": 16
+        }
+      ]
+    },
+    {
+      "path": "/inventory/qa-jakarta",
+      "width": 768,
+      "panels": [
+        {
+          "bottom": 499.5,
+          "left": 12,
+          "right": 756,
+          "top": 100.5
+        }
+      ]
+    },
+    {
+      "path": "/site",
+      "width": 768,
+      "panels": [
+        {
+          "bottom": 545,
+          "left": 128,
+          "right": 640,
+          "top": 55
+        }
+      ]
+    },
+    {
+      "path": "/categories",
+      "width": 768,
+      "panels": [
+        {
+          "bottom": 504,
+          "left": 160,
+          "right": 608,
+          "top": 96
+        }
+      ]
+    },
+    {
+      "path": "/daily-reports",
+      "width": 768,
+      "panels": [
+        {
+          "bottom": 509.75,
+          "left": 48,
+          "right": 720,
+          "top": 90.25
+        }
+      ]
+    },
+    {
+      "path": "/leave",
+      "width": 768,
+      "panels": [
+        {
+          "bottom": 457,
+          "left": 160,
+          "right": 608,
+          "top": 143
+        }
+      ]
+    },
+    {
+      "path": "/salary",
+      "width": 768,
+      "panels": [
+        {
+          "bottom": 510.75,
+          "left": 160,
+          "right": 608,
+          "top": 89.25
+        }
+      ]
+    },
+    {
+      "path": "/reimbursements",
+      "width": 1440,
+      "panels": [
+        {
+          "bottom": 584,
+          "left": 336,
+          "right": 1104,
+          "top": 16
+        }
+      ]
+    },
+    {
+      "path": "/schedules",
+      "width": 1440,
+      "panels": [
+        {
+          "bottom": 584,
+          "left": 144,
+          "right": 1296,
+          "top": 16
+        }
+      ]
+    },
+    {
+      "path": "/attendance?site_id=1&month=2026-10",
+      "width": 1440,
+      "panels": [
+        {
+          "bottom": 596,
+          "left": 496,
+          "right": 944,
+          "top": 28
+        }
+      ]
+    },
+    {
+      "path": "/employee",
+      "width": 1440,
+      "panels": [
+        {
+          "bottom": 584,
+          "left": 384,
+          "right": 1056,
+          "top": 16
+        }
+      ]
+    },
+    {
+      "path": "/inventory/qa-jakarta",
+      "width": 1440,
+      "panels": [
+        {
+          "bottom": 499.5,
+          "left": 336,
+          "right": 1104,
+          "top": 100.5
+        }
+      ]
+    },
+    {
+      "path": "/site",
+      "width": 1440,
+      "panels": [
+        {
+          "bottom": 545,
+          "left": 464,
+          "right": 976,
+          "top": 55
+        }
+      ]
+    },
+    {
+      "path": "/categories",
+      "width": 1440,
+      "panels": [
+        {
+          "bottom": 504,
+          "left": 496,
+          "right": 944,
+          "top": 96
+        }
+      ]
+    },
+    {
+      "path": "/daily-reports",
+      "width": 1440,
+      "panels": [
+        {
+          "bottom": 509.75,
+          "left": 384,
+          "right": 1056,
+          "top": 90.25
+        }
+      ]
+    },
+    {
+      "path": "/leave",
+      "width": 1440,
+      "panels": [
+        {
+          "bottom": 457,
+          "left": 496,
+          "right": 944,
+          "top": 143
+        }
+      ]
+    },
+    {
+      "path": "/salary",
+      "width": 1440,
+      "panels": [
+        {
+          "bottom": 510.75,
+          "left": 496,
+          "right": 944,
+          "top": 89.25
+        }
+      ]
+    }
+  ],
+  "wideChecks": [
+    {
+      "path": "/schedules",
+      "width": 1920,
+      "metrics": {
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "workspace": 1594
+      }
+    },
+    {
+      "path": "/attendance?site_id=1&month=2026-10",
+      "width": 1920,
+      "metrics": {
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "workspace": 1594
+      }
+    },
+    {
+      "path": "/inventory/qa-jakarta",
+      "width": 1920,
+      "metrics": {
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "workspace": 1594
+      }
+    },
+    {
+      "path": "/spareparts/all",
+      "width": 1920,
+      "metrics": {
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "workspace": 1594
+      }
+    },
+    {
+      "path": "/employee",
+      "width": 1920,
+      "metrics": {
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "workspace": 1594
+      }
+    },
+    {
+      "path": "/salary",
+      "width": 1920,
+      "metrics": {
+        "content": 1658,
+        "main": 1658,
+        "root": 1920,
+        "workspace": 1594
+      }
+    },
+    {
+      "path": "/schedules",
+      "width": 3840,
+      "metrics": {
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "workspace": 2240
+      }
+    },
+    {
+      "path": "/attendance?site_id=1&month=2026-10",
+      "width": 3840,
+      "metrics": {
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "workspace": 2240
+      }
+    },
+    {
+      "path": "/inventory/qa-jakarta",
+      "width": 3840,
+      "metrics": {
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "workspace": 2240
+      }
+    },
+    {
+      "path": "/spareparts/all",
+      "width": 3840,
+      "metrics": {
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "workspace": 2240
+      }
+    },
+    {
+      "path": "/employee",
+      "width": 3840,
+      "metrics": {
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "workspace": 2240
+      }
+    },
+    {
+      "path": "/salary",
+      "width": 3840,
+      "metrics": {
+        "content": 3578,
+        "main": 3578,
+        "root": 3840,
+        "workspace": 2240
+      }
+    }
+  ]
+}

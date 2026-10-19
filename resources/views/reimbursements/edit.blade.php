@@ -170,7 +170,7 @@
 
                             <input type="text" id="amountDisplay"
                                 value="{{ number_format((float) old('amount', $reimbursement->amount), 0, ',', '.') }}"
-                                required placeholder="0" onkeyup="formatCurrency(this)"
+                                required placeholder="0" oninput="formatCurrency(this)"
                                 class="w-full py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-black border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
 
                             <input type="hidden" name="amount" id="amountRaw"
@@ -200,7 +200,7 @@
                     <div class="space-y-1.5 md:col-span-2">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
                             Ganti Lampiran Nota
-                            <span class="text-[10px] text-slate-400 font-normal lowercase">(Kosongkan jika tidak diubah)</span>
+                            <span class="text-xs text-slate-400 font-normal lowercase">(Kosongkan jika tidak diubah)</span>
                         </label>
 
                         @if ($reimbursement->receipt_attachment)

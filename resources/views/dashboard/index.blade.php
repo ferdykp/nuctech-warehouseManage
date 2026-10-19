@@ -46,7 +46,7 @@
                         <i class="fa-solid fa-building"></i>
                     </div>
                     <span
-                        class="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50 rounded-lg border border-blue-100">
+                        class="px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-50 rounded-lg border border-blue-100">
                         Aktif
                     </span>
                 </div>
@@ -63,7 +63,7 @@
                         <i class="fa-solid fa-users"></i>
                     </div>
                     <span
-                        class="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 rounded-lg border border-indigo-100">
+                        class="px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 rounded-lg border border-indigo-100">
                         Karyawan
                     </span>
                 </div>
@@ -80,8 +80,8 @@
                         <i class="fa-solid fa-boxes-stacked"></i>
                     </div>
                     <span
-                        class="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-violet-700 bg-violet-50 rounded-lg border border-violet-100">
-                        Semua Lokasi
+                        class="px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-violet-700 bg-violet-50 rounded-lg border border-violet-100">
+                        {{ auth()->user()?->role === 'superadmin' ? 'Semua Lokasi' : 'Lokasi Anda' }}
                     </span>
                 </div>
                 <p class="text-3xl font-black tracking-tight text-slate-900">{{ number_format($totalSparepart ?? 0) }}</p>
@@ -97,7 +97,7 @@
                         <i class="fa-solid fa-triangle-exclamation"></i>
                     </div>
                     <span
-                        class="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 rounded-lg border border-rose-100">
+                        class="px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-rose-700 bg-rose-50 rounded-lg border border-rose-100">
                         Perlu Diperiksa
                     </span>
                 </div>
@@ -106,6 +106,18 @@
             </div>
 
         </div>
+
+        <section aria-labelledby="dashboard-tasks-title" class="space-y-3">
+            <div>
+                <h2 id="dashboard-tasks-title" class="text-lg font-extrabold text-slate-900">Perlu ditindaklanjuti</h2>
+                <p class="mt-1 text-sm text-slate-600">Pekerjaan tertunda sesuai akses akun Anda.</p>
+            </div>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                @foreach ($tasks as $task)
+                    <x-ui.task-card :label="$task['label']" :count="$task['count']" :url="$task['url']" :help="$task['help']" />
+                @endforeach
+            </div>
+        </section>
 
         {{-- 3. MAIN WORKSPACE GRID --}}
         <div class="grid items-start grid-cols-1 gap-6 lg:grid-cols-3">
@@ -122,18 +134,20 @@
                             </h3>
                             <p class="text-xs font-medium text-slate-500">Jadwal kerja karyawan hari ini.</p>
                         </div>
+                        @if (in_array(auth()->user()?->role, ['superadmin', 'team_leader', 'administration', 'employee_role']))
                         <a href="{{ route('schedule.index') }}"
                             class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-600 hover:text-white transition-all shrink-0">
                             <span>Lihat Semua Jadwal</span>
                             <i class="fa-solid fa-arrow-right text-[10px]"></i>
                         </a>
+                        @endif
                     </div>
 
                     {{-- Table Responsive Wrapper --}}
                     <div class="overflow-x-auto border rounded-2xl border-slate-100">
                         <table class="w-full text-xs text-left">
                             <thead
-                                class="bg-slate-50 border-b border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                                class="bg-slate-50 border-b border-slate-100 text-xs font-bold uppercase tracking-wider text-slate-500">
                                 <tr>
                                     <th class="px-4 py-3">Karyawan</th>
                                     <th class="px-4 py-3">Lokasi Mesin</th>
@@ -155,14 +169,14 @@
                                         </td>
                                         <td class="px-4 py-3">
                                             <span
-                                                class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold bg-slate-100 text-slate-600 rounded-lg">
+                                                class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold bg-slate-100 text-slate-600 rounded-lg">
                                                 <i class="fa-solid fa-location-dot text-slate-400"></i>
                                                 {{ $sched->employee?->site?->machine_name ?? 'Belum Ditentukan' }}
                                             </span>
                                         </td>
                                         <td class="px-4 py-3 text-center">
                                             <span
-                                                class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                class="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                 <i
                                                     class="mr-1 fa-regular fa-clock"></i>{{ $sched->shift?->shift_name ?? 'Standar' }}
                                             </span>
@@ -181,6 +195,7 @@
                     </div>
                 </div>
 
+                @if (in_array(auth()->user()?->role, ['superadmin', 'team_leader']))
                 {{-- SITE & INVENTORY DIRECTORY --}}
                 <div class="p-6 bg-white border shadow-xs border-slate-200/80 rounded-3xl">
                     <div class="flex flex-col justify-between gap-3 mb-5 sm:flex-row sm:items-center">
@@ -190,16 +205,17 @@
                             </h3>
                             <p class="text-xs font-medium text-slate-500">Pilih lokasi untuk mengelola stok suku cadang.</p>
                         </div>
+                        @if (in_array(auth()->user()?->role, ['superadmin', 'team_leader']))
                         <a href="{{ route('sparepart.all') }}"
                             class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 rounded-xl hover:bg-slate-200 transition-all shrink-0">
                             <span>Semua Sparepart</span>
                             <i class="fa-solid fa-arrow-right text-[10px]"></i>
                         </a>
+                        @endif
                     </div>
 
                     @php
-                        // Gunakan data variabel $sites jika disuplai controller, atau jalankan fallback query
-                        $siteList = $sites ?? \App\Models\Site::with('branch')->get();
+                        $siteList = $sites;
                     @endphp
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[320px] overflow-y-auto pr-1">
@@ -215,7 +231,7 @@
                                         class="text-xs font-extrabold truncate transition-colors text-slate-800 group-hover:text-blue-700">
                                         {{ $site->machine_name }}
                                     </p>
-                                    <p class="text-[10px] font-semibold text-slate-400 uppercase truncate mt-0.5">
+                                    <p class="text-xs font-semibold text-slate-400 uppercase truncate mt-0.5">
                                         {{ $site->branch?->branch_name ?? 'Kantor Pusat' }}
                                     </p>
                                 </div>
@@ -232,6 +248,7 @@
                     </div>
                 </div>
 
+                @endif
             </div>
 
             {{-- RIGHT COLUMN: ACTIONS & ALERTS (Span 1) --}}
@@ -245,10 +262,13 @@
                     <p class="mb-5 text-xs font-medium text-slate-400">Buka fitur yang sering digunakan.</p>
 
                     <div class="space-y-2.5">
+                        @if (in_array(auth()->user()?->role, ['superadmin', 'team_leader']))
                         <a href="{{ route('sparepart.all') }}"
                             class="w-full py-2.5 px-4 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98]">
                             <i class="fa-solid fa-file-excel"></i> Lihat Stok Semua Lokasi
                         </a>
+                        @endif
+                        @if (in_array(auth()->user()?->role, ['superadmin', 'team_leader', 'administration', 'employee_role']))
                         <a href="{{ route('schedule.index') }}"
                             class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98]">
                             <i class="fa-solid fa-calendar-plus"></i> Kelola Jadwal
@@ -257,6 +277,7 @@
                             class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98]">
                             <i class="fa-solid fa-clipboard-user"></i> Proses Absensi
                         </a>
+                        @endif
                         @if (auth()->user()?->role === 'superadmin')
                             <a href="{{ route('employee.index') }}"
                                 class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
@@ -278,7 +299,7 @@
                                 <i class="fa-solid fa-triangle-exclamation text-rose-500 text-base mt-0.5"></i>
                                 <div>
                                     <p class="text-xs font-bold text-rose-900">Peringatan Stok</p>
-                                    <p class="text-[11px] font-medium text-rose-700 mt-0.5">
+                                    <p class="text-xs font-medium text-rose-700 mt-0.5">
                                         {{ $criticalStock }} jenis stok perlu segera ditambah.
                                     </p>
                                 </div>
@@ -288,7 +309,7 @@
                                 <i class="fa-solid fa-circle-check text-emerald-500 text-base mt-0.5"></i>
                                 <div>
                                     <p class="text-xs font-bold text-emerald-900">Stok Mencukupi</p>
-                                    <p class="text-[11px] font-medium text-emerald-700 mt-0.5">
+                                    <p class="text-xs font-medium text-emerald-700 mt-0.5">
                                         Seluruh stok berada di atas batas minimum.
                                     </p>
                                 </div>
@@ -299,7 +320,7 @@
                             <i class="fa-solid fa-clock-rotate-left text-slate-400 text-base mt-0.5"></i>
                             <div>
                                 <p class="text-xs font-bold text-slate-800">Periode Jadwal</p>
-                                <p class="text-[11px] font-medium text-slate-500 mt-0.5">
+                                <p class="text-xs font-medium text-slate-500 mt-0.5">
                                     Periode jadwal: {{ now()->translatedFormat('F Y') }} .
                                 </p>
                             </div>

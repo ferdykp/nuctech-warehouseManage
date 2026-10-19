@@ -40,17 +40,21 @@ class EmployeeController extends Controller
         ];
 
         // 2. Query khusus Karyawan Join Date 1 Bulan Full (Berdasarkan bulan terpilih, tanpa memedulikan tahun join)
+        // Query karyawan berdasarkan bulan PKWT
         $upcomingEmployeesQuery = Employee::with(['site'])
             ->where('status', '!=', 'Resigned')
-            ->whereNotNull('join_date')
-            ->whereMonth('join_date', $bannerMonth);
+            ->whereNotNull('pkwt_date')
+            ->whereMonth('pkwt_date', $bannerMonth);
 
         if ($user->role === 'employee_role') {
             $upcomingEmployeesQuery->where('site_id', $user->site_id);
         }
 
         $upcomingEmployees = $upcomingEmployeesQuery
-            ->get()->sortBy(fn ($employee) => $employee->join_date->day)->values();
+            ->orderBy('name')
+            ->get()
+            ->sortBy(fn (Employee $employee) => (int) $employee->pkwt_date->format('d'))
+            ->values();
 
         // 3. Query Utama untuk Tabel Karyawan
         $employeesQuery = Employee::with(['site.branch']);
@@ -74,7 +78,8 @@ class EmployeeController extends Controller
                     ->orWhere('nik', 'like', '%' . $search . '%')
                     ->orWhere('position', 'like', '%' . $search . '%')
                     ->orWhere('phone_number', 'like', '%' . $search . '%')
-                    ->orWhere('bank_account_number', 'like', '%' . $search . '%');
+                    ->orWhere('bank_account_number', 'like', '%' . $search . '%')
+                    ->orWhere('pkwt_number', 'like', '%' . $search . '%');
             });
         }
 
@@ -155,6 +160,8 @@ class EmployeeController extends Controller
             'join_date'           => 'required|date',
             'contract_start_date' => 'nullable|date',
             'more_information', // <--- Tambahkan ini
+            'pkwt_date'   => ['nullable', 'date'],
+            'pkwt_number' => ['nullable', 'string', 'max:150'],
         ]);
 
         $siteId = ($user->role === 'employee_role') ? $user->site_id : $validatedData['site_id'];
@@ -210,6 +217,8 @@ class EmployeeController extends Controller
             'join_date'            => 'required|date',
             'resign_date'          => 'nullable|required_if:status,Resigned|date', // Tambahkan validasi resign_date
             'contract_start_date'  => 'nullable|date',
+            'pkwt_date'   => ['nullable', 'date'],
+            'pkwt_number' => ['nullable', 'string', 'max:150'],
         ]);
 
         $newSalary = $validatedData['basic_salary'] ?? 0;
@@ -267,6 +276,9 @@ class EmployeeController extends Controller
 
             $employee->tenure_formatted = implode(' ', $tenureParts);
             $employee->join_date_formatted = $joinDate->translatedFormat('d F Y');
+            $employee->pkwt_date_formatted = $employee->pkwt_date
+                ? $employee->pkwt_date->translatedFormat('d F Y')
+                : '-';
             $employee->resign_date_formatted = $employee->resign_date
                 ? Carbon::parse($employee->resign_date)->translatedFormat('d F Y')
                 : '-';
@@ -337,17 +349,33 @@ class EmployeeController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:5120',
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:5120'],
         ]);
 
         $user = Auth::user();
-        $siteId = ($user->role === 'employee_role') ? $user->site_id : $request->input('site_id');
+
+        $siteId = $user->role === 'employee_role'
+            ? $user->site_id
+            : $request->input('site_id');
+
+        $import = new EmployeesImport($siteId);
 
         try {
-            Excel::import(new EmployeesImport($siteId), $request->file('file'));
-            return redirect()->back()->with('success', 'Data karyawan berhasil diimpor.');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Data karyawan gagal diimpor: ' . $e->getMessage());
+            Excel::import($import, $request->file('file'));
+
+            return redirect()->back()->with(
+                'success',
+                "Import selesai: {$import->created} ditambahkan, "
+                    . "{$import->updated} diperbarui, "
+                    . "{$import->unchanged} tidak berubah."
+            );
+        } catch (\Throwable $e) {
+            report($e);
+
+            return redirect()->back()->with(
+                'error',
+                'Import dibatalkan: ' . $e->getMessage()
+            );
         }
     }
 

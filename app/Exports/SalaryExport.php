@@ -23,6 +23,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 class SalaryExport extends DefaultValueBinder implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize, WithStyles, WithColumnFormatting, WithCustomValueBinder
 {
     private $rowNumber = 0;
+    private array $calculations = [];
 
     public function __construct(
         protected string $month,
@@ -83,6 +84,8 @@ class SalaryExport extends DefaultValueBinder implements FromCollection, WithHea
         }
 
         $salaries = $query->get();
+        $this->calculations = app(\App\Services\PayrollCalculation::class)->calculateMany(
+            $salaries, sprintf('%04d-%02d', $this->year, (int) $this->month));
 
         $formattedSalaries = $salaries->map(function ($salary) {
             $machineName = strtolower(trim($salary->employee->site->machine_name ?? ''));
@@ -182,7 +185,7 @@ class SalaryExport extends DefaultValueBinder implements FromCollection, WithHea
 
         $monthPeriod = sprintf('%04d-%02d', $this->year, (int)$this->month);
         $holidayService = app(IndonesianHolidayService::class);
-        $calc = $this->calculateSalaryDetails($salary->employee_id, $monthPeriod, $holidayService, $salary->amount);
+        $calc = $this->calculations[$salary->id] ?? $this->calculateSalaryDetails($salary->employee_id, $monthPeriod, $holidayService, $salary->amount);
 
         // PENYESUAIAN KOLOM BEFORE/AFTER
         if ($calc['holiday_overtime_days'] > 0) {

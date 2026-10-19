@@ -89,7 +89,7 @@
                 <table data-mobile-cards class="w-full text-left border-collapse min-w-[700px]">
                     <thead>
                         <tr
-                            class="border-b border-slate-100 bg-slate-50/60 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                            class="border-b border-slate-100 bg-slate-50/60 text-xs font-bold text-slate-400 uppercase tracking-wider">
                             <th scope="col" class="px-6 py-4">Karyawan</th>
                             <th scope="col" class="px-4 py-4">Jenis Cuti</th>
                             <th scope="col" class="px-4 py-4">Rentang Tanggal</th>
@@ -106,11 +106,11 @@
                                     <strong
                                         class="block text-sm font-bold text-slate-900">{{ $req->employee->name ?? '-' }}</strong>
                                     <span
-                                        class="text-[11px] text-slate-400 font-semibold">{{ $req->employee->position ?? '-' }}</span>
+                                        class="text-xs text-slate-400 font-semibold">{{ $req->employee->position ?? '-' }}</span>
                                 </td>
                                 <td class="px-4 py-4">
                                     <span
-                                        class="px-3 py-1 text-[11px] font-extrabold rounded-full bg-slate-100 text-slate-700 border border-slate-200/60">
+                                        class="px-3 py-1 text-xs font-extrabold rounded-full bg-slate-100 text-slate-700 border border-slate-200/60">
                                         {{ $req->leaveType->name ?? '-' }}
                                     </span>
                                 </td>
@@ -210,7 +210,7 @@
                     </div>
                     <div>
                         <h3 class="text-sm font-extrabold text-slate-900">Tolak Pengajuan Cuti</h3>
-                        <p class="text-[11px] font-medium text-slate-500">Tuliskan alasan penolakan cuti ini.</p>
+                        <p class="text-xs font-medium text-slate-500">Tuliskan alasan penolakan cuti ini.</p>
                     </div>
                 </div>
                 <button type="button" onclick="closeRejectModal()"
@@ -220,7 +220,7 @@
             <form id="rejectForm" method="POST" class="p-6 space-y-4">
                 @csrf
                 <div>
-                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Alasan Penolakan</label>
+                    <label class="block mb-1.5 text-xs font-bold tracking-wider uppercase text-slate-600">Alasan Penolakan</label>
                     <textarea name="rejection_reason" required rows="3"
                         class="w-full p-3 text-xs font-medium border outline-none bg-slate-50 border-slate-200 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 text-slate-800 placeholder-slate-400"
                         placeholder="Tuliskan alasan penolakan..."></textarea>

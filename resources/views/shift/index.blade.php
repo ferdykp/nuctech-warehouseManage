@@ -128,7 +128,7 @@
                 <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
                     <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Daftar Shift</h2>
                     <span
-                        class="text-[10px] font-extrabold text-slate-600 bg-slate-100 border border-slate-200/80 px-3 py-1 rounded-full uppercase">
+                        class="text-xs font-extrabold text-slate-600 bg-slate-100 border border-slate-200/80 px-3 py-1 rounded-full uppercase">
                         {{ count($shifts) }} Shift Terdaftar
                     </span>
                 </div>
@@ -137,7 +137,7 @@
                     <table data-mobile-cards class="w-full text-left border-collapse min-w-[550px]">
                         <thead>
                             <tr
-                                class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
+                                class="text-xs font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
                                 <th class="px-6 py-4">Nama Shift</th>
                                 <th class="px-6 py-4 text-center">Jam Kerja</th>
                                 <th class="px-6 py-4 text-center">Status</th>
@@ -158,7 +158,7 @@
                                             <span class="font-bold text-slate-300">&mdash;</span>
                                         @else
                                             <span
-                                                class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-lg text-slate-700 font-mono text-[11px]">
+                                                class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-lg text-slate-700 font-mono text-xs">
                                                 {{ \Carbon\Carbon::parse($sf->start_time)->format('H:i') }} -
                                                 {{ \Carbon\Carbon::parse($sf->end_time)->format('H:i') }}
                                             </span>
@@ -168,12 +168,12 @@
                                     <td class="px-6 py-4 text-center">
                                         @if ($sf->is_off)
                                             <span
-                                                class="px-3 py-1 text-[10px] font-extrabold text-rose-800 bg-rose-50 border border-rose-200 rounded-full uppercase">
+                                                class="px-3 py-1 text-xs font-extrabold text-rose-800 bg-rose-50 border border-rose-200 rounded-full uppercase">
                                                 Hari Libur
                                             </span>
                                         @else
                                             <span
-                                                class="px-3 py-1 text-[10px] font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-full uppercase">
+                                                class="px-3 py-1 text-xs font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-full uppercase">
                                                 Shift
                                             </span>
                                         @endif

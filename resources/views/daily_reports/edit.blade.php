@@ -138,14 +138,14 @@
                             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <div>
                                     <label
-                                        class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Unggah
+                                        class="block text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-1">Unggah
                                         Foto</label>
                                     <input type="file" name="photos[]" accept="image/*"
                                         class="w-full text-xs cursor-pointer text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
                                 </div>
                                 <div>
                                     <label
-                                        class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Keterangan</label>
+                                        class="block text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-1">Keterangan</label>
                                     <input type="text" name="captions[]" placeholder="Keterangan foto..."
                                         class="w-full px-3 py-2 text-xs bg-white border outline-none border-slate-200 rounded-xl focus:border-emerald-500 text-slate-700">
                                 </div>
@@ -185,12 +185,12 @@
                 <button type="button" onclick="this.parentElement.remove()" class="absolute text-base font-bold cursor-pointer top-3 right-3 text-slate-400 hover:text-rose-600">&times;</button>
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
-                        <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Upload Photo</label>
+                        <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-1">Upload Photo</label>
                         <input type="file" name="photos[]" accept="image/*"
                             class="w-full text-xs cursor-pointer text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Caption</label>
+                        <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-1">Caption</label>
                         <input type="text" name="captions[]" placeholder="Photo caption..."
                             class="w-full px-3 py-2 text-xs bg-white border outline-none border-slate-200 rounded-xl focus:border-emerald-500 text-slate-700">
                     </div>

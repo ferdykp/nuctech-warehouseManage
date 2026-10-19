@@ -3,7 +3,7 @@
 @section('title', 'Laporan Kerusakan')
 
 @section('content')
-    <div class="w-full space-y-6">
+    <div data-ui-list-root="{{ route('report.index') }}" class="w-full space-y-6">
 
         {{-- 1. HEADER CARD --}}
         <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
@@ -25,8 +25,8 @@
                 <div
                     class="flex items-center gap-6 pt-4 border-t md:pt-0 md:border-t-0 md:border-l border-slate-200 md:pl-8 shrink-0">
                     <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Jumlah Laporan</p>
-                        <p class="text-2xl font-black text-slate-900 mt-0.5 tracking-tight">{{ $report->total() }}</p>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Jumlah Laporan</p>
+                        <p id="report-total" class="text-2xl font-black text-slate-900 mt-0.5 tracking-tight">{{ $report->total() }}</p>
                     </div>
                 </div>
             </div>
@@ -53,7 +53,7 @@
                         <table data-mobile-cards class="w-full text-left border-collapse min-w-[650px]">
                             <thead>
                                 <tr
-                                    class="border-b bg-amber-50/50 border-slate-200/80 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                                    class="border-b bg-amber-50/50 border-slate-200/80 text-xs font-extrabold text-slate-500 uppercase tracking-wider">
                                     <th class="px-6 py-3.5">Informasi Suku Cadang</th>
                                     <th class="px-6 py-3.5">Lokasi Mesin</th>
                                     <th class="px-6 py-3.5 text-center">Jumlah Rusak</th>
@@ -66,7 +66,7 @@
                                         <td class="px-6 py-3.5">
                                             <span
                                                 class="block text-sm font-bold leading-snug text-slate-900">{{ $item->sparepart?->item_name ?? 'N/A' }}</span>
-                                            <span class="text-[10px] font-mono text-slate-400">SN:
+                                            <span class="text-xs font-mono text-slate-400">SN:
                                                 {{ $item->sparepart?->serial_number ?? '-' }}</span>
                                         </td>
                                         <td class="px-6 py-3.5 font-bold text-slate-700">
@@ -74,7 +74,7 @@
                                         </td>
                                         <td class="px-6 py-3.5 font-black text-center text-rose-600 text-sm">
                                             {{ $item->qty }} <span
-                                                class="text-[10px] font-bold text-slate-400 uppercase">{{ $item->sparepart?->uom ?? 'PCS' }}</span>
+                                                class="text-xs font-bold text-slate-400 uppercase">{{ $item->sparepart?->uom ?? 'PCS' }}</span>
                                         </td>
                                         <td class="px-6 py-3.5 text-center">
                                             @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader']))
@@ -117,10 +117,12 @@
                                 <i class="text-xs fa-solid fa-plus"></i> Tambah Laporan Manual
                             </a>
 
+                            @if (auth()->user()->isSuperAdmin())
                             <button id="btn-delete" type="button" onclick="confirmDeleteSelected()"
                                 class="flex items-center gap-2 px-4 py-2.5 text-xs font-bold transition-all bg-white border text-slate-600 border-slate-200 rounded-xl hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 active:scale-95 cursor-pointer">
                                 <i class="fa-solid fa-trash-can"></i> Hapus Terpilih
                             </button>
+                            @endif
 
                             <div class="hidden w-px h-6 mx-1 bg-slate-200 sm:block"></div>
 
@@ -136,8 +138,8 @@
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none">
                             <i class="text-xs fa-solid fa-magnifying-glass"></i>
                         </span>
-                        <input type="text" id="search" name="search" data-route="{{ route('report.search', ['site_id' => $siteData->id]) }}"
-                            placeholder="Cari laporan atau lokasi..." autocomplete="off" value="{{ request('search') }}"
+                        <input type="text" id="search" aria-label="Cari laporan" name="search" data-route="{{ route('report.index', $siteData->slug) }}"
+                            value="{{ request('search') }}" placeholder="Cari laporan atau lokasi..." autocomplete="off"
                             class="w-full py-2.5 pl-10 pr-10 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl bg-white focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 transition-all outline-none shadow-2xs text-slate-800">
 
                         <div id="search-loader" class="absolute hidden right-3.5 top-3 text-rose-600 text-xs">
@@ -149,10 +151,10 @@
 
             {{-- TABLE SECTION --}}
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse min-w-[700px]">
+                <table data-mobile-cards class="w-full text-left border-collapse min-w-[700px]">
                     <thead>
                         <tr
-                            class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
+                            class="text-xs font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
                             @if (Auth::user()?->role === 'superadmin')
                                 <th class="w-12 px-6 py-4 text-center">
                                     <input type="checkbox" id="select_all_id"
@@ -177,7 +179,7 @@
             </div>
 
             {{-- Pagination Info --}}
-            <div class="p-4 border-t sm:p-6 border-slate-100 bg-slate-50/50">
+            <div id="report-pagination" class="p-4 border-t sm:p-6 border-slate-100 bg-slate-50/50">
                 {{ $report->links() }}
             </div>
 
@@ -209,19 +211,19 @@
                 {{-- Top Information Grid --}}
                 <div class="grid grid-cols-2 gap-4 p-4 border border-slate-100 rounded-2xl bg-slate-50/50">
                     <div>
-                        <span class="block text-[10px] font-extrabold uppercase text-slate-400">Lokasi Mesin</span>
+                        <span class="block text-xs font-extrabold uppercase text-slate-400">Lokasi Mesin</span>
                         <span class="text-sm font-extrabold text-slate-900" id="detail-site-machine">-</span>
                     </div>
                     <div>
-                        <span class="block text-[10px] font-extrabold uppercase text-slate-400">Seri Mesin</span>
+                        <span class="block text-xs font-extrabold uppercase text-slate-400">Seri Mesin</span>
                         <span class="font-mono text-xs font-bold text-slate-700" id="detail-series-machine">-</span>
                     </div>
                     <div>
-                        <span class="block text-[10px] font-extrabold uppercase text-slate-400">Petugas / Pelapor</span>
+                        <span class="block text-xs font-extrabold uppercase text-slate-400">Petugas / Pelapor</span>
                         <span class="text-xs font-bold text-slate-800" id="detail-attendant">-</span>
                     </div>
                     <div>
-                        <span class="block text-[10px] font-extrabold uppercase text-slate-400">Tanggal Kerusakan</span>
+                        <span class="block text-xs font-extrabold uppercase text-slate-400">Tanggal Kerusakan</span>
                         <span class="text-xs font-bold text-rose-600" id="detail-failure-date">-</span>
                     </div>
                 </div>
@@ -284,8 +286,7 @@
             </div>
             <h3 class="mb-1 text-base font-extrabold text-slate-900">Konfirmasi Penghapusan</h3>
             <p class="mb-6 text-xs font-medium text-slate-500">
-                Yakin ingin menghapus <strong id="delete-report-name" class="text-slate-900">data ini</strong>?
-                <span class="block mt-1 font-semibold text-rose-600">Aksi ini tidak dapat dibatalkan.</span>
+                Yakin ingin menghapus <strong id="delete-report-name" class="text-slate-900">data ini</strong>?<span class="mt-2 block text-sm text-rose-700">Penghapusan bersifat permanen dan tidak dapat dibatalkan.</span>
             </p>
             <form id="form-delete-report" method="POST">
                 @csrf
@@ -306,106 +307,6 @@
 @endsection
 
 @push('scripts')
-    <script>
-        // Checkbox Select All Logic
-        const selectAll = document.getElementById('select_all_id');
-        if (selectAll) {
-            selectAll.addEventListener('change', function() {
-                const checkboxes = document.querySelectorAll('.sub_chk');
-                checkboxes.forEach(cb => cb.checked = this.checked);
-            });
-        }
-
-        // Open Detail Modal Handler
-        function openDetailReportModal(item) {
-            document.getElementById('detail-report-code').innerText = `#REP-${String(item.id).padStart(4, '0')}`;
-            document.getElementById('detail-site-machine').innerText = item.site_machine || '-';
-            document.getElementById('detail-series-machine').innerText = item.series_machine || 'N/A';
-            document.getElementById('detail-attendant').innerText = item.attendant || '-';
-            document.getElementById('detail-failure-date').innerText = item.failure_date ? new Date(item.failure_date)
-                .toLocaleDateString('id-ID', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric'
-                }) : '-';
-
-            document.getElementById('detail-subsystem').innerText = item.failed_subsystem ||
-                'Komponen yang rusak belum diisi.';
-            document.getElementById('detail-phenomenon').innerText = item.failure_phenomenon ||
-                'Gejala kerusakan belum diisi.';
-            document.getElementById('detail-procedure').innerText = item.ts_procedure ||
-                'Langkah penanganan belum diisi.';
-
-            // Handle Image Evidence
-            const imgWrapper = document.getElementById('detail-image-wrapper');
-            const imgEl = document.getElementById('detail-image');
-            if (item.image) {
-                imgEl.src = `/storage/${item.image}`;
-                imgWrapper.classList.remove('hidden');
-            } else {
-                imgWrapper.classList.add('hidden');
-                imgEl.src = '';
-            }
-
-            const m = document.getElementById('modal-detail-report');
-            m.classList.remove('hidden');
-            m.classList.add('flex');
-            document.body.classList.add('overflow-hidden');
-        }
-
-        function closeDetailReportModal() {
-            const m = document.getElementById('modal-detail-report');
-            m.classList.add('hidden');
-            m.classList.remove('flex');
-            document.body.classList.remove('overflow-hidden');
-        }
-
-        function openDeleteReportModal(url, name) {
-            const m = document.getElementById('modal-delete-report');
-            document.getElementById('form-delete-report').action = url;
-            document.getElementById('delete-report-name').innerText = name;
-            m.classList.remove('hidden');
-            m.classList.add('flex');
-            document.body.classList.add('overflow-hidden');
-        }
-
-        function closeDeleteReportModal() {
-            const m = document.getElementById('modal-delete-report');
-            m.classList.add('hidden');
-            m.classList.remove('flex');
-            document.body.classList.remove('overflow-hidden');
-        }
-
-        // Live Search AJAX with Debounce
-        const searchInput = document.getElementById('search');
-        const searchLoader = document.getElementById('search-loader');
-        const tableBody = document.getElementById('table-body');
-        let searchTimer;
-
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                clearTimeout(searchTimer);
-                if (searchLoader) searchLoader.classList.remove('hidden');
-
-                searchTimer = setTimeout(() => {
-                    const query = this.value.trim();
-                    const route = this.getAttribute('data-route');
-
-                    fetch(`${route}?search=${encodeURIComponent(query)}`, {
-                            headers: {
-                                "X-Requested-With": "XMLHttpRequest"
-                            }
-                        })
-                        .then(res => res.text())
-                        .then(html => {
-                            tableBody.innerHTML = html;
-                        })
-                        .catch(err => console.error(err))
-                        .finally(() => {
-                            if (searchLoader) searchLoader.classList.hidden = true;
-                        });
-                }, 350);
-            });
-        }
-    </script>
+    <script type="application/json" id="reports-config">{!! json_encode(['bulkUrl' => route('report.bulk_destroy'), 'indexUrl' => route('report.index', $siteData->slug)], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+    @vite('resources/js/pages/reports.js')
 @endpush

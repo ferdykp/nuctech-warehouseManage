@@ -43,30 +43,7 @@
 
                 {{-- BADGE STATUS --}}
                 <div class="shrink-0">
-                    @if ($reimbursement->status == 'approved')
-                        <span
-                            class="px-3.5 py-1.5 text-xs font-extrabold tracking-wider uppercase border text-emerald-800 bg-emerald-50 border-emerald-200 rounded-xl">
-                            Disetujui / Selesai
-                        </span>
-                    @elseif($reimbursement->status == 'rejected')
-                        <span
-                            class="px-3.5 py-1.5 text-xs font-extrabold tracking-wider uppercase border text-rose-800 bg-rose-50 border-rose-200 rounded-xl">
-                            Ditolak
-                        </span>
-                    @else
-                        <span
-                            class="px-3.5 py-1.5 text-xs font-extrabold tracking-wider uppercase border text-amber-800 bg-amber-50 border-amber-200 rounded-xl animate-pulse">
-                            @if ($reimbursement->status == 'pending')
-                                Awaiting Staff Tanda Tangan
-                            @elseif($reimbursement->status == 'pending_leader')
-                                Awaiting Leader Tanda Tangan
-                            @elseif($reimbursement->status == 'pending_station')
-                                Awaiting Kepala Stasiun Tanda Tangan
-                            @elseif($reimbursement->status == 'pending_manager')
-                                Menunggu Tanda Tangan Manajer
-                            @endif
-                        </span>
-                    @endif
+                    <x-ui.status-badge :status="$reimbursement->status" />
                 </div>
             </div>
         </div>
@@ -86,23 +63,23 @@
 
                     <div class="grid grid-cols-2 gap-4 text-xs">
                         <div>
-                            <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Diajukan oleh</span>
+                            <span class="text-slate-400 font-bold block uppercase text-xs tracking-wider">Diajukan oleh</span>
                             <span
                                 class="font-bold text-slate-900 text-sm block mt-0.5">{{ $reimbursement->person_name }}</span>
                         </div>
                         <div>
                             <span
-                                class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Kategori</span>
+                                class="text-slate-400 font-bold block uppercase text-xs tracking-wider">Kategori</span>
                             <span
-                                class="px-2.5 py-1 inline-block text-[10px] font-extrabold rounded-lg bg-amber-50 text-amber-800 uppercase mt-0.5 tracking-wide border border-amber-200">
-                                {{ $reimbursement->category }}
+                                class="px-2.5 py-1 inline-block text-xs font-extrabold rounded-lg bg-amber-50 text-amber-800 uppercase mt-0.5 tracking-wide border border-amber-200">
+                                {{ \App\Support\UiText::label($reimbursement->category) }}
                             </span>
                         </div>
                     </div>
 
                     @if (in_array($reimbursement->category, ['transportation', 'delivery']))
                         <div class="pt-3 text-xs border-t border-slate-100">
-                            <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider mb-1">Informasi Rute</span>
+                            <span class="text-slate-400 font-bold block uppercase text-xs tracking-wider mb-1">Informasi Rute</span>
                             <p class="font-bold text-slate-800">
                                 <i
                                     class="mr-1 fa-solid fa-location-dot text-rose-500"></i>{{ $reimbursement->from_location }}
@@ -113,14 +90,14 @@
                     @endif
 
                     <div class="pt-3 text-xs border-t border-slate-100">
-                        <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Nominal yang Diajukan</span>
+                        <span class="text-slate-400 font-bold block uppercase text-xs tracking-wider">Nominal yang Diajukan</span>
                         <span class="font-black text-rose-600 text-xl block mt-0.5">
                             Rp {{ number_format((float) $reimbursement->amount, 0, ',', '.') }}
                         </span>
                     </div>
 
                     <div class="pt-3 text-xs border-t border-slate-100">
-                        <span class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider">Catatan / Keterangan</span>
+                        <span class="text-slate-400 font-bold block uppercase text-xs tracking-wider">Catatan / Keterangan</span>
                         <p
                             class="p-3.5 mt-1.5 italic font-medium leading-relaxed border text-slate-700 bg-amber-50/40 rounded-2xl border-amber-200/60">
                             "{{ $reimbursement->comment ?? 'Belum ada catatan tambahan.' }}"
@@ -135,9 +112,9 @@
                             class="flex items-center gap-2 pb-3 text-xs font-extrabold tracking-wider uppercase border-b text-slate-800 border-slate-100">
                             <i class="text-sm fa-solid fa-signature text-emerald-600"></i>
                             @if ($reimbursement->status == 'pending')
-                                Step 1: Karyawan Pengaju Tanda Tangan
+                                Tahap 1: Karyawan Pengaju Tanda Tangan
                             @elseif($reimbursement->status == 'pending_leader')
-                                Step 2: Ketua Tim Tanda Tangan
+                                Tahap 2: Ketua Tim Tanda Tangan
                             @elseif($reimbursement->status == 'pending_station')
                                 Tahap 3: Tanda Tangan Kepala Stasiun
                             @else
@@ -148,11 +125,11 @@
                         {{-- TAB TTD --}}
                         <div class="flex gap-1.5 p-1 bg-slate-100 rounded-xl">
                             <button type="button" onclick="switchSignatureTab('draw')" id="btn-tab-draw"
-                                class="flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all bg-white text-slate-800 shadow-2xs cursor-pointer">
+                                class="flex-1 py-2 font-bold text-xs uppercase rounded-lg transition-all bg-white text-slate-800 shadow-2xs cursor-pointer">
                                 <i class="mr-1 fa-solid fa-pen"></i> Gambar Tanda Tangan
                             </button>
                             <button type="button" onclick="switchSignatureTab('upload')" id="btn-tab-upload"
-                                class="flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all text-slate-500 hover:text-slate-700 cursor-pointer">
+                                class="flex-1 py-2 font-bold text-xs uppercase rounded-lg transition-all text-slate-500 hover:text-slate-700 cursor-pointer">
                                 <i class="mr-1 fa-solid fa-upload"></i> Unggah File
                             </button>
                         </div>
@@ -160,11 +137,11 @@
                         {{-- DRAW CANVAS PANEL --}}
                         <div id="panel-signature-draw" class="space-y-1.5">
                             <div class="overflow-hidden bg-white border border-slate-200 rounded-2xl">
-                                <canvas id="signature-canvas" class="w-full h-36 cursor-crosshair"
+                                <canvas id="signature-canvas" aria-label="Area menggambar tanda tangan; opsi unggah tersedia sebagai alternatif" class="w-full h-36 cursor-crosshair"
                                     style="touch-action: none;"></canvas>
                             </div>
                             <button type="button" onclick="clearSignature()"
-                                class="text-[10px] text-rose-600 font-bold uppercase tracking-wider inline-block hover:text-rose-700 transition-colors px-1 cursor-pointer">
+                                class="text-xs text-rose-600 font-bold uppercase tracking-wider inline-block hover:text-rose-700 transition-colors px-1 cursor-pointer">
                                 <i class="fa-solid fa-trash-can mr-0.5"></i> Hapus Tanda Tangan
                             </button>
                         </div>
@@ -179,20 +156,20 @@
                                 <i
                                     class="block mb-1 text-2xl transition-colors fa-solid fa-cloud-arrow-up text-slate-400 group-hover:text-amber-600"></i>
                                 <p class="text-xs font-bold text-slate-700" id="dropzone-text">Tarik gambar tanda tangan atau klik</p>
-                                <p class="text-[10px] text-slate-400 mt-0.5">Mendukung file PNG atau JPG</p>
+                                <p class="text-xs text-slate-400 mt-0.5">Mendukung file PNG atau JPG</p>
                             </div>
                         </div>
 
                         {{-- SIGNER INPUTS --}}
                         <div class="grid grid-cols-2 gap-3 text-xs">
                             <div class="space-y-1">
-                                <label class="text-slate-700 font-bold block uppercase text-[10px] tracking-wider">Nama Penanda Tangan <span class="text-rose-500">*</span></label>
+                                <label class="text-slate-700 font-bold block uppercase text-xs tracking-wider">Nama Penanda Tangan <span class="text-rose-500">*</span></label>
                                 <input type="text" id="signer-name" placeholder="Contoh: Budi S."
                                     value="{{ auth()->user()->name }}"
                                     class="w-full px-3.5 py-2 font-bold transition-all border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800" />
                             </div>
                             <div class="space-y-1">
-                                <label class="text-slate-700 font-bold block uppercase text-[10px] tracking-wider">Tanggal
+                                <label class="text-slate-700 font-bold block uppercase text-xs tracking-wider">Tanggal
                                     <span class="text-rose-500">*</span></label>
                                 <input type="date" id="signer-date" value="{{ now()->format('Y-m-d') }}"
                                     class="w-full px-3.5 py-2 font-bold transition-all border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800" />
@@ -207,14 +184,14 @@
                             </button>
 
                             <button type="button" onclick="duplicateLastStamp()"
-                                class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                                class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
                                 <i class="fa-solid fa-copy"></i> Gandakan Tanda Tangan Terakhir
                             </button>
                         </div>
 
-                        <div class="flex items-center justify-between px-1 text-[10px] font-bold text-slate-400 pt-1">
+                        <div class="flex items-center justify-between px-1 text-xs font-bold text-slate-400 pt-1">
                             <span>Status Tanda Tangan:</span>
-                            <span id="stamp-count-info" class="tracking-wide uppercase text-amber-600">0 tanda tangan ditempatkan</span>
+                            <span id="stamp-count-info" role="status" aria-live="polite" class="tracking-wide uppercase text-amber-600">0 tanda tangan ditempatkan</span>
                         </div>
 
                         {{-- SUBMIT FORM --}}
@@ -287,11 +264,11 @@
             <div class="w-full space-y-3 lg:col-span-3">
                 <div class="flex items-center justify-between px-1">
                     <span
-                        class="text-slate-400 font-bold block uppercase text-[10px] tracking-wider flex items-center gap-1.5">
+                        class="text-slate-400 font-bold block uppercase text-xs tracking-wider flex items-center gap-1.5">
                         <i class="fa-solid fa-file-lines text-slate-500"></i> Pratinjau Dokumen
                     </span>
                     <span
-                        class="text-[10px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-md uppercase tracking-wider">
+                        class="text-xs font-extrabold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-md uppercase tracking-wider">
                         <i class="fa-solid fa-scroll mr-0.5"></i> Dokumen PDF Beberapa Halaman
                     </span>
                 </div>
@@ -339,483 +316,9 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 @endsection
 
 @push('scripts')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-        let signaturePad = null;
-        let loadedSignatureBase64 = null;
-        let activeStampsArray = [];
-
-        const pdfUrl = "{{ asset('storage/' . $reimbursement->receipt_attachment) }}?v={{ $fileVersion }}";
-        const isPdf = {{ pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf' ? 'true' : 'false' }};
-
-        function initApprovalWorkspace() {
-            const canvas = document.getElementById('signature-canvas');
-            if (canvas) {
-                const ratio = Math.max(window.devicePixelRatio || 1, 1);
-                const rect = canvas.getBoundingClientRect();
-
-                if (rect.width > 0 && rect.height > 0) {
-                    canvas.width = rect.width * ratio;
-                    canvas.height = rect.height * ratio;
-                    const ctx = canvas.getContext("2d");
-                    if (ctx) ctx.scale(ratio, ratio);
-                }
-
-                if (typeof SignaturePad !== 'undefined') {
-                    signaturePad = new SignaturePad(canvas, {
-                        minWidth: 1.5,
-                        maxWidth: 3.5,
-                        penColor: "rgb(30, 41, 59)"
-                    });
-                }
-            }
-
-            if (isPdf) {
-                setTimeout(function() {
-                    renderPdfWithPdfJs(pdfUrl);
-                }, 150);
-            } else {
-                setTimeout(syncLayerHeight, 800);
-            }
-        }
-
-        document.addEventListener("DOMContentLoaded", initApprovalWorkspace);
-
-        if (window.up) {
-            up.compiler('#workspace-area', function(element) {
-                initApprovalWorkspace();
-            });
-            up.on('up:fragment:inserted', function() {
-                initApprovalWorkspace();
-            });
-        }
-
-        function renderPdfWithPdfJs(url) {
-            const container = document.getElementById('invoice-target-img');
-            if (!container) return;
-
-            container.innerHTML = '';
-
-            const loadingTask = pdfjsLib.getDocument(url);
-            loadingTask.promise.then(function(pdf) {
-                const indicator = document.getElementById('pdf-loading-indicator');
-                if (indicator) indicator.remove();
-
-                let renderPromises = [];
-                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                    renderPromises.push(renderSinglePage(pdf, pageNum, container));
-                }
-
-                Promise.all(renderPromises).then(function() {
-                    setTimeout(syncLayerHeight, 500);
-                });
-            }).catch(function(err) {
-                console.error("PDF.js Error: ", err);
-                const indicator = document.getElementById('pdf-loading-indicator');
-                if (indicator) indicator.innerText = "Dokumen PDF gagal dimuat. Silakan coba lagi.";
-            });
-        }
-
-        function renderSinglePage(pdf, pageNum, container) {
-            return pdf.getPage(pageNum).then(function(page) {
-                const pageWrapper = document.createElement('div');
-                pageWrapper.className =
-                    'pdf-page-wrapper relative bg-white shadow-lg rounded-2xl overflow-hidden w-full max-w-full mb-4';
-                pageWrapper.dataset.pageNum = pageNum;
-
-                const canvas = document.createElement('canvas');
-                canvas.className = 'block w-full h-auto';
-                pageWrapper.appendChild(canvas);
-                container.appendChild(pageWrapper);
-
-                const containerWidth = container.clientWidth > 0 ? container.clientWidth : 650;
-                const unscaledViewport = page.getViewport({
-                    scale: 1
-                });
-                const scale = containerWidth / unscaledViewport.width;
-                const viewport = page.getViewport({
-                    scale: scale
-                });
-
-                const context = canvas.getContext('2d');
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-
-                const renderContext = {
-                    canvasContext: context,
-                    viewport: viewport
-                };
-
-                return page.render(renderContext).promise;
-            });
-        }
-
-        function syncLayerHeight() {
-            const workspace = document.getElementById('workspace-area');
-            const layer = document.getElementById('stamps-rendering-layer');
-            if (workspace && layer) {
-                layer.style.height = workspace.scrollHeight + 'px';
-                layer.style.width = workspace.scrollWidth + 'px';
-            }
-        }
-
-        function clearSignature() {
-            if (signaturePad) signaturePad.clear();
-        }
-
-        function switchSignatureTab(type) {
-            const btnDraw = document.getElementById('btn-tab-draw');
-            const btnUpload = document.getElementById('btn-tab-upload');
-            const panelDraw = document.getElementById('panel-signature-draw');
-            const panelUpload = document.getElementById('panel-signature-upload');
-            if (!btnDraw || !btnUpload) return;
-
-            if (type === 'draw') {
-                btnDraw.className =
-                    "flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all bg-white text-slate-800 shadow-2xs cursor-pointer";
-                btnUpload.className =
-                    "flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all text-slate-500 hover:text-slate-700 cursor-pointer";
-                panelDraw.classList.remove('hidden');
-                panelUpload.classList.add('hidden');
-            } else {
-                btnUpload.className =
-                    "flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all bg-white text-slate-800 shadow-2xs cursor-pointer";
-                btnDraw.className =
-                    "flex-1 py-2 font-bold text-[10px] uppercase rounded-lg transition-all text-slate-500 hover:text-slate-700 cursor-pointer";
-                panelUpload.classList.remove('hidden');
-                panelDraw.classList.add('hidden');
-            }
-        }
-
-        function handleSignatureDrop(event) {
-            event.preventDefault();
-            if (event.dataTransfer.files.length > 0) processFile(event.dataTransfer.files[0]);
-        }
-
-        function handleSignatureFileSelect(event) {
-            if (event.target.files.length > 0) processFile(event.target.files[0]);
-        }
-
-        function processFile(file) {
-            if (!file.type.match('image.*')) {
-                (window.showUiMessage || window.alert)("Gunakan gambar PNG atau JPG yang valid.");
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                loadedSignatureBase64 = e.target.result;
-                document.getElementById('dropzone-text').innerText = "✓ Diunggah: " + file.name;
-                document.getElementById('dropzone').classList.add('border-emerald-500', 'bg-emerald-50/50');
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function applySignatureToPreview() {
-            let base64Image = null;
-            const drawPanel = document.getElementById('panel-signature-draw');
-            const isDrawPanel = drawPanel ? !drawPanel.classList.contains('hidden') : true;
-
-            if (isDrawPanel) {
-                if (signaturePad && !signaturePad.isEmpty()) {
-                    base64Image = signaturePad.toDataURL("image/png");
-                }
-            } else {
-                if (loadedSignatureBase64) base64Image = loadedSignatureBase64;
-            }
-
-            if (!base64Image) {
-                (window.showUiMessage || window.alert)("Gambar atau unggah tanda tangan terlebih dahulu.");
-                return;
-            }
-
-            const name = (document.getElementById('signer-name')?.value || '').trim();
-            const dateVal = document.getElementById('signer-date')?.value || '';
-
-            if (!name) {
-                (window.showUiMessage || window.alert)("Nama penanda tangan wajib diisi.");
-                return;
-            }
-
-            generateStampMarkup(base64Image, name, dateVal);
-        }
-
-        function duplicateLastStamp() {
-            if (activeStampsArray.length === 0) {
-                (window.showUiMessage || window.alert)("Belum ada tanda tangan yang dapat digandakan.");
-                return;
-            }
-            const lastStamp = activeStampsArray[activeStampsArray.length - 1];
-            const lastEl = lastStamp.stampEl;
-
-            generateStampMarkup(lastStamp.imgData, lastStamp.signerName, lastStamp.signerDate, {
-                left: lastEl.offsetLeft + 25,
-                top: lastEl.offsetTop + 25,
-                w: lastEl.offsetWidth,
-                h: lastEl.offsetHeight
-            });
-        }
-
-        function generateStampMarkup(imgData, signerName, signerDate, opts) {
-            const layer = document.getElementById('stamps-rendering-layer');
-            if (!layer) return;
-
-            const leftPos = opts?.left ?? 30;
-            const topPos = opts?.top ?? 30;
-            const widthSize = opts?.w ?? 140;
-            const heightSize = opts?.h ?? 85;
-
-            let formattedDate = signerDate;
-            if (signerDate) {
-                const d = new Date(signerDate);
-                formattedDate = d.toLocaleDateString('id-ID', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                });
-            }
-
-            const stampEl = document.createElement('div');
-            stampEl.className = 'absolute cursor-move select-none';
-            stampEl.style.cssText =
-                `left: ${leftPos}px; top: ${topPos}px; width: ${widthSize}px; height: ${heightSize}px; pointer-events: all; z-index: 50;`;
-
-            stampEl.innerHTML = `
-                <div class="relative w-full h-full transition-all border-2 border-dashed rounded-lg border-amber-500 hover:bg-amber-500/5" style="padding: 2px;">
-                    <img src="${imgData}" class="block w-full pointer-events-none drop-shadow-sm" style="height: calc(100% - 22px); object-fit: contain;" />
-                    <div class="absolute bottom-0 left-0 right-0 leading-tight text-center text-white bg-slate-900/60 rounded-b-md" style="padding: 2px 4px;">
-                        <div class="font-black" style="font-size: 8px;">${signerName}</div>
-                        <div class="font-bold text-slate-300" style="font-size: 7px;">${formattedDate}</div>
-                    </div>
-                    <span class="absolute -top-4 left-0 bg-amber-500 text-white font-black rounded px-1.5 uppercase text-[7px] tracking-wider pointer-events-none shadow-xs">
-                        Drag &bull; ${signerName}
-                    </span>
-                    <button type="button" class="stamp-delete-btn flex items-center justify-center bg-rose-500 hover:bg-rose-600 text-white border-none rounded-full absolute -top-3.5 -right-1.5 transition-colors cursor-pointer" style="width: 16px; height: 16px; font-size: 8px; font-weight: 900; line-height: 1;" onclick="removeTargetStamp(this)">✕</button>
-                    <div class="absolute bg-blue-500 border-2 border-white rounded shadow-xs stamp-resize-handle bottom-1 right-1 cursor-se-resize" style="width: 12px; height: 12px; z-index: 60;"></div>
-                </div>
-            `;
-
-            layer.appendChild(stampEl);
-            syncLayerHeight();
-
-            activeStampsArray.push({
-                stampEl: stampEl,
-                imgData: imgData,
-                signerName: signerName,
-                signerDate: signerDate
-            });
-
-            const infoText = document.getElementById('stamp-count-info');
-            if (infoText) infoText.textContent = `${activeStampsArray.length} tanda tangan ditempatkan pada dokumen`;
-
-            bindDragEvents(stampEl);
-            bindResizeEvents(stampEl);
-        }
-
-        function removeTargetStamp(btn) {
-            const stampWrapper = btn.closest('.absolute.cursor-move');
-            if (!stampWrapper) return;
-            activeStampsArray = activeStampsArray.filter(function(item) {
-                return item.stampEl !== stampWrapper;
-            });
-            const infoText = document.getElementById('stamp-count-info');
-            if (infoText) infoText.textContent = `${activeStampsArray.length} tanda tangan ditempatkan pada dokumen`;
-            stampWrapper.remove();
-        }
-
-        function bindDragEvents(el) {
-            const workspace = document.getElementById('workspace-area');
-            let dragging = false,
-                sX, sY, iL, iT;
-
-            el.addEventListener('mousedown', startDrag);
-            el.addEventListener('touchstart', startDrag, {
-                passive: true
-            });
-
-            function startDrag(e) {
-                if (e.target.classList.contains('stamp-resize-handle') || e.target.classList.contains('stamp-delete-btn'))
-                    return;
-                dragging = true;
-                sX = e.clientX ?? e.touches[0].clientX;
-                sY = e.clientY ?? e.touches[0].clientY;
-                iL = el.offsetLeft;
-                iT = el.offsetTop;
-
-                document.addEventListener('mousemove', processDrag);
-                document.addEventListener('mouseup', stopDrag);
-                document.addEventListener('touchmove', processDrag, {
-                    passive: false
-                });
-                document.addEventListener('touchend', stopDrag);
-            }
-
-            function processDrag(e) {
-                if (!dragging) return;
-                if (e.cancelable) e.preventDefault();
-                const cX = e.clientX ?? e.touches[0].clientX;
-                const cY = e.clientY ?? e.touches[0].clientY;
-
-                let nL = iL + (cX - sX);
-                let nT = iT + (cY - sY);
-
-                const maxL = workspace.scrollWidth - el.offsetWidth;
-                const maxT = workspace.scrollHeight - el.offsetHeight;
-
-                nL = Math.max(0, Math.min(nL, maxL));
-                nT = Math.max(0, Math.min(nT, maxT));
-
-                el.style.left = nL + 'px';
-                el.style.top = nT + 'px';
-            }
-
-            function stopDrag() {
-                dragging = false;
-                document.removeEventListener('mousemove', processDrag);
-                document.removeEventListener('mouseup', stopDrag);
-                document.removeEventListener('touchmove', processDrag);
-                document.removeEventListener('touchend', stopDrag);
-            }
-        }
-
-        function bindResizeEvents(el) {
-            const handle = el.querySelector('.stamp-resize-handle');
-            if (!handle) return;
-            let resizing = false,
-                sX, sY, sW, sH;
-
-            handle.addEventListener('mousedown', startResize);
-            handle.addEventListener('touchstart', startResize, {
-                passive: true
-            });
-
-            function startResize(e) {
-                e.stopPropagation();
-                resizing = true;
-                sX = e.clientX ?? e.touches[0].clientX;
-                sY = e.clientY ?? e.touches[0].clientY;
-                sW = el.offsetWidth;
-                sH = el.offsetHeight;
-
-                document.addEventListener('mousemove', processResize);
-                document.addEventListener('mouseup', stopResize);
-                document.addEventListener('touchmove', processResize, {
-                    passive: false
-                });
-                document.addEventListener('touchend', stopResize);
-            }
-
-            function processResize(e) {
-                if (!resizing) return;
-                if (e.cancelable) e.preventDefault();
-                const cX = e.clientX ?? e.touches[0].clientX;
-                const cY = e.clientY ?? e.touches[0].clientY;
-
-                el.style.width = Math.max(80, sW + (cX - sX)) + 'px';
-                el.style.height = Math.max(60, sH + (cY - sY)) + 'px';
-            }
-
-            function stopResize() {
-                resizing = false;
-                document.removeEventListener('mousemove', processResize);
-                document.removeEventListener('mouseup', stopResize);
-                document.removeEventListener('touchmove', processResize);
-                document.removeEventListener('touchend', stopResize);
-            }
-        }
-
-        function prepareFinalApproval(event) {
-            event.preventDefault();
-            if (activeStampsArray.length === 0) {
-                (window.showUiMessage || window.alert)("Letakkan setidaknya satu tanda tangan pada dokumen nota.");
-                return false;
-            }
-
-            const signaturesMap = activeStampsArray.map(function(item) {
-                const stampEl = item.stampEl;
-                const imgData = item.imgData;
-                const signerName = item.signerName;
-                const signerDate = item.signerDate;
-
-                const stampRect = stampEl.getBoundingClientRect();
-
-                let detectedPageNum = 1;
-                let finalRelLeft = 0;
-                let finalRelTop = 0;
-                let baseWidth = 100;
-                let baseHeight = 100;
-
-                if (isPdf) {
-                    const pageElements = document.querySelectorAll('.pdf-page-wrapper');
-                    let matched = false;
-                    const stampCenterY = stampRect.top + (stampRect.height / 2);
-
-                    for (let i = 0; i < pageElements.length; i++) {
-                        const pRect = pageElements[i].getBoundingClientRect();
-                        if (stampCenterY >= pRect.top && stampCenterY <= pRect.bottom) {
-                            detectedPageNum = parseInt(pageElements[i].dataset.pageNum);
-                            finalRelLeft = stampRect.left - pRect.left;
-                            finalRelTop = stampRect.top - pRect.top;
-                            baseWidth = pRect.width;
-                            baseHeight = pRect.height;
-                            matched = true;
-                            break;
-                        }
-                    }
-
-                    if (!matched && pageElements.length > 0) {
-                        const pRect = pageElements[0].getBoundingClientRect();
-                        finalRelLeft = stampRect.left - pRect.left;
-                        finalRelTop = stampRect.top - pRect.top;
-                        baseWidth = pRect.width;
-                        baseHeight = pRect.height;
-                    }
-                } else {
-                    const imgTarget = document.querySelector('#invoice-target-img img');
-                    if (imgTarget) {
-                        const imgRect = imgTarget.getBoundingClientRect();
-                        finalRelLeft = stampRect.left - imgRect.left;
-                        finalRelTop = stampRect.top - imgRect.top;
-                        baseWidth = imgRect.width;
-                        baseHeight = imgRect.height;
-                    }
-                }
-
-                // Normalisasi persentase posisi agar aman dari batas overflow
-                const posXPercent = Math.max(0, Math.min((finalRelLeft / baseWidth) * 100, 100));
-                const posYPercent = Math.max(0, Math.min((finalRelTop / baseHeight) * 100, 100));
-                const scaleWPercent = Math.max(1, Math.min((stampRect.width / baseWidth) * 100, 100));
-                const scaleHPercent = Math.max(1, Math.min((stampRect.height / baseHeight) * 100, 100));
-
-                return {
-                    image: imgData,
-                    page: detectedPageNum,
-                    pos_x: posXPercent,
-                    pos_y: posYPercent,
-                    scale_w: scaleWPercent,
-                    scale_h: scaleHPercent,
-                    signer_name: signerName,
-                    signer_date: signerDate
-                };
-            });
-
-            document.getElementById('signatures-json-input').value = JSON.stringify(signaturesMap);
-            document.getElementById('signature-input').value = signaturesMap[0].image;
-            document.getElementById('pos-x-input').value = signaturesMap[0].pos_x;
-            document.getElementById('pos-y-input').value = signaturesMap[0].pos_y;
-            document.getElementById('scale-w-input').value = signaturesMap[0].scale_w;
-            document.getElementById('scale-h-input').value = signaturesMap[0].scale_h;
-
-            if (document.getElementById('page-input')) {
-                document.getElementById('page-input').value = signaturesMap[0].page;
-            }
-
-            document.getElementById('approve-form').submit();
-        }
-    </script>
+    <script type="application/json" id="reimbursement-approval-config">{!! json_encode(['pdfUrl' => asset('storage/' . $reimbursement->receipt_attachment) . '?v=' . $fileVersion, 'isPdf' => pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+    @vite('resources/js/pages/reimbursement-approval.js')
 @endpush

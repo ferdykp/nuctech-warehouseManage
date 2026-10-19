@@ -1,3 +1,8 @@
+import { enhanceTables } from './ui/tables.js';
+import { initDialogs } from './ui/dialogs.js';
+import { enhanceActions } from './ui/actions.js';
+import { initNavigation } from './ui/navigation.js';
+
 // Shared presentation behaviour. Routes, stored enums and permissions stay in their modules.
 export function validationMessage(field, label) {
     const v = field.validity;
@@ -29,6 +34,7 @@ export function uiLabel(value) {
 
 export function initUi() {
     window.uiLabel = uiLabel;
+    const enhanceDialogs = initDialogs();
     let nextId = 0;
     const newId = prefix => `${prefix}-${++nextId}`;
     const visible = element => element.getClientRects().length > 0 && getComputedStyle(element).visibility !== 'hidden';
@@ -57,13 +63,18 @@ export function initUi() {
         field.setAttribute('aria-describedby', `${field.getAttribute('aria-describedby') || ''} ${error.id}`.trim());
     };
 
+    window.announceUi = message => {
+        const status = document.getElementById('ui-live-status');
+        if (status) status.textContent = message;
+    };
+
     window.showUiMessage = (message, type = 'error') => {
         let panel = document.getElementById('ui-message');
         if (!panel) {
             panel = document.createElement('div');
             panel.id = 'ui-message';
             panel.className = 'ui-message';
-            panel.setAttribute('role', 'alert');
+            panel.setAttribute('role', type === 'error' ? 'alert' : 'status');
             document.body.append(panel);
         }
         panel.replaceChildren();
@@ -72,11 +83,13 @@ export function initUi() {
         const close = document.createElement('button');
         close.type = 'button'; close.textContent = 'Tutup';
         close.addEventListener('click', () => panel.remove());
+        panel.setAttribute('role', type === 'error' ? 'alert' : 'status');
         panel.dataset.type = type;
         panel.append(text, close);
     };
 
     function enhance() {
+        enhanceActions();
         document.querySelectorAll('form').forEach((form, index) => {
             if (!form.dataset.uiKey) form.dataset.uiKey = form.id || `form-${index}`;
             if (form.method.toLowerCase() === 'post' && !form.querySelector('[name="_ui_form"]')) {
@@ -102,44 +115,11 @@ export function initUi() {
             });
 
         });
-        document.querySelectorAll('table[data-mobile-cards]').forEach(table => {
-            const headers = Array.from(table.tHead?.rows[0]?.cells || []).map(cell => cell.textContent.replace(/\s+/g, ' ').trim());
-            Array.from(table.tBodies).forEach(body => Array.from(body.rows).forEach(row => {
-                Array.from(row.cells).forEach((cell, index) => {
-                    if (!cell.dataset.label) cell.dataset.label = headers[index] || 'Pilihan';
-                    if (cell.colSpan > 1) cell.dataset.fullWidth = 'true';
-                });
-            }));
-            table.dataset.uiCards = 'ready';
-        });
-        document.querySelectorAll('#main-content .overflow-x-auto').forEach(container => {
-            const table = container.querySelector('table');
-            if (!table || table.hasAttribute('data-mobile-cards') || container.dataset.uiScroll) return;
-            container.dataset.uiScroll = 'true';
-            container.tabIndex = 0;
-            container.setAttribute('role', 'region');
-            container.setAttribute('aria-label', 'Tabel yang dapat digeser ke samping');
-            const hint = document.createElement('p');
-            hint.className = 'ui-scroll-hint';
-            hint.textContent = 'Geser tabel ke samping untuk melihat semua kolom.';
-            container.before(hint);
-        });
-        document.querySelectorAll('.fixed.inset-0').forEach(overlay => {
-            const panel = Array.from(overlay.children).find(child => child.matches('div') && child.querySelector('h3') && !child.classList.contains('fixed'));
-            if (!panel || panel.dataset.uiDialog) return;
-            panel.dataset.uiDialog = 'true';
-            panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-modal', 'true');
-            const title = panel.querySelector('h3');
-            if (!title.id) title.id = newId('dialog-title');
-            panel.setAttribute('aria-labelledby', title.id);
-            panel.querySelectorAll('button').forEach(button => {
-                if (!button.textContent.trim() && !button.getAttribute('aria-label')) {
-                    if (button.querySelector('.fa-xmark, .fa-times')) button.setAttribute('aria-label', 'Tutup dialog');
-                }
-            });
-        });
+        enhanceTables();
+        enhanceDialogs();
     }
     enhance();
+    initNavigation();
     const desktopFilters = window.matchMedia('(min-width: 768px)');
     const syncFilters = () => document.querySelectorAll('.ui-filter-details').forEach(details => {
         if (desktopFilters.matches) {
@@ -159,7 +139,7 @@ export function initUi() {
     } catch { /* Storage may be disabled by the browser. */ }
     let queued = false;
     new MutationObserver(records => {
-        if (queued || !records.some(r => r.addedNodes.length)) return;
+        if (queued || !records.some(record => Array.from(record.addedNodes).some(node => node instanceof Element && (node.matches('form, input, select, textarea, table, button, a, .fixed') || node.querySelector('form, input, select, textarea, table, button, a, .fixed'))))) return;
         queued = true;
         requestAnimationFrame(() => { queued = false; enhance(); });
     }).observe(document.body, { childList: true, subtree: true });
@@ -247,16 +227,5 @@ export function initUi() {
             if (button.tagName === 'INPUT') button.value = button.dataset.uiOriginal; else button.innerHTML = button.dataset.uiOriginal;
             delete button.dataset.uiOriginal;
         });
-    });
-    document.addEventListener('keydown', event => {
-        if (event.key !== 'Tab') return;
-        const panels = Array.from(document.querySelectorAll('[data-ui-dialog]')).filter(visible);
-        const panel = panels.at(-1);
-        if (!panel) return;
-        const controls = Array.from(panel.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')).filter(visible);
-        if (!controls.length) return;
-        const first = controls[0], last = controls.at(-1);
-        if (!panel.contains(document.activeElement) || (!event.shiftKey && document.activeElement === last)) { event.preventDefault(); first.focus(); }
-        else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
     });
 }

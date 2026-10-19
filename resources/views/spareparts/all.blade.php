@@ -83,7 +83,7 @@
                         </div>
                         <div class="min-w-0">
                             <p
-                                class="text-[10px] sm:text-[11px] font-bold tracking-wider text-slate-400 uppercase truncate">
+                                class="text-xs sm:text-xs font-bold tracking-wider text-slate-400 uppercase truncate">
                                 {{ $stat['label'] }}
                             </p>
                             <p class="text-2xl font-black text-slate-900 mt-0.5 tracking-tight">

@@ -34,7 +34,7 @@
                 <table data-mobile-cards class="w-full text-left border-collapse min-w-[650px]">
                     <thead>
                         <tr
-                            class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
+                            class="text-xs font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
                             <th scope="col" class="w-16 px-6 py-4 text-center">Nomor</th>
                             <th scope="col" class="px-6 py-4 text-center w-36">Kode Lokasi</th>
                             <th scope="col" class="px-6 py-4">Nama Mesin</th>
@@ -53,7 +53,7 @@
 
                                 <td class="px-6 py-4 text-center">
                                     <span
-                                        class="px-3 py-1 font-mono font-extrabold text-[11px] text-blue-700 bg-blue-50 border border-blue-200/80 rounded-lg">
+                                        class="px-3 py-1 font-mono font-extrabold text-xs text-blue-700 bg-blue-50 border border-blue-200/80 rounded-lg">
                                         {{ $item->code ?? '-' }}
                                     </span>
                                 </td>
@@ -69,12 +69,12 @@
                                 <td class="px-6 py-4 text-center">
                                     @if ($item->is_active)
                                         <span
-                                            class="px-2.5 py-1 text-[10px] font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-full uppercase">
+                                            class="px-2.5 py-1 text-xs font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-full uppercase">
                                             Aktif
                                         </span>
                                     @else
                                         <span
-                                            class="px-2.5 py-1 text-[10px] font-extrabold text-slate-700 bg-slate-100 border border-slate-200 rounded-full uppercase">
+                                            class="px-2.5 py-1 text-xs font-extrabold text-slate-700 bg-slate-100 border border-slate-200 rounded-full uppercase">
                                             Tidak Aktif
                                         </span>
                                     @endif

@@ -27,7 +27,7 @@
                         'text' => 'text-amber-900',
                         'icon_bg' => 'bg-amber-500',
                         'icon' => 'fa-exclamation',
-                        'title' => 'Warning',
+                        'title' => 'Perlu perhatian',
                     ],
                 ][$type];
             @endphp

@@ -184,7 +184,7 @@
 
                     {{-- FILTER SITE LOCATION --}}
                     <div class="w-full sm:w-64">
-                        <label class="block mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                        <label class="block mb-1.5 text-xs font-extrabold uppercase tracking-wider text-slate-500">
                             Lokasi Mesin
                         </label>
                         <select name="site_id" id="main_site_select"
@@ -203,7 +203,7 @@
 
                     <div class="w-1/2 sm:w-44">
                         <label
-                            class="block mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Bulan</label>
+                            class="block mb-1.5 text-xs font-extrabold uppercase tracking-wider text-slate-500">Bulan</label>
                         <select name="month" id="main_month_select"
                             class="w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all outline-none cursor-pointer">
                             @for ($m = 1; $m <= 12; $m++)
@@ -216,7 +216,7 @@
 
                     <div class="w-1/2 sm:w-36">
                         <label
-                            class="block mb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Tahun</label>
+                            class="block mb-1.5 text-xs font-extrabold uppercase tracking-wider text-slate-500">Tahun</label>
                         <select name="year" id="main_year_select"
                             class="w-full py-2.5 px-3.5 text-xs sm:text-sm font-bold bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all outline-none cursor-pointer">
                             @for ($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
@@ -263,7 +263,7 @@
                         <h3 class="text-sm font-extrabold text-slate-900 sm:text-base">Jadwal Bulanan</h3>
                         @if (Auth::user()?->role === 'team_leader')
                             <span
-                                class="px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200/80 rounded-md uppercase">
+                                class="px-2.5 py-0.5 text-xs font-extrabold text-amber-800 bg-amber-50 border border-amber-200/80 rounded-md uppercase">
                                 Ketua Tim: {{ Auth::user()->site->machine_name ?? 'Terdaftar' }}
                             </span>
                         @endif
@@ -274,7 +274,7 @@
                     </div>
 
                     {{-- LEGEND BADGES --}}
-                    <div class="flex flex-wrap items-center gap-2.5 text-[10px] font-bold text-slate-500">
+                    <div class="flex flex-wrap items-center gap-2.5 text-xs font-bold text-slate-500">
                         <span class="flex items-center gap-1.5"><span
                                 class="inline-block w-2.5 h-2.5 rounded-xs bg-blue-50 border border-blue-200"></span> Shift
                             1</span>
@@ -298,11 +298,11 @@
                     </div>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full border-collapse table-fixed min-w-[900px]">
+                <div class="overflow-x-auto max-h-[70dvh]">
+                    <table class="ui-schedule-table w-full border-collapse table-fixed" style="--schedule-days: {{ count($datesInMonth) }}">
                         <thead>
                             <tr
-                                class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-y border-slate-100">
+                                class="text-xs font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-y border-slate-100">
                                 <th
                                     class="w-48 px-4 py-3.5 text-left sticky left-0 top-0 bg-slate-50 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
                                     Karyawan / Lokasi
@@ -316,10 +316,10 @@
                                     <th class="w-11 text-center py-2.5 border-l border-slate-100 {{ $isRedDate ? 'bg-rose-50/80 text-rose-700' : '' }}"
                                         @if ($holidayName) title="{{ $holidayName }}" @endif>
                                         <div class="font-black">{{ $date->format('d') }}</div>
-                                        <div class="text-[8px] font-bold uppercase mt-0.5">
+                                        <div class="text-xs font-bold uppercase mt-0.5">
                                             {{ $date->translatedFormat('D') }}</div>
                                         @if ($holidayName)
-                                            <div class="mt-0.5 truncate px-0.5 text-[7px] font-bold text-rose-600"
+                                            <div class="mt-0.5 truncate px-0.5 text-xs font-bold text-rose-600"
                                                 title="{{ $holidayName }}">
                                                 <i class="fa-solid fa-circle-exclamation"></i>
                                             </div>
@@ -330,12 +330,12 @@
                                 <th
                                     class="py-2.5 font-extrabold text-center text-blue-800 border-l border-slate-100 w-14 bg-blue-50/60">
                                     <div>KERJA</div>
-                                    <div class="text-[7px] text-blue-600 uppercase">(Hari)</div>
+                                    <div class="text-xs text-blue-600 uppercase">(Hari)</div>
                                 </th>
                                 <th
                                     class="py-2.5 font-extrabold text-center border-l text-rose-800 border-slate-100 w-14 bg-rose-50/60">
                                     <div>LIBUR</div>
-                                    <div class="text-[7px] text-rose-600 uppercase">(Hari)</div>
+                                    <div class="text-xs text-rose-600 uppercase">(Hari)</div>
                                 </th>
                             </tr>
                         </thead>
@@ -348,12 +348,12 @@
                                             <span class="text-xs truncate">{{ $emp->name }}</span>
                                             @if ($emp->last_date)
                                                 <span
-                                                    class="px-1.5 py-0.2 text-[8px] font-black text-rose-700 bg-rose-50 border border-rose-200 rounded-md shrink-0">
+                                                    class="px-1.5 py-0.2 text-xs font-black text-rose-700 bg-rose-50 border border-rose-200 rounded-md shrink-0">
                                                     Berhenti Bekerja
                                                 </span>
                                             @endif
                                         </div>
-                                        <div class="text-[10px] font-semibold text-slate-400 truncate mt-0.5">
+                                        <div class="text-xs font-semibold text-slate-400 truncate mt-0.5">
                                             {{ $emp->site->machine_name ?? '-' }}
                                         </div>
                                     </td>
@@ -420,7 +420,7 @@
                                         <td
                                             class="p-1 text-center border-l border-slate-100 {{ $isAfterResign ? 'bg-slate-100/70' : '' }}">
                                             @if ($isAfterResign)
-                                                <span class="text-[9px] font-bold text-slate-300 select-none"
+                                                <span class="text-xs font-bold text-slate-300 select-none"
                                                     title="Hari terakhir bekerja: {{ \Carbon\Carbon::parse($emp->last_date)->translatedFormat('d M Y') }}">
                                                     N/A
                                                 </span>
@@ -491,7 +491,7 @@
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr
-                            class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
+                            class="text-xs font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
                             <th class="px-6 py-3.5">Nama Karyawan</th>
                             <th class="px-6 py-3.5">Lokasi Mesin</th>
                             <th class="px-6 py-3.5">Tanggal dan Hari</th>
@@ -512,7 +512,7 @@
                                     </td>
                                     <td class="px-6 py-3.5 font-bold text-slate-800">
                                         {{ $duty['date'] }} <span
-                                            class="text-[10px] font-normal text-slate-400">({{ $duty['day_name'] }})</span>
+                                            class="text-xs font-normal text-slate-400">({{ $duty['day_name'] }})</span>
                                     </td>
                                     <td class="px-6 py-3.5 font-bold text-rose-600">
                                         <i class="mr-1 fa-solid fa-flag text-rose-600"></i>
@@ -520,13 +520,13 @@
                                     </td>
                                     <td class="px-6 py-3.5">
                                         <span
-                                            class="px-2.5 py-1 text-[10px] font-black rounded-lg border bg-slate-100 border-slate-200 text-slate-700">
+                                            class="px-2.5 py-1 text-xs font-black rounded-lg border bg-slate-100 border-slate-200 text-slate-700">
                                             {{ $duty['shift_name'] }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-3.5 text-center">
                                         <span
-                                            class="px-2.5 py-0.5 text-[10px] font-extrabold text-rose-800 bg-rose-50 border border-rose-200/80 rounded-full">
+                                            class="px-2.5 py-0.5 text-xs font-extrabold text-rose-800 bg-rose-50 border border-rose-200/80 rounded-full">
                                             Tugas Hari Libur Nasional
                                         </span>
                                     </td>
@@ -591,7 +591,7 @@
                                     <div>
                                         <div class="flex items-center justify-between mb-2">
                                             <label
-                                                class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                                class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
                                                 Pilih Lokasi (Bisa Lebih dari Satu)
                                             </label>
                                             <label
@@ -622,7 +622,7 @@
                                     <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
                                         <div class="col-span-1">
                                             <label
-                                                class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Hari Mulai</label>
+                                                class="block mb-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Hari Mulai</label>
                                             <input type="number" name="start_day" value="{{ old('start_day', 1) }}"
                                                 min="1" max="31"
                                                 class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all"
@@ -631,7 +631,7 @@
 
                                         <div class="col-span-1 sm:col-span-2">
                                             <label
-                                                class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Bulan</label>
+                                                class="block mb-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Bulan</label>
                                             <select name="month" id="gen_month"
                                                 class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all cursor-pointer">
                                                 @for ($m = 1; $m <= 12; $m++)
@@ -645,7 +645,7 @@
 
                                         <div class="col-span-1">
                                             <label
-                                                class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tahun</label>
+                                                class="block mb-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Tahun</label>
                                             <select name="year" id="gen_year"
                                                 class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 text-slate-800 transition-all cursor-pointer">
                                                 @for ($y = date('Y') - 1; $y <= date('Y') + 2; $y++)
@@ -667,14 +667,14 @@
                                         class="text-xs font-extrabold tracking-wider uppercase text-slate-800 sm:text-sm">Pola
                                         Kerja Lokasi</span>
                                 </div>
-                                <p class="mb-4 text-[10px] font-medium leading-relaxed text-slate-500 ml-[34px]">
+                                <p class="mb-4 text-xs font-medium leading-relaxed text-slate-500 ml-[34px]">
                                     Pola ini akan otomatis disimpan untuk site yang dipilih saat Anda menekan Buat.
                                 </p>
 
                                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                     <div class="sm:col-span-1">
                                         <label
-                                            class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Jenis Pola</label>
+                                            class="block mb-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Jenis Pola</label>
                                         <select name="schedule_type" id="gen_schedule_type"
                                             onchange="onScheduleTypeChange()"
                                             class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all cursor-pointer">
@@ -684,14 +684,14 @@
                                     </div>
                                     <div id="gen_work_days_wrapper">
                                         <label
-                                            class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Hari Kerja</label>
+                                            class="block mb-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Hari Kerja</label>
                                         <input type="number" name="work_days" id="gen_work_days" value="6"
                                             min="1"
                                             class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all">
                                     </div>
                                     <div id="gen_off_days_wrapper">
                                         <label
-                                            class="block mb-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Hari Libur</label>
+                                            class="block mb-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Hari Libur</label>
                                         <input type="number" name="off_days" id="gen_off_days" value="2"
                                             min="1"
                                             class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 text-slate-800 transition-all">
@@ -744,13 +744,13 @@
                                                         class="block text-xs font-bold text-slate-800">{{ $emp->name }}</span>
                                                     @if ($emp->last_date)
                                                         <span
-                                                            class="px-1.5 py-0.2 text-[8px] font-black text-rose-700 bg-rose-50 border border-rose-200 rounded-md shrink-0">
+                                                            class="px-1.5 py-0.2 text-xs font-black text-rose-700 bg-rose-50 border border-rose-200 rounded-md shrink-0">
                                                             Terakhir:
                                                             {{ \Carbon\Carbon::parse($emp->last_date)->format('d M') }}
                                                         </span>
                                                     @endif
                                                 </div>
-                                                <span class="text-[10px] block text-slate-400 font-semibold">Lokasi:
+                                                <span class="text-xs block text-slate-400 font-semibold">Lokasi:
                                                     {{ $emp->site->machine_name ?? '-' }}</span>
                                             </div>
                                         </label>
@@ -781,7 +781,7 @@
                             <div class="lg:col-span-8">
                                 <div class="flex items-center justify-between mb-2">
                                     <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">Urutan Shift Aktif</label>
-                                    <span class="text-[10px] text-slate-400 font-medium">Gunakan tombol <i
+                                    <span class="text-xs text-slate-400 font-medium">Gunakan tombol <i
                                             class="fa-solid fa-arrow-up text-slate-500"></i> <i
                                             class="fa-solid fa-arrow-down text-slate-500"></i> untuk mengatur urutan
                                         rotasi</span>
@@ -810,8 +810,8 @@
                                                     {{ old('active_shifts') ? (in_array($sf->id, old('active_shifts')) ? 'checked' : '') : 'checked' }}>
                                                 <span>{{ $sf->shift_name }} {{ $sf->is_off ? '(OFF/Libur)' : '' }}</span>
                                                 <span
-                                                    class="start-badge hidden items-center gap-1 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-white uppercase bg-purple-600 rounded-full">
-                                                    <i class="fa-solid fa-flag text-[8px]"></i> Mulai
+                                                    class="start-badge hidden items-center gap-1 px-1.5 py-0.5 text-xs font-black tracking-wider text-white uppercase bg-purple-600 rounded-full">
+                                                    <i class="fa-solid fa-flag text-xs"></i> Mulai
                                                 </span>
                                             </label>
 
@@ -842,7 +842,7 @@
                                         <i class="text-purple-500 fa-solid fa-flag"></i>
                                         <span id="start_shift_display_text">—</span>
                                     </div>
-                                    <p class="mt-2.5 text-[10px] text-slate-400 leading-relaxed font-medium">
+                                    <p class="mt-2.5 text-xs text-slate-400 leading-relaxed font-medium">
                                         Otomatis mengikuti shift paling atas di Urutan Shift Aktif.
                                     </p>
                                 </div>
@@ -853,7 +853,7 @@
                                     <input type="number" name="shift_duration" id="gen_shift_duration"
                                         value="{{ old('shift_duration', 2) }}" min="1"
                                         class="w-full p-2.5 text-xs font-bold bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 text-slate-800 transition-all">
-                                    <p class="mt-2.5 text-[10px] text-slate-400 font-medium leading-relaxed">
+                                    <p class="mt-2.5 text-xs text-slate-400 font-medium leading-relaxed">
                                         Durasi hari berturut-turut pada shift yang sama.
                                     </p>
                                 </div>
@@ -979,287 +979,6 @@
         });
     @endphp
 
-    <script>
-        const SITE_PATTERNS = @json($sitePatternsForJs);
-
-        function openModal(id) {
-            const modal = document.getElementById(id);
-            if (!modal) return;
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.body.classList.add('overflow-hidden');
-        }
-
-        function closeModal(id) {
-            const modal = document.getElementById(id);
-            if (!modal) return;
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            document.body.classList.remove('overflow-hidden');
-        }
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay').forEach(function(modal) {
-                    if (!modal.classList.contains('hidden')) closeModal(modal.id);
-                });
-            }
-        });
-
-        function toggleAllGenSites(checked) {
-            document.querySelectorAll('.gen-site-checkbox').forEach(cb => {
-                cb.checked = checked;
-            });
-            onGenSiteChange();
-        }
-
-        function onGenSiteChange() {
-            const selectedSiteIds = Array.from(document.querySelectorAll('.gen-site-checkbox:checked'))
-                .map(cb => cb.value);
-
-            document.querySelectorAll('.employee-option').forEach(el => {
-                const empSiteId = el.getAttribute('data-site-id');
-                const isMatched = selectedSiteIds.includes(empSiteId);
-
-                el.style.display = isMatched ? '' : 'none';
-
-                if (!isMatched) {
-                    const cb = el.querySelector('.employee-checkbox');
-                    if (cb) cb.checked = false;
-                }
-            });
-
-            const emptyNotice = document.getElementById('employee-empty-notice');
-            if (emptyNotice) {
-                emptyNotice.classList.toggle('hidden', selectedSiteIds.length > 0);
-            }
-
-            if (selectedSiteIds.length > 0) {
-                const firstSiteId = selectedSiteIds[0];
-                const pattern = SITE_PATTERNS[firstSiteId] ?? {
-                    schedule_type: 'office_hour',
-                    work_days: 6,
-                    off_days: 2
-                };
-                document.getElementById('gen_schedule_type').value = pattern.schedule_type;
-                document.getElementById('gen_work_days').value = pattern.work_days;
-                document.getElementById('gen_off_days').value = pattern.off_days;
-            }
-
-            onScheduleTypeChange();
-            updateEmployeeCount();
-        }
-
-        function moveShiftItem(button, direction) {
-            const row = button.closest('.shift-item-row');
-            if (!row) return;
-
-            const container = document.getElementById('shift-sequence-container');
-            const visibleRows = Array.from(container.children).filter(r => r.style.display !== 'none');
-            const currentIndex = visibleRows.indexOf(row);
-
-            if (currentIndex === -1) return;
-
-            if (direction === 'up' && currentIndex > 0) {
-                const targetRow = visibleRows[currentIndex - 1];
-                container.insertBefore(row, targetRow);
-            } else if (direction === 'down' && currentIndex < visibleRows.length - 1) {
-                const targetRow = visibleRows[currentIndex + 1];
-                container.insertBefore(targetRow, row);
-            } else {
-                updateStartingShift();
-                return;
-            }
-
-            row.classList.add('ring-2', 'ring-purple-400', 'ring-offset-1');
-            setTimeout(() => row.classList.remove('ring-2', 'ring-purple-400', 'ring-offset-1'), 260);
-
-            updateStartingShift();
-        }
-
-        function updateStartingShift() {
-            const startShiftInput = document.getElementById('gen_start_shift_id');
-            const startShiftDisplayText = document.getElementById('start_shift_display_text');
-            if (!startShiftInput) return;
-
-            let starter = null;
-
-            document.querySelectorAll('.shift-item-row').forEach(row => {
-                row.querySelector('.start-badge')?.classList.add('hidden');
-                row.querySelector('.start-badge')?.classList.remove('inline-flex');
-
-                if (!starter && row.style.display !== 'none') {
-                    const cb = row.querySelector('.active-shift-checkbox');
-                    if (cb && cb.checked) {
-                        starter = row;
-                    }
-                }
-            });
-
-            if (starter) {
-                startShiftInput.value = starter.getAttribute('data-shift-id');
-                if (startShiftDisplayText) startShiftDisplayText.textContent = starter.getAttribute('data-shift-name');
-                const badge = starter.querySelector('.start-badge');
-                badge?.classList.remove('hidden');
-                badge?.classList.add('inline-flex');
-            } else {
-                startShiftInput.value = '';
-                if (startShiftDisplayText) startShiftDisplayText.textContent = 'Belum ada shift yang dipilih';
-            }
-        }
-
-        function onScheduleTypeChange() {
-            const type = document.getElementById('gen_schedule_type').value;
-            const workWrap = document.getElementById('gen_work_days_wrapper');
-            const offWrap = document.getElementById('gen_off_days_wrapper');
-            const durationWrapper = document.getElementById('gen_shift_duration_wrapper');
-            const durationInput = document.getElementById('gen_shift_duration');
-            const ohNoticeBanner = document.getElementById('oh-notice-banner');
-            const isOfficeHour = type === 'office_hour';
-
-            workWrap.classList.toggle('hidden', isOfficeHour);
-            offWrap.classList.toggle('hidden', isOfficeHour);
-            ohNoticeBanner.classList.toggle('hidden', !isOfficeHour);
-
-            if (isOfficeHour) {
-                durationWrapper.classList.add('hidden');
-                durationInput.removeAttribute('required');
-            } else {
-                durationWrapper.classList.remove('hidden');
-                durationInput.setAttribute('required', 'required');
-            }
-
-            document.querySelectorAll('.shift-item-row').forEach(row => {
-                const isOh = row.getAttribute('data-is-oh') === 'true';
-                const isOffShift = row.getAttribute('data-is-off') === 'true';
-                const cb = row.querySelector('.active-shift-checkbox');
-
-                if (isOfficeHour) {
-                    row.style.display = isOh ? '' : 'none';
-                    if (cb) cb.checked = isOh;
-                } else {
-                    // Dinamis Shift Rotation: Sembunyikan Office Hour DAN Shift OFF otomatis
-                    const isWorkShift = !isOh && !isOffShift;
-                    row.style.display = isWorkShift ? '' : 'none';
-                    if (cb) cb.checked = isWorkShift;
-                }
-            });
-
-            updateStartingShift();
-        }
-
-        function filterEmployees() {
-            const q = document.getElementById('employee-search').value.toLowerCase();
-            const selectedSiteIds = Array.from(document.querySelectorAll('.gen-site-checkbox:checked'))
-                .map(cb => cb.value);
-
-            document.querySelectorAll('.employee-option').forEach(function(el) {
-                const empSiteId = el.getAttribute('data-site-id');
-                const matchesName = el.dataset.name.includes(q);
-                const matchesSite = selectedSiteIds.includes(empSiteId);
-
-                el.style.display = (matchesName && matchesSite) ? '' : 'none';
-            });
-        }
-
-        function toggleAllEmployees(checked) {
-            document.querySelectorAll('.employee-option').forEach(function(el) {
-                if (el.style.display !== 'none') {
-                    const cb = el.querySelector('.employee-checkbox');
-                    if (cb) cb.checked = checked;
-                }
-            });
-            updateEmployeeCount();
-        }
-
-        function updateEmployeeCount() {
-            const total = document.querySelectorAll('.employee-checkbox:checked').length;
-            const countEl = document.getElementById('employee-count');
-            const btnSubmit = document.getElementById('btn-submit-generate');
-
-            if (countEl) {
-                countEl.textContent = total > 0 ? `${total} karyawan dipilih` : 'Belum ada karyawan yang dipilih';
-            }
-
-            if (btnSubmit) {
-                btnSubmit.disabled = total === 0;
-            }
-        }
-
-        document.querySelectorAll('.employee-checkbox').forEach(function(cb) {
-            cb.addEventListener('change', updateEmployeeCount);
-        });
-
-        function openGenerateModal() {
-            const mainSiteSelect = document.getElementById('main_site_select');
-            const mainMonth = document.getElementById('main_month_select');
-            const mainYear = document.getElementById('main_year_select');
-
-            if (mainMonth && document.getElementById('gen_month')) {
-                document.getElementById('gen_month').value = mainMonth.value;
-            }
-            if (mainYear && document.getElementById('gen_year')) {
-                document.getElementById('gen_year').value = mainYear.value;
-            }
-
-            if (mainSiteSelect) {
-                if (mainSiteSelect.value !== 'all') {
-                    document.querySelectorAll('.gen-site-checkbox').forEach(cb => {
-                        cb.checked = (cb.value === mainSiteSelect.value);
-                    });
-                } else {
-                    document.querySelectorAll('.gen-site-checkbox').forEach(cb => {
-                        cb.checked = true;
-                    });
-                    const checkAll = document.getElementById('check-all-sites');
-                    if (checkAll) checkAll.checked = true;
-                }
-            }
-
-            onGenSiteChange();
-            openModal('modal-generate');
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            updateEmployeeCount();
-            onGenSiteChange();
-        });
-
-        function openEditShiftModal(empId, empName, dateStr, currentShiftId) {
-            document.getElementById('edit_employee_id').value = empId;
-            document.getElementById('edit_date').value = dateStr;
-            document.getElementById('edit-shift-subtitle').innerText = `${empName} (${dateStr})`;
-
-            if (currentShiftId) {
-                document.getElementById('edit_shift_id').value = currentShiftId;
-            }
-            openModal('modal-edit-shift');
-        }
-
-        function submitQuickEditShift(e) {
-            e.preventDefault();
-            const form = document.getElementById('form-quick-edit-shift');
-            const formData = new FormData(form);
-
-            fetch('{{ route('schedule.updateSingle') }}', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    body: formData
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.reload();
-                    } else {
-                        (window.showUiMessage || window.alert)(data.message || 'Giliran kerja gagal diperbarui');
-                    }
-                })
-                .catch(err => {
-                    (window.showUiMessage || window.alert)('Koneksi terputus. Periksa jaringan dan coba lagi.');
-                });
-        }
-    </script>
+    <script type="application/json" id="schedule-config">{!! json_encode(['sitePatterns' => $sitePatternsForJs, 'updateUrl' => route('schedule.updateSingle')], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+    @vite('resources/js/pages/schedule.js')
 @endsection

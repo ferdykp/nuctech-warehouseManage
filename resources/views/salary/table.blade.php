@@ -2,7 +2,7 @@
     <table data-mobile-cards class="w-full text-left border-collapse min-w-[700px]">
         <thead>
             <tr
-                class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
+                class="text-xs font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
                 <th scope="col" class="px-6 py-4">Karyawan</th>
                 <th scope="col" class="px-6 py-4">Rekening Bank</th>
                 <th scope="col" class="px-6 py-4">
@@ -25,7 +25,7 @@
                     {{-- Employee: Name, Position & Placement --}}
                     <td class="px-6 py-4">
                         <div class="text-sm font-extrabold text-slate-900">{{ $item->name }}</div>
-                        <div class="text-[11px] font-semibold text-slate-400 mt-0.5">
+                        <div class="text-xs font-semibold text-slate-400 mt-0.5">
                             {{ $item->position ?? '-' }} &bull; <span
                                 class="text-slate-600">{{ $item->placement ?? '-' }}</span>
                         </div>
@@ -34,7 +34,7 @@
                     {{-- Bank Account --}}
                     <td class="px-6 py-4">
                         <div class="font-extrabold text-slate-800">{{ $item->bank ?? '-' }}</div>
-                        <div class="font-mono text-[11px] text-slate-400 font-semibold">{{ $item->account_no ?? '-' }}
+                        <div class="font-mono text-xs text-slate-400 font-semibold">{{ $item->account_no ?? '-' }}
                         </div>
                     </td>
 
@@ -55,7 +55,7 @@
                                 : 'bg-blue-50 text-blue-800 border-blue-200';
                         @endphp
                         <span
-                            class="inline-block px-2.5 py-1 text-[10px] font-extrabold rounded-full border tracking-wide uppercase leading-tight {{ $badgeStyle }}">
+                            class="inline-block px-2.5 py-1 text-xs font-extrabold rounded-full border tracking-wide uppercase leading-tight {{ $badgeStyle }}">
                             {{ \App\Support\UiText::label($item->information ?? 'regular salary') }}
                         </span>
                     </td>
@@ -79,7 +79,7 @@
                                 </div>
                                 @if ($overtimeNote)
                                     <div
-                                        class="inline-block px-2 py-0.5 text-[10px] font-extrabold bg-rose-50 text-rose-700 border border-rose-100 rounded-md">
+                                        class="inline-block px-2 py-0.5 text-xs font-extrabold bg-rose-50 text-rose-700 border border-rose-100 rounded-md">
                                         {{ $overtimeNote }}
                                     </div>
                                 @endif

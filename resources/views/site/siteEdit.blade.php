@@ -34,7 +34,7 @@
             <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
                 <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Informasi Lokasi</h2>
                 <span
-                    class="px-3 py-1 text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200/80 rounded-full uppercase tracking-wide">
+                    class="px-3 py-1 text-xs font-extrabold bg-blue-50 text-blue-700 border border-blue-200/80 rounded-full uppercase tracking-wide">
                     ID: #{{ str_pad($site->id ?? ($user->id ?? 0), 4, '0', STR_PAD_LEFT) }}
                 </span>
             </div>

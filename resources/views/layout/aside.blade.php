@@ -7,8 +7,9 @@
 </div>
 
 <!-- SIDEBAR NAVIGATION -->
-<aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-    class="fixed inset-y-0 left-0 z-50 flex flex-col justify-between w-64 transition-transform duration-300 ease-in-out border-r shadow-xl bg-slate-900 text-slate-300 lg:translate-x-0 lg:static lg:inset-0 shrink-0 border-slate-800">
+<aside id="main-sidebar" :inert="!desktop && !sidebarOpen" :aria-hidden="!desktop && !sidebarOpen"
+    :class="{ 'translate-x-0': sidebarOpen, '-translate-x-full': !sidebarOpen }"
+    class="fixed inset-y-0 left-0 z-50 -translate-x-full flex flex-col justify-between w-64 transition-transform duration-300 ease-in-out border-r shadow-xl bg-slate-900 text-slate-300 lg:translate-x-0 lg:static lg:inset-0 shrink-0 border-slate-800">
 
     <!-- LOGO / BRANDING -->
     <div>
@@ -26,7 +27,7 @@
             </button>
         </div>
 
-        <nav aria-label="Menu utama" class="p-4 space-y-5 overflow-y-auto max-h-[calc(100dvh-8rem)]">
+        <nav id="sidebar-menu" data-scroll-key="sidebar-scroll-{{ auth()->id() }}" aria-label="Menu utama" class="p-4 space-y-5 overflow-y-auto max-h-[calc(100dvh-8rem)]">
             @php
                 $baseItemClass =
                     'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150';
@@ -36,40 +37,36 @@
             <div>
                 <p class="px-3 mb-2 text-xs font-bold tracking-wide text-slate-400">Beranda</p>
                 <div class="space-y-1">
-<a href="{{ route('dashboard') }}"
+                    <a href="{{ route('dashboard') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('dashboard') ? $activeClass : $defaultClass }}">
-<i
-                            class="w-5 text-sm text-center fa-solid fa-chart-pie"
-                            aria-hidden="true">
-</i>
-<span>Dashboard</span>
-</a>
-</div>
+                        <i class="w-5 text-sm text-center fa-solid fa-chart-pie" aria-hidden="true">
+                        </i>
+                        <span>Dashboard</span>
+                    </a>
+                </div>
             </div>
             @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader']))
                 <div>
                     <p class="px-3 mb-2 text-xs font-bold tracking-wide text-slate-400">Inventaris</p>
                     <div class="space-y-1">
-<a href="{{ route('sparepart.all') }}"
+                        <a href="{{ route('sparepart.all') }}"
                             class="{{ $baseItemClass }} {{ request()->routeIs('sparepart.all') ? $activeClass : $defaultClass }}">
-<i
-                                class="w-5 text-sm text-center fa-solid fa-boxes-stacked"
-                                aria-hidden="true">
-</i>
-<span>Semua Stok</span>
-</a>
+                            <i class="w-5 text-sm text-center fa-solid fa-boxes-stacked" aria-hidden="true">
+                            </i>
+                            <span>Semua Stok</span>
+                        </a>
                         <div x-data="{ open: {{ request()->routeIs('sites.*') || request()->routeIs('sparepart.index') ? 'true' : 'false' }} }">
                             <button @click="open = !open" :aria-expanded="open" aria-controls="sidebar-machine-list"
                                 type="button"
                                 class="w-full {{ $baseItemClass }} {{ $defaultClass }} justify-between cursor-pointer">
                                 <div class="flex items-center gap-3">
                                     <i class="w-5 text-sm text-center fa-solid fa-gears">
-</i>
+                                    </i>
                                     <span>Stok per Lokasi</span>
                                 </div>
                                 <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"
                                     :class="{ 'rotate-180': open }">
-</i>
+                                </i>
                             </button>
 
                             <div x-show="open" x-cloak x-collapse
@@ -86,7 +83,7 @@
                                     <button @click="$dispatch('open-add-machine'); sidebarOpen = false" type="button"
                                         class="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-bold text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all mt-1 cursor-pointer">
                                         <i class="fa-solid fa-circle-plus">
-</i> Mesin Baru
+                                        </i> Mesin Baru
                                     </button>
                                 @endif
                             </div>
@@ -100,21 +97,18 @@
                     @if (in_array(Auth::user()?->role, ['superadmin', 'team_leader']))
                         <a href="{{ route('report.index') }}"
                             class="{{ $baseItemClass }} {{ request()->routeIs('report.*') ? $activeClass : $defaultClass }}">
-<i
-                                class="w-5 text-sm text-center fa-solid fa-triangle-exclamation"
-                                aria-hidden="true">
-</i>
-<span>Laporan Kerusakan</span>
-</a>
+                            <i class="w-5 text-sm text-center fa-solid fa-triangle-exclamation" aria-hidden="true">
+                            </i>
+                            <span>Laporan Kerusakan</span>
+                        </a>
                     @endif
                     <a href="{{ route('daily_reports.index') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('daily_reports.*') ? $activeClass : $defaultClass }}">
-<i
-                            class="w-5 text-sm text-center fa-solid fa-calendar" aria-hidden="true">
-</i>
-<span>Laporan
+                        <i class="w-5 text-sm text-center fa-solid fa-calendar" aria-hidden="true">
+                        </i>
+                        <span>Laporan
                             Harian</span>
-</a>
+                    </a>
                 </div>
             </div>
             <div>
@@ -123,59 +117,47 @@
                     @if (Auth::user()?->role === 'superadmin')
                         <a href="{{ route('employee.index') }}"
                             class="{{ $baseItemClass }} {{ request()->routeIs('employee.*') ? $activeClass : $defaultClass }}">
-<i
-                                class="w-5 text-sm text-center fa-solid fa-users"
-                                aria-hidden="true">
-</i>
-<span>Karyawan</span>
-</a>
+                            <i class="w-5 text-sm text-center fa-solid fa-users" aria-hidden="true">
+                            </i>
+                            <span>Karyawan</span>
+                        </a>
                     @endif
                     <a href="{{ route('schedule.index') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('schedule.*') ? $activeClass : $defaultClass }}">
-<i
-                            class="w-5 text-sm text-center fa-solid fa-calendar-days"
-                            aria-hidden="true">
-</i>
-<span>Jadwal Kerja</span>
-</a>
-<a
-                        href="{{ route('attendance.index') }}"
+                        <i class="w-5 text-sm text-center fa-solid fa-calendar-days" aria-hidden="true">
+                        </i>
+                        <span>Jadwal Kerja</span>
+                    </a>
+                    <a href="{{ route('attendance.index') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('attendance.*') ? $activeClass : $defaultClass }}">
-<i
-                            class="w-5 text-sm text-center fa-solid fa-user-check"
-                            aria-hidden="true">
-</i>
-<span>Absensi</span>
-</a>
-<a href="{{ route('leave.index') }}"
+                        <i class="w-5 text-sm text-center fa-solid fa-user-check" aria-hidden="true">
+                        </i>
+                        <span>Absensi</span>
+                    </a>
+                    <a href="{{ route('leave.index') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('leave.*') ? $activeClass : $defaultClass }}">
-<i
-                            class="w-5 text-sm text-center fa-solid fa-person-walking-arrow-right"
-                            aria-hidden="true">
-</i>
-<span>Cuti dan Izin</span>
-</a>
+                        <i class="w-5 text-sm text-center fa-solid fa-person-walking-arrow-right" aria-hidden="true">
+                        </i>
+                        <span>Cuti dan Izin</span>
+                    </a>
                 </div>
             </div>
             <div>
                 <p class="px-3 mb-2 text-xs font-bold tracking-wide text-slate-400">Keuangan</p>
                 <div class="space-y-1">
-<a href="{{ route('reimbursements.index') }}"
+                    <a href="{{ route('reimbursements.index') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('reimbursements.*') ? $activeClass : $defaultClass }}">
-<i
-                            class="w-5 text-sm text-center fa-solid fa-receipt" aria-hidden="true">
-</i>
-<span>Reimbursement</span>
-</a>
+                        <i class="w-5 text-sm text-center fa-solid fa-receipt" aria-hidden="true">
+                        </i>
+                        <span>Reimbursement</span>
+                    </a>
                     @if (Auth::user()?->role === 'superadmin')
                         <a href="{{ route('salary.index') }}"
                             class="{{ $baseItemClass }} {{ request()->routeIs('salary.*') ? $activeClass : $defaultClass }}">
-<i
-                                class="w-5 text-sm text-center fa-solid fa-wallet"
-                                aria-hidden="true">
-</i>
-<span>Penggajian</span>
-</a>
+                            <i class="w-5 text-sm text-center fa-solid fa-wallet" aria-hidden="true">
+                            </i>
+                            <span>Penggajian</span>
+                        </a>
                     @endif
                 </div>
             </div>
@@ -183,36 +165,55 @@
                 <div>
                     <p class="px-3 mb-2 text-xs font-bold tracking-wide text-slate-400">Data Master</p>
                     <div class="space-y-1">
-<a href="{{ route('site.index') }}"
+                        <a href="{{ route('site.index') }}"
                             class="{{ $baseItemClass }} {{ request()->routeIs('site.*') ? $activeClass : $defaultClass }}">
-<i
-                                class="w-5 text-sm text-center fa-solid fa-map-pin" aria-hidden="true">
-</i>
-<span>Daftar
+                            <i class="w-5 text-sm text-center fa-solid fa-map-pin" aria-hidden="true">
+                            </i>
+                            <span>Daftar
                                 Lokasi Mesin</span>
-</a>
-<a href="{{ route('categories.index') }}"
+                        </a>
+                        <a href="{{ route('categories.index') }}"
                             class="{{ $baseItemClass }} {{ request()->routeIs('categories.*') ? $activeClass : $defaultClass }}">
-<i
-                                class="w-5 text-sm text-center fa-solid fa-layer-group"
-                                aria-hidden="true">
-</i>
-<span>Kategori Sparepart</span>
-</a>
+                            <i class="w-5 text-sm text-center fa-solid fa-layer-group" aria-hidden="true">
+                            </i>
+                            <span>Kategori Sparepart</span>
+                        </a>
                         @if (Auth::user()?->role === 'superadmin')
                             <a href="{{ route('branches.index') }}"
                                 class="{{ $baseItemClass }} {{ request()->routeIs('branches.*') ? $activeClass : $defaultClass }}">
-<i
-                                    class="w-5 text-sm text-center fa-solid fa-building"
-                                    aria-hidden="true">
-</i>
-<span>Cabang</span>
-</a>
+                                <i class="w-5 text-sm text-center fa-solid fa-building" aria-hidden="true">
+                                </i>
+                                <span>Cabang</span>
+                            </a>
                         @endif
                     </div>
                 </div>
             @endif
         </nav>
+        <script>
+            // Restore before the deferred application bundle to avoid a jump from the top.
+            (() => {
+                const menu = document.getElementById('sidebar-menu');
+                const key = menu.dataset.scrollKey;
+                const restore = () => {
+                    try {
+                        const saved = sessionStorage.getItem(key);
+                        const top = Number(saved);
+                        if (saved !== null && Number.isFinite(top) && top >= 0) menu.scrollTop = top;
+                    } catch { /* Sidebar navigation also works when storage is unavailable. */ }
+                };
+                const save = () => {
+                    try { sessionStorage.setItem(key, String(menu.scrollTop)); }
+                    catch { /* Storage may be disabled by the browser. */ }
+                };
+                restore();
+                // Fonts and stylesheet loading can change the scrollable height.
+                window.addEventListener('load', restore, { once: true });
+                menu.addEventListener('scroll', save, { passive: true });
+                menu.addEventListener('click', save, { capture: true });
+                window.addEventListener('pagehide', save);
+            })();
+        </script>
     </div>
 
     <!-- USER FOOTER CARD -->
@@ -224,7 +225,7 @@
             </div>
             <div class="flex-1 min-w-0">
                 <p class="text-xs font-bold truncate text-slate-200">{{ auth()->user()?->username ?? 'Tamu' }}</p>
-                <p class="text-[10px] font-semibold text-slate-400 capitalize truncate">
+                <p class="text-xs font-semibold text-slate-400 capitalize truncate">
                     {{ \App\Support\UiText::label(auth()->user()?->role) }}</p>
             </div>
         </div>

@@ -16,7 +16,7 @@
         {{-- Site Machine --}}
         <td class="px-6 py-4">
             <div class="text-sm font-bold leading-snug text-slate-900">{{ $item->site_machine }}</div>
-            <div class="text-[11px] font-mono text-slate-400 mt-0.5">Seri: {{ $item->series_machine ?? 'N/A' }}</div>
+            <div class="text-xs font-mono text-slate-400 mt-0.5">Seri: {{ $item->series_machine ?? 'N/A' }}</div>
         </td>
 
         {{-- Attendant --}}

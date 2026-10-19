@@ -49,7 +49,7 @@
 
                 {{-- EMPLOYEE SELECTION --}}
                 <div>
-                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Pilih
+                    <label class="block mb-1.5 text-xs font-bold tracking-wider uppercase text-slate-600">Pilih
                         Karyawan <span class="text-rose-500">*</span></label>
                     <select name="employee_id" required
                         class="w-full px-3.5 py-2.5 text-xs font-bold transition-all bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
@@ -65,7 +65,7 @@
 
                 {{-- LEAVE TYPE --}}
                 <div>
-                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Jenis Cuti <span class="text-rose-500">*</span></label>
+                    <label class="block mb-1.5 text-xs font-bold tracking-wider uppercase text-slate-600">Jenis Cuti <span class="text-rose-500">*</span></label>
                     <select name="leave_type_id" required
                         class="w-full px-3.5 py-2.5 text-xs font-bold transition-all bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
                         <option value="">-- Pilih Jenis Cuti --</option>
@@ -90,7 +90,7 @@
 
                 {{-- DURATION TYPE --}}
                 <div>
-                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Jenis Durasi</label>
+                    <label class="block mb-1.5 text-xs font-bold tracking-wider uppercase text-slate-600">Jenis Durasi</label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <label
                             class="flex items-center gap-2.5 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-all text-xs font-bold text-slate-700 bg-slate-50/50">
@@ -111,7 +111,7 @@
 
                 {{-- SINGLE DATE CONTAINER --}}
                 <div id="single_date_container" class="{{ !$isSingleDay ? 'hidden' : '' }}">
-                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Tanggal Cuti <span class="text-rose-500">*</span></label>
+                    <label class="block mb-1.5 text-xs font-bold tracking-wider uppercase text-slate-600">Tanggal Cuti <span class="text-rose-500">*</span></label>
                     <input type="date" id="single_date" value="{{ old('start_date', $startDateStr) }}"
                         onchange="syncSingleDate(this.value)"
                         class="w-full px-3.5 py-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
@@ -120,13 +120,13 @@
                 {{-- MULTIPLE DATES CONTAINER --}}
                 <div id="multiple_date_container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 {{ $isSingleDay ? 'hidden' : '' }}">
                     <div>
-                        <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Tanggal Mulai <span class="text-rose-500">*</span></label>
+                        <label class="block mb-1.5 text-xs font-bold tracking-wider uppercase text-slate-600">Tanggal Mulai <span class="text-rose-500">*</span></label>
                         <input type="date" id="start_date" name="start_date"
                             value="{{ old('start_date', $startDateStr) }}" required
                             class="w-full px-3.5 py-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
                     </div>
                     <div>
-                        <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Tanggal Selesai <span class="text-rose-500">*</span></label>
+                        <label class="block mb-1.5 text-xs font-bold tracking-wider uppercase text-slate-600">Tanggal Selesai <span class="text-rose-500">*</span></label>
                         <input type="date" id="end_date" name="end_date" value="{{ old('end_date', $endDateStr) }}"
                             required
                             class="w-full px-3.5 py-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
@@ -135,7 +135,7 @@
 
                 {{-- REASON --}}
                 <div>
-                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Alasan / Keterangan <span class="text-rose-500">*</span></label>
+                    <label class="block mb-1.5 text-xs font-bold tracking-wider uppercase text-slate-600">Alasan / Keterangan <span class="text-rose-500">*</span></label>
                     <textarea name="reason" required rows="3"
                         class="w-full px-3.5 py-2.5 text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 placeholder-slate-400"
                         placeholder="Tuliskan alasan pengajuan cuti...">{{ old('reason', $leaveRequest->reason) }}</textarea>
@@ -143,7 +143,7 @@
 
                 {{-- ATTACHMENT --}}
                 <div>
-                    <label class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Lampiran (Opsional / Surat Dokter)</label>
+                    <label class="block mb-1.5 text-xs font-bold tracking-wider uppercase text-slate-600">Lampiran (Opsional / Surat Dokter)</label>
                     @if ($leaveRequest->attachment_file)
                         <div class="mb-2 text-xs font-medium text-slate-500">
                             <i class="fa-solid fa-paperclip text-slate-400"></i> File Saat Ini:

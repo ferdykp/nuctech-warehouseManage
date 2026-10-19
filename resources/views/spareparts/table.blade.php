@@ -2,7 +2,7 @@
     <table data-mobile-cards class="w-full border-collapse min-w-[750px] text-left">
         <thead>
             <tr
-                class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
+                class="text-xs font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
                 <th class="w-16 px-6 py-4 text-center">Nomor</th>
                 <th class="px-6 py-4">Informasi Barang</th>
                 <th class="px-6 py-4 text-center">Nomor Seri</th>
@@ -28,7 +28,7 @@
                         <div class="flex flex-col">
                             <span
                                 class="text-sm font-bold leading-snug text-slate-900">{{ $item->sparepart?->item_name ?? 'Barang Tanpa Nama' }}</span>
-                            <span class="text-[11px] text-slate-400 font-normal mt-0.5"><i
+                            <span class="text-xs text-slate-400 font-normal mt-0.5"><i
                                     class="fa-solid fa-cube text-[10px] mr-1 text-slate-300"></i>{{ $item->sparepart?->type ?? 'Model Standar' }}</span>
                         </div>
                     </td>
@@ -36,7 +36,7 @@
                     {{-- Serial Number --}}
                     <td class="px-6 py-4 font-mono text-center">
                         <span
-                            class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-100 text-slate-600 border border-slate-200/60">
+                            class="px-2.5 py-1 text-xs font-bold rounded-lg bg-slate-100 text-slate-600 border border-slate-200/60">
                             {{ $item->sparepart?->serial_number ?? '-' }}
                         </span>
                     </td>
@@ -63,7 +63,7 @@
                             $style = $colorMap[$item->condition] ?? 'bg-slate-50 text-slate-700 border-slate-200';
                         @endphp
                         <span
-                            class="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider border rounded-lg shadow-2xs {{ $style }}">
+                            class="px-3 py-1 text-xs font-extrabold uppercase tracking-wider border rounded-lg shadow-2xs {{ $style }}">
                             {{ \App\Support\UiText::label($item->condition) }}
                         </span>
                     </td>

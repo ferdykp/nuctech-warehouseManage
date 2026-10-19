@@ -13,7 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(prepend: [\App\Http\Middleware\NoCache::class], append: [\App\Http\Middleware\ExpireIdleSession::class]);
+        $middleware->web(prepend: [\App\Http\Middleware\NoCache::class], append: [\App\Http\Middleware\ExpireIdleSession::class, \App\Http\Middleware\PreserveListContext::class]);
         $middleware->validateCsrfTokens(except: ['telegram/webhook']);
         $middleware->alias([
             'role'    => \App\Http\Middleware\RoleMiddleware::class,

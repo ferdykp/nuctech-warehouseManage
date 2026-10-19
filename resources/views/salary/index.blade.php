@@ -171,7 +171,7 @@
                     </div>
                     <div>
                         <h3 class="text-sm font-extrabold text-slate-900">Buat / Perbarui Penggajian Bulanan</h3>
-                        <p class="text-[11px] font-medium text-slate-500">Pilih periode untuk membuat penggajian karyawan.</p>
+                        <p class="text-xs font-medium text-slate-500">Pilih periode untuk membuat penggajian karyawan.</p>
                     </div>
                 </div>
                 <button type="button" onclick="closeGenerateModal()"
@@ -183,7 +183,7 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label
-                            class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Bulan</label>
+                            class="block mb-1.5 text-xs font-bold tracking-wider uppercase text-slate-600">Bulan</label>
                         <select name="month" id="modal_gen_month"
                             class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
                             @foreach ($monthList as $k => $v)
@@ -193,7 +193,7 @@
                     </div>
                     <div>
                         <label
-                            class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Tahun</label>
+                            class="block mb-1.5 text-xs font-bold tracking-wider uppercase text-slate-600">Tahun</label>
                         <select name="year" id="modal_gen_year"
                             class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-800 cursor-pointer">
                             @for ($y = date('Y') - 2; $y <= date('Y') + 2; $y++)
@@ -235,7 +235,7 @@
                     </div>
                     <div>
                         <h3 class="text-sm font-extrabold text-slate-900">Hapus Penggajian Periode</h3>
-                        <p class="text-[11px] font-medium text-slate-500">Kosongkan seluruh data gaji pada bulan terpilih.
+                        <p class="text-xs font-medium text-slate-500">Kosongkan seluruh data gaji pada bulan terpilih.
                         </p>
                     </div>
                 </div>
@@ -248,7 +248,7 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label
-                            class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Bulan</label>
+                            class="block mb-1.5 text-xs font-bold tracking-wider uppercase text-slate-600">Bulan</label>
                         <select name="month" id="modal_reset_month"
                             class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 text-slate-800 cursor-pointer">
                             @foreach ($monthList as $k => $v)
@@ -258,7 +258,7 @@
                     </div>
                     <div>
                         <label
-                            class="block mb-1.5 text-[11px] font-bold tracking-wider uppercase text-slate-600">Tahun</label>
+                            class="block mb-1.5 text-xs font-bold tracking-wider uppercase text-slate-600">Tahun</label>
                         <select name="year" id="modal_reset_year"
                             class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 text-slate-800 cursor-pointer">
                             @for ($y = date('Y') - 2; $y <= date('Y') + 2; $y++)
@@ -319,33 +319,33 @@
                 <div class="grid grid-cols-1 gap-3 text-xs md:grid-cols-2">
                     <div class="p-3.5 border border-slate-100 rounded-2xl bg-slate-50/60">
                         <span
-                            class="block mb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Penempatan / Cabang</span>
+                            class="block mb-1 text-xs font-extrabold text-slate-400 uppercase tracking-wider">Penempatan / Cabang</span>
                         <strong class="text-xs text-slate-800" id="detail_placement">-</strong>
                     </div>
 
                     <div class="p-3.5 border border-slate-100 rounded-2xl bg-slate-50/60">
-                        <span class="block mb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Jenis Gaji</span>
+                        <span class="block mb-1 text-xs font-extrabold text-slate-400 uppercase tracking-wider">Jenis Gaji</span>
                         <span id="detail_information_badge">-</span>
                     </div>
 
                     <div class="p-3.5 border border-slate-100 rounded-2xl bg-slate-50/60">
-                        <span class="block mb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Nama Bank</span>
+                        <span class="block mb-1 text-xs font-extrabold text-slate-400 uppercase tracking-wider">Nama Bank</span>
                         <strong class="text-xs text-slate-800" id="detail_bank">-</strong>
                     </div>
 
                     <div class="p-3.5 border border-slate-100 rounded-2xl bg-slate-50/60">
-                        <span class="block mb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Nomor Rekening</span>
+                        <span class="block mb-1 text-xs font-extrabold text-slate-400 uppercase tracking-wider">Nomor Rekening</span>
                         <strong class="font-mono text-xs text-slate-900" id="detail_account_no">-</strong>
                     </div>
 
                     <div class="p-3.5 border border-emerald-100 rounded-2xl bg-emerald-50/40">
                         <span
-                            class="block mb-1 text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider">Gaji Pokok Bulanan</span>
+                            class="block mb-1 text-xs font-extrabold text-emerald-600 uppercase tracking-wider">Gaji Pokok Bulanan</span>
                         <strong class="text-sm font-extrabold text-emerald-700" id="detail_amount">-</strong>
                     </div>
 
                     <div class="p-3.5 border border-blue-100 rounded-2xl bg-blue-50/40">
-                        <span class="block mb-1 text-[10px] font-extrabold text-blue-600 uppercase tracking-wider">Sebelum / Sesudah (Penyesuaian Lembur)</span>
+                        <span class="block mb-1 text-xs font-extrabold text-blue-600 uppercase tracking-wider">Sebelum / Sesudah (Penyesuaian Lembur)</span>
                         <strong class="text-xs font-bold text-blue-800" id="detail_before_after">-</strong>
                     </div>
                 </div>
@@ -358,15 +358,15 @@
                     </h6>
                     <div class="grid grid-cols-3 gap-2 pt-1 text-xs">
                         <div>
-                            <span class="block text-[10px] font-semibold text-slate-400">Hari Kerja Efektif:</span>
+                            <span class="block text-xs font-semibold text-slate-400">Hari Kerja Efektif:</span>
                             <strong class="text-slate-800" id="detail_effective_days">0 Hari</strong>
                         </div>
                         <div>
-                            <span class="block text-[10px] font-semibold text-slate-400">Lembur Hari Libur:</span>
+                            <span class="block text-xs font-semibold text-slate-400">Lembur Hari Libur:</span>
                             <strong class="text-rose-600" id="detail_holiday_days">0 Hari</strong>
                         </div>
                         <div>
-                            <span class="block text-[10px] font-semibold text-slate-400">Tambahan Lembur:</span>
+                            <span class="block text-xs font-semibold text-slate-400">Tambahan Lembur:</span>
                             <strong class="text-emerald-600" id="detail_holiday_pay">Rp 0</strong>
                         </div>
                     </div>
@@ -379,13 +379,13 @@
                 <!-- More Info & Get Info -->
                 <div class="pt-1 space-y-3 text-xs">
                     <div class="p-3.5 border border-slate-100 rounded-2xl bg-slate-50/60">
-                        <span class="block mb-1 font-extrabold text-slate-400 uppercase text-[10px] tracking-wider">Informasi Tambahan:</span>
+                        <span class="block mb-1 font-extrabold text-slate-400 uppercase text-xs tracking-wider">Informasi Tambahan:</span>
                         <p class="font-medium leading-relaxed whitespace-pre-line text-slate-700"
                             id="detail_more_information">-</p>
                     </div>
 
                     <div class="p-3.5 border border-slate-100 rounded-2xl bg-slate-50/60">
-                        <span class="block mb-1 font-extrabold text-slate-400 uppercase text-[10px] tracking-wider">Informasi Gaji:</span>
+                        <span class="block mb-1 font-extrabold text-slate-400 uppercase text-xs tracking-wider">Informasi Gaji:</span>
                         <p class="font-medium leading-relaxed whitespace-pre-line text-slate-700"
                             id="detail_get_information">-</p>
                     </div>
@@ -403,256 +403,6 @@
 @endsection
 
 @push('scripts')
-    <script>
-        var debounceTimer = debounceTimer || null;
-
-        function openGenerateModal() {
-            const monthEl = document.getElementById('filter-month');
-            const yearEl = document.getElementById('filter-year');
-
-            if (monthEl) document.getElementById('modal_gen_month').value = monthEl.value;
-            if (yearEl) document.getElementById('modal_gen_year').value = yearEl.value;
-
-            let modal = document.getElementById('modalGenerateSalary');
-            if (modal) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                document.body.classList.add('overflow-hidden');
-            }
-        }
-
-        function closeGenerateModal() {
-            let modal = document.getElementById('modalGenerateSalary');
-            if (modal) {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }
-            document.body.classList.remove('overflow-hidden');
-        }
-
-        function openResetModal() {
-            const monthEl = document.getElementById('filter-month');
-            const yearEl = document.getElementById('filter-year');
-
-            if (monthEl) document.getElementById('modal_reset_month').value = monthEl.value;
-            if (yearEl) document.getElementById('modal_reset_year').value = yearEl.value;
-
-            let modal = document.getElementById('modalResetSalary');
-            if (modal) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                document.body.classList.add('overflow-hidden');
-            }
-        }
-
-        function closeResetModal() {
-            let modal = document.getElementById('modalResetSalary');
-            if (modal) {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }
-            document.body.classList.remove('overflow-hidden');
-        }
-
-        function fetchSalaries(targetUrl = null) {
-            const tableContainer = document.getElementById('table-container');
-            if (!tableContainer) return;
-
-            tableContainer.style.opacity = '0.5';
-
-            const month = document.getElementById('filter-month')?.value || '';
-            const year = document.getElementById('filter-year')?.value || '';
-            const search = document.getElementById('filter-search')?.value || '';
-            const branchId = document.getElementById('filter-branch')?.value || '';
-            const information = document.getElementById('filter-information')?.value || '';
-            const bank = document.getElementById('filter-bank')?.value || '';
-
-            const url = targetUrl ||
-                `{{ route('salary.index') }}?month=${month}&year=${year}&search=${encodeURIComponent(search)}&branch_id=${encodeURIComponent(branchId)}&information=${encodeURIComponent(information)}&bank=${encodeURIComponent(bank)}`;
-
-            fetch(url, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(res => res.text())
-                .then(html => {
-                    tableContainer.innerHTML = html;
-                    tableContainer.style.opacity = '1';
-                    applySalaryVisibility();
-                })
-                .catch(err => {
-                    console.error('Error fetching salaries:', err);
-                    tableContainer.style.opacity = '1';
-                });
-        }
-
-        function initSalaryPageScripts() {
-            const filterMonth = document.getElementById('filter-month');
-            const filterYear = document.getElementById('filter-year');
-            const filterBranch = document.getElementById('filter-branch');
-            const filterInfo = document.getElementById('filter-information');
-            const filterBank = document.getElementById('filter-bank');
-            const filterSearch = document.getElementById('filter-search');
-
-            if (filterMonth) filterMonth.onchange = () => fetchSalaries();
-            if (filterYear) filterYear.onchange = () => fetchSalaries();
-            if (filterBranch) filterBranch.onchange = () => fetchSalaries();
-            if (filterInfo) filterInfo.onchange = () => fetchSalaries();
-            if (filterBank) filterBank.onchange = () => fetchSalaries();
-
-            if (filterSearch) {
-                filterSearch.oninput = function() {
-                    clearTimeout(debounceTimer);
-                    debounceTimer = setTimeout(() => {
-                        fetchSalaries();
-                    }, 300);
-                };
-            }
-
-            const container = document.getElementById('table-container');
-            if (container) {
-                container.onclick = function(e) {
-                    const pageLink = e.target.closest('a');
-                    if (pageLink && pageLink.href && (pageLink.closest('nav') || pageLink.closest('.pagination') ||
-                            pageLink.getAttribute('rel'))) {
-                        e.preventDefault();
-                        fetchSalaries(pageLink.href);
-                    }
-                };
-            }
-        }
-
-        function showSalaryDetail(id) {
-            const month = document.getElementById('filter-month')?.value || '';
-            const year = document.getElementById('filter-year')?.value || '';
-
-            fetch(`/salary/${id}?month=${month}&year=${year}`, {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(async res => {
-                    if (!res.ok) {
-                        let errMsg = 'Rincian gaji gagal dimuat (' + res.status + ')';
-                        try {
-                            let errJson = await res.json();
-                            if (errJson.message) errMsg = errJson.message;
-                        } catch (e) {}
-                        throw new Error(errMsg);
-                    }
-                    return res.json();
-                })
-                .then(data => {
-                    document.getElementById('detail_name').innerText = data.name || '-';
-                    document.getElementById('detail_position').innerText = data.position || '-';
-                    document.getElementById('detail_placement').innerText = data.placement || '-';
-                    document.getElementById('detail_bank').innerText = data.bank || '-';
-                    document.getElementById('detail_account_no').innerText = data.account_no || '-';
-                    document.getElementById('detail_amount').innerText = data.amount_formatted || 'Rp 0';
-                    document.getElementById('detail_before_after').innerText = data.before_after || '-';
-                    document.getElementById('detail_more_information').innerText = data.more_information ||
-                        'Belum ada keterangan tambahan.';
-                    document.getElementById('detail_get_information').innerText = data.get_information ||
-                        'Belum ada catatan.';
-
-                    document.getElementById('detail_period_label').innerText = month + '/' + year;
-
-                    document.getElementById('detail_effective_days').innerText = (data.calculation ? data.calculation
-                        .effective_days : 0) + ' Hari';
-                    document.getElementById('detail_holiday_days').innerText = (data.calculation ? data.calculation
-                        .holiday_overtime_days : 0) + ' Hari';
-                    document.getElementById('detail_holiday_pay').innerText = data.calculation ? data.calculation
-                        .holiday_overtime_pay : 'Rp 0';
-                    document.getElementById('detail_total_pay').innerText = data.calculation ? data.calculation
-                        .total_salary_to_pay : 'Rp 0';
-
-                    let infoText = window.uiLabel(data.information || '-');
-                    let isProbation = (data.information || '').includes('probation');
-                    let badgeClass = isProbation ?
-                        'px-2.5 py-1 text-xs font-extrabold text-amber-800 bg-amber-50 border border-amber-200 rounded-full' :
-                        'px-2.5 py-1 text-xs font-extrabold text-blue-800 bg-blue-50 border border-blue-200 rounded-full';
-
-                    document.getElementById('detail_information_badge').innerHTML =
-                        `<span class="${badgeClass}">${infoText}</span>`;
-
-                    let modal = document.getElementById('salaryDetailModal');
-                    if (modal) {
-                        modal.classList.remove('hidden');
-                        modal.classList.add('flex');
-                        document.body.classList.add('overflow-hidden');
-                    }
-                })
-                .catch(err => (window.showUiMessage || window.alert)(err.message));
-        }
-
-        function closeSalaryModal() {
-            let modal = document.getElementById('salaryDetailModal');
-            if (modal) {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }
-            document.body.classList.remove('overflow-hidden');
-        }
-
-        function exportExcel() {
-            const month = document.getElementById('filter-month')?.value || '';
-            const year = document.getElementById('filter-year')?.value || '';
-            const search = document.getElementById('filter-search')?.value || '';
-            const branchId = document.getElementById('filter-branch')?.value || '';
-            const information = document.getElementById('filter-information')?.value || '';
-            const bank = document.getElementById('filter-bank')?.value || '';
-
-            const url =
-                `{{ route('salary.exportExcel') }}?month=${month}&year=${year}&search=${encodeURIComponent(search)}&branch_id=${encodeURIComponent(branchId)}&information=${encodeURIComponent(information)}&bank=${encodeURIComponent(bank)}`;
-
-            window.location.href = url;
-        }
-
-        let isSalaryHidden = localStorage.getItem('isSalaryHidden') !== 'false';
-
-        function toggleTableSalaryVisibility() {
-            isSalaryHidden = !isSalaryHidden;
-            localStorage.setItem('isSalaryHidden', isSalaryHidden);
-            applySalaryVisibility();
-        }
-
-        function applySalaryVisibility() {
-            const icon = document.getElementById('table_salary_toggle_icon');
-            const salaryElements = document.querySelectorAll('.salary-amount');
-
-            if (icon) {
-                if (isSalaryHidden) {
-                    icon.classList.remove('fa-eye');
-                    icon.classList.add('fa-eye-slash');
-                } else {
-                    icon.classList.remove('fa-eye-slash');
-                    icon.classList.add('fa-eye');
-                }
-            }
-
-            salaryElements.forEach(el => {
-                const originalSalary = el.getAttribute('data-salary');
-                if (isSalaryHidden) {
-                    el.innerText = '••••••••';
-                } else {
-                    el.innerText = originalSalary;
-                }
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            initSalaryPageScripts();
-            applySalaryVisibility();
-
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    closeGenerateModal();
-                    closeResetModal();
-                    closeSalaryModal();
-                }
-            });
-        });
-    </script>
+    <script type="application/json" id="salary-config">{!! json_encode(['indexUrl' => route('salary.index'), 'exportUrl' => route('salary.exportExcel')], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+    @vite('resources/js/pages/salary.js')
 @endpush

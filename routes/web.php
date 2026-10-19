@@ -18,7 +18,6 @@ use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\TelegramWebhookController;
-// use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -55,22 +54,11 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::resource('sites', SiteController::class);
         Route::resource('site', SiteController::class);
 
-
-
-
         Route::get('/shift', [ShiftController::class, 'index'])->name('shift.index');
         Route::post('/shift', [ShiftController::class, 'store'])->name('shift.store');
         Route::put('/shift/{shift}', [ShiftController::class, 'update'])->name('shift.update'); // ROUTE UPDATE BARU
         Route::delete('/shift/{shift}', [ShiftController::class, 'destroy'])->name('shift.destroy');
 
-        // Route::prefix('report')->name('report.')->group(function () {
-        //     Route::get('/', [ReportController::class, 'index'])->name('index');
-        //     Route::get('/export', [ReportController::class, 'export'])->name('export');
-        //     Route::post('/bulk-delete', [ReportController::class, 'bulkDelete'])->name('bulk-delete');
-        //     Route::post('/search', [ReportController::class, 'search'])->name('search');
-        //     Route::resource('/', ReportController::class)->except(['index']);
-        //     Route::get('/global/export', [ReportController::class, 'exportAll'])->name('export_all');
-        // });
         Route::prefix('report')->name('report.')->group(function () {
             // Route index utama menangani opsional slug atau wajib slug
 
@@ -79,6 +67,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::get('/export', [ReportController::class, 'export'])->name('export');
             Route::get('/global/export', [ReportController::class, 'exportAll'])->name('export_all');
             Route::post('/search', [ReportController::class, 'search'])->name('search');
+            Route::delete('/bulk', [ReportController::class, 'bulkDestroy'])->name('bulk_destroy');
             Route::get('/{slug?}', [ReportController::class, 'index'])->name('index');
 
             Route::get('/{report}/edit', [ReportController::class, 'edit'])->name('edit');
@@ -116,9 +105,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     });
 
     // Resources
-
-
-
 
     Route::middleware(['role:superadmin|employee_role|team_leader|administration'])->group(function () {
         Route::prefix('daily-reports')->name('daily_reports.')->group(function () {
@@ -159,9 +145,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::put('/leave/{id}', [LeaveRequestController::class, 'update'])->name('leave.update');
         Route::delete('/leave/{id}', [LeaveRequestController::class, 'destroy'])->name('leave.destroy');
 
-        // Route::prefix('api')->name('api.')->group(function () {
-        //     Route::get('/branches/{site_id}/employees', [EmployeeController::class, 'getEmployeesByBranch'])->name('employees.by-branch');
-        // });
         Route::prefix('api')->name('api.')->group(function () {
             Route::get('/branches/{site_id}/employees', [AttendanceController::class, 'getEmployeesByBranch'])->name('employees.by-branch');
         });
@@ -172,7 +155,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::get('/profile/profileEdit/{id}', [UserController::class, 'edit'])->name('profile.profileEdit');
         Route::put('/profile/profileEdit/{id}', [UserController::class, 'update'])->name('profile.profileUpdate');
     });
-
 
     Route::middleware(['role:superadmin|employee_role|team_leader|administration|manager|station_master'])->group(function () {
         // Fitur Reimbursement System
@@ -220,9 +202,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::resource('branches', BranchController::class)->except(['show']);
     });
 
-
-
-
     Route::middleware(['role:superadmin|administration'])->group(function () {
         Route::prefix('employee')->name('employee.')->group(function () {
             Route::get('/', [EmployeeController::class, 'index'])->name('index');
@@ -251,9 +230,6 @@ Route::middleware(['auth', 'nocache'])->group(function () {
             Route::delete('/{id}', [SalaryController::class, 'destroy'])->name('destroy');
         });
         // Salary Management
-        // Route::post('/salary/generate-monthly', [SalaryController::class, 'generateMonthlySalaries'])->name('salary.generateMonthly');
-        // Route::get('/salary/export-excel', [SalaryController::class, 'exportExcel'])->name('salary.exportExcel');
-        // Route::resource('salary', SalaryController::class);
     });
     // Manajemen Employee
     // Manajemen Employee
@@ -262,18 +238,9 @@ Route::middleware(['auth', 'nocache'])->group(function () {
 
     // Absensi
 
-
     /*
     |--------------------------------------------------------------------------
     | Superadmin Only Routes (Khusus Khusus Superadmin)
     |--------------------------------------------------------------------------
     |*/
-    // Route::middleware(['role:superadmin'])->group(function () {
-    //     Route::get('profile/profileList', [UserController::class, 'profileList'])->name('profile.profileList');
-    //     // Route::resource('users', UserController::class);
-    //     // Route::get('/profile/store', [UserController::class, 'store'])->name('users.store');
-    //     // Route::get('/profile/create', [UserController::class, 'create'])->name('users.create');
-    //     // Route::get('/profile/edit', [UserController::class, 'edit'])->name('users.edit');
-    //     // Route::delete('/profile/{id}', [UserController::class, 'destroy'])->name('users.destroy');
-    // });
 });

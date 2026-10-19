@@ -81,8 +81,9 @@ class SalaryController extends Controller
 
         $salaries = $query->latest('created_at')->paginate(10)->appends($request->all());
 
+        $calculations = app(\App\Services\PayrollCalculation::class)->calculateMany($salaries->getCollection(), $monthPeriod);
         foreach ($salaries as $salary) {
-            $calc = $this->calculateSalaryDetails($salary->employee_id, $monthPeriod, (float) $salary->amount);
+            $calc = $calculations[$salary->id];
 
             if ($calc['holiday_overtime_days'] > 0) {
                 $salary->calculated_before_after =

@@ -41,7 +41,7 @@
                 <table data-mobile-cards id="datatable" class="w-full text-left border-collapse min-w-[700px]">
                     <thead>
                         <tr
-                            class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
+                            class="text-xs font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
                             <th scope="col" class="w-16 px-6 py-4 text-center">#</th>
                             <th scope="col" class="px-6 py-4">Informasi Pengguna</th>
                             <th scope="col" class="px-6 py-4">Email</th>
@@ -67,7 +67,7 @@
                                         <div>
                                             <div class="text-sm font-bold leading-snug text-slate-900">{{ $user->name }}
                                             </div>
-                                            <div class="font-mono text-[11px] text-slate-400">@ {{ $user->username }}</div>
+                                            <div class="font-mono text-xs text-slate-400">@ {{ $user->username }}</div>
                                         </div>
                                     </div>
                                 </td>
@@ -84,7 +84,7 @@
                                                 : 'bg-blue-50 text-blue-700 border-blue-200/60';
                                     @endphp
                                     <span
-                                        class="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider border rounded-full {{ $roleClasses }}">
+                                        class="px-2.5 py-1 text-xs font-extrabold uppercase tracking-wider border rounded-full {{ $roleClasses }}">
                                         {{ \App\Support\UiText::label($user->role) }}
                                     </span>
                                 </td>
@@ -98,7 +98,7 @@
                                         </span>
                                     @else
                                         <span
-                                            class="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200/60 rounded-full">
+                                            class="px-2.5 py-1 text-xs font-extrabold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200/60 rounded-full">
                                             Semua Lokasi (Kantor Pusat)
                                         </span>
                                     @endif

@@ -1,194 +1,333 @@
 @extends('layout.master')
 
-@section('title', 'Daftar Karyawan')
+@section('title', 'Manajemen Karyawan')
 
 @section('content')
-    <div class="w-full space-y-6">
+    <div class="w-full pb-6 space-y-5">
 
-        {{-- ALERT NOTIFIKASI --}}
+        {{-- ========================================================= --}}
+        {{-- ALERT MESSAGES --}}
+        {{-- ========================================================= --}}
         @if (session('success'))
             <div
-                class="flex items-center justify-between p-4 text-xs font-bold border border-emerald-200 rounded-2xl bg-emerald-50/80 text-emerald-800 sm:text-sm shadow-2xs">
-                <div class="flex items-center gap-2.5">
-                    <i class="text-base fa-solid fa-circle-check text-emerald-600"></i>
-                    <span>{{ session('success') }}</span>
+                class="flex items-start justify-between gap-3 px-4 py-3 text-sm border rounded-2xl border-emerald-200 bg-emerald-50 text-emerald-800">
+                <div class="flex items-start gap-2.5">
+                    <i class="fa-solid fa-circle-check mt-0.5 text-emerald-600"></i>
+                    <span class="font-medium">{{ session('success') }}</span>
                 </div>
                 <button type="button" onclick="this.parentElement.remove()"
-                    class="cursor-pointer text-emerald-600 hover:text-emerald-900">&times;</button>
+                    class="cursor-pointer shrink-0 text-emerald-600 hover:text-emerald-900" aria-label="Tutup notifikasi">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
         @endif
 
         @if (session('error'))
             <div
-                class="flex items-center justify-between p-4 text-xs font-bold border border-rose-200 rounded-2xl bg-rose-50/80 text-rose-800 sm:text-sm shadow-2xs">
-                <div class="flex items-center gap-2.5">
-                    <i class="text-base fa-solid fa-triangle-exclamation text-rose-600"></i>
-                    <span>{{ session('error') }}</span>
+                class="flex items-start justify-between gap-3 px-4 py-3 text-sm border rounded-2xl border-rose-200 bg-rose-50 text-rose-800">
+                <div class="flex items-start gap-2.5">
+                    <i class="fa-solid fa-triangle-exclamation mt-0.5 text-rose-600"></i>
+                    <span class="font-medium">{{ session('error') }}</span>
                 </div>
                 <button type="button" onclick="this.parentElement.remove()"
-                    class="cursor-pointer text-rose-600 hover:text-rose-900">&times;</button>
+                    class="cursor-pointer shrink-0 text-rose-600 hover:text-rose-900" aria-label="Tutup notifikasi">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
         @endif
 
-        {{-- 1. HEADER CARD --}}
-        <div class="p-6 bg-white border shadow-xs sm:p-8 border-slate-200/80 rounded-3xl">
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
+        {{-- ========================================================= --}}
+        {{-- PAGE HEADER --}}
+        {{-- ========================================================= --}}
+        <div class="p-5 bg-white border shadow-xs rounded-3xl border-slate-200 sm:p-7">
+            <div class="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+
+                <div class="min-w-0">
                     <div
-                        class="inline-flex items-center gap-2 px-3 py-1 mb-2 text-xs font-bold text-blue-700 border border-blue-100 rounded-full bg-blue-50">
-                        <i class="fa-solid fa-users text-[10px]"></i> Kepegawaian
+                        class="mb-3 inline-flex items-center gap-2 rounded-lg bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700">
+                        <i class="fa-solid fa-users"></i>
+                        Human Resources
                     </div>
-                    <h1 class="text-2xl font-extrabold tracking-tight sm:text-3xl text-slate-900">
+
+                    <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
                         Manajemen Karyawan
                     </h1>
-                    <p class="mt-1 text-xs font-semibold sm:text-sm text-slate-500">
-                        Kelola data karyawan, jabatan, gaji, dan masa kerja.
+
+                    <p class="mt-1.5 text-sm text-slate-500">
+                        Kelola informasi, penempatan, dan kontrak karyawan.
                     </p>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2 shrink-0">
+                <div class="flex flex-wrap items-center gap-2">
+
                     <button type="button" onclick="openImportModal()"
-                        class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-emerald-700 transition-all bg-emerald-50 border border-emerald-200/80 hover:bg-emerald-600 hover:text-white rounded-xl active:scale-95 cursor-pointer">
-                        <i class="fa-solid fa-file-import"></i> Impor Excel
+                        class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-700 transition-colors hover:border-emerald-600 hover:bg-emerald-600 hover:text-white">
+                        <i class="fa-solid fa-file-import"></i>
+                        Impor Excel
                     </button>
 
-                    <a id="btn-export-excel" href="{{ route('employee.export', request()->query()) }}" download
-                        class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-700 transition-all bg-slate-100 border border-slate-200/80 hover:bg-slate-800 hover:text-white rounded-xl active:scale-95">
-                        <i class="fa-solid fa-file-excel"></i> Ekspor Excel
+                    <a id="btn-export-excel" href="{{ route('employee.export', request()->query()) }}"
+                        class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-100">
+                        <i class="fa-solid fa-file-excel"></i>
+                        Ekspor Excel
                     </a>
 
                     <a href="{{ route('employee.create') }}"
-                        class="flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold text-white transition-all bg-blue-600 shadow-md hover:bg-blue-700 rounded-xl shadow-blue-600/20 active:scale-95">
-                        <i class="text-xs fa-solid fa-user-plus"></i> Tambah Karyawan
+                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-blue-700">
+                        <i class="fa-solid fa-plus"></i>
+                        Tambah Karyawan
                     </a>
+
                 </div>
             </div>
         </div>
 
-        {{-- 2. CONTAINER JOIN DATE KARYAWAN 1 BULAN FULL + FILTER BULAN --}}
-        <div
-            class="p-5 space-y-4 border shadow-xs bg-gradient-to-r from-amber-50/90 via-orange-50/50 to-amber-50/90 border-amber-200/80 rounded-3xl">
-            <div class="flex flex-col justify-between gap-3 pb-3 border-b sm:flex-row sm:items-center border-amber-200/60">
-                <div class="flex items-center gap-2.5">
-                    <div
-                        class="flex items-center justify-center w-8 h-8 text-xs font-bold text-white shadow-xs rounded-xl bg-amber-500 shrink-0">
-                        <i class="fa-solid fa-cake-candles"></i>
+        {{-- ========================================================= --}}
+        {{-- MONTHLY PKWT OVERVIEW --}}
+        {{-- ========================================================= --}}
+        <section class="overflow-hidden bg-white border shadow-xs rounded-3xl border-amber-200">
+
+            <div
+                class="flex flex-col gap-4 px-5 py-4 border-b border-amber-100 bg-amber-50/70 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+
+                <div class="flex items-center min-w-0 gap-3">
+                    <div class="flex items-center justify-center w-10 h-10 text-white shrink-0 rounded-xl bg-amber-500">
+                        <i class="fa-solid fa-file-contract"></i>
                     </div>
-                    <div>
-                        <h3 class="text-xs font-extrabold tracking-wider uppercase text-amber-900 sm:text-sm">
-                            Karyawan yang Bergabung pada Bulan {{ $monthsList[$bannerMonth] }}
-                        </h3>
-                        <p class="text-[11px] font-medium text-amber-700">
-                            Evaluasi Perpanjangan Kontrak Tahunan & Masa Kerja Karyawan
+
+                    <div class="min-w-0">
+                        <h2 class="text-sm font-extrabold text-slate-900">
+                            PKWT Bulan {{ $monthsList[$bannerMonth] }}
+                        </h2>
+
+                        <p class="mt-0.5 text-xs text-slate-500">
+                            Daftar karyawan berdasarkan bulan tanggal PKWT.
                         </p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2.5 shrink-0">
-                    {{-- Dropdown Filter Pilihan Bulan Banner --}}
+                <div class="flex flex-wrap items-center gap-2">
+
                     <form action="{{ route('employee.index') }}" method="GET" class="flex items-center">
+
                         @foreach (request()->except('banner_month', 'page') as $key => $value)
                             @if (is_array($value))
                                 @foreach ($value as $v)
-                                    <input type="hidden" name="{{ $key }}[]" value="{{ $v }}">
+                                    @if (!is_array($v))
+                                        <input type="hidden" name="{{ $key }}[]" value="{{ $v }}">
+                                    @endif
                                 @endforeach
                             @else
                                 <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                             @endif
                         @endforeach
 
-                        <select name="banner_month" onchange="this.form.submit()"
-                            class="py-1.5 px-3 text-xs font-bold bg-white border border-amber-300 rounded-xl text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 cursor-pointer shadow-2xs">
-                            @foreach ($monthsList as $mNum => $mName)
-                                <option value="{{ $mNum }}" {{ $bannerMonth == $mNum ? 'selected' : '' }}>
-                                    Bulan {{ $mName }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <div class="relative">
+                            <i
+                                class="absolute text-xs -translate-y-1/2 fa-regular fa-calendar left-3 top-1/2 text-amber-600"></i>
+
+                            <select name="banner_month" onchange="this.form.submit()" aria-label="Pilih bulan PKWT"
+                                class="min-w-36 cursor-pointer appearance-none rounded-xl border border-amber-200 bg-white py-2.5 pl-9 pr-9 text-xs font-bold text-slate-700 outline-none transition-colors focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10">
+
+                                @foreach ($monthsList as $mNum => $mName)
+                                    <option value="{{ $mNum }}" {{ $bannerMonth == $mNum ? 'selected' : '' }}>
+                                        {{ $mName }}
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            <i
+                                class="fa-solid fa-chevron-down pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400"></i>
+                        </div>
                     </form>
 
                     <span
-                        class="px-3 py-1.5 text-xs font-extrabold border rounded-xl text-amber-800 bg-amber-100/80 border-amber-300/80">
-                        {{ $upcomingEmployees->count() }} Karyawan
+                        class="inline-flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-100 px-3 py-2.5 text-xs font-extrabold text-amber-800">
+                        <i class="fa-solid fa-users text-[10px]"></i>
+                        {{ $upcomingEmployees->count() }}
+                        <span class="hidden sm:inline">Karyawan</span>
                     </span>
                 </div>
             </div>
 
-            @if ($upcomingEmployees->count() > 0)
-                <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                    @foreach ($upcomingEmployees as $emp)
-                        @php
-                            $joinDate = \Carbon\Carbon::parse($emp->join_date);
-                        @endphp
-                        <div onclick="showEmployeeDetail({{ $emp->id }})"
-                            class="flex items-center justify-between p-3 transition-all bg-white border cursor-pointer border-amber-200/60 rounded-2xl shadow-2xs hover:border-amber-400 hover:shadow-xs group">
-                            <div class="mr-2 truncate">
-                                <div class="text-xs font-extrabold truncate text-slate-800 group-hover:text-amber-700">
-                                    {{ $emp->name }}
+            <div class="p-4 sm:p-5">
+                @if ($upcomingEmployees->isNotEmpty())
+
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+
+                        @foreach ($upcomingEmployees as $emp)
+                            <button type="button" onclick="showEmployeeDetail({{ $emp->id }})"
+                                class="w-full p-4 text-left transition-all bg-white border cursor-pointer group rounded-2xl border-slate-200 hover:border-amber-300 hover:bg-amber-50/40 hover:shadow-sm">
+
+                                <div class="flex items-start justify-between gap-3">
+
+                                    <div class="flex-1 min-w-0">
+                                        <p
+                                            class="text-xs font-extrabold truncate text-slate-900 group-hover:text-amber-800">
+                                            {{ $emp->name }}
+                                        </p>
+
+                                        <p class="mt-1 truncate text-[11px] font-medium text-slate-500">
+                                            {{ $emp->site->machine_name ?? 'Lokasi belum ditentukan' }}
+                                            &middot;
+                                            {{ $emp->position ?? 'Karyawan' }}
+                                        </p>
+                                    </div>
+
+                                    <span
+                                        class="shrink-0 rounded-lg bg-amber-100 px-2 py-1 text-[11px] font-extrabold text-amber-800">
+                                        {{ \Carbon\Carbon::parse($emp->pkwt_date)->translatedFormat('d M Y') }}
+                                    </span>
                                 </div>
-                                <div class="text-[10px] font-semibold text-slate-500 truncate">
-                                    {{ $emp->site->machine_name ?? 'Lokasi Belum Ditentukan' }} • {{ $emp->position ?? 'Karyawan' }}
-                                </div>
-                            </div>
-                            <div class="text-right shrink-0">
-                                <span
-                                    class="px-2.5 py-1 text-[11px] font-black text-amber-900 bg-amber-100/90 border border-amber-200 rounded-xl inline-block">
-                                    {{ $joinDate->translatedFormat('d M Y') }}
-                                </span>
-                            </div>
+
+                                @if ($emp->pkwt_number)
+                                    <div class="mt-3 border-t border-slate-100 pt-2.5">
+                                        <p class="truncate text-[10px] font-semibold text-slate-400"
+                                            title="{{ $emp->pkwt_number }}">
+                                            <i class="mr-1 fa-regular fa-file-lines"></i>
+                                            {{ $emp->pkwt_number }}
+                                        </p>
+                                    </div>
+                                @endif
+
+                            </button>
+                        @endforeach
+
+                    </div>
+                @else
+                    <div
+                        class="flex flex-col items-center px-5 py-8 text-center border border-dashed rounded-2xl border-slate-200 bg-slate-50/50">
+
+                        <div class="flex items-center justify-center bg-white h-11 w-11 rounded-xl text-slate-400">
+                            <i class="text-lg fa-regular fa-calendar-xmark"></i>
                         </div>
-                    @endforeach
-                </div>
-            @else
-                <div
-                    class="p-4 text-xs font-bold text-center border border-dashed bg-white/60 border-amber-200 rounded-2xl text-amber-700/60">
-                    Tidak ada karyawan yang bergabung pada bulan {{ $monthsList[$bannerMonth] }}.
-                </div>
-            @endif
-        </div>
 
-        {{-- 3. MAIN TABLE & FILTER CONTAINER --}}
-        <div class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
+                        <p class="mt-3 text-sm font-bold text-slate-700">
+                            Tidak ada PKWT pada bulan ini
+                        </p>
 
-            {{-- FORM FILTER DENGAN EVENT DELEGATION --}}
+                        <p class="mt-1 text-xs text-slate-400">
+                            Tidak ada data tanggal PKWT untuk bulan
+                            {{ $monthsList[$bannerMonth] }}.
+                        </p>
+
+                    </div>
+                @endif
+            </div>
+
+        </section>
+
+        {{-- ========================================================= --}}
+        {{-- UNIFIED FILTER + EMPLOYEE TABLE --}}
+        {{-- ========================================================= --}}
+        <section class="overflow-hidden bg-white border shadow-xs rounded-3xl border-slate-200">
+
+            {{-- SECTION HEADER --}}
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 sm:px-6">
+                <div>
+                    <h2 class="text-sm font-extrabold text-slate-900">
+                        Daftar Karyawan
+                    </h2>
+                    <p class="mt-0.5 text-xs text-slate-400">
+                        Cari dan filter data karyawan.
+                    </p>
+                </div>
+
+                <div class="items-center hidden gap-2 text-xs font-medium text-slate-400 sm:flex">
+                    <i class="fa-solid fa-database"></i>
+                    Data Karyawan
+                </div>
+            </div>
+
             <form id="filter-form" action="{{ route('employee.index') }}" method="GET" onsubmit="return false;">
-                <div class="p-5 border-b sm:p-6 border-slate-100 bg-slate-50/30">
-                    <div class="flex flex-col gap-4">
-                        {{-- Search Bar --}}
-                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div class="relative w-full md:w-96">
-                                <div
-                                    class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
-                                    <i class="text-xs fa-solid fa-magnifying-glass"></i>
-                                </div>
-                                <input type="text" name="search" id="search"
-                                    placeholder="Cari nama, NIK, email, atau jabatan..." value="{{ request('search') }}"
-                                    class="block w-full py-2.5 pl-10 pr-8 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-800 placeholder-slate-400 shadow-2xs">
-                                <button type="button" id="clearSearchBtn" onclick="clearSearchInput()"
-                                    class="absolute inset-y-0 right-0 flex items-center hidden pr-3 cursor-pointer text-slate-400 hover:text-slate-600">
-                                    <i class="text-xs fa-solid fa-xmark"></i>
-                                </button>
-                            </div>
 
-                            <button type="button" id="btn-reset-filter"
-                                class="flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-600 transition-colors bg-white border border-slate-200 rounded-xl hover:bg-slate-100 hover:text-slate-800 active:scale-95 shrink-0 shadow-2xs cursor-pointer">
-                                <i class="fa-solid fa-rotate-left text-[11px]"></i> Atur Ulang Filter
+                <div class="p-4 space-y-4 border-b border-slate-100 sm:p-5">
+
+                    {{-- MAIN FILTER TOOLBAR --}}
+                    <div class="flex flex-col gap-3 md:flex-row md:items-center">
+
+                        {{-- SEARCH --}}
+                        <div class="relative flex-1 min-w-0">
+
+                            <i
+                                class="absolute text-sm -translate-y-1/2 pointer-events-none fa-solid fa-magnifying-glass left-4 top-1/2 text-slate-400"></i>
+
+                            <input type="search" name="search" id="search" autocomplete="off"
+                                value="{{ request('search') }}" placeholder="Cari nama, NIK, jabatan, nomor PKWT..."
+                                class="w-full py-3 pr-10 text-sm font-medium transition-all border outline-none rounded-xl border-slate-200 bg-slate-50 pl-11 text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+
+                            <button type="button" id="clearSearchBtn" onclick="clearSearchInput()"
+                                aria-label="Hapus pencarian"
+                                class="absolute hidden -translate-y-1/2 cursor-pointer right-3 top-1/2 text-slate-400 hover:text-slate-700">
+                                <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
 
-                        <details class="ui-filter-details" {{ collect(request()->only(['join_month', 'join_day', 'status', 'site_id', 'branch_id', 'mcu', 'tld', 'bank_name']))->filter()->isNotEmpty() ? 'open' : '' }}>
-                            <summary class="cursor-pointer py-2 text-sm font-semibold text-slate-700">Filter tambahan (tanggal, status, lokasi, dan bank)</summary>
-                        {{-- Filter Grid --}}
-                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
-                            {{-- Filter Join Month --}}
+                        {{-- TOOLBAR ACTIONS --}}
+                        <div class="flex items-center gap-2">
+
+                            <button type="button" id="btn-toggle-filter" aria-expanded="false"
+                                aria-controls="employee-filter-panel"
+                                class="inline-flex items-center justify-center flex-1 gap-2 px-4 py-3 text-xs font-bold transition-colors bg-white border cursor-pointer rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 md:flex-none">
+
+                                <i class="fa-solid fa-sliders text-slate-500"></i>
+                                <span>Filter</span>
+
+                                <span id="filter-count"
+                                    class="hidden rounded-md bg-blue-600 px-1.5 py-0.5 text-[10px] font-extrabold text-white">
+                                    0
+                                </span>
+
+                                <i id="filter-chevron"
+                                    class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform"></i>
+                            </button>
+
+                            <button type="button" id="btn-reset-filter" title="Atur ulang filter"
+                                class="inline-flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold transition-colors bg-white border cursor-pointer rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50">
+
+                                <i class="fa-solid fa-rotate-left"></i>
+                                <span class="hidden sm:inline">Reset</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- ACTIVE FILTER CHIPS --}}
+                    <div id="active-filter-container" class="flex-wrap items-center hidden gap-2">
+
+                        <span class="text-[11px] font-semibold text-slate-400">
+                            Aktif:
+                        </span>
+
+                        <div id="active-filter-list" class="flex flex-wrap items-center gap-1.5"></div>
+                    </div>
+
+                    {{-- ADVANCED FILTER PANEL --}}
+                    <div id="employee-filter-panel" class="hidden pt-4 border-t border-slate-100">
+
+                        <div class="flex items-center justify-between mb-4">
                             <div>
-                                <label
-                                    class="block mb-1.5 text-[10px] font-extrabold text-amber-700 uppercase tracking-wider">
-                                    <i class="mr-1 fa-solid fa-calendar-days text-amber-600"></i> Bulan Bergabung
+                                <h3 class="text-xs font-extrabold text-slate-800">
+                                    Filter Lanjutan
+                                </h3>
+                                <p class="mt-1 text-[11px] text-slate-400">
+                                    Pilih satu atau beberapa kategori.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+
+                            {{-- BULAN BERGABUNG --}}
+                            <div class="space-y-1.5">
+                                <label for="filter_join_month" class="block text-[11px] font-bold text-slate-600">
+                                    Bulan Bergabung
                                 </label>
+
                                 <select name="join_month" id="filter_join_month"
-                                    class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border outline-none cursor-pointer border-amber-200 rounded-xl focus:border-amber-500 text-slate-800">
+                                    class="block w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10">
+
                                     <option value="">Semua Bulan</option>
+
                                     @for ($m = 1; $m <= 12; $m++)
                                         <option value="{{ $m }}"
                                             {{ request('join_month') == $m ? 'selected' : '' }}>
@@ -198,15 +337,17 @@
                                 </select>
                             </div>
 
-                            {{-- Filter Join Day --}}
-                            <div>
-                                <label
-                                    class="block mb-1.5 text-[10px] font-extrabold text-amber-700 uppercase tracking-wider">
-                                    <i class="mr-1 fa-solid fa-calendar-day text-amber-600"></i> Tanggal Bergabung
+                            {{-- TANGGAL BERGABUNG --}}
+                            <div class="space-y-1.5">
+                                <label for="filter_join_day" class="block text-[11px] font-bold text-slate-600">
+                                    Tanggal Bergabung
                                 </label>
+
                                 <select name="join_day" id="filter_join_day"
-                                    class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border outline-none cursor-pointer border-amber-200 rounded-xl focus:border-amber-500 text-slate-800">
+                                    class="block w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10">
+
                                     <option value="">Semua Tanggal</option>
+
                                     @for ($d = 1; $d <= 31; $d++)
                                         <option value="{{ $d }}"
                                             {{ request('join_day') == $d ? 'selected' : '' }}>
@@ -216,32 +357,43 @@
                                 </select>
                             </div>
 
-                            {{-- Dropdown Filter Status --}}
-                            <div>
-                                <label
-                                    class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Status</label>
+                            {{-- STATUS --}}
+                            <div class="space-y-1.5">
+                                <label for="filter_status" class="block text-[11px] font-bold text-slate-600">
+                                    Status Kepegawaian
+                                </label>
+
                                 <select name="status" id="filter_status"
-                                    class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border outline-none cursor-pointer border-slate-200 rounded-xl focus:border-blue-500 text-slate-800">
+                                    class="block w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10">
+
                                     <option value="">Semua Status</option>
-                                    <option value="Permanent" {{ request('status') == 'Permanent' ? 'selected' : '' }}>
-                                        Tetap</option>
-                                    <option value="Contract" {{ request('status') == 'Contract' ? 'selected' : '' }}>
-                                        Kontrak</option>
-                                    <option value="Probation" {{ request('status') == 'Probation' ? 'selected' : '' }}>
-                                        Masa Percobaan</option>
-                                    <option value="Daily" {{ request('status') == 'Daily' ? 'selected' : '' }}>Harian
-                                    </option>
-                                    <option value="Resigned" {{ request('status') == 'Resigned' ? 'selected' : '' }}>🔴
-                                        Berhenti Bekerja</option>
+
+                                    @foreach ([
+            'Permanent' => 'Tetap',
+            'Contract' => 'Kontrak',
+            'Probation' => 'Masa Percobaan',
+            'Daily' => 'Harian',
+            'Resigned' => 'Berhenti Bekerja',
+        ] as $value => $label)
+                                        <option value="{{ $value }}"
+                                            {{ request('status') == $value ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
                                 </select>
                             </div>
 
-                            <div>
-                                <label
-                                    class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Lokasi Mesin</label>
+                            {{-- SITE --}}
+                            <div class="space-y-1.5">
+                                <label for="filter_site" class="block text-[11px] font-bold text-slate-600">
+                                    Lokasi Mesin
+                                </label>
+
                                 <select name="site_id" id="filter_site"
-                                    class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border outline-none cursor-pointer border-slate-200 rounded-xl focus:border-blue-500 text-slate-800">
+                                    class="block w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10">
+
                                     <option value="">Semua Lokasi</option>
+
                                     @foreach ($sites as $site)
                                         <option value="{{ $site->id }}"
                                             {{ request('site_id') == $site->id ? 'selected' : '' }}>
@@ -251,12 +403,17 @@
                                 </select>
                             </div>
 
-                            <div>
-                                <label
-                                    class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Cabang</label>
+                            {{-- CABANG --}}
+                            <div class="space-y-1.5">
+                                <label for="filter_branch" class="block text-[11px] font-bold text-slate-600">
+                                    Cabang
+                                </label>
+
                                 <select name="branch_id" id="filter_branch"
-                                    class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border outline-none cursor-pointer border-slate-200 rounded-xl focus:border-blue-500 text-slate-800">
+                                    class="block w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10">
+
                                     <option value="">Semua Cabang</option>
+
                                     @foreach ($branches as $branch)
                                         <option value="{{ $branch->id }}"
                                             {{ request('branch_id') == $branch->id ? 'selected' : '' }}>
@@ -266,38 +423,55 @@
                                 </select>
                             </div>
 
-                            <div>
-                                <label
-                                    class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Status MCU</label>
+                            {{-- MCU --}}
+                            <div class="space-y-1.5">
+                                <label for="filter_mcu" class="block text-[11px] font-bold text-slate-600">
+                                    Status MCU
+                                </label>
+
                                 <select name="mcu" id="filter_mcu"
-                                    class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border outline-none cursor-pointer border-slate-200 rounded-xl focus:border-blue-500 text-slate-800">
-                                    <option value="">Semua Status MCU</option>
-                                    <option value="yes" {{ request('mcu') == 'yes' ? 'selected' : '' }}>Lulus (Ya)
+                                    class="block w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10">
+
+                                    <option value="">Semua Status</option>
+                                    <option value="yes" {{ request('mcu') == 'yes' ? 'selected' : '' }}>
+                                        Ya
                                     </option>
-                                    <option value="no" {{ request('mcu') == 'no' ? 'selected' : '' }}>Belum (Tidak)
+                                    <option value="no" {{ request('mcu') == 'no' ? 'selected' : '' }}>
+                                        Tidak
                                     </option>
                                 </select>
                             </div>
 
-                            <div>
-                                <label
-                                    class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Kartu TLD</label>
+                            {{-- TLD --}}
+                            <div class="space-y-1.5">
+                                <label for="filter_tld" class="block text-[11px] font-bold text-slate-600">
+                                    Kartu TLD
+                                </label>
+
                                 <select name="tld" id="filter_tld"
-                                    class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border outline-none cursor-pointer border-slate-200 rounded-xl focus:border-blue-500 text-slate-800">
-                                    <option value="">Semua Status TLD</option>
-                                    <option value="yes" {{ request('tld') == 'yes' ? 'selected' : '' }}>Aktif (Ya)
+                                    class="block w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10">
+
+                                    <option value="">Semua Status</option>
+                                    <option value="yes" {{ request('tld') == 'yes' ? 'selected' : '' }}>
+                                        Ya
                                     </option>
-                                    <option value="no" {{ request('tld') == 'no' ? 'selected' : '' }}>Tidak Ada
+                                    <option value="no" {{ request('tld') == 'no' ? 'selected' : '' }}>
+                                        Tidak
                                     </option>
                                 </select>
                             </div>
 
-                            <div>
-                                <label
-                                    class="block mb-1.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Nama Bank</label>
+                            {{-- BANK --}}
+                            <div class="space-y-1.5">
+                                <label for="filter_bank" class="block text-[11px] font-bold text-slate-600">
+                                    Nama Bank
+                                </label>
+
                                 <select name="bank_name" id="filter_bank"
-                                    class="block w-full px-3 py-2 text-xs font-bold transition-all bg-white border outline-none cursor-pointer border-slate-200 rounded-xl focus:border-blue-500 text-slate-800">
+                                    class="block w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10">
+
                                     <option value="">Semua Bank</option>
+
                                     @php
                                         $bankList = [
                                             'BCA',
@@ -306,459 +480,973 @@
                                             'BNI',
                                             'BSI',
                                             'CIMB Niaga',
+                                            'Bank Permata',
+                                            'Bank Danamon',
+                                            'BTN',
+                                            'Maybank',
                                             'Panin Bank',
                                             'OCBC NISP',
+                                            'Bank BJB',
+                                            'Bank DKI',
+                                            'Bank Jatim',
+                                            'Bank Jateng',
                                             'Seabank',
+                                            'Bank Jago',
+                                            'Bank Neo Commerce',
                                         ];
                                     @endphp
+
                                     @foreach ($bankList as $bank)
                                         <option value="{{ $bank }}"
-                                            {{ request('bank_name') == $bank ? 'selected' : '' }}>{{ $bank }}
+                                            {{ request('bank_name') == $bank ? 'selected' : '' }}>
+                                            {{ $bank }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
+
                         </div>
-                        </details>
                     </div>
+
                 </div>
             </form>
 
+            {{-- FILTER ERROR --}}
+            <div id="filter-error" role="alert"
+                class="hidden px-5 py-3 text-xs font-semibold border-b border-rose-100 bg-rose-50 text-rose-700">
+            </div>
+
+            {{-- AJAX TABLE --}}
             <div id="table-container" class="transition-opacity duration-200">
                 @include('employee.table', ['employees' => $employees])
             </div>
-        </div>
+
+        </section>
+
     </div>
 
-    {{-- MODAL IMPORT EXCEL --}}
-    <div id="importModal" onclick="if(event.target===this) closeImportModal()"
-        class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs">
-        <div class="w-full max-w-md mx-auto overflow-hidden bg-white border shadow-2xl border-slate-100 rounded-3xl">
-            <div class="flex items-center justify-between px-6 py-5 text-white bg-slate-900">
-                <h5 class="flex items-center gap-2.5 text-xs font-extrabold tracking-wider uppercase">
-                    <i class="text-emerald-400 fa-solid fa-file-excel"></i> Impor Karyawan Excel
-                </h5>
-                <button type="button" onclick="closeImportModal()"
-                    class="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">&times;</button>
-            </div>
-            <form action="{{ route('employee.import') }}" method="POST" enctype="multipart/form-data"
-                class="p-6 space-y-4">
-                @csrf
+    {{-- ========================================================= --}}
+    {{-- IMPORT EXCEL MODAL --}}
+    {{-- ========================================================= --}}
+    <div id="importModal" onclick="if(event.target === this) closeImportModal()" role="dialog" aria-modal="true"
+        aria-label="Impor karyawan dari Excel"
+        class="fixed inset-0 z-50 items-center justify-center hidden p-4 bg-slate-900/60 backdrop-blur-xs">
+
+        <div class="w-full max-w-md mx-auto overflow-hidden bg-white border shadow-2xl rounded-3xl border-slate-100">
+
+            <div class="flex items-center justify-between px-6 py-5 bg-slate-900">
+
                 <div>
-                    <label class="block mb-1.5 text-xs font-bold uppercase tracking-wider text-slate-700">Pilih File Excel
-                        (.xlsx, .xls)</label>
-                    <input type="file" name="file" required accept=".xlsx, .xls, .csv"
-                        class="block w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-200 rounded-xl">
+                    <h3 class="flex items-center gap-2 text-sm font-extrabold text-white">
+                        <i class="fa-solid fa-file-excel text-emerald-400"></i>
+                        Impor Excel
+                    </h3>
+                    <p class="mt-1 text-xs text-slate-400">
+                        Tambahkan atau perbarui data karyawan.
+                    </p>
                 </div>
+
+                <button type="button" onclick="closeImportModal()" aria-label="Tutup modal import"
+                    class="flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form action="{{ route('employee.import') }}" method="POST" enctype="multipart/form-data"
+                class="p-6 space-y-5">
+                @csrf
+
+                <div class="rounded-xl border border-blue-100 bg-blue-50 p-3.5">
+                    <p class="text-xs font-bold text-blue-800">
+                        <i class="mr-1 fa-solid fa-circle-info"></i>
+                        Partial Import
+                    </p>
+                    <p class="mt-1 text-xs leading-relaxed text-blue-700">
+                        Hanya kolom yang tersedia dan berisi nilai pada Excel
+                        yang akan diperbarui. Gunakan nama atau identitas
+                        karyawan untuk mencocokkan data.
+                    </p>
+                </div>
+
+                <div class="space-y-2">
+                    <label for="employee-import-file" class="block text-xs font-bold text-slate-700">
+                        File Excel
+                    </label>
+
+                    <input type="file" id="employee-import-file" name="file" required accept=".xlsx,.xls,.csv"
+                        class="block w-full text-xs bg-white border rounded-xl border-slate-200 text-slate-500 file:mr-3 file:cursor-pointer file:border-0 file:bg-slate-100 file:px-4 file:py-3 file:text-xs file:font-bold file:text-slate-700 hover:file:bg-slate-200">
+
+                    <p class="text-[11px] text-slate-400">
+                        Format didukung: XLSX, XLS, CSV. Maksimal 5 MB.
+                    </p>
+                </div>
+
                 <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
                     <button type="button" onclick="closeImportModal()"
-                        class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800">Batal</button>
+                        class="cursor-pointer rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100">
+                        Batal
+                    </button>
+
                     <button type="submit"
-                        class="px-5 py-2 text-xs font-bold text-white shadow-md bg-emerald-600 hover:bg-emerald-700 rounded-xl">Unggah
-                        & Impor</button>
+                        class="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white transition-colors hover:bg-emerald-700">
+                        <i class="fa-solid fa-upload"></i>
+                        Unggah & Impor
+                    </button>
                 </div>
+
             </form>
         </div>
     </div>
 
-    {{-- MODAL DETAIL KARYAWAN --}}
-    <div id="employeeDetailModal" onclick="if(event.target===this) closeEmployeeModal()"
-        class="fixed inset-0 z-50 items-center justify-center hidden p-4 transition-all duration-200 bg-slate-900/60 backdrop-blur-xs">
-        <div class="w-full max-w-2xl mx-auto overflow-hidden bg-white border shadow-2xl border-slate-100 rounded-3xl">
-            <div class="flex items-center justify-between px-6 py-5 text-white bg-slate-900">
-                <h5 class="flex items-center gap-2.5 text-xs font-extrabold tracking-wider uppercase">
-                    <i class="text-blue-400 fa-solid fa-id-card"></i> Rincian Karyawan
-                </h5>
-                <button type="button" onclick="closeEmployeeModal()"
-                    class="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">&times;</button>
+    {{-- ========================================================= --}}
+    {{-- EMPLOYEE DETAIL MODAL --}}
+    {{-- ========================================================= --}}
+    <div id="employeeDetailModal" onclick="if(event.target === this) closeEmployeeModal()" role="dialog"
+        aria-modal="true" aria-label="Rincian karyawan"
+        class="fixed inset-0 z-50 items-center justify-center hidden p-3 bg-slate-900/60 backdrop-blur-xs sm:p-4">
+
+        <div
+            class="mx-auto flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl">
+
+            {{-- MODAL HEADER --}}
+            <div class="flex items-center justify-between px-5 py-4 shrink-0 bg-slate-900 sm:px-6">
+
+                <h3 class="flex items-center gap-2 text-sm font-extrabold text-white">
+                    <i class="text-blue-400 fa-solid fa-id-card"></i>
+                    Rincian Karyawan
+                </h3>
+
+                <button type="button" onclick="closeEmployeeModal()" aria-label="Tutup rincian karyawan"
+                    class="flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
 
-            <div class="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
-                <div class="flex items-center gap-4 pb-4 border-b border-slate-100">
-                    <div
-                        class="flex items-center justify-center w-12 h-12 text-lg font-black text-blue-700 border rounded-2xl border-blue-200/80 bg-blue-50 shrink-0">
-                        <i class="fa-solid fa-user"></i>
+            {{-- MODAL BODY --}}
+            <div class="flex-1 min-h-0 p-5 space-y-5 overflow-y-auto sm:p-6">
+
+                {{-- EMPLOYEE IDENTITY --}}
+                <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+
+                    <div class="flex items-center justify-center w-12 h-12 text-blue-600 shrink-0 rounded-2xl bg-blue-50">
+                        <i class="text-lg fa-solid fa-user"></i>
                     </div>
-                    <div>
-                        <h3 class="text-base font-extrabold text-slate-900 sm:text-lg" id="detail_name">-</h3>
-                        <p class="text-xs font-bold text-slate-500 mt-0.5" id="detail_position">-</p>
+
+                    <div class="min-w-0">
+                        <h3 id="detail_name" class="text-base font-extrabold text-slate-900 sm:text-lg">
+                            -
+                        </h3>
+
+                        <p id="detail_position" class="mt-0.5 text-xs font-medium text-slate-500">
+                            -
+                        </p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 text-xs md:grid-cols-3">
-                    <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
-                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">NIK</span>
-                        <strong class="font-mono text-xs sm:text-sm text-slate-800" id="detail_nik">-</strong>
-                    </div>
-                    <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
-                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Email</span>
-                        <strong class="block text-xs truncate sm:text-sm text-slate-800" id="detail_email">-</strong>
-                    </div>
-                    <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
-                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Telepon</span>
-                        <strong class="text-xs sm:text-sm text-slate-800" id="detail_phone">-</strong>
-                    </div>
-                    <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
-                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Lokasi Mesin</span>
-                        <strong class="text-xs sm:text-sm text-slate-800" id="detail_site">-</strong>
-                    </div>
-                    <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
-                        <span
-                            class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Cabang</span>
-                        <strong class="text-xs sm:text-sm text-slate-800" id="detail_branch">-</strong>
-                    </div>
-                    <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
-                        <span
-                            class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Status</span>
-                        <span id="detail_status_badge">-</span>
+                {{-- IDENTITY GRID --}}
+                <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
+
+                    <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                        <span class="block text-[10px] font-bold uppercase text-slate-400">NIK</span>
+                        <strong id="detail_nik" class="block mt-1 font-mono text-xs break-all text-slate-800">-</strong>
                     </div>
 
-                    {{-- FITUR GAJI DENGAN TOGGLE EYE --}}
-                    <div class="p-3.5 border border-emerald-200/80 rounded-2xl bg-emerald-50/40 col-span-2 md:col-span-1">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="font-bold text-emerald-600 uppercase text-[10px] tracking-wider">Gaji Pokok</span>
-                            <button type="button" onclick="toggleSalaryVisibility()" title="Tampilkan atau sembunyikan gaji"
-                                class="transition-colors cursor-pointer text-emerald-700 hover:text-emerald-900 focus:outline-none">
+                    <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                        <span class="block text-[10px] font-bold uppercase text-slate-400">Email</span>
+                        <strong id="detail_email" class="block mt-1 text-xs break-all text-slate-800">-</strong>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                        <span class="block text-[10px] font-bold uppercase text-slate-400">Telepon</span>
+                        <strong id="detail_phone" class="block mt-1 text-xs break-all text-slate-800">-</strong>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                        <span class="block text-[10px] font-bold uppercase text-slate-400">Lokasi Mesin</span>
+                        <strong id="detail_site" class="block mt-1 text-xs text-slate-800">-</strong>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                        <span class="block text-[10px] font-bold uppercase text-slate-400">Cabang</span>
+                        <strong id="detail_branch" class="block mt-1 text-xs text-slate-800">-</strong>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                        <span class="block text-[10px] font-bold uppercase text-slate-400">Status</span>
+                        <div id="detail_status_badge" class="mt-1.5">-</div>
+                    </div>
+
+                    {{-- SALARY --}}
+                    <div class="col-span-2 rounded-xl border border-emerald-200 bg-emerald-50/50 p-3.5 md:col-span-1">
+
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[10px] font-bold uppercase text-emerald-700">
+                                Gaji Pokok
+                            </span>
+
+                            <button type="button" onclick="toggleSalaryVisibility()"
+                                aria-label="Tampilkan atau sembunyikan gaji"
+                                class="cursor-pointer text-emerald-700 hover:text-emerald-900">
                                 <i id="salary_toggle_icon" class="text-xs fa-solid fa-eye-slash"></i>
                             </button>
                         </div>
-                        <strong class="text-sm font-black text-emerald-700" id="detail_basic_salary">••••••••</strong>
+
+                        <strong id="detail_basic_salary" class="block mt-1 text-sm font-extrabold text-emerald-700">
+                            ••••••••
+                        </strong>
                     </div>
 
-                    <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
-                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Rekening Bank</span>
-                        <strong class="block text-xs sm:text-sm text-slate-800" id="detail_bank">-</strong>
-                    </div>
-                    <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
-                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">MCU</span>
-                        <span id="detail_mcu_badge">-</span>
-                    </div>
-                    <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
-                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Kartu TLD</span>
-                        <span id="detail_tld_badge">-</span>
-                    </div>
-                    <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
-                        <span
-                            class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Masa Kerja</span>
-                        <strong class="text-xs font-bold text-blue-600 sm:text-sm" id="detail_tenure">-</strong>
-                    </div>
-                    <div class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
-                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Tanggal Bergabung</span>
-                        <strong class="text-xs sm:text-sm text-slate-800" id="detail_join_date">-</strong>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                        <span class="block text-[10px] font-bold uppercase text-slate-400">Rekening Bank</span>
+                        <strong id="detail_bank" class="block mt-1 text-xs break-words text-slate-800">-</strong>
                     </div>
 
-                    {{-- INFORMASI LAST DATE (RESIGN DATE) --}}
-                    <div id="detail_last_date_wrapper"
-                        class="p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50">
-                        <span class="block mb-1 font-bold text-slate-400 uppercase text-[10px] tracking-wider">Hari Terakhir Bekerja</span>
-                        <strong class="text-xs sm:text-sm text-slate-800" id="detail_last_date">-</strong>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                        <span class="block text-[10px] font-bold uppercase text-slate-400">MCU</span>
+                        <div id="detail_mcu_badge" class="mt-1">-</div>
                     </div>
+
+                    <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                        <span class="block text-[10px] font-bold uppercase text-slate-400">Kartu TLD</span>
+                        <div id="detail_tld_badge" class="mt-1">-</div>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                        <span class="block text-[10px] font-bold uppercase text-slate-400">Masa Kerja</span>
+                        <strong id="detail_tenure" class="block mt-1 text-xs font-bold text-blue-600">-</strong>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                        <span class="block text-[10px] font-bold uppercase text-slate-400">Tanggal Bergabung</span>
+                        <strong id="detail_join_date" class="block mt-1 text-xs text-slate-800">-</strong>
+                    </div>
+
+                    {{-- PKWT --}}
+                    <div class="rounded-xl border border-blue-100 bg-blue-50/40 p-3.5">
+                        <span class="block text-[10px] font-bold uppercase text-blue-600">Tanggal PKWT</span>
+                        <strong id="detail_pkwt_date" class="block mt-1 text-xs text-slate-800">-</strong>
+                    </div>
+
+                    <div class="col-span-2 rounded-xl border border-blue-100 bg-blue-50/40 p-3.5 md:col-span-1">
+                        <span class="block text-[10px] font-bold uppercase text-blue-600">Nomor PKWT</span>
+                        <strong id="detail_pkwt_number" class="block mt-1 text-xs break-all text-slate-800">-</strong>
+                    </div>
+
+                    {{-- RESIGN DATE --}}
+                    <div id="detail_last_date_wrapper" class="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
+                        <span class="block text-[10px] font-bold uppercase text-slate-400">
+                            Hari Terakhir Bekerja
+                        </span>
+                        <strong id="detail_last_date" class="block mt-1 text-xs text-slate-800">-</strong>
+                    </div>
+
                 </div>
 
-                <div class="pt-2">
-                    <h6 class="mb-2 text-xs font-extrabold tracking-wider uppercase text-slate-700">Histori Perubahan Gaji
-                    </h6>
-                    <div class="overflow-hidden border border-slate-200 rounded-2xl">
-                        <table class="w-full text-xs text-left">
-                            <thead class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-100">
+                {{-- SALARY HISTORY --}}
+                <div class="pt-4 space-y-3 border-t border-slate-100">
+
+                    <h4 class="text-xs font-extrabold text-slate-800">
+                        Histori Perubahan Gaji
+                    </h4>
+
+                    <div class="overflow-x-auto border rounded-xl border-slate-200">
+
+                        <table class="w-full min-w-[450px] text-left text-xs">
+                            <thead class="bg-slate-50 text-[10px] font-bold uppercase text-slate-500">
                                 <tr>
-                                    <th class="p-3">Tanggal</th>
-                                    <th class="p-3">Lama</th>
-                                    <th class="p-3">Baru</th>
-                                    <th class="p-3">Alasan</th>
+                                    <th class="px-3 py-3">Tanggal</th>
+                                    <th class="px-3 py-3">Gaji Lama</th>
+                                    <th class="px-3 py-3">Gaji Baru</th>
+                                    <th class="px-3 py-3">Alasan</th>
                                 </tr>
                             </thead>
-                            <tbody id="detail_salary_history_body"
-                                class="font-medium divide-y divide-slate-100 text-slate-700">
+
+                            <tbody id="detail_salary_history_body" class="divide-y divide-slate-100 text-slate-700">
                                 <tr>
-                                    <td colspan="4" class="p-4 text-center text-slate-400">Belum ada riwayat perubahan.
+                                    <td colspan="4" class="px-3 py-6 text-center text-slate-400">
+                                        Belum ada riwayat perubahan.
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
+
             </div>
 
-            <div class="flex justify-end px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+            {{-- MODAL FOOTER --}}
+            <div class="flex justify-end px-5 py-4 border-t shrink-0 border-slate-100 bg-slate-50 sm:px-6">
                 <button type="button" onclick="closeEmployeeModal()"
-                    class="px-5 py-2.5 text-xs font-bold bg-white border text-slate-700 border-slate-200 rounded-xl hover:bg-slate-100 shadow-2xs">
+                    class="cursor-pointer rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-100">
                     Tutup
                 </button>
             </div>
+
         </div>
     </div>
-@endsection
 
-{{-- SCRIPT DIJALANKAN LANGSUNG TANPA DEPENDENCY --}}
-<script>
-    // State Global Privasi Gaji
-    let isTableSalaryVisible = false;
-    let isSalaryVisible = false;
-    let currentEmployeeData = null;
+    <script>
+        let isTableSalaryVisible = false;
+        let isSalaryVisible = false;
+        let currentEmployeeData = null;
 
-    (function() {
-        let debounceTimer = null;
-
-        // Fungsi AJAX Submit
-        function submitFilterForm(targetUrl = null) {
+        // =========================================================
+        // UNIFIED AJAX FILTER
+        // =========================================================
+        (function() {
             const form = document.getElementById('filter-form');
-            const tableContainer = document.getElementById('table-container');
-            if (!form || !tableContainer) return;
+            const panel = document.getElementById('employee-filter-panel');
+            const toggleButton = document.getElementById('btn-toggle-filter');
+            const chevron = document.getElementById('filter-chevron');
+            const table = document.getElementById('table-container');
+            const search = document.getElementById('search');
+            const clearSearch = document.getElementById('clearSearchBtn');
+            const counter = document.getElementById('filter-count');
+            const activeContainer = document.getElementById('active-filter-container');
+            const activeList = document.getElementById('active-filter-list');
+            const exportButton = document.getElementById('btn-export-excel');
+            const errorContainer = document.getElementById('filter-error');
+            const resetButton = document.getElementById('btn-reset-filter');
 
-            tableContainer.style.opacity = '0.4';
+            if (!form || !panel || !table) return;
 
-            const formData = new FormData(form);
-            const params = new URLSearchParams(formData);
+            const indexUrl = @json(route('employee.index'));
+            const exportUrl = @json(route('employee.export'));
 
-            // Toggle Tombol Clear Search
-            const searchVal = form.querySelector('[name="search"]')?.value.trim() || '';
-            const clearBtn = document.getElementById('clearSearchBtn');
-            if (clearBtn) clearBtn.classList.toggle('hidden', !searchVal);
+            const filterNames = [
+                'join_month',
+                'join_day',
+                'status',
+                'site_id',
+                'branch_id',
+                'mcu',
+                'tld',
+                'bank_name'
+            ];
 
-            // Synchronize Link Export Excel
-            const exportBtn = document.getElementById('btn-export-excel');
-            if (exportBtn) {
-                exportBtn.href = `{{ route('employee.export') }}?${params.toString()}`;
+            let debounceTimer = null;
+            let activeRequest = null;
+            let requestSequence = 0;
+
+            function getParams() {
+                const params = new URLSearchParams();
+
+                new FormData(form).forEach((value, key) => {
+                    const text = String(value).trim();
+
+                    if (text !== '') {
+                        params.set(key, text);
+                    }
+                });
+
+                const current = new URL(window.location.href);
+                const bannerMonth = current.searchParams.get('banner_month');
+
+                if (bannerMonth) {
+                    params.set('banner_month', bannerMonth);
+                }
+
+                return params;
             }
 
-            let fetchUrl = targetUrl || `{{ route('employee.index') }}?${params.toString()}`;
+            function buildUrl(base, params) {
+                const query = params.toString();
+                return query ? `${base}?${query}` : base;
+            }
 
-            fetch(fetchUrl, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'text/html'
+            function setPanelOpen(open) {
+                panel.classList.toggle('hidden', !open);
+
+                if (chevron) {
+                    chevron.classList.toggle('rotate-180', open);
+                }
+
+                toggleButton?.setAttribute('aria-expanded', String(open));
+            }
+
+            function updateFilterUI() {
+                const params = getParams();
+
+                const activeFilters = filterNames.filter(name => {
+                    return params.has(name);
+                });
+
+                const count = activeFilters.length;
+
+                clearSearch?.classList.toggle(
+                    'hidden',
+                    !search.value.trim()
+                );
+
+                if (counter) {
+                    counter.textContent = count;
+                    counter.classList.toggle('hidden', count === 0);
+                }
+
+                if (activeList) {
+                    activeList.replaceChildren();
+
+                    activeFilters.forEach(name => {
+                        const select = form.elements.namedItem(name);
+                        if (!select) return;
+
+                        const label = form.querySelector(
+                            `label[for="${select.id}"]`
+                        );
+
+                        const optionText =
+                            select.selectedOptions?.[0]?.textContent.trim();
+
+                        const chip = document.createElement('button');
+                        chip.type = 'button';
+
+                        chip.className =
+                            'inline-flex cursor-pointer items-center gap-2 ' +
+                            'rounded-lg border border-blue-100 bg-blue-50 ' +
+                            'px-2.5 py-1.5 text-[11px] font-semibold ' +
+                            'text-blue-700 transition-colors hover:bg-blue-100';
+
+                        const labelSpan = document.createElement('span');
+
+                        labelSpan.textContent =
+                            `${label?.textContent.trim() || name}: ${optionText || select.value}`;
+
+                        const closeIcon = document.createElement('i');
+                        closeIcon.className =
+                            'fa-solid fa-xmark text-[10px]';
+
+                        chip.append(labelSpan, closeIcon);
+
+                        chip.addEventListener('click', () => {
+                            select.value = '';
+                            clearTimeout(debounceTimer);
+                            updateFilterUI();
+                            submitFilterForm();
+                        });
+
+                        activeList.appendChild(chip);
+                    });
+                }
+
+                if (activeContainer) {
+                    activeContainer.classList.toggle('hidden', count === 0);
+                    activeContainer.classList.toggle('flex', count > 0);
+                }
+
+                if (exportButton) {
+                    exportButton.href = buildUrl(exportUrl, params);
+                }
+            }
+
+            function restoreFormFromUrl() {
+                const params = new URLSearchParams(window.location.search);
+
+                form.reset();
+
+                ['search', ...filterNames].forEach(name => {
+                    const field = form.elements.namedItem(name);
+
+                    if (field && params.has(name)) {
+                        field.value = params.get(name);
                     }
-                })
-                .then(res => {
-                    if (!res.ok) throw new Error('Koneksi terputus. Periksa jaringan dan coba lagi.');
-                    return res.text();
-                })
-                .then(html => {
-                    tableContainer.innerHTML = html;
-                    tableContainer.style.opacity = '1';
-                    window.history.pushState({}, '', fetchUrl);
+                });
 
-                    // Pertahankan status toggle gaji tabel saat pagination/filter
+                updateFilterUI();
+
+                setPanelOpen(
+                    filterNames.some(name => params.has(name))
+                );
+            }
+
+            async function submitFilterForm(
+                targetUrl = null,
+                updateHistory = true
+            ) {
+                const params = getParams();
+                const url = targetUrl || buildUrl(indexUrl, params);
+
+                if (activeRequest) {
+                    activeRequest.abort();
+                }
+
+                const controller = new AbortController();
+                activeRequest = controller;
+
+                const sequence = ++requestSequence;
+
+                table.style.opacity = '0.4';
+                table.setAttribute('aria-busy', 'true');
+
+                errorContainer?.classList.add('hidden');
+
+                updateFilterUI();
+
+                try {
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'text/html'
+                        },
+                        signal: controller.signal
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Gagal memuat data karyawan.');
+                    }
+
+                    const html = await response.text();
+
+                    if (sequence !== requestSequence) return;
+
+                    table.innerHTML = html;
+
+                    if (updateHistory) {
+                        window.history.pushState({}, '', url);
+                    }
+
                     updateTableSalaryUI();
+
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        console.error('Employee Filter Error:', error);
+
+                        if (errorContainer) {
+                            errorContainer.textContent =
+                                'Data gagal dimuat. Periksa koneksi dan coba lagi.';
+                            errorContainer.classList.remove('hidden');
+                        }
+                    }
+
+                } finally {
+                    if (sequence === requestSequence) {
+                        table.style.opacity = '1';
+                        table.removeAttribute('aria-busy');
+                        activeRequest = null;
+                    }
+                }
+            }
+
+            toggleButton?.addEventListener('click', () => {
+                const isOpen = !panel.classList.contains('hidden');
+                setPanelOpen(!isOpen);
+            });
+
+            form.addEventListener('input', event => {
+                if (event.target !== search) return;
+
+                clearTimeout(debounceTimer);
+                updateFilterUI();
+
+                debounceTimer = setTimeout(() => {
+                    submitFilterForm();
+                }, 350);
+            });
+
+            form.addEventListener('change', event => {
+                if (!event.target.matches('select')) return;
+
+                clearTimeout(debounceTimer);
+                submitFilterForm();
+            });
+
+            resetButton?.addEventListener('click', () => {
+                clearTimeout(debounceTimer);
+                form.reset();
+
+                updateFilterUI();
+                submitFilterForm();
+            });
+
+            document.addEventListener('click', event => {
+                const link = event.target.closest(
+                    '#table-container .pagination a, ' +
+                    '#table-container a[rel="prev"], ' +
+                    '#table-container a[rel="next"]'
+                );
+
+                if (!link) return;
+
+                event.preventDefault();
+                clearTimeout(debounceTimer);
+
+                submitFilterForm(link.href);
+            });
+
+            window.addEventListener('popstate', () => {
+                clearTimeout(debounceTimer);
+                restoreFormFromUrl();
+                submitFilterForm(window.location.href, false);
+            });
+
+            restoreFormFromUrl();
+
+            // Expose only to existing clear-search function if needed.
+            window.refreshEmployeeFilter = function() {
+                clearTimeout(debounceTimer);
+                updateFilterUI();
+                submitFilterForm();
+            };
+        })();
+
+        // =========================================================
+        // CLEAR SEARCH
+        // =========================================================
+        function clearSearchInput() {
+            const search = document.getElementById('search');
+            if (!search) return;
+
+            search.value = '';
+
+            search.dispatchEvent(
+                new Event('input', {
+                    bubbles: true
                 })
-                .catch(err => {
-                    console.error('AJAX Filter Error:', err);
-                    tableContainer.style.opacity = '1';
+            );
+
+            search.focus();
+        }
+
+        // =========================================================
+        // TABLE SALARY PRIVACY
+        // =========================================================
+        function toggleTableSalaryVisibility() {
+            isTableSalaryVisible = !isTableSalaryVisible;
+            updateTableSalaryUI();
+        }
+
+        function updateTableSalaryUI() {
+            const icon = document.getElementById('table_salary_toggle_icon');
+
+            if (icon) {
+                icon.className = isTableSalaryVisible ?
+                    'text-xs fa-solid fa-eye' :
+                    'text-xs fa-solid fa-eye-slash';
+            }
+
+            document.querySelectorAll('.table-salary-text')
+                .forEach(element => {
+                    const actualSalary = element.getAttribute('data-salary');
+
+                    element.textContent = isTableSalaryVisible ?
+                        actualSalary :
+                        '••••••••';
                 });
         }
 
-        // Event Listener untuk Typing (Debounce)
-        document.addEventListener('input', function(e) {
-            if (e.target.closest('#filter-form')) {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => submitFilterForm(), 300);
-            }
-        });
+        // =========================================================
+        // IMPORT MODAL
+        // =========================================================
+        function openImportModal() {
+            const modal = document.getElementById('importModal');
 
-        // Event Listener untuk Dropdown Select
-        document.addEventListener('change', function(e) {
-            if (e.target.closest('#filter-form')) {
-                submitFilterForm();
-            }
-        });
+            if (!modal) return;
 
-        // Event Listener untuk Click (Pagination & Reset Button)
-        document.addEventListener('click', function(e) {
-            // Click Reset Filter
-            if (e.target.closest('#btn-reset-filter')) {
-                const form = document.getElementById('filter-form');
-                if (form) {
-                    form.reset();
-                    submitFilterForm();
-                }
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeImportModal() {
+            const modal = document.getElementById('importModal');
+
+            if (!modal) return;
+
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        // =========================================================
+        // DETAIL SALARY PRIVACY
+        // =========================================================
+        function toggleSalaryVisibility() {
+            isSalaryVisible = !isSalaryVisible;
+
+            const icon = document.getElementById('salary_toggle_icon');
+
+            if (icon) {
+                icon.className = isSalaryVisible ?
+                    'fa-solid fa-eye text-xs' :
+                    'fa-solid fa-eye-slash text-xs';
             }
 
-            // Click Pagination Link
-            const pagLink = e.target.closest(
-                '#table-container .pagination a, #table-container a[rel="prev"], #table-container a[rel="next"]'
+            renderSalaryInfo();
+        }
+
+        function renderSalaryInfo() {
+            if (!currentEmployeeData) return;
+
+            const salaryElement = document.getElementById(
+                'detail_basic_salary'
             );
-            if (pagLink) {
-                e.preventDefault();
-                submitFilterForm(pagLink.href);
+
+            if (salaryElement) {
+                salaryElement.textContent = isSalaryVisible ?
+                    (currentEmployeeData.basic_salary_formatted || 'Rp 0') :
+                    '••••••••';
             }
-        });
-    })();
 
-    // TOGGLE PRIVASI GAJI PADA TABEL UTAMA
-    function toggleTableSalaryVisibility() {
-        isTableSalaryVisible = !isTableSalaryVisible;
-        updateTableSalaryUI();
-    }
+            const historyBody = document.getElementById(
+                'detail_salary_history_body'
+            );
 
-    function updateTableSalaryUI() {
-        const icon = document.getElementById('table_salary_toggle_icon');
-        if (icon) {
-            icon.className = isTableSalaryVisible ? 'text-xs fa-solid fa-eye' : 'text-xs fa-solid fa-eye-slash';
-        }
+            if (!historyBody) return;
 
-        const salaryElements = document.querySelectorAll('.table-salary-text');
-        salaryElements.forEach(el => {
-            const actualSalary = el.getAttribute('data-salary');
-            el.innerText = isTableSalaryVisible ? actualSalary : '••••••••';
-        });
-    }
+            historyBody.replaceChildren();
 
-    function clearSearchInput() {
-        const searchInput = document.getElementById('search');
-        if (searchInput) {
-            searchInput.value = '';
-            searchInput.dispatchEvent(new Event('input', {
-                bubbles: true
-            }));
-        }
-    }
+            const histories = currentEmployeeData.salary_histories || [];
 
-    function openImportModal() {
-        let modal = document.getElementById('importModal');
-        if (!modal) return;
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        document.body.classList.add('overflow-hidden');
-    }
+            if (histories.length === 0) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
 
-    function closeImportModal() {
-        let modal = document.getElementById('importModal');
-        if (!modal) return;
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        document.body.classList.remove('overflow-hidden');
-    }
+                cell.colSpan = 4;
+                cell.className =
+                    'px-3 py-6 text-center text-slate-400';
 
-    // TOGGLE PRIVASI GAJI PADA MODAL DETAIL
-    function toggleSalaryVisibility() {
-        isSalaryVisible = !isSalaryVisible;
-        const icon = document.getElementById('salary_toggle_icon');
-        if (icon) {
-            icon.className = isSalaryVisible ? 'fa-solid fa-eye text-xs' : 'fa-solid fa-eye-slash text-xs';
-        }
-        renderSalaryInfo();
-    }
+                cell.textContent = 'Belum ada riwayat perubahan.';
 
-    function renderSalaryInfo() {
-        if (!currentEmployeeData) return;
+                row.appendChild(cell);
+                historyBody.appendChild(row);
+                return;
+            }
 
-        // Render Basic Salary
-        const basicSalaryElem = document.getElementById('detail_basic_salary');
-        if (basicSalaryElem) {
-            basicSalaryElem.innerText = isSalaryVisible ?
-                (currentEmployeeData.basic_salary_formatted || 'Rp 0') :
-                '••••••••';
-        }
+            const money = value => {
+                return 'Rp ' + new Intl.NumberFormat('id-ID')
+                    .format(Number(value) || 0);
+            };
 
-        // Render Salary History Table
-        let historyBody = document.getElementById('detail_salary_history_body');
-        if (currentEmployeeData.salary_histories && currentEmployeeData.salary_histories.length > 0) {
-            let rows = '';
-            currentEmployeeData.salary_histories.forEach(h => {
-                let dt = new Date(h.created_at).toLocaleDateString('id-ID');
-                let oldSal = isSalaryVisible ? ('Rp ' + new Intl.NumberFormat('id-ID').format(h.old_salary ||
-                    0)) : '••••••••';
-                let newSal = isSalaryVisible ? ('Rp ' + new Intl.NumberFormat('id-ID').format(h.new_salary ||
-                    0)) : '••••••••';
+            histories.forEach(history => {
+                const row = document.createElement('tr');
 
-                rows += `<tr>
-                    <td class="p-3">${dt}</td>
-                    <td class="p-3 font-semibold text-slate-400">${oldSal}</td>
-                    <td class="p-3 font-bold text-emerald-600">${newSal}</td>
-                    <td class="p-3">${h.reason || '-'}</td>
-                </tr>`;
+                const date = document.createElement('td');
+                date.className = 'px-3 py-3';
+                date.textContent = history.created_at ?
+                    new Date(history.created_at).toLocaleDateString('id-ID') :
+                    '-';
+
+                const oldSalary = document.createElement('td');
+                oldSalary.className =
+                    'px-3 py-3 font-semibold text-slate-500';
+                oldSalary.textContent = isSalaryVisible ?
+                    money(history.old_salary) :
+                    '••••••••';
+
+                const newSalary = document.createElement('td');
+                newSalary.className =
+                    'px-3 py-3 font-bold text-emerald-600';
+                newSalary.textContent = isSalaryVisible ?
+                    money(history.new_salary) :
+                    '••••••••';
+
+                const reason = document.createElement('td');
+                reason.className = 'px-3 py-3';
+                reason.textContent = history.reason || '-';
+
+                row.append(date, oldSalary, newSalary, reason);
+                historyBody.appendChild(row);
             });
-            historyBody.innerHTML = rows;
-        } else {
-            historyBody.innerHTML =
-                '<tr><td colspan="4" class="p-4 text-center text-slate-400">Belum ada riwayat perubahan.</td></tr>';
         }
-    }
 
-    function showEmployeeDetail(id) {
-        isSalaryVisible = false;
-        const icon = document.getElementById('salary_toggle_icon');
-        if (icon) icon.className = 'fa-solid fa-eye-slash text-xs';
+        // =========================================================
+        // DETAIL EMPLOYEE
+        // =========================================================
+        async function showEmployeeDetail(id) {
+            isSalaryVisible = false;
+            currentEmployeeData = null;
 
-        fetch(`/employee/${id}`, {
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+            const icon = document.getElementById('salary_toggle_icon');
+
+            if (icon) {
+                icon.className = 'fa-solid fa-eye-slash text-xs';
+            }
+
+            try {
+                const response = await fetch(
+                    @json(url('/employee')) + '/' + encodeURIComponent(id), {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error('Gagal mengambil rincian karyawan.');
                 }
-            })
-            .then(res => res.json())
-            .then(data => {
+
+                const data = await response.json();
+
                 currentEmployeeData = data;
 
-                document.getElementById('detail_name').innerText = data.name || '-';
-                document.getElementById('detail_nik').innerText = data.nik || '-';
-                document.getElementById('detail_email').innerText = data.email || '-';
-                document.getElementById('detail_phone').innerText = data.phone_number || '-';
-                document.getElementById('detail_position').innerText = data.position || 'Karyawan';
-                document.getElementById('detail_site').innerText = data.site ? data.site.machine_name : '-';
-                document.getElementById('detail_branch').innerText = (data.site && data.site.branch) ? data.site
-                    .branch.branch_name : '-';
-                document.getElementById('detail_tenure').innerText = data.tenure_formatted || '-';
-                document.getElementById('detail_join_date').innerText = data.join_date_formatted || '-';
-                document.getElementById('detail_bank').innerText = (data.bank_name && data.bank_account_number) ?
-                    `${data.bank_name} - ${data.bank_account_number}` : (data.bank_account_number || '-');
+                const setText = (elementId, value) => {
+                    const element = document.getElementById(elementId);
 
-                // Render Last Date (Resign Date)
-                const lastDateElem = document.getElementById('detail_last_date');
-                const lastDateWrapper = document.getElementById('detail_last_date_wrapper');
-
-                if (data.resign_date_formatted) {
-                    lastDateElem.innerText = data.resign_date_formatted;
-                    if (data.status === 'Resigned') {
-                        lastDateWrapper.className = 'p-3.5 border border-rose-200/80 rounded-2xl bg-rose-50/40';
-                        lastDateElem.className = 'text-xs font-black text-rose-700 sm:text-sm';
-                    } else {
-                        lastDateWrapper.className = 'p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50';
-                        lastDateElem.className = 'text-xs sm:text-sm text-slate-800';
+                    if (element) {
+                        element.textContent =
+                            value === null || value === undefined || value === '' ?
+                            '-' :
+                            value;
                     }
-                } else {
-                    lastDateElem.innerText = '-';
-                    lastDateWrapper.className = 'p-3.5 border border-slate-200/80 rounded-2xl bg-slate-50/50';
-                    lastDateElem.className = 'text-xs sm:text-sm text-slate-800';
+                };
+
+                setText('detail_name', data.name);
+                setText('detail_nik', data.nik);
+                setText('detail_email', data.email);
+                setText('detail_phone', data.phone_number);
+                setText('detail_position', data.position || 'Karyawan');
+                setText('detail_site', data.site?.machine_name);
+                setText('detail_branch', data.site?.branch?.branch_name);
+                setText('detail_tenure', data.tenure_formatted);
+                setText('detail_join_date', data.join_date_formatted);
+                setText('detail_pkwt_date', data.pkwt_date_formatted);
+                setText('detail_pkwt_number', data.pkwt_number);
+
+                const bank = data.bank_name && data.bank_account_number ?
+                    `${data.bank_name} - ${data.bank_account_number}` :
+                    (data.bank_account_number || '-');
+
+                setText('detail_bank', bank);
+
+                // Resign information
+                const lastDate = document.getElementById('detail_last_date');
+                const lastWrapper = document.getElementById(
+                    'detail_last_date_wrapper'
+                );
+
+                setText('detail_last_date', data.resign_date_formatted);
+
+                if (lastDate && lastWrapper) {
+                    const resigned = data.status === 'Resigned';
+
+                    lastWrapper.className = resigned ?
+                        'rounded-xl border border-rose-200 bg-rose-50 p-3.5' :
+                        'rounded-xl border border-slate-200 bg-slate-50/50 p-3.5';
+
+                    lastDate.className = resigned ?
+                        'mt-1 block text-xs font-extrabold text-rose-700' :
+                        'mt-1 block text-xs text-slate-800';
                 }
 
-                // Badge Status dengan pembedaan warna khusus untuk Resigned
-                let badgeClass = 'bg-slate-100 text-slate-700 border-slate-200';
+                // Status badge
+                let statusClass =
+                    'border-slate-200 bg-slate-100 text-slate-700';
+
                 if (data.status === 'Resigned') {
-                    badgeClass = 'bg-rose-50 text-rose-700 border-rose-200';
+                    statusClass =
+                        'border-rose-200 bg-rose-50 text-rose-700';
                 } else if (data.status === 'Permanent') {
-                    badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                    statusClass =
+                        'border-emerald-200 bg-emerald-50 text-emerald-700';
+                } else if (data.status === 'Contract') {
+                    statusClass =
+                        'border-blue-200 bg-blue-50 text-blue-700';
+                } else if (data.status === 'Probation') {
+                    statusClass =
+                        'border-amber-200 bg-amber-50 text-amber-700';
                 }
 
-                document.getElementById('detail_status_badge').innerHTML =
-                    `<span class="px-2.5 py-1 text-[10px] font-extrabold border rounded-full uppercase ${badgeClass}">${window.uiLabel(data.status || 'Active')}</span>`;
+                const statusHolder = document.getElementById(
+                    'detail_status_badge'
+                );
 
-                document.getElementById('detail_mcu_badge').innerHTML = (data.mcu === 'yes') ?
-                    `<span class="px-2 py-0.5 text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md">YA</span>` :
-                    `<span class="px-2 py-0.5 text-[10px] font-black text-slate-500 bg-slate-100 border border-slate-200 rounded-md">TIDAK</span>`;
-                document.getElementById('detail_tld_badge').innerHTML = (data.tld === 'yes') ?
-                    `<span class="px-2 py-0.5 text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-200 rounded-md">YA</span>` :
-                    `<span class="px-2 py-0.5 text-[10px] font-black text-slate-500 bg-slate-100 border border-slate-200 rounded-md">TIDAK</span>`;
+                if (statusHolder) {
+                    statusHolder.replaceChildren();
+
+                    const badge = document.createElement('span');
+
+                    badge.className =
+                        'inline-flex rounded-full border px-2.5 py-1 ' +
+                        'text-[10px] font-extrabold uppercase ' +
+                        statusClass;
+
+                    badge.textContent = typeof window.uiLabel === 'function' ?
+                        window.uiLabel(data.status || 'Active') :
+                        (data.status || 'Active');
+
+                    statusHolder.appendChild(badge);
+                }
+
+                // MCU / TLD badges
+                const renderYesNoBadge = (elementId, value, color) => {
+                    const holder = document.getElementById(elementId);
+                    if (!holder) return;
+
+                    holder.replaceChildren();
+
+                    const badge = document.createElement('span');
+                    const yes = value === 'yes';
+
+                    badge.className = yes ?
+                        `inline-flex rounded-md border px-2 py-0.5 text-[10px] font-extrabold ${color}` :
+                        'inline-flex rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px] font-extrabold text-slate-500';
+
+                    badge.textContent = yes ? 'YA' : 'TIDAK';
+
+                    holder.appendChild(badge);
+                };
+
+                renderYesNoBadge(
+                    'detail_mcu_badge',
+                    data.mcu,
+                    'border-emerald-200 bg-emerald-50 text-emerald-700'
+                );
+
+                renderYesNoBadge(
+                    'detail_tld_badge',
+                    data.tld,
+                    'border-blue-200 bg-blue-50 text-blue-700'
+                );
 
                 renderSalaryInfo();
 
-                let modal = document.getElementById('employeeDetailModal');
+                const modal = document.getElementById('employeeDetailModal');
+
                 if (modal) {
                     modal.classList.remove('hidden');
                     modal.classList.add('flex');
                     document.body.classList.add('overflow-hidden');
                 }
-            })
-            .catch(err => console.error('Rincian karyawan gagal dimuat:', err));
-    }
 
-    function closeEmployeeModal() {
-        let modal = document.getElementById('employeeDetailModal');
-        if (modal) {
+            } catch (error) {
+                console.error('Rincian karyawan gagal dimuat:', error);
+                alert('Rincian karyawan gagal dimuat. Silakan coba lagi.');
+            }
+        }
+
+        function closeEmployeeModal() {
+            const modal = document.getElementById('employeeDetailModal');
+
+            if (!modal) return;
+
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+
             document.body.classList.remove('overflow-hidden');
         }
-    }
-</script>
+
+        // =========================================================
+        // GLOBAL KEYBOARD ESCAPE
+        // =========================================================
+        document.addEventListener('keydown', function(event) {
+            if (event.key !== 'Escape') return;
+
+            const detailModal = document.getElementById('employeeDetailModal');
+            const importModal = document.getElementById('importModal');
+
+            if (detailModal && !detailModal.classList.contains('hidden')) {
+                closeEmployeeModal();
+            }
+
+            if (importModal && !importModal.classList.contains('hidden')) {
+                closeImportModal();
+            }
+        });
+    </script>
+@endsection
+
+{{-- ========================================================= --}}
+{{-- PAGE JAVASCRIPT --}}
+{{-- ========================================================= --}}

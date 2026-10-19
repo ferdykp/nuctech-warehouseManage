@@ -54,7 +54,7 @@
                     </div>
                     <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Data yang Dihapus</h2>
                 </div>
-                <span class="text-[11px] font-semibold text-slate-400">
+                <span class="text-xs font-semibold text-slate-400">
                     Menampilkan {{ $reimbursements->total() }} data
                 </span>
             </div>
@@ -63,7 +63,7 @@
                 <table data-mobile-cards class="w-full text-left border-collapse min-w-[750px]">
                     <thead>
                         <tr
-                            class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
+                            class="text-xs font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
                             <th class="w-12 px-4 py-4 text-center">
                                 <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)"
                                     class="rounded cursor-pointer border-slate-300 text-slate-900 focus:ring-slate-900">
@@ -100,7 +100,7 @@
                                         <div>
                                             <p class="text-sm font-bold leading-snug text-slate-900">{{ $r->person_name }}
                                             </p>
-                                            <p class="text-[11px] font-medium text-slate-400 mt-0.5">
+                                            <p class="text-xs font-medium text-slate-400 mt-0.5">
                                                 Tanggal Klaim: {{ \Carbon\Carbon::parse($r->date)->translatedFormat('d M Y') }}
                                             </p>
                                         </div>
@@ -108,7 +108,7 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <span
-                                        class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg uppercase tracking-wider
+                                        class="px-2.5 py-1 text-xs font-extrabold rounded-lg uppercase tracking-wider
                                         {{ $r->category == 'transportation' ? 'bg-blue-50 text-blue-700 border border-blue-200/60' : ($r->category == 'delivery' ? 'bg-purple-50 text-purple-700 border border-purple-200/60' : 'bg-slate-100 text-slate-700 border border-slate-200') }}">
                                         {{ \App\Support\UiText::label($r->category) }}
                                     </span>
@@ -120,7 +120,7 @@
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <span
-                                        class="px-2.5 py-1 text-[10px] font-extrabold text-slate-600 bg-slate-100 border border-slate-200 rounded-lg uppercase">
+                                        class="px-2.5 py-1 text-xs font-extrabold text-slate-600 bg-slate-100 border border-slate-200 rounded-lg uppercase">
                                         {{ \App\Support\UiText::label($r->status) }}
                                     </span>
                                 </td>
@@ -265,7 +265,7 @@
                 container.appendChild(input);
             });
 
-            form.submit();
+            form.requestSubmit();
         }
 
         function openForceDeleteModal(id, personName, amount) {

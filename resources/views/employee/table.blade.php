@@ -2,7 +2,7 @@
     <table data-mobile-cards class="w-full text-left border-collapse min-w-[950px]">
         <thead>
             <tr
-                class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
+                class="text-xs font-extrabold tracking-wider uppercase border-b text-slate-500 bg-slate-50 border-slate-100">
                 <th scope="col" class="w-12 px-4 py-4 text-center">Nomor</th>
                 <th scope="col" class="px-6 py-4">Identitas Karyawan</th>
                 <th scope="col" class="px-6 py-4">Jabatan</th>
@@ -10,7 +10,8 @@
                 <th scope="col" class="px-6 py-4 text-emerald-700">
                     <div class="flex items-center gap-2">
                         <span>Gaji Pokok</span>
-                        <button type="button" onclick="toggleTableSalaryVisibility()" title="Tampilkan atau sembunyikan gaji"
+                        <button type="button" onclick="toggleTableSalaryVisibility()"
+                            title="Tampilkan atau sembunyikan gaji"
                             class="transition-colors cursor-pointer text-emerald-700 hover:text-emerald-900 focus:outline-none">
                             <i id="table_salary_toggle_icon" class="text-xs fa-solid fa-eye-slash"></i>
                         </button>
@@ -19,7 +20,7 @@
                 <th scope="col" class="px-4 py-4 text-center">MCU</th>
                 <th scope="col" class="px-4 py-4 text-center">TLD</th>
                 <th scope="col" class="px-6 py-4 text-center">Status</th>
-                <th scope="col" class="px-6 py-4 text-center">Tanggal Bergabung</th>
+                <th scope="col" class="px-6 py-4 text-center">Tanggal PKWT</th>
                 <th scope="col" class="w-32 px-6 py-4 text-center">Aksi</th>
             </tr>
         </thead>
@@ -33,7 +34,7 @@
                         <div class="text-sm font-bold text-slate-900">
                             {{ $employee->name }}
                         </div>
-                        <div class="text-[11px] font-medium text-slate-400 mt-0.5 flex flex-col gap-0.5">
+                        <div class="text-xs font-medium text-slate-400 mt-0.5 flex flex-col gap-0.5">
                             @if ($employee->nik)
                                 <span><i class="fa-regular fa-id-card text-[10px] me-1"></i>{{ $employee->nik }}</span>
                             @endif
@@ -49,7 +50,7 @@
                     <td class="px-6 py-4">
                         <div class="flex flex-col">
                             <span class="font-bold text-slate-900">{{ $employee->site->machine_name ?? '-' }}</span>
-                            <span class="text-[11px] font-semibold text-slate-400 mt-0.5">
+                            <span class="text-xs font-semibold text-slate-400 mt-0.5">
                                 {{ $employee->site->branch->branch_name ?? ($employee->branch->branch_name ?? '-') }}
                             </span>
                         </div>
@@ -61,19 +62,19 @@
                     <td class="px-4 py-4 text-center">
                         @if ($employee->mcu === 'yes')
                             <span
-                                class="px-2 py-0.5 text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md">YA</span>
+                                class="px-2 py-0.5 text-xs font-black text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md">YA</span>
                         @else
                             <span
-                                class="px-2 py-0.5 text-[10px] font-black text-slate-400 bg-slate-100 border border-slate-200 rounded-md">TIDAK</span>
+                                class="px-2 py-0.5 text-xs font-black text-slate-400 bg-slate-100 border border-slate-200 rounded-md">TIDAK</span>
                         @endif
                     </td>
                     <td class="px-4 py-4 text-center">
                         @if ($employee->tld === 'yes')
                             <span
-                                class="px-2 py-0.5 text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-200 rounded-md">YA</span>
+                                class="px-2 py-0.5 text-xs font-black text-blue-700 bg-blue-50 border border-blue-200 rounded-md">YA</span>
                         @else
                             <span
-                                class="px-2 py-0.5 text-[10px] font-black text-slate-400 bg-slate-100 border border-slate-200 rounded-md">TIDAK</span>
+                                class="px-2 py-0.5 text-xs font-black text-slate-400 bg-slate-100 border border-slate-200 rounded-md">TIDAK</span>
                         @endif
                     </td>
                     <td class="px-6 py-4 text-center">
@@ -87,12 +88,12 @@
                             };
                         @endphp
                         <span
-                            class="px-2.5 py-1 text-[10px] font-extrabold uppercase border rounded-full {{ $statusClasses }}">
+                            class="px-2.5 py-1 text-xs font-extrabold uppercase border rounded-full {{ $statusClasses }}">
                             {{ \App\Support\UiText::label($employee->status ?? 'Active') }}
                         </span>
                     </td>
                     <td class="px-6 py-4 font-semibold text-center text-slate-600">
-                        {{ $employee->join_date ? \Carbon\Carbon::parse($employee->join_date)->translatedFormat('d M Y') : '-' }}
+                        {{ $employee->pkwt_date ? \Carbon\Carbon::parse($employee->pkwt_date)->translatedFormat('d M Y') : '-' }}
                     </td>
                     <td class="px-6 py-4 text-center">
                         <div class="flex items-center justify-center gap-1.5">

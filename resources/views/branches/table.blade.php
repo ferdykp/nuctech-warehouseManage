@@ -1,7 +1,7 @@
 <div class="w-full overflow-x-auto">
     <table data-mobile-cards class="w-full text-left border-collapse min-w-[650px]">
         <thead
-            class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
+            class="text-xs font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
             <tr>
                 <th class="px-6 py-3.5 text-center w-16">Nomor</th>
                 <th class="px-6 py-3.5 w-36">Kode Cabang</th>
@@ -20,7 +20,7 @@
                     </td>
                     <td class="px-6 py-4">
                         <span
-                            class="inline-flex items-center px-2.5 py-1 font-black text-[11px] text-blue-700 bg-blue-50 border border-blue-200/80 rounded-lg tracking-wider">
+                            class="inline-flex items-center px-2.5 py-1 font-black text-xs text-blue-700 bg-blue-50 border border-blue-200/80 rounded-lg tracking-wider">
                             {{ $b->branch_code }}
                         </span>
                     </td>
@@ -28,11 +28,11 @@
                         <div>
                             <p class="text-sm font-bold text-slate-900">{{ $b->branch_name }}</p>
                             @if (!empty($b->branch_address))
-                                <p class="text-slate-400 text-[11px] font-normal truncate max-w-md mt-0.5">
+                                <p class="text-slate-400 text-xs font-normal truncate max-w-md mt-0.5">
                                     <i class="mr-1 fa-solid fa-location-dot text-slate-300"></i>{{ $b->branch_address }}
                                 </p>
                             @else
-                                <p class="text-slate-300 text-[11px] italic font-normal mt-0.5">Alamat belum diisi</p>
+                                <p class="text-slate-300 text-xs italic font-normal mt-0.5">Alamat belum diisi</p>
                             @endif
                         </div>
                     </td>

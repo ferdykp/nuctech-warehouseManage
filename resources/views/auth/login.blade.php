@@ -35,7 +35,7 @@
                     </div>
                     <div>
                         <h2 class="text-base font-black leading-none tracking-tight text-white">NUCINDO</h2>
-                        <span class="text-[10px] font-bold text-blue-400 tracking-widest uppercase block mt-0.5">Kepegawaian dan Manajemen</span>
+                        <span class="text-xs font-bold text-blue-400 tracking-widest uppercase block mt-0.5">Kepegawaian dan Manajemen</span>
                     </div>
                 </div>
 
@@ -63,7 +63,7 @@
                         </span>
                         <span>Status: <strong class="font-bold text-emerald-400">Operasional</strong></span>
                     </div>
-                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">v2.4 PRO</span>
+                    <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">v2.4 PRO</span>
                 </div>
             </div>
 
@@ -88,7 +88,7 @@
 
                     {{-- Username Input --}}
                     <div class="space-y-1.5">
-                        <label for="username" class="block text-[11px] font-bold text-slate-700 tracking-wider uppercase">
+                        <label for="username" class="block text-xs font-bold text-slate-700 tracking-wider uppercase">
                             Username <span class="text-rose-500">*</span>
                         </label>
                         <div class="relative flex items-center">
@@ -101,7 +101,7 @@
                                 class="w-full py-3 pl-10 pr-4 text-sm font-semibold transition-all border text-slate-900 bg-slate-50 border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 focus:outline-none placeholder:text-slate-400">
                         </div>
                         @error('username')
-                            <p class="text-[11px] font-bold text-rose-600 mt-1 flex items-center gap-1">
+                            <p class="text-xs font-bold text-rose-600 mt-1 flex items-center gap-1">
                                 <i class="fa-solid fa-circle-exclamation"></i> {{ $message }}
                             </p>
                         @enderror
@@ -109,7 +109,7 @@
 
                     {{-- Password Input with Alpine.js Password Visibility Toggle --}}
                     <div class="space-y-1.5 mt-4" x-data="{ showPass: false }">
-                        <label for="password" class="block text-[11px] font-bold text-slate-700 tracking-wider uppercase">
+                        <label for="password" class="block text-xs font-bold text-slate-700 tracking-wider uppercase">
                             Password <span class="text-rose-500">*</span>
                         </label>
                         <div class="relative flex items-center">
@@ -128,7 +128,7 @@
                             </button>
                         </div>
                         @error('password')
-                            <p class="text-[11px] font-bold text-rose-600 mt-1 flex items-center gap-1">
+                            <p class="text-xs font-bold text-rose-600 mt-1 flex items-center gap-1">
                                 <i class="fa-solid fa-circle-exclamation"></i> {{ $message }}
                             </p>
                         @enderror
@@ -144,7 +144,7 @@
 
                 {{-- Footer Legal Notice --}}
                 <div class="pt-5 mt-8 text-center border-t border-slate-100">
-                    <p class="text-[11px] font-semibold text-slate-400">
+                    <p class="text-xs font-semibold text-slate-400">
                         Sistem Operasional Terpadu &copy; {{ date('Y') }} NUCINDO.
                     </p>
                 </div>

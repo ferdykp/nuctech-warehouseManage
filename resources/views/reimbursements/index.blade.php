@@ -3,6 +3,22 @@
 @section('title', 'Klaim Reimbursement')
 
 @section('content')
+                            @php
+                                $months = [
+                                    '01' => 'Januari',
+                                    '02' => 'Februari',
+                                    '03' => 'Maret',
+                                    '04' => 'April',
+                                    '05' => 'Mei',
+                                    '06' => 'Juni',
+                                    '07' => 'Juli',
+                                    '08' => 'Agustus',
+                                    '09' => 'September',
+                                    '10' => 'Oktober',
+                                    '11' => 'November',
+                                    '12' => 'Desember',
+                                ];
+                            @endphp
     <div class="w-full space-y-5">
 
         {{-- 1. HEADER & METRIC SUMMARY --}}
@@ -34,7 +50,7 @@
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div class="flex items-center justify-between p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs">
                 <div>
-                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block">Total Nominal Klaim</span>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 block">Total Nominal Klaim</span>
                     <p id="totalApprovedAmountText" class="text-lg font-bold text-slate-900 font-mono mt-0.5">
                         Rp {{ number_format((float) ($totalApprovedAmount ?? 0), 0, ',', '.') }}
                     </p>
@@ -47,8 +63,8 @@
 
             <div class="flex items-center justify-between p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs">
                 <div>
-                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block">Jumlah Data</span>
-                    <p class="text-lg font-bold text-slate-900 font-mono mt-0.5">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 block">Jumlah Data</span>
+                    <p id="reimburseCountText" class="text-lg font-bold text-slate-900 font-mono mt-0.5">
                         {{ $reimbursements->total() }} <span
                             class="font-sans text-xs font-normal text-slate-400">Klaim</span>
                     </p>
@@ -61,8 +77,8 @@
 
             <div class="flex items-center justify-between p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs">
                 <div>
-                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block">Periode Filter</span>
-                    <p class="mt-1 text-xs font-semibold truncate text-slate-800">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 block">Periode Filter</span>
+                    <p id="reimbursePeriodText" class="mt-1 text-sm font-semibold text-slate-800">
                         {{ request('month') && isset($months[request('month')]) ? $months[request('month')] : 'Semua Bulan' }}
                     </p>
                 </div>
@@ -80,44 +96,37 @@
             <div
                 class="p-4 border-b border-slate-100 bg-slate-50/40 flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
                 <form id="reimburseFilterForm" action="{{ route('reimbursements.index') }}" method="GET"
-                    onsubmit="return false;" class="flex flex-wrap items-center gap-2.5 flex-1">
+                    onsubmit="event.preventDefault(); fetchReimbursementData();" class="flex flex-wrap items-center gap-2.5 flex-1">
 
                     {{-- Search Input --}}
                     <div class="relative w-full sm:w-80">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
                             <i class="text-xs fa-solid fa-magnifying-glass"></i>
                         </span>
-                        <input type="text" id="reimburseSearchInput" name="search" value="{{ request('search') }}"
+                        <input type="text" id="reimburseSearchInput" aria-label="Cari klaim" name="search" value="{{ request('search') }}"
                             placeholder="Cari pengaju, rute, atau nomor nota..." autocomplete="off"
                             class="w-full h-10 pl-9.5 pr-8 text-xs bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all shadow-2xs">
 
-                        <button type="button" id="clearSearchBtn" onclick="clearSearch()"
+                        <button type="button" id="clearSearchBtn" aria-label="Hapus pencarian" onclick="clearSearch()"
                             class="{{ request('search') ? '' : 'hidden' }} absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 cursor-pointer">
                             <i class="text-xs fa-solid fa-circle-xmark"></i>
                         </button>
                     </div>
 
+                    <div class="w-full sm:w-56">
+                        <select id="reimburseStatusSelect" name="status" aria-label="Tahap persetujuan klaim" class="w-full rounded-xl border border-slate-200 bg-white text-sm">
+                            <option value="">Semua Status</option>
+                            @foreach (['waiting' => 'Semua yang Menunggu', 'pending' => 'Tanda Tangan Pengaju', 'pending_leader' => 'Menunggu Ketua Tim', 'pending_station' => 'Menunggu Kepala Stasiun', 'pending_manager' => 'Menunggu Manajer', 'approved' => 'Disetujui', 'rejected' => 'Ditolak'] as $value => $label)
+                                <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     {{-- Month Dropdown --}}
                     <div class="relative w-full sm:w-44">
-                        <select id="reimburseMonthSelect" name="month"
+                        <select id="reimburseMonthSelect" aria-label="Bulan klaim" name="month"
                             class="w-full h-10 pl-3.5 pr-8 text-xs bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 appearance-none cursor-pointer transition-all shadow-2xs">
                             <option value="">Semua Bulan</option>
-                            @php
-                                $months = [
-                                    '01' => 'Januari',
-                                    '02' => 'Februari',
-                                    '03' => 'Maret',
-                                    '04' => 'April',
-                                    '05' => 'Mei',
-                                    '06' => 'Juni',
-                                    '07' => 'Juli',
-                                    '08' => 'Agustus',
-                                    '09' => 'September',
-                                    '10' => 'Oktober',
-                                    '11' => 'November',
-                                    '12' => 'Desember',
-                                ];
-                            @endphp
+
                             @foreach ($months as $value => $name)
                                 <option value="{{ $value }}" {{ request('month') == $value ? 'selected' : '' }}>
                                     {{ $name }}
@@ -146,7 +155,7 @@
                         <span>Impor Excel</span>
                     </button>
 
-                    <a href="{{ route('reimbursements.export_pdf', ['month' => request('month')]) }}" id="pdfExportLink"
+                    <a href="{{ route('reimbursements.export_pdf', ['month' => request('month')]) }}" id="pdfExportLink" title="Ekspor klaim yang sudah disetujui pada bulan terpilih"
                         download title="Ekspor PDF"
                         class="h-10 px-3.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-2xs inline-flex items-center gap-2 active:scale-[0.98]">
                         <i class="text-sm fa-solid fa-file-pdf text-rose-500"></i>
@@ -168,7 +177,7 @@
                     <table class="w-full text-left border-collapse min-w-[700px]">
                         <thead>
                             <tr
-                                class="text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50 border-b border-slate-100">
+                                class="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50 border-b border-slate-100">
                                 <th class="w-10 px-4 py-3 text-center">
                                     <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)"
                                         class="rounded cursor-pointer border-slate-300 text-slate-900 focus:ring-slate-900">
@@ -200,12 +209,12 @@
                                                         {{ $r->person_name }}
                                                     </p>
                                                     <span
-                                                        class="px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-wider rounded border
+                                                        class="px-1.5 py-0.2 text-xs font-bold uppercase tracking-wider rounded border
                                                         {{ $r->category == 'transportation' ? 'bg-blue-50 text-blue-700 border-blue-200/60' : ($r->category == 'delivery' ? 'bg-purple-50 text-purple-700 border-purple-200/60' : 'bg-slate-100 text-slate-600 border-slate-200') }}">
                                                         {{ \App\Support\UiText::label($r->category) }}
                                                     </span>
                                                 </div>
-                                                <div class="flex items-center gap-2 text-[11px] text-slate-400">
+                                                <div class="flex items-center gap-2 text-xs text-slate-400">
                                                     <span>{{ \Carbon\Carbon::parse($r->date)->translatedFormat('d M Y') }}</span>
                                                     @if (in_array($r->category, ['transportation', 'delivery']))
                                                         <span>•</span>
@@ -216,7 +225,7 @@
                                                         </span>
                                                     @elseif($r->comment)
                                                         <span>•</span>
-                                                        <span class="font-mono text-slate-500 text-[10px]">Ref:
+                                                        <span class="font-mono text-slate-500 text-xs">Ref:
                                                             {{ $r->comment }}</span>
                                                     @endif
                                                 </div>
@@ -231,23 +240,7 @@
 
                                     {{-- Column 3: Status --}}
                                     <td class="px-5 py-3.5 text-center">
-                                        @if ($r->status == 'approved')
-                                            <span
-                                                class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200/80 rounded-md">
-                                                <i class="fa-solid fa-check text-[9px]"></i> Disetujui
-                                            </span>
-                                        @elseif($r->status == 'rejected')
-                                            <span
-                                                class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-50 border border-rose-200/80 rounded-md">
-                                                <i class="fa-solid fa-xmark text-[9px]"></i> Ditolak
-                                            </span>
-                                        @else
-                                            <span
-                                                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200/80 rounded-md">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                                                {{ \App\Support\UiText::label($r->status) }}
-                                            </span>
-                                        @endif
+                                        <x-ui.status-badge :status="$r->status" />
                                     </td>
 
                                     {{-- Column 4: Direct Action Buttons --}}
@@ -315,7 +308,7 @@
                                                 <i class="text-sm fa-solid fa-receipt"></i>
                                             </div>
                                             <p class="text-xs font-bold text-slate-800">Klaim Tidak Ditemukan</p>
-                                            <p class="mt-0.5 text-[11px] text-slate-400">Tidak ada klaim yang sesuai dengan filter yang dipilih.</p>
+                                            <p class="mt-0.5 text-xs text-slate-400">Tidak ada klaim yang sesuai dengan filter yang dipilih.</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -331,30 +324,26 @@
                             <div class="flex items-start justify-between gap-2">
                                 <div class="flex items-center gap-2">
                                     <div
-                                        class="w-7 h-7 font-bold text-slate-700 bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-center text-[11px] shrink-0">
+                                        class="w-7 h-7 font-bold text-slate-700 bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-center text-xs shrink-0">
                                         {{ strtoupper(substr($r->person_name ?? '?', 0, 1)) }}
                                     </div>
                                     <div>
                                         <p class="text-xs font-bold leading-tight text-slate-900">{{ $r->person_name }}
                                         </p>
-                                        <p class="text-[10px] text-slate-400">
+                                        <p class="text-xs text-slate-400">
                                             {{ \Carbon\Carbon::parse($r->date)->translatedFormat('d M Y') }}</p>
                                     </div>
                                 </div>
-                                <span
-                                    class="px-2 py-0.5 text-[9px] font-bold rounded border uppercase
-                                    {{ $r->status == 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : ($r->status == 'rejected' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200') }}">
-                                    {{ \App\Support\UiText::label($r->status) }}
-                                </span>
+                                <x-ui.status-badge :status="$r->status" />
                             </div>
 
                             <div class="flex items-center justify-between p-2 text-xs rounded-lg bg-slate-50">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase">{{ \App\Support\UiText::label($r->category) }}</span>
+                                <span class="text-xs font-bold text-slate-400 uppercase">{{ \App\Support\UiText::label($r->category) }}</span>
                                 <span class="font-mono font-bold text-slate-900">Rp
                                     {{ number_format((float) ($r->amount ?? 0), 0, ',', '.') }}</span>
                             </div>
 
-                            <div class="flex items-center justify-between gap-1 pt-1 border-t border-slate-100">
+                            <div data-ui-row-actions class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
                                 <div class="flex gap-1">
                                     @if (\App\Services\ReimbursementAccess::canEdit($r))
 <a href="{{ route('reimbursements.edit', $r->id) }}"
@@ -387,7 +376,7 @@
                                     @endif
                                     <a href="{{ route('reimbursements.approval', $r->id) }}"
                                         class="px-3 py-1 text-xs font-bold text-white bg-slate-900 rounded-xl">
-                                        Tanda Tangan
+                                        {{ in_array($r->status, ['approved', 'rejected']) ? 'Lihat Dokumen' : 'Tanda Tangan' }}
                                     </a>
                                 </div>
                             </div>
@@ -426,7 +415,7 @@
             <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/60 shrink-0">
                 <div class="flex items-center gap-2">
                     <span id="modal-category"
-                        class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-md bg-slate-200 text-slate-800">
+                        class="px-2 py-0.5 text-xs font-bold uppercase tracking-wider rounded-md bg-slate-200 text-slate-800">
                         Kategori
                     </span>
                     <h3 class="text-sm font-bold text-slate-900">Rincian Klaim dan Bukti Nota</h3>
@@ -441,28 +430,28 @@
                 <div class="space-y-4 lg:col-span-2">
                     <div class="p-3.5 border border-slate-200/80 bg-slate-50/50 rounded-xl space-y-2">
                         <div>
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Diajukan oleh</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Diajukan oleh</span>
                             <p id="modal-name" class="font-bold text-slate-900 text-sm mt-0.5">-</p>
                         </div>
                         <div class="pt-2 border-t border-slate-200/60">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Tanggal Pengajuan</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Tanggal Pengajuan</span>
                             <p id="modal-date" class="font-medium text-slate-800 mt-0.5">-</p>
                         </div>
                     </div>
 
                     <div class="p-3.5 border border-slate-200/80 rounded-xl space-y-2">
                         <div>
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Nominal Klaim</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Nominal Klaim</span>
                             <p id="modal-amount" class="text-lg font-mono font-bold text-slate-900 mt-0.5">Rp 0</p>
                         </div>
                         <div class="pt-2 border-t border-slate-100">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Informasi Rute</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Informasi Rute</span>
                             <p id="modal-route" class="font-medium text-slate-800 mt-0.5">-</p>
                         </div>
                     </div>
 
                     <div>
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Catatan / Keterangan</span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Catatan / Keterangan</span>
                         <div id="modal-comment"
                             class="p-3 italic border border-slate-200 bg-slate-50/50 rounded-xl text-slate-700">
                             "Belum ada keterangan."
@@ -470,30 +459,30 @@
                     </div>
 
                     <div>
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">Tahapan Persetujuan</span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1.5">Tahapan Persetujuan</span>
                         <div class="p-3 space-y-2 border border-slate-200/80 rounded-xl bg-slate-50/30">
                             <div class="flex items-center justify-between pb-1.5 border-b border-slate-200/60">
                                 <span class="font-semibold text-slate-700">1. Karyawan Pengaju</span>
-                                <span id="sign-status-staff" class="px-2 py-0.5 rounded text-[10px] font-bold"></span>
+                                <span id="sign-status-staff" class="px-2 py-0.5 rounded text-xs font-bold"></span>
                             </div>
                             <div class="flex items-center justify-between pb-1.5 border-b border-slate-200/60">
                                 <span class="font-semibold text-slate-700">2. Ketua Tim</span>
-                                <span id="sign-status-leader" class="px-2 py-0.5 rounded text-[10px] font-bold"></span>
+                                <span id="sign-status-leader" class="px-2 py-0.5 rounded text-xs font-bold"></span>
                             </div>
                             <div class="flex items-center justify-between pb-1.5 border-b border-slate-200/60">
                                 <span class="font-semibold text-slate-700">3. Kepala Stasiun</span>
-                                <span id="sign-status-station" class="px-2 py-0.5 rounded text-[10px] font-bold"></span>
+                                <span id="sign-status-station" class="px-2 py-0.5 rounded text-xs font-bold"></span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="font-semibold text-slate-700">4. Manajer Operasional</span>
-                                <span id="sign-status-manager" class="px-2 py-0.5 rounded text-[10px] font-bold"></span>
+                                <span id="sign-status-manager" class="px-2 py-0.5 rounded text-xs font-bold"></span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="lg:col-span-3 flex flex-col space-y-1.5 min-h-[300px]">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Lampiran Nota</span>
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Lampiran Nota</span>
                     <div id="modal-attachment-frame"
                         class="relative flex-1 w-full overflow-hidden border border-slate-200 bg-slate-100 rounded-xl">
                     </div>
@@ -553,7 +542,7 @@
                         .csv)</label>
                     <input type="file" name="file" accept=".xlsx, .xls, .csv" required
                         class="block w-full p-1 text-xs border cursor-pointer text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 border-slate-200 rounded-xl">
-                    <p class="mt-1.5 text-[11px] text-slate-400">
+                    <p class="mt-1.5 text-xs text-slate-400">
                         Gunakan file hasil dari fitur <strong>Ekspor Excel</strong> sebagai acuan struktur data.
                     </p>
                 </div>
@@ -575,345 +564,6 @@
 @endsection
 
 @push('scripts')
-    <script>
-        function openImportModal() {
-            const modal = document.getElementById('importModal');
-            if (modal) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                document.body.classList.add('overflow-hidden');
-            }
-        }
-
-        function closeImportModal() {
-            const modal = document.getElementById('importModal');
-            if (modal) {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-                document.body.classList.remove('overflow-hidden');
-            }
-        }
-
-        // Fungsi JavaScript untuk Bulk Delete
-        function toggleSelectAll(master) {
-            const checkboxes = document.querySelectorAll('.rowCheckbox');
-            checkboxes.forEach(cb => {
-                cb.checked = master.checked;
-            });
-            updateBulkDeleteButton();
-        }
-
-        function updateBulkDeleteButton() {
-            const checkboxes = document.querySelectorAll('.rowCheckbox:checked');
-            const bulkBtn = document.getElementById('bulkDeleteBtn');
-            const countSpan = document.getElementById('selectedCount');
-
-            if (checkboxes.length > 0) {
-                bulkBtn.style.display = 'inline-flex';
-                countSpan.innerText = checkboxes.length;
-            } else {
-                bulkBtn.style.display = 'none';
-            }
-        }
-
-        function submitBulkDelete() {
-            if (!confirm('Yakin ingin menghapus klaim reimbursement yang dipilih ke Sampah?')) {
-                return;
-            }
-
-            const checkboxes = document.querySelectorAll('.rowCheckbox:checked');
-            const container = document.getElementById('bulkDeleteInputs');
-            container.innerHTML = '';
-
-            checkboxes.forEach(cb => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'ids[]';
-                input.value = cb.value;
-                container.appendChild(input);
-            });
-
-            document.getElementById('bulkDeleteForm').submit();
-        }
-
-        let debounceTimer;
-
-        function fetchReimbursementData(targetUrl = null) {
-            const wrapper = document.getElementById('reimbursementDataWrapper');
-            const searchInput = document.getElementById('reimburseSearchInput');
-            const monthSelect = document.getElementById('reimburseMonthSelect');
-
-            const searchValue = searchInput ? searchInput.value.trim() : '';
-            const monthValue = monthSelect ? monthSelect.value : '';
-
-            if (wrapper) wrapper.style.opacity = '0.5';
-
-            let url = targetUrl ? new URL(targetUrl, window.location.origin) : new URL(
-                "{{ route('reimbursements.index') }}", window.location.origin);
-
-            if (searchValue) url.searchParams.set('search', searchValue);
-            else url.searchParams.delete('search');
-
-            if (monthValue) url.searchParams.set('month', monthValue);
-            else url.searchParams.delete('month');
-
-            const clearBtn = document.getElementById('clearSearchBtn');
-            if (clearBtn) {
-                clearBtn.classList.toggle('hidden', !searchValue);
-            }
-
-            const pdfLink = document.getElementById('pdfExportLink');
-            if (pdfLink) {
-                const pdfUrl = new URL("{{ route('reimbursements.export_pdf') }}", window.location.origin);
-                if (monthValue) pdfUrl.searchParams.set('month', monthValue);
-                pdfLink.href = pdfUrl.href;
-            }
-
-            fetch(url, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.text())
-                .then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-
-                    const newContent = doc.getElementById('reimbursementDataWrapper');
-                    if (newContent && wrapper) {
-                        wrapper.innerHTML = newContent.innerHTML;
-                    }
-
-                    const newApprovedText = doc.getElementById('totalApprovedAmountText');
-                    const currentApprovedText = document.getElementById('totalApprovedAmountText');
-                    if (newApprovedText && currentApprovedText) {
-                        currentApprovedText.innerHTML = newApprovedText.innerHTML;
-                    }
-
-                    if (wrapper) wrapper.style.opacity = '1';
-
-                    window.history.pushState({}, '', url);
-                    bindPaginationEvents();
-                })
-                .catch(error => {
-                    console.error('AJAX Fetch Error:', error);
-                    if (wrapper) wrapper.style.opacity = '1';
-                });
-        }
-
-        function initReimbursementFilters() {
-            const searchInput = document.getElementById('reimburseSearchInput');
-            const monthSelect = document.getElementById('reimburseMonthSelect');
-
-            if (searchInput) {
-                searchInput.removeEventListener('input', handleSearchInput);
-                searchInput.addEventListener('input', handleSearchInput);
-            }
-
-            if (monthSelect) {
-                monthSelect.removeEventListener('change', handleMonthChange);
-                monthSelect.addEventListener('change', handleMonthChange);
-            }
-
-            bindPaginationEvents();
-        }
-
-        function handleSearchInput() {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
-                fetchReimbursementData();
-            }, 350);
-        }
-
-        function handleMonthChange() {
-            fetchReimbursementData();
-        }
-
-        function clearSearch() {
-            const input = document.getElementById('reimburseSearchInput');
-            if (input) {
-                input.value = '';
-                fetchReimbursementData();
-            }
-        }
-
-        function bindPaginationEvents() {
-            const paginationLinks = document.querySelectorAll('.ajax-pagination a');
-            paginationLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    fetchReimbursementData(this.href);
-                });
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            initReimbursementFilters();
-
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    closeDetailModal();
-                    closeCancelModal();
-                }
-            });
-        });
-
-        function exportExcelReport() {
-            const url = new URL('{{ route('reimbursements.export_excel') }}', window.location.origin);
-            const urlParams = new URLSearchParams(window.location.search);
-            const currentMonth = urlParams.get('month');
-            const currentSearch = urlParams.get('search');
-
-            if (currentMonth) url.searchParams.set('month', currentMonth);
-            if (currentSearch) url.searchParams.set('search', currentSearch);
-
-            @if (in_array(Auth::user()?->role, ['superadmin', 'administration']))
-                url.searchParams.set('all_site', '1');
-            @endif
-
-            window.location.href = url.href;
-        }
-
-        function openDetailModal(buttonElement) {
-            const rawData = buttonElement.getAttribute('data-reimbursement');
-            let data;
-            try {
-                data = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
-            } catch (e) {
-                console.error("Failed to parse reimbursement json:", e);
-                (window.showUiMessage || window.alert)("Rincian gagal dimuat. Silakan coba lagi.");
-                return;
-            }
-
-            document.getElementById('modal-name').innerText = data.person_name || '-';
-            document.getElementById('modal-category').innerText = window.uiLabel(data.category || 'Klaim');
-            document.getElementById('modal-comment').innerText = data.comment ? `"${data.comment}"` :
-                "Belum ada keterangan.";
-
-            const dateObj = new Date(data.date);
-            document.getElementById('modal-date').innerText = isNaN(dateObj) ? '-' : dateObj.toLocaleDateString('id-ID', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
-            });
-
-            document.getElementById('modal-amount').innerText = new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0
-            }).format(data.amount || 0);
-
-            if (data.category === 'transportation' || data.category === 'delivery') {
-                document.getElementById('modal-route').innerHTML =
-                    `<span class="font-semibold text-slate-900">${data.from_location || '-'}</span> <i class="mx-1 fa-solid fa-arrow-right text-slate-300"></i> <span class="font-semibold text-slate-900">${data.to_location || '-'}</span>`;
-            } else {
-                document.getElementById('modal-route').innerText = "Rute Tidak Diperlukan";
-            }
-
-            let signatures = [];
-            if (data.signatures_json) {
-                try {
-                    signatures = typeof data.signatures_json === 'string' ? JSON.parse(data.signatures_json) : data
-                        .signatures_json;
-                    if (!Array.isArray(signatures)) signatures = [];
-                } catch (e) {
-                    signatures = [];
-                }
-            }
-
-            function renderSignBadge(elementId, isSigned, fallbackText = "Belum Ditandatangani") {
-                const el = document.getElementById(elementId);
-                if (!el) return;
-                if (isSigned) {
-                    el.innerText = "✓ Ditandatangani";
-                    el.className =
-                        "px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200";
-                } else {
-                    el.innerText = fallbackText;
-                    el.className =
-                        "px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-400 border border-slate-200";
-                }
-            }
-
-            const hasStaff = signatures.some(s => s && (s.role === 'employee_role' || s.level === 'employee_role')) || !!
-                data.person_name;
-            const hasLeader = signatures.some(s => s && (s.role === 'leader' || s.level === 'leader')) || (data.status !==
-                'pending' && data.status !== 'pending_leader');
-            const hasStation = signatures.some(s => s && (s.role === 'station_master' || s.role === 'station')) || (data
-                .status === 'approved' || data.status === 'pending_manager');
-            const hasManager = signatures.some(s => s && s.role === 'manager') || data.status === 'approved';
-
-            renderSignBadge('sign-status-staff', hasStaff, "Menunggu Tanda Tangan");
-            renderSignBadge('sign-status-leader', hasLeader, "Menunggu Pemeriksaan");
-            renderSignBadge('sign-status-station', hasStation, "Menunggu Persetujuan");
-            renderSignBadge('sign-status-manager', hasManager, "Menunggu Persetujuan Akhir");
-
-            if (data.status === 'rejected') {
-                if (!hasLeader) renderSignBadge('sign-status-leader', false, "✖ Ditolak");
-                else if (!hasStation) renderSignBadge('sign-status-station', false, "✖ Ditolak");
-                else if (!hasManager) renderSignBadge('sign-status-manager', false, "✖ Ditolak");
-            }
-
-            const frame = document.getElementById('modal-attachment-frame');
-            frame.innerHTML = '';
-
-            if (data.receipt_attachment) {
-                const fileExt = data.receipt_attachment.split('.').pop().toLowerCase();
-                const fullUrl = `/storage/${data.receipt_attachment}`;
-
-                if (fileExt === 'pdf') {
-                    frame.innerHTML =
-                        `<object data="${fullUrl}#toolbar=0" type="application/pdf" class="block w-full h-full min-h-[280px]"></object>`;
-                } else {
-                    frame.innerHTML =
-                        `<div class="flex items-center justify-center w-full h-full p-2 bg-slate-50"><img src="${fullUrl}" class="object-contain max-w-full max-h-full rounded-lg" /></div>`;
-                }
-            } else {
-                frame.innerHTML =
-                    `<div class="flex items-center justify-center w-full h-full p-8 text-xs italic text-slate-400">Belum ada bukti nota yang dilampirkan.</div>`;
-            }
-
-            const m = document.getElementById('detailModal');
-            if (m) {
-                m.classList.remove('hidden');
-                m.classList.add('flex');
-            }
-            document.body.classList.add('overflow-hidden');
-        }
-
-        function closeDetailModal() {
-            const m = document.getElementById('detailModal');
-            if (m) {
-                m.classList.add('hidden');
-                m.classList.remove('flex');
-            }
-            document.body.classList.remove('overflow-hidden');
-        }
-
-        function confirmCancel(id, personName = '', amount = '') {
-            const modal = document.getElementById('cancelModal');
-            if (!modal) return;
-
-            const form = modal.querySelector('form');
-            if (form) form.action = `/reimbursements/${id}`;
-
-            const nameEl = document.getElementById('cancel_person_name');
-            const amountEl = document.getElementById('cancel_amount');
-            if (nameEl) nameEl.innerText = personName;
-            if (amountEl) amountEl.innerText = amount;
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.body.classList.add('overflow-hidden');
-        }
-
-        function closeCancelModal() {
-            const modal = document.getElementById('cancelModal');
-            if (modal) {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }
-            document.body.classList.remove('overflow-hidden');
-        }
-    </script>
+    <script type="application/json" id="reimbursements-config">{!! json_encode(['allSites' => in_array(auth()->user()?->role, ['superadmin', 'administration']), 'indexUrl' => route('reimbursements.index'), 'pdfUrl' => route('reimbursements.export_pdf'), 'excelUrl' => route('reimbursements.export_excel')], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+    @vite('resources/js/pages/reimbursements.js')
 @endpush

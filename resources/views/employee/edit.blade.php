@@ -10,7 +10,8 @@
             <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
                     <nav class="flex items-center gap-2 mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                        <a href="{{ route('employee.index') }}" class="transition-colors hover:text-blue-600">Daftar Karyawan</a>
+                        <a href="{{ route('employee.index') }}" class="transition-colors hover:text-blue-600">Daftar
+                            Karyawan</a>
                         <i class="fa-solid fa-chevron-right text-[9px]"></i>
                         <span class="font-extrabold text-blue-600">Ubah Data</span>
                     </nav>
@@ -117,7 +118,8 @@
                         <select name="status" id="status_select"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
                             <option value="Probation"
-                                {{ old('status', $employee->status) == 'Probation' ? 'selected' : '' }}>Masa Percobaan</option>
+                                {{ old('status', $employee->status) == 'Probation' ? 'selected' : '' }}>Masa Percobaan
+                            </option>
                             <option value="Contract"
                                 {{ old('status', $employee->status) == 'Contract' ? 'selected' : '' }}>Kontrak</option>
                             <option value="Permanent"
@@ -125,7 +127,8 @@
                             <option value="Daily" {{ old('status', $employee->status) == 'Daily' ? 'selected' : '' }}>
                                 Harian</option>
                             <option value="Resigned" class="font-bold text-rose-600"
-                                {{ old('status', $employee->status) == 'Resigned' ? 'selected' : '' }}>🔴 Berhenti Bekerja</option>
+                                {{ old('status', $employee->status) == 'Resigned' ? 'selected' : '' }}>🔴 Berhenti Bekerja
+                            </option>
                         </select>
                     </div>
 
@@ -209,7 +212,8 @@
                         </label>
                         <select name="mcu"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
-                            <option value="no" {{ old('mcu', $employee->mcu) == 'no' ? 'selected' : '' }}>TIDAK</option>
+                            <option value="no" {{ old('mcu', $employee->mcu) == 'no' ? 'selected' : '' }}>TIDAK
+                            </option>
                             <option value="yes" {{ old('mcu', $employee->mcu) == 'yes' ? 'selected' : '' }}>YA
                             </option>
                         </select>
@@ -222,7 +226,8 @@
                         </label>
                         <select name="tld"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 cursor-pointer">
-                            <option value="no" {{ old('tld', $employee->tld) == 'no' ? 'selected' : '' }}>TIDAK</option>
+                            <option value="no" {{ old('tld', $employee->tld) == 'no' ? 'selected' : '' }}>TIDAK
+                            </option>
                             <option value="yes" {{ old('tld', $employee->tld) == 'yes' ? 'selected' : '' }}>YA
                             </option>
                         </select>
@@ -268,7 +273,7 @@
                                 Hari Terakhir Bekerja <span class="text-rose-600">*</span>
                             </label>
                         </div>
-                        <p class="text-[11px] text-slate-500 font-medium leading-relaxed">
+                        <p class="text-xs font-medium leading-relaxed text-slate-500">
                             Masukkan hari terakhir karyawan bekerja. Karyawan ini akan dinonaktifkan dari perhitungan gaji
                             (payroll) periode berikutnya.
                         </p>
@@ -276,6 +281,66 @@
                             <input type="date" name="resign_date" id="resign_date_input"
                                 value="{{ old('resign_date', isset($employee->resign_date) ? \Carbon\Carbon::parse($employee->resign_date)->format('Y-m-d') : '') }}"
                                 class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold border border-rose-300 rounded-xl focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 outline-none transition-all bg-white text-slate-800">
+                        </div>
+                    </div>
+
+                    {{-- INFORMASI PKWT --}}
+                    <div class="pt-4 border-t md:col-span-2 border-slate-100">
+
+                        <div class="flex items-center gap-2 mb-4">
+                            <div class="flex items-center justify-center w-8 h-8 text-blue-600 rounded-lg bg-blue-50">
+                                <i class="fa-regular fa-file-lines"></i>
+                            </div>
+
+                            <div>
+                                <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-800">
+                                    Informasi PKWT
+                                </h3>
+                                <p class="mt-0.5 text-xs font-medium text-slate-400">
+                                    Informasi dokumen perjanjian kerja karyawan.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+                            {{-- NOMOR PKWT --}}
+                            <div class="space-y-1.5">
+                                <label for="pkwt_number"
+                                    class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                                    Nomor PKWT
+                                </label>
+
+                                <input type="text" id="pkwt_number" name="pkwt_number" maxlength="150"
+                                    value="{{ old('pkwt_number', $employee->pkwt_number) }}"
+                                    placeholder="Masukkan nomor dokumen PKWT"
+                                    class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+
+                                @error('pkwt_number')
+                                    <p class="text-xs font-medium text-rose-600">
+                                        {{ $message }}
+                                    </p>
+                                @enderror
+                            </div>
+
+                            {{-- TANGGAL PKWT --}}
+                            <div class="space-y-1.5">
+                                <label for="pkwt_date"
+                                    class="block text-xs font-bold tracking-wider uppercase text-slate-700">
+                                    Tanggal PKWT
+                                </label>
+
+                                <input type="date" id="pkwt_date" name="pkwt_date"
+                                    value="{{ old('pkwt_date', $employee->pkwt_date ? \Carbon\Carbon::parse($employee->pkwt_date)->format('Y-m-d') : '') }}"
+                                    class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
+
+                                @error('pkwt_date')
+                                    <p class="text-xs font-medium text-rose-600">
+                                        {{ $message }}
+                                    </p>
+                                @enderror
+                            </div>
+
                         </div>
                     </div>
                 </div>

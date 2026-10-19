@@ -99,7 +99,7 @@
                         <div>
                             <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Dokumentasi Foto
                                 (Opsional)</h3>
-                            <p class="text-[11px] font-medium text-slate-400">Lampirkan foto kegiatan. Keterangan foto dapat dikosongkan.</p>
+                            <p class="text-xs font-medium text-slate-400">Lampirkan foto kegiatan. Keterangan foto dapat dikosongkan.</p>
                         </div>
                         <button type="button" @click="addPhotoRow()"
                             class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-all cursor-pointer">

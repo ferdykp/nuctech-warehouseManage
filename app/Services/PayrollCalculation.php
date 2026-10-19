@@ -22,12 +22,39 @@ class PayrollCalculation
     public function calculate($employeeId, $monthPeriod = null, ?float $salaryAmount = null)
     {
         $monthPeriod = $monthPeriod ?? date('Y-m');
+        return $this->calculateFor(
+            Employee::findOrFail($employeeId),
+            \App\Models\Attendance::where('employee_id', $employeeId)->where('month', $monthPeriod)->first(),
+            $monthPeriod, $salaryAmount,
+            app(IndonesianHolidayService::class)->getHolidaysForMonth($monthPeriod)
+        );
+    }
 
+    /** Calculate a list/export in a fixed number of queries; agreed amounts stay unchanged. */
+    public function calculateMany(iterable $salaries, string $period): array
+    {
+        $salaries = collect($salaries);
+        if ($salaries->isEmpty()) return [];
+        $employees = Employee::whereIn('id', $salaries->pluck('employee_id')->unique())->get()->keyBy('id');
+        $attendances = \App\Models\Attendance::whereIn('employee_id', $employees->keys())
+            ->where('month', $period)->get()->groupBy('employee_id');
+        $holidays = app(IndonesianHolidayService::class)->getHolidaysForMonth($period);
+        $results = [];
+        foreach ($salaries as $salary) {
+            $employee = $employees->get($salary->employee_id);
+            if (!$employee) $employee = Employee::findOrFail($salary->employee_id);
+            $results[$salary->id] = $this->calculateFor($employee,
+                $attendances->get($employee->id)?->first(), $period, (float) $salary->amount, $holidays);
+        }
+        return $results;
+    }
+
+    private function calculateFor(Employee $employee, ?\App\Models\Attendance $attendance,
+        string $monthPeriod, ?float $salaryAmount, array $rawHolidays): array
+    {
         $startOfMonth = Carbon::parse($monthPeriod.'-01')->startOfMonth();
         $endOfMonth = Carbon::parse($monthPeriod.'-01')->endOfMonth();
         $daysInMonth = $startOfMonth->daysInMonth;
-
-        $rawHolidays = app(IndonesianHolidayService::class)->getHolidaysForMonth($monthPeriod);
 
         $nationalHolidays = [];
         if (! empty($rawHolidays)) {
@@ -58,8 +85,6 @@ class PayrollCalculation
         $holidayOvertimeDays = 0;
         $holidayDates = [];
 
-        $employee = Employee::findOrFail($employeeId);
-        $attendance = \App\Models\Attendance::where('employee_id', $employeeId)->where('month', $monthPeriod)->first();
         $matrix = json_decode($attendance?->matrix_details ?? '{}', true) ?? [];
         foreach ($matrix as $day => $sessions) {
             if (! ctype_digit((string) $day) || $day < 1 || $day > $daysInMonth || ! is_array($sessions)) {
@@ -81,12 +106,12 @@ class PayrollCalculation
             }
         }
 
-        $salaryMaster = Salary::where('employee_id', $employeeId)
-            ->where('created_at', '<=', $endOfMonth)
-            ->orderByDesc('created_at')
-            ->first();
-
-        $monthlySalary = $salaryAmount ?? (float) ($salaryMaster?->amount ?? $this->salaryAt(Employee::findOrFail($employeeId), $endOfMonth));
+        $monthlySalary = $salaryAmount;
+        if ($monthlySalary === null) {
+            $salaryMaster = Salary::where('employee_id', $employee->id)
+                ->where('created_at', '<=', $endOfMonth)->orderByDesc('created_at')->first();
+            $monthlySalary = (float) ($salaryMaster?->amount ?? $this->salaryAt($employee, $endOfMonth));
+        }
 
         $dailyRate = $effectiveWorkingDays > 0 ? ($monthlySalary / $effectiveWorkingDays) : 0;
 

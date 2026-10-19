@@ -19,18 +19,18 @@
                     </h1>
                     <div class="flex flex-wrap items-center justify-center gap-2 pt-1 sm:justify-start">
                         <span
-                            class="px-3 py-1 text-[10px] font-black uppercase tracking-widest bg-blue-50 text-blue-700 border border-blue-200/60 rounded-full">
+                            class="px-3 py-1 text-xs font-black uppercase tracking-widest bg-blue-50 text-blue-700 border border-blue-200/60 rounded-full">
                             {{ str_replace('_', ' ', auth()->user()->role) }}
                         </span>
                         @if (auth()->user()->site)
                             <span
-                                class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200 rounded-full">
+                                class="px-3 py-1 text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200 rounded-full">
                                 <i
                                     class="mr-1 fa-solid fa-location-dot text-slate-400"></i>{{ auth()->user()->site->machine_name }}
                             </span>
                         @else
                             <span
-                                class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200/60 rounded-full">
+                                class="px-3 py-1 text-xs font-bold uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200/60 rounded-full">
                                 Kantor Pusat / Semua Lokasi
                             </span>
                         @endif

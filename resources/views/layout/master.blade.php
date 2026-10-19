@@ -6,15 +6,19 @@
     @stack('head')
 </head>
 
-<body class="flex h-dvh overflow-hidden font-sans bg-slate-100 text-slate-800" x-data="{ sidebarOpen: false }">
+<body class="flex h-dvh overflow-hidden font-sans bg-slate-100 text-slate-800 {{ request()->routeIs(['schedule.index', 'attendance.index', 'sparepart.index', 'sparepart.all', 'employee.index', 'salary.index']) ? 'ui-wide-layout' : '' }}" x-data="{ sidebarOpen: false, desktop: window.innerWidth >= 1024 }"
+    x-init="$watch('sidebarOpen', open => $nextTick(() => { const target = open ? document.querySelector('#main-sidebar button') : document.querySelector('[aria-controls=main-sidebar]'); if (target?.getClientRects().length) target.focus(); }))"
+    @resize.window="desktop = window.innerWidth >= 1024; if (desktop) sidebarOpen = false" @keydown.escape.window="sidebarOpen = false">
 
+    <a href="#main-content" class="ui-skip-link">Langsung ke konten</a>
+    <p id="ui-live-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
     <!-- SIDEBAR NAVIGATION -->
     @if (!request()->routeIs(['login', 'register', 'password.*']))
         @include('layout.aside')
     @endif
 
     <!-- MAIN WRAPPER -->
-    <div class="flex flex-col flex-1 w-full min-h-0 min-w-0 overflow-hidden">
+    <div :inert="sidebarOpen && !desktop" class="flex flex-col flex-1 w-full min-h-0 min-w-0 overflow-hidden">
 
         <!-- TOP NAVBAR -->
         @if (!request()->routeIs(['login', 'register', 'password.*']))
@@ -25,7 +29,7 @@
         @include('layout.notif')
 
         <!-- MAIN CONTENT AREA -->
-        <main id="main-content"
+        <main id="main-content" tabindex="-1"
             class="flex-1 w-full min-h-0 min-w-0 {{ request()->routeIs(['login', 'register', 'password.*']) ? 'overflow-y-auto overflow-x-hidden bg-slate-950 p-0' : 'overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8' }}">
             @if (request()->routeIs(['login', 'register', 'password.*']))
                 @yield('content')

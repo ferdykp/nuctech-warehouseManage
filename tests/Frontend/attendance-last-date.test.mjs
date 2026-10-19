@@ -4,14 +4,13 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 function page() {
-    const blade = readFileSync(new URL('../../resources/views/attendance/index.blade.php', import.meta.url), 'utf8');
-    const script = blade.match(/<script>([\s\S]*?)<\/script>/)[1].replace('@json($holidays ?? [])', '{}');
+    const script = readFileSync(new URL('../../resources/js/pages/attendance.js', import.meta.url), 'utf8');
     const classes = { add() {}, remove() {}, contains() { return true; } };
     const fields = Object.fromEntries(['filter_bulan', 'filter_tahun', 'auto_full_hidden', 'counter_s1_1', 'counter_s2_1', 'counter_s3_1', 'raw_data_1', 'modalEmployeeName', 'calendarGridBody', 'plotCalendarModal'].map(id => [id, { value: '', innerHTML: '', classList: classes }]));
     fields.filter_bulan.value = '09';
     fields.filter_tahun.value = '2026';
-    const context = vm.createContext({ console, document: {
-        getElementById: id => fields[id] ?? null,
+    const context = vm.createContext({ console, window: {}, document: {
+        getElementById: id => id === 'attendance-config' ? { textContent: '{"holidays":{}}' } : fields[id] ?? null,
         querySelectorAll: () => [],
         body: { classList: classes },
     }});

@@ -53,7 +53,7 @@
                         {{-- SEARCH --}}
                         <div class="lg:col-span-3">
                             <label
-                                class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Cari Catatan</label>
+                                class="block mb-1 text-xs font-extrabold tracking-wider uppercase text-slate-400">Cari Catatan</label>
                             <div class="relative">
                                 <input type="text" name="search" value="{{ request('search') }}"
                                     placeholder="Cari keterangan..."
@@ -66,7 +66,7 @@
                         @if (in_array(auth()->user()->role, ['superadmin', 'administration']))
                             <div class="lg:col-span-2">
                                 <label
-                                    class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Cabang</label>
+                                    class="block mb-1 text-xs font-extrabold tracking-wider uppercase text-slate-400">Cabang</label>
                                 <select name="branch_id" id="filter_branch_id" onchange="filterSitesByBranch()"
                                     class="block w-full py-2.5 px-3 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-slate-800 cursor-pointer">
                                     <option value="">Semua Cabang</option>
@@ -81,7 +81,7 @@
 
                             <div class="lg:col-span-3">
                                 <label
-                                    class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Lokasi Mesin</label>
+                                    class="block mb-1 text-xs font-extrabold tracking-wider uppercase text-slate-400">Lokasi Mesin</label>
                                 <select name="site_id" id="filter_site_id"
                                     class="block w-full py-2.5 px-3 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-slate-800 cursor-pointer">
                                     <option value="">Semua Lokasi Mesin</option>
@@ -97,7 +97,7 @@
                             {{-- NON-SUPERADMIN VIEW --}}
                             <div class="lg:col-span-5">
                                 <label
-                                    class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Lokasi Mesin</label>
+                                    class="block mb-1 text-xs font-extrabold tracking-wider uppercase text-slate-400">Lokasi Mesin</label>
                                 <input type="text" disabled
                                     value="{{ auth()->user()->site->machine_name ?? 'Lokasi Penempatan Anda' }}"
                                     class="block w-full py-2.5 px-3.5 text-xs font-semibold bg-slate-100 border border-slate-200 rounded-xl text-slate-500 cursor-not-allowed">
@@ -108,7 +108,7 @@
                         <div
                             class="{{ in_array(auth()->user()->role, ['superadmin', 'administration']) ? 'lg:col-span-2' : 'lg:col-span-2' }}">
                             <label
-                                class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Tanggal Mulai</label>
+                                class="block mb-1 text-xs font-extrabold tracking-wider uppercase text-slate-400">Tanggal Mulai</label>
                             <input type="date" name="start_date" value="{{ request('start_date') }}"
                                 class="block w-full py-2.5 px-3 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-slate-800 cursor-pointer">
                         </div>
@@ -116,7 +116,7 @@
                         {{-- END DATE --}}
                         <div
                             class="{{ in_array(auth()->user()->role, ['superadmin', 'administration']) ? 'lg:col-span-2' : 'lg:col-span-2' }}">
-                            <label class="block mb-1 text-[10px] font-extrabold tracking-wider uppercase text-slate-400">Tanggal Selesai</label>
+                            <label class="block mb-1 text-xs font-extrabold tracking-wider uppercase text-slate-400">Tanggal Selesai</label>
                             <input type="date" name="end_date" value="{{ request('end_date') }}"
                                 class="block w-full py-2.5 px-3 text-xs font-medium transition-all bg-white border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-slate-800 cursor-pointer">
                         </div>
@@ -140,7 +140,7 @@
                 <table data-mobile-cards class="w-full text-left border-collapse min-w-[700px]">
                     <thead>
                         <tr
-                            class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
+                            class="text-xs font-extrabold uppercase tracking-wider text-slate-500 bg-slate-50 border-b border-slate-100">
                             <th class="px-6 py-4">Tanggal dan Lokasi</th>
                             <th class="px-6 py-4">Pelapor</th>
                             <th class="px-6 py-4">Catatan Kegiatan</th>
@@ -155,7 +155,7 @@
                                     <span
                                         class="block text-xs font-extrabold text-slate-900">{{ $report->report_date->translatedFormat('d M Y') }}</span>
                                     <span
-                                        class="block text-[11px] text-slate-400 font-semibold mt-0.5">{{ $report->site->machine_name ?? '-' }}
+                                        class="block text-xs text-slate-400 font-semibold mt-0.5">{{ $report->site->machine_name ?? '-' }}
                                         ({{ $report->site->branch->branch_name ?? '-' }})
                                     </span>
                                 </td>
@@ -167,7 +167,7 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <span
-                                        class="px-2.5 py-1 text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 rounded-full">
+                                        class="px-2.5 py-1 text-xs font-extrabold bg-blue-50 text-blue-700 border border-blue-200 rounded-full">
                                         {{ $report->photos->count() }} Foto
                                     </span>
                                 </td>
@@ -266,7 +266,7 @@
                     </div>
                     <div>
                         <h3 class="text-sm font-extrabold text-slate-900">Rincian Laporan Harian</h3>
-                        <p id="detail_meta" class="text-[11px] font-medium text-slate-500">-</p>
+                        <p id="detail_meta" class="text-xs font-medium text-slate-500">-</p>
                     </div>
                 </div>
                 <button type="button" onclick="closeDetailModal()"
@@ -275,7 +275,7 @@
 
             <div class="p-6 space-y-5 overflow-y-auto">
                 <div>
-                    <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">Catatan Kegiatan</label>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-1">Catatan Kegiatan</label>
                     <div id="detail_description"
                         class="p-4 text-xs font-medium leading-relaxed whitespace-pre-line border border-slate-200/80 rounded-2xl bg-slate-50 text-slate-800">
                         -
@@ -283,7 +283,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Dokumentasi Foto</label>
+                    <label class="block text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2">Dokumentasi Foto</label>
                     <div id="detail_photos_container" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <!-- Foto dinamis diinjeksi via JS -->
                     </div>
@@ -311,7 +311,7 @@
                     </div>
                     <div>
                         <h3 class="text-sm font-extrabold text-slate-900">Ekspor Laporan Harian</h3>
-                        <p class="text-[11px] font-medium text-slate-500">Pilih rentang tanggal ekspor laporan.</p>
+                        <p class="text-xs font-medium text-slate-500">Pilih rentang tanggal ekspor laporan.</p>
                     </div>
                 </div>
                 <button type="button" onclick="closeExportModal()"
@@ -320,19 +320,19 @@
 
             <form action="{{ route('daily_reports.export_pdf') }}" method="GET" class="p-6 space-y-4">
                 <div>
-                    <label class="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">Preset
+                    <label class="block mb-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">Preset
                         Cepat</label>
                     <div class="grid grid-cols-3 gap-2" id="presetContainer">
                         <button type="button" id="btn_preset_this_week" onclick="setPreset('this_week')"
-                            class="preset-btn px-2.5 py-2 text-[11px] font-bold border border-slate-200 bg-slate-50 hover:border-emerald-500 hover:text-emerald-700 hover:bg-emerald-50/50 rounded-xl text-slate-700 transition-all cursor-pointer active:scale-95 shadow-2xs">
+                            class="preset-btn px-2.5 py-2 text-xs font-bold border border-slate-200 bg-slate-50 hover:border-emerald-500 hover:text-emerald-700 hover:bg-emerald-50/50 rounded-xl text-slate-700 transition-all cursor-pointer active:scale-95 shadow-2xs">
                             Minggu Ini
                         </button>
                         <button type="button" id="btn_preset_last_week" onclick="setPreset('last_week')"
-                            class="preset-btn px-2.5 py-2 text-[11px] font-bold border border-slate-200 bg-slate-50 hover:border-emerald-500 hover:text-emerald-700 hover:bg-emerald-50/50 rounded-xl text-slate-700 transition-all cursor-pointer active:scale-95 shadow-2xs">
+                            class="preset-btn px-2.5 py-2 text-xs font-bold border border-slate-200 bg-slate-50 hover:border-emerald-500 hover:text-emerald-700 hover:bg-emerald-50/50 rounded-xl text-slate-700 transition-all cursor-pointer active:scale-95 shadow-2xs">
                             Minggu Lalu
                         </button>
                         <button type="button" id="btn_preset_this_month" onclick="setPreset('this_month')"
-                            class="preset-btn px-2.5 py-2 text-[11px] font-bold border border-slate-200 bg-slate-50 hover:border-emerald-500 hover:text-emerald-700 hover:bg-emerald-50/50 rounded-xl text-slate-700 transition-all cursor-pointer active:scale-95 shadow-2xs">
+                            class="preset-btn px-2.5 py-2 text-xs font-bold border border-slate-200 bg-slate-50 hover:border-emerald-500 hover:text-emerald-700 hover:bg-emerald-50/50 rounded-xl text-slate-700 transition-all cursor-pointer active:scale-95 shadow-2xs">
                             Bulan Ini
                         </button>
                     </div>
@@ -341,7 +341,7 @@
                 {{-- KHUSUS SUPERADMIN: OPSIONAL PILIH ALL SITES ATAU SITE SPECIFIC --}}
                 @if (in_array(auth()->user()->role, ['superadmin', 'administration']))
                     <div>
-                        <label class="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                        <label class="block mb-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
                             Lokasi Cabang
                         </label>
                         <select name="branch_id" id="export_branch_id" onchange="filterExportSitesByBranch()"
@@ -354,7 +354,7 @@
                     </div>
 
                     <div>
-                        <label class="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                        <label class="block mb-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">
                             Lokasi Mesin <span class="font-extrabold text-emerald-600">(Superadmin Access)</span>
                         </label>
                         <select name="site_id" id="export_site_id"
@@ -374,14 +374,14 @@
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">Tanggal
+                        <label class="block mb-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">Tanggal
                             Mulai <span class="text-rose-500">*</span></label>
                         <input type="date" name="start_date" id="export_start_date" required
                             onchange="checkActivePreset()" value="{{ date('Y-m-01') }}"
                             class="w-full p-2.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-none text-slate-800 cursor-pointer focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all">
                     </div>
                     <div>
-                        <label class="block mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600">Tanggal
+                        <label class="block mb-1.5 text-xs font-bold uppercase tracking-wider text-slate-600">Tanggal
                             Selesai <span class="text-rose-500">*</span></label>
                         <input type="date" name="end_date" id="export_end_date" required
                             onchange="checkActivePreset()" value="{{ date('Y-m-d') }}"
@@ -492,7 +492,7 @@
                             <a href="/storage/${photo.photo_path}" target="_blank">
                                 <img src="/storage/${photo.photo_path}" class="object-contain w-full h-40 bg-white border rounded-xl border-slate-100" />
                             </a>
-                            ${photo.caption ? `<p class="mt-1.5 text-[10px] font-semibold text-slate-500 italic">${photo.caption}</p>` : ''}
+                            ${photo.caption ? `<p class="mt-1.5 text-xs font-semibold text-slate-500 italic">${photo.caption}</p>` : ''}
                         </div>
                     `;
                     photosContainer.innerHTML += photoHtml;

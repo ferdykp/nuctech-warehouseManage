@@ -19,15 +19,17 @@ class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, 
     protected $search;
     protected $month;
     protected $isAllSite;
+    protected $status;
 
     /**
      * Constructor untuk menerima filter search, month, dan status all_site
      */
-    public function __construct($search = null, $month = null, $isAllSite = false)
+    public function __construct($search = null, $month = null, $isAllSite = false, $status = null)
     {
         $this->search = $search;
         $this->month = $month;
         $this->isAllSite = $isAllSite;
+        $this->status = $status;
     }
 
     public function collection()
@@ -52,12 +54,7 @@ class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, 
         }
 
         // 3. FILTER LIVE SEARCH
-        if ($this->search) {
-            $query->where(function ($q) {
-                $q->where('person_name', 'like', "%{$this->search}%")
-                    ->orWhere('comment', 'like', "%{$this->search}%");
-            });
-        }
+        \App\Services\ReimbursementFilters::apply($query, ['search' => $this->search, 'status' => $this->status]);
 
         // Urutkan berdasarkan Kategori -> Nama Karyawan -> Tanggal Invoice -> ID
         return $query
