@@ -25,7 +25,7 @@ class PreserveListContext
         if (!$saved || !$target || isset($saved['host']) || isset($saved['scheme'])
             || ($target['host'] ?? $request->getHost()) !== $request->getHost()
             || (($saved['path'] ?? '') !== ($target['path'] ?? '') && !$reportReturn)
-            || !preg_match('~^/(employee|salary|attendance|schedules|leave|shift|profile/profileList|reimbursements|daily-reports|report(?:/[a-z0-9_-]+)?|branches|sites|site|categories|spareparts/all|inventory/[^/]+)/?$~', $saved['path'] ?? '')) {
+            || !preg_match('~^/(contracts|employee|salary|attendance|schedules|leave|shift|profile/profileList|reimbursements|daily-reports|report(?:/[a-z0-9_-]+)?|branches|sites|site|categories|spareparts/all|inventory/[^/]+)/?$~', $saved['path'] ?? '')) {
             return $response;
         }
         parse_str($saved['query'] ?? '', $query);

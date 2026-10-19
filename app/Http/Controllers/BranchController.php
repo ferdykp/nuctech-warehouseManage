@@ -74,6 +74,9 @@ class BranchController extends Controller
 
     public function destroy(Branch $branch)
     {
+        if (\App\Models\EmployeeContract::whereHas('employee', fn ($q) => $q->where('branch_id', $branch->id)->orWhereHas('site', fn ($site) => $site->where('branch_id', $branch->id)))->exists()) {
+            return back()->with('error', 'Cabang terkait arsip kontrak karyawan dan tidak dapat dihapus.');
+        }
         $branch->delete();
         return redirect()->route('branches.index')
             ->with('success', 'Cabang berhasil dihapus.');

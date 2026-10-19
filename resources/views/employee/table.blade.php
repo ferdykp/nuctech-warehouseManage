@@ -98,6 +98,9 @@
                     <td class="px-6 py-4 text-center">
                         <div class="flex items-center justify-center gap-1.5">
                             {{-- VIEW DETAIL --}}
+                            @if(in_array(auth()->user()->role, ['superadmin','administration']))
+                            <a href="{{ route('contracts.index', ['employee_id'=>$employee->id]) }}" class="inline-flex items-center px-3 py-2 text-blue-700 border rounded-xl text-xs font-semibold" aria-label="Riwayat kontrak {{ $employee->name }}">Kontrak</a>
+                            @endif
                             <button type="button" onclick="showEmployeeDetail({{ $employee->id }})"
                                 class="flex items-center justify-center w-8 h-8 text-blue-600 transition-all border border-blue-100 cursor-pointer rounded-xl bg-blue-50 hover:bg-blue-600 hover:text-white active:scale-95"
                                 title="Lihat Rincian">

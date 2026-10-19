@@ -775,7 +775,10 @@
             </div>
 
             {{-- MODAL FOOTER --}}
-            <div class="flex justify-end px-5 py-4 border-t shrink-0 border-slate-100 bg-slate-50 sm:px-6">
+            <div class="flex flex-wrap justify-end gap-2 px-5 py-4 border-t shrink-0 border-slate-100 bg-slate-50 sm:px-6">
+                @if(in_array(auth()->user()->role, ['superadmin','administration']))
+                <a id="detail_contract_link" href="{{ route('contracts.index') }}" class="inline-flex items-center px-4 py-2.5 text-xs font-bold text-blue-700 bg-white border rounded-xl">Riwayat Kontrak</a>
+                @endif
                 <button type="button" onclick="closeEmployeeModal()"
                     class="cursor-pointer rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-100">
                     Tutup
@@ -1280,6 +1283,8 @@
                 const data = await response.json();
 
                 currentEmployeeData = data;
+                const contractLink = document.getElementById('detail_contract_link');
+                if (contractLink) contractLink.href = @json(route('contracts.index')) + '?employee_id=' + encodeURIComponent(data.id);
 
                 const setText = (elementId, value) => {
                     const element = document.getElementById(elementId);

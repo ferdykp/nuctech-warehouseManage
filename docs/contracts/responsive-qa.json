@@ -1,0 +1,201 @@
+{
+  "environment": "Isolated SQLite QA with synthetic employees",
+  "checks": [
+    {
+      "main": 314,
+      "mainScroll": 314,
+      "path": "/contracts",
+      "scroll": 320,
+      "width": 320
+    },
+    {
+      "main": 314,
+      "mainScroll": 314,
+      "path": "/contracts/create",
+      "scroll": 320,
+      "width": 320
+    },
+    {
+      "main": 314,
+      "mainScroll": 314,
+      "path": "/contracts/1",
+      "scroll": 320,
+      "width": 320
+    },
+    {
+      "main": 314,
+      "mainScroll": 314,
+      "path": "/contracts/templates",
+      "scroll": 320,
+      "width": 320
+    },
+    {
+      "main": 369,
+      "mainScroll": 369,
+      "path": "/contracts",
+      "scroll": 375,
+      "width": 375
+    },
+    {
+      "main": 369,
+      "mainScroll": 369,
+      "path": "/contracts/create",
+      "scroll": 375,
+      "width": 375
+    },
+    {
+      "main": 369,
+      "mainScroll": 369,
+      "path": "/contracts/1",
+      "scroll": 375,
+      "width": 375
+    },
+    {
+      "main": 369,
+      "mainScroll": 369,
+      "path": "/contracts/templates",
+      "scroll": 375,
+      "width": 375
+    },
+    {
+      "main": 762,
+      "mainScroll": 762,
+      "path": "/contracts",
+      "scroll": 768,
+      "width": 768
+    },
+    {
+      "main": 762,
+      "mainScroll": 762,
+      "path": "/contracts/create",
+      "scroll": 768,
+      "width": 768
+    },
+    {
+      "main": 762,
+      "mainScroll": 762,
+      "path": "/contracts/1",
+      "scroll": 768,
+      "width": 768
+    },
+    {
+      "main": 762,
+      "mainScroll": 762,
+      "path": "/contracts/templates",
+      "scroll": 768,
+      "width": 768
+    },
+    {
+      "main": 762,
+      "mainScroll": 762,
+      "path": "/contracts",
+      "scroll": 1024,
+      "width": 1024
+    },
+    {
+      "main": 762,
+      "mainScroll": 762,
+      "path": "/contracts/create",
+      "scroll": 1024,
+      "width": 1024
+    },
+    {
+      "main": 762,
+      "mainScroll": 762,
+      "path": "/contracts/1",
+      "scroll": 1024,
+      "width": 1024
+    },
+    {
+      "main": 762,
+      "mainScroll": 762,
+      "path": "/contracts/templates",
+      "scroll": 1024,
+      "width": 1024
+    },
+    {
+      "main": 1178,
+      "mainScroll": 1178,
+      "path": "/contracts",
+      "scroll": 1440,
+      "width": 1440
+    },
+    {
+      "main": 1178,
+      "mainScroll": 1178,
+      "path": "/contracts/create",
+      "scroll": 1440,
+      "width": 1440
+    },
+    {
+      "main": 1178,
+      "mainScroll": 1178,
+      "path": "/contracts/1",
+      "scroll": 1440,
+      "width": 1440
+    },
+    {
+      "main": 1178,
+      "mainScroll": 1178,
+      "path": "/contracts/templates",
+      "scroll": 1440,
+      "width": 1440
+    },
+    {
+      "main": 1658,
+      "mainScroll": 1658,
+      "path": "/contracts",
+      "scroll": 1920,
+      "width": 1920
+    },
+    {
+      "main": 1658,
+      "mainScroll": 1658,
+      "path": "/contracts/create",
+      "scroll": 1920,
+      "width": 1920
+    },
+    {
+      "main": 1658,
+      "mainScroll": 1658,
+      "path": "/contracts/1",
+      "scroll": 1920,
+      "width": 1920
+    },
+    {
+      "main": 1658,
+      "mainScroll": 1658,
+      "path": "/contracts/templates",
+      "scroll": 1920,
+      "width": 1920
+    },
+    {
+      "main": 3578,
+      "mainScroll": 3578,
+      "path": "/contracts",
+      "scroll": 3840,
+      "width": 3840
+    },
+    {
+      "main": 3578,
+      "mainScroll": 3578,
+      "path": "/contracts/create",
+      "scroll": 3840,
+      "width": 3840
+    },
+    {
+      "main": 3578,
+      "mainScroll": 3578,
+      "path": "/contracts/1",
+      "scroll": 3840,
+      "width": 3840
+    },
+    {
+      "main": 3578,
+      "mainScroll": 3578,
+      "path": "/contracts/templates",
+      "scroll": 3840,
+      "width": 3840
+    }
+  ]
+}

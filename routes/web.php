@@ -46,6 +46,23 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     })->name('session.status');
     Route::post('/session/activity', fn() => response()->noContent())->name('session.activity');
 
+    Route::middleware('role:superadmin|administration')->prefix('contracts')->name('contracts.')->group(function () {
+        $controller = \App\Http\Controllers\EmployeeContractController::class;
+        Route::get('/', [$controller, 'index'])->name('index');
+        Route::get('/create', [$controller, 'create'])->name('create');
+        Route::post('/', [$controller, 'store'])->name('store');
+        Route::get('/templates', [$controller, 'templates'])->name('templates');
+        Route::post('/templates', [$controller, 'storeTemplate'])->name('templates.store');
+        Route::get('/templates/{template}/download', [$controller, 'downloadTemplate'])->name('templates.download');
+        Route::get('/{contract}', [$controller, 'show'])->name('show');
+        Route::get('/{contract}/edit', [$controller, 'edit'])->name('edit');
+        Route::put('/{contract}', [$controller, 'update'])->name('update');
+        foreach (['generate', 'reopen', 'signed', 'communication', 'activate', 'cancel'] as $action) {
+            Route::post('/{contract}/'.$action, [$controller, $action])->name($action);
+        }
+        Route::get('/{contract}/download/{kind}', [$controller, 'download'])->name('download');
+    });
+
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 

@@ -34,6 +34,16 @@ class DashboardTasks
             $tasks[] = ['label' => 'Mutasi menunggu penerimaan', 'count' => $incoming->count(), 'url' => $user->isSuperAdmin() ? route('site.index') : $url,
                 'help' => 'Konfirmasi setelah barang fisik diterima di lokasi tujuan.'];
         }
+        if (in_array($user->role, ['superadmin', 'administration'], true)) {
+            $tasks[] = ['label'=>'Kontrak berakhir dalam 60 hari',
+                'count'=>\App\Models\EmployeeContract::needsRenewal()->whereBetween('end_date',[today()->toDateString(),today()->addDays(60)->toDateString()])->count(),
+                'url'=>route('contracts.index',['status'=>'due']), 'help'=>'Siapkan perpanjangan dan pemberitahuan sebelum kontrak berakhir.'];
+            $tasks[] = ['label'=>'Kontrak berakhir tanpa perpanjangan',
+                'count'=>\App\Models\EmployeeContract::needsRenewal()->whereDate('end_date','<',today())->count(),
+                'url'=>route('contracts.index',['status'=>'expired']), 'help'=>'Tinjau kontrak berakhir yang belum memiliki penerus disetujui.'];
+            $tasks[] = ['label'=>'Kontrak lama perlu verifikasi', 'count'=>\App\Models\EmployeeContract::where('status','needs_verification')->count(),
+                'url'=>route('contracts.index',['status'=>'needs_verification']), 'help'=>'Lengkapi periode dari dokumen asli.'];
+        }
         return $tasks;
     }
 }

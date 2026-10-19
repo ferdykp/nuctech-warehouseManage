@@ -122,6 +122,9 @@
                             <span>Karyawan</span>
                         </a>
                     @endif
+                    @if(in_array(Auth::user()?->role, ['superadmin', 'administration']))
+                    <a href="{{ route('contracts.index') }}" class="{{ $baseItemClass }} {{ request()->routeIs('contracts.*') ? $activeClass : $defaultClass }}"><i class="w-5 text-sm text-center fa-solid fa-file-contract" aria-hidden="true"></i><span>Kontrak Karyawan</span></a>
+                    @endif
                     <a href="{{ route('schedule.index') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('schedule.*') ? $activeClass : $defaultClass }}">
                         <i class="w-5 text-sm text-center fa-solid fa-calendar-days" aria-hidden="true">

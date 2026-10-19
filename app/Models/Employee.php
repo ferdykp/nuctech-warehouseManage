@@ -40,6 +40,11 @@ class Employee extends Model
         'pkwt_date' => 'date',
     ];
 
+    public function contracts()
+    {
+        return $this->hasMany(EmployeeContract::class)->orderByDesc('start_date');
+    }
+
     public function site()
     {
         return $this->belongsTo(Site::class, 'site_id');

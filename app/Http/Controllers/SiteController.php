@@ -89,6 +89,9 @@ class SiteController extends Controller
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403);
         $site = Site::findOrFail($id);
+        if (\App\Models\EmployeeContract::whereHas('employee', fn ($q) => $q->where('site_id', $site->id))->exists()) {
+            return back()->with('error', 'Lokasi terkait arsip kontrak karyawan dan tidak dapat dihapus.');
+        }
         $site->delete();
 
         // <--- 4. Hapus Cache Sidebar & Dashboard saat site dihapus (Garis Solusi Utama)

@@ -324,20 +324,22 @@ class EmployeeController extends Controller
 
     public function destroy($id)
     {
-        $user = Auth::user();
-        $employeeId = is_object($id) ? $id->id : $id;
-        $employee = Employee::findOrFail($employeeId);
-
-        if ($user->role === 'employee_role' && (int)$employee->site_id !== (int)$user->site_id) {
-            abort(403, 'Anda tidak memiliki akses menghapus karyawan di site ini.');
-        }
-
-        $employee->attendances()->delete();
-        $employee->schedules()->delete();
-        $employee->salaryHistories()->delete();
-        $employee->delete();
-
-        return redirect()->route('employee.index')->with('success', 'Data karyawan dan seluruh riwayat kerjanya berhasil dihapus.');
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
+            $user = Auth::user();
+            $employeeId = is_object($id) ? $id->id : $id;
+            $employee = Employee::lockForUpdate()->findOrFail($employeeId);
+            if ($user->role === 'employee_role' && (int) $employee->site_id !== (int) $user->site_id) {
+                abort(403, 'Anda tidak memiliki akses menghapus karyawan di site ini.');
+            }
+            if ($employee->contracts()->exists()) {
+                return back()->with('error', 'Karyawan memiliki arsip kontrak. Nonaktifkan karyawan agar riwayat kontrak dan kepegawaiannya tetap tersimpan.');
+            }
+            $employee->attendances()->delete();
+            $employee->schedules()->delete();
+            $employee->salaryHistories()->delete();
+            $employee->delete();
+            return redirect()->route('employee.index')->with('success', 'Data karyawan dan seluruh riwayat kerjanya berhasil dihapus.');
+        });
     }
 
     public function export(Request $request)

@@ -1,5 +1,5 @@
 const prefix = 'ui-list-context:';
-const listPath = /\/(?:dashboard|employee|salary|attendance|schedules|leave|shift|profile\/profileList|reimbursements|daily-reports|report|branches|sites|site|categories|spareparts\/all|inventory\/[^/]+)\/?$/;
+const listPath = /\/(?:dashboard|contracts|employee|salary|attendance|schedules|leave|shift|profile\/profileList|reimbursements|daily-reports|report|branches|sites|site|categories|spareparts\/all|inventory\/[^/]+)\/?$/;
 
 export function readListContext(storage, path, account = '', allowAlias = false) {
     try {
