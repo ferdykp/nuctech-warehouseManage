@@ -87,13 +87,13 @@ class SalaryController extends Controller
 
             if ($calc['holiday_overtime_days'] > 0) {
                 $salary->calculated_before_after =
-                    'Rp ' . number_format($salary->amount, 0, ',', '.') .
-                    ' / Rp ' . number_format($calc['total_salary_to_pay'], 0, ',', '.') .
+                    'Rp ' . \App\Support\UiText::number($salary->amount) .
+                    ' / Rp ' . \App\Support\UiText::number($calc['total_salary_to_pay']) .
                     ' (+Lembur ' . $calc['holiday_overtime_days'] . ' Hr Tgl Merah)';
             } else {
                 $salary->calculated_before_after =
                     $salary->before_after ??
-                    'Rp ' . number_format($salary->amount, 0, ',', '.');
+                    'Rp ' . \App\Support\UiText::number($salary->amount);
             }
         }
 
@@ -174,6 +174,7 @@ class SalaryController extends Controller
             'bank'             => $request->bank,
             'account_no'       => $request->account_no,
             'amount'           => $request->amount,
+            'allowance_snapshot' => app(\App\Services\PayrollCalculation::class)->allowancesAt($employee, now()->format('Y-m')),
             'information'      => $request->information,
             'before_after'     => $request->before_after,
             'more_information' => $request->more_information,
@@ -198,35 +199,30 @@ class SalaryController extends Controller
                 'employee.branch',
             ])->findOrFail($id);
 
-            $month = sprintf('%02d', $request->input('month', date('m')));
-            $year = (int) $request->input('year', date('Y'));
-            $monthPeriod = "{$year}-{$month}";
-
-            $calc = $this->calculateSalaryDetails(
-                $salary->employee_id,
-                $monthPeriod,
-                (float) $salary->amount
-            );
+            $monthPeriod = $salary->created_at->format('Y-m');
+            $calc = app(\App\Services\PayrollCalculation::class)->calculateMany(collect([$salary]), $monthPeriod)[$salary->id];
 
             if ($calc['holiday_overtime_days'] > 0) {
                 $salary->before_after =
-                    'Rp ' . number_format($salary->amount, 0, ',', '.') .
-                    ' / Rp ' . number_format($calc['total_salary_to_pay'], 0, ',', '.') .
+                    'Rp ' . \App\Support\UiText::number($salary->amount) .
+                    ' / Rp ' . \App\Support\UiText::number($calc['total_salary_to_pay']) .
                     ' (Lembur ' . $calc['holiday_overtime_days'] . ' Hari Tgl Merah)';
             } else {
                 $salary->before_after =
                     $salary->before_after ??
-                    'Rp ' . number_format($salary->amount, 0, ',', '.');
+                    'Rp ' . \App\Support\UiText::number($salary->amount);
             }
 
-            $salary->amount_formatted = 'Rp ' . number_format($salary->amount, 0, ',', '.');
+            $salary->amount_formatted = 'Rp ' . \App\Support\UiText::number($salary->amount);
             $salary->calculation = [
+                'allowances' => $calc['allowances'],
+                'allowance_total' => 'Rp ' . \App\Support\UiText::number($calc['allowance_total']),
                 'effective_days'        => $calc['effective_working_days'],
                 'total_attended'        => $calc['total_attended_days'],
                 'holiday_overtime_days' => $calc['holiday_overtime_days'],
                 'holiday_dates'         => $calc['holiday_dates'],
-                'holiday_overtime_pay'  => 'Rp ' . number_format($calc['holiday_overtime_pay'], 0, ',', '.'),
-                'total_salary_to_pay'   => 'Rp ' . number_format($calc['total_salary_to_pay'], 0, ',', '.'),
+                'holiday_overtime_pay'  => 'Rp ' . \App\Support\UiText::number($calc['holiday_overtime_pay']),
+                'total_salary_to_pay'   => 'Rp ' . \App\Support\UiText::number($calc['total_salary_to_pay']),
             ];
 
             return response()->json($salary);
@@ -290,6 +286,11 @@ class SalaryController extends Controller
             ?? $employee->site->branch->branch_name
             ?? '-';
 
+        $snapshot = $salary->allowance_snapshot ?? [];
+        if ($request->boolean('refresh_allowances') || (int) $salary->employee_id !== (int) $employee->id) {
+            $snapshot = app(\App\Services\PayrollCalculation::class)->allowancesAt($employee, $salary->created_at->format('Y-m'));
+        }
+
         $salary->update([
             'employee_id'      => $employee->id,
             'name'             => $employee->name,
@@ -298,6 +299,7 @@ class SalaryController extends Controller
             'bank'             => $request->bank,
             'account_no'       => $request->account_no,
             'amount'           => $request->amount,
+            'allowance_snapshot' => $snapshot,
             'information'      => $request->information,
             'before_after'     => $request->before_after,
             'more_information' => $request->more_information,
@@ -430,6 +432,7 @@ class SalaryController extends Controller
                 $newSalary->bank             = $emp->bank_name ?? 'BCA';
                 $newSalary->account_no       = $emp->bank_account_number ?? '-';
                 $newSalary->amount           = app(\App\Services\PayrollCalculation::class)->salaryAt($emp, $endOfMonth);
+                $newSalary->allowance_snapshot = app(\App\Services\PayrollCalculation::class)->allowancesAt($emp, $period);
                 $newSalary->information      = $calculatedInfo;
                 $newSalary->more_information = $moreInformation;
 

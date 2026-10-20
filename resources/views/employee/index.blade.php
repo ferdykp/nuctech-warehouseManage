@@ -144,7 +144,7 @@
                     <span
                         class="inline-flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-100 px-3 py-2.5 text-xs font-extrabold text-amber-800">
                         <i class="fa-solid fa-users text-[10px]"></i>
-                        {{ $upcomingEmployees->count() }}
+                        {{ \App\Support\UiText::number($upcomingEmployees->count()) }}
                         <span class="hidden sm:inline">Karyawan</span>
                     </span>
                 </div>
@@ -732,6 +732,13 @@
                         <strong id="detail_pkwt_number" class="block mt-1 text-xs break-all text-slate-800">-</strong>
                     </div>
 
+                    <div class="min-w-0 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5"><span class="block text-[10px] font-bold uppercase text-slate-400">Tanggal Mulai Kontrak</span><strong id="detail_contract_start" class="block mt-1 text-xs break-words whitespace-pre-line text-slate-800">-</strong></div>
+                    <div class="min-w-0 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5"><span class="block text-[10px] font-bold uppercase text-slate-400">Keaktifan Karyawan</span><strong id="detail_active" class="block mt-1 text-xs break-words whitespace-pre-line text-slate-800">-</strong></div>
+                    <div class="min-w-0 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5"><span class="block text-[10px] font-bold uppercase text-slate-400">Nama Bank</span><strong id="detail_bank_name" class="block mt-1 text-xs break-words whitespace-pre-line text-slate-800">-</strong></div>
+                    <div class="min-w-0 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5"><span class="block text-[10px] font-bold uppercase text-slate-400">Nomor Rekening</span><strong id="detail_account_number" class="block mt-1 text-xs break-words whitespace-pre-line text-slate-800">-</strong></div>
+                    <div class="min-w-0 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5"><span class="block text-[10px] font-bold uppercase text-slate-400">Alamat / Lokasi Penempatan</span><strong id="detail_site_location" class="block mt-1 text-xs break-words whitespace-pre-line text-slate-800">-</strong></div>
+                    <div class="min-w-0 rounded-xl border border-slate-200 bg-slate-50/50 p-3.5"><span class="block text-[10px] font-bold uppercase text-slate-400">Keterangan Tambahan</span><strong id="detail_more_information" class="block mt-1 text-xs break-words whitespace-pre-line text-slate-800">-</strong></div>
+
                     {{-- RESIGN DATE --}}
                     <div id="detail_last_date_wrapper" class="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
                         <span class="block text-[10px] font-bold uppercase text-slate-400">
@@ -741,6 +748,15 @@
                     </div>
 
                 </div>
+
+                <section class="p-4 space-y-3 border border-emerald-200 rounded-2xl bg-emerald-50/40" aria-labelledby="employee-allowances-title">
+                    <h4 id="employee-allowances-title" class="text-sm font-extrabold text-slate-800">Tunjangan Bulanan</h4>
+                    <p class="text-xs text-slate-500">Rincian semua tunjangan. Total hanya menghitung tunjangan yang berlaku pada <span id="detail_allowance_period">bulan ini</span>.</p>
+                    <div id="detail_employee_allowances" class="space-y-3"></div>
+                    <div class="flex flex-wrap justify-between gap-2 pt-3 border-t border-emerald-200 text-sm"><span>Total Tunjangan Aktif</span><strong id="detail_allowance_total">••••••••</strong></div>
+                    <div class="flex flex-wrap justify-between gap-2 text-sm text-emerald-800"><span>Gaji Pokok + Tunjangan / Bulan</span><strong id="detail_monthly_total">••••••••</strong></div>
+                    <p class="text-xs text-slate-500">Sebelum lembur dan potongan. Gunakan tombol mata pada Gaji Pokok untuk menampilkan atau menyembunyikan seluruh nominal.</p>
+                </section>
 
                 {{-- SALARY HISTORY --}}
                 <div class="pt-4 space-y-3 border-t border-slate-100">
@@ -757,7 +773,8 @@
                                     <th class="px-3 py-3">Tanggal</th>
                                     <th class="px-3 py-3">Gaji Lama</th>
                                     <th class="px-3 py-3">Gaji Baru</th>
-                                    <th class="px-3 py-3">Alasan</th>
+                                    <th class="px-3 py-3">Alasan / Status</th>
+                                    <th class="px-3 py-3">Aksi</th>
                                 </tr>
                             </thead>
 
@@ -1191,6 +1208,41 @@
                     '••••••••';
             }
 
+            for (const [id, value] of [['detail_allowance_total', currentEmployeeData.allowance_total_formatted], ['detail_monthly_total', currentEmployeeData.monthly_total_formatted]]) {
+                const element = document.getElementById(id);
+                if (element) element.textContent = isSalaryVisible ? (value || 'Rp 0') : '••••••••';
+            }
+            const allowanceHolder = document.getElementById('detail_employee_allowances');
+            if (allowanceHolder) {
+                allowanceHolder.replaceChildren();
+                const allowances = currentEmployeeData.allowance_details || [];
+                if (!allowances.length) allowanceHolder.textContent = 'Belum ada tunjangan bulanan.';
+                for (const allowance of allowances) {
+                    const card = document.createElement('article');
+                    card.className = 'min-w-0 p-3 space-y-2 bg-white border rounded-xl text-xs break-words';
+                    const title = document.createElement('h5');
+                    title.className = 'font-bold text-slate-800';
+                    title.textContent = allowance.name;
+                    const amount = document.createElement('p');
+                    amount.className = 'font-semibold text-emerald-700';
+                    amount.textContent = isSalaryVisible ? allowance.amount_formatted + ' / bulan' : '•••••••• / bulan';
+                    const period = document.createElement('p');
+                    period.textContent = allowance.start_month + ' – ' + allowance.end_month + ' · ' + allowance.status;
+                    const notes = document.createElement('p');
+                    notes.className = 'whitespace-pre-line';
+                    notes.textContent = allowance.notes || 'Tanpa keterangan tambahan.';
+                    card.append(title, amount, period, notes);
+                    if (allowance.certificate_url) {
+                        const link = document.createElement('a');
+                        link.href = allowance.certificate_url;
+                        link.className = 'inline-block py-2 font-semibold text-blue-700';
+                        link.textContent = 'Unduh sertifikat';
+                        card.append(link);
+                    }
+                    allowanceHolder.append(card);
+                }
+            }
+
             const historyBody = document.getElementById(
                 'detail_salary_history_body'
             );
@@ -1205,7 +1257,7 @@
                 const row = document.createElement('tr');
                 const cell = document.createElement('td');
 
-                cell.colSpan = 4;
+                cell.colSpan = 5;
                 cell.className =
                     'px-3 py-6 text-center text-slate-400';
 
@@ -1246,9 +1298,17 @@
 
                 const reason = document.createElement('td');
                 reason.className = 'px-3 py-3';
-                reason.textContent = history.reason || '-';
+                reason.textContent = (history.reason || '-') + (history.cancelled_at ? ' · Dibatalkan' : (history.audits_count > 0 ? ' · Dikoreksi' : ''));
+                if (history.cancelled_at) row.className = 'bg-slate-50 text-slate-400';
 
-                row.append(date, oldSalary, newSalary, reason);
+                const actions = document.createElement('td');
+                actions.className = 'px-3 py-3';
+                const link = document.createElement('a');
+                link.href = @json(url('/employee')) + '/' + encodeURIComponent(currentEmployeeData.id) + '/salary-history/' + encodeURIComponent(history.id) + '/edit';
+                link.className = 'inline-block py-2 font-semibold text-blue-700 whitespace-nowrap';
+                link.textContent = history.cancelled_at ? 'Lihat Jejak' : 'Koreksi / Batalkan';
+                actions.append(link);
+                row.append(date, oldSalary, newSalary, reason, actions);
                 historyBody.appendChild(row);
             });
         }
@@ -1303,7 +1363,14 @@
                 setText('detail_phone', data.phone_number);
                 setText('detail_position', data.position || 'Karyawan');
                 setText('detail_site', data.site?.machine_name);
-                setText('detail_branch', data.site?.branch?.branch_name);
+                setText('detail_branch', data.branch?.branch_name || data.site?.branch?.branch_name);
+                setText('detail_contract_start', data.contract_start_formatted);
+                setText('detail_active', Number(data.is_active) === 1 ? 'Aktif' : 'Nonaktif');
+                setText('detail_bank_name', data.bank_name);
+                setText('detail_account_number', data.bank_account_number);
+                setText('detail_site_location', data.site?.location);
+                setText('detail_more_information', data.more_information);
+                setText('detail_allowance_period', data.allowance_period);
                 setText('detail_tenure', data.tenure_formatted);
                 setText('detail_join_date', data.join_date_formatted);
                 setText('detail_pkwt_date', data.pkwt_date_formatted);
@@ -1311,7 +1378,7 @@
 
                 const bank = data.bank_name && data.bank_account_number ?
                     `${data.bank_name} - ${data.bank_account_number}` :
-                    (data.bank_account_number || '-');
+                    (data.bank_name || data.bank_account_number || '-');
 
                 setText('detail_bank', bank);
 

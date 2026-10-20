@@ -50,7 +50,7 @@
                         Aktif
                     </span>
                 </div>
-                <p class="text-3xl font-black tracking-tight text-slate-900">{{ number_format($totalBranch ?? 0) }}</p>
+                <p class="text-3xl font-black tracking-tight text-slate-900">{{ \App\Support\UiText::number($totalBranch ?? 0) }}</p>
                 <p class="mt-1 text-xs font-semibold text-slate-500">Cabang Operasional</p>
             </div>
 
@@ -67,7 +67,7 @@
                         Karyawan
                     </span>
                 </div>
-                <p class="text-3xl font-black tracking-tight text-slate-900">{{ number_format($totalEmployee ?? 0) }}</p>
+                <p class="text-3xl font-black tracking-tight text-slate-900">{{ \App\Support\UiText::number($totalEmployee ?? 0) }}</p>
                 <p class="mt-1 text-xs font-semibold text-slate-500">Karyawan Terdaftar</p>
             </div>
 
@@ -84,7 +84,7 @@
                         {{ auth()->user()?->role === 'superadmin' ? 'Semua Lokasi' : 'Lokasi Anda' }}
                     </span>
                 </div>
-                <p class="text-3xl font-black tracking-tight text-slate-900">{{ number_format($totalSparepart ?? 0) }}</p>
+                <p class="text-3xl font-black tracking-tight text-slate-900">{{ \App\Support\UiText::number($totalSparepart ?? 0) }}</p>
                 <p class="mt-1 text-xs font-semibold text-slate-500">Total Suku Cadang</p>
             </div>
 
@@ -101,7 +101,7 @@
                         Perlu Diperiksa
                     </span>
                 </div>
-                <p class="text-3xl font-black tracking-tight text-slate-900">{{ number_format($criticalStock ?? 0) }}</p>
+                <p class="text-3xl font-black tracking-tight text-slate-900">{{ \App\Support\UiText::number($criticalStock ?? 0) }}</p>
                 <p class="mt-1 text-xs font-semibold text-slate-500">Stok Menipis</p>
             </div>
 

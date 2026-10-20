@@ -26,7 +26,7 @@
                     class="flex items-center gap-6 pt-4 border-t md:pt-0 md:border-t-0 md:border-l border-slate-200 md:pl-8 shrink-0">
                     <div>
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Jumlah Laporan</p>
-                        <p id="report-total" class="text-2xl font-black text-slate-900 mt-0.5 tracking-tight">{{ $report->total() }}</p>
+                        <p id="report-total" class="text-2xl font-black text-slate-900 mt-0.5 tracking-tight">{{ \App\Support\UiText::number($report->total()) }}</p>
                     </div>
                 </div>
             </div>
@@ -73,7 +73,7 @@
                                             {{ $item->site?->machine_name ?? 'N/A' }}
                                         </td>
                                         <td class="px-6 py-3.5 font-black text-center text-rose-600 text-sm">
-                                            {{ $item->qty }} <span
+                                            {{ \App\Support\UiText::number($item->qty) }} <span
                                                 class="text-xs font-bold text-slate-400 uppercase">{{ $item->sparepart?->uom ?? 'PCS' }}</span>
                                         </td>
                                         <td class="px-6 py-3.5 text-center">

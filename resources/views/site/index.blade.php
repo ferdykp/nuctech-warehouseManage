@@ -71,7 +71,7 @@
                             <p class="text-xs sm:text-xs font-extrabold tracking-widest text-slate-400 uppercase">
                                 {{ $s['label'] }}
                             </p>
-                            <p class="mt-0.5 text-2xl font-black text-slate-900">{{ number_format($s['val']) }}</p>
+                            <p class="mt-0.5 text-2xl font-black text-slate-900">{{ \App\Support\UiText::number($s['val']) }}</p>
                         </div>
                     </div>
                 </div>

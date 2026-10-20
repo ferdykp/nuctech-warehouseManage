@@ -52,7 +52,7 @@
                 <div>
                     <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 block">Total Nominal Klaim</span>
                     <p id="totalApprovedAmountText" class="text-lg font-bold text-slate-900 font-mono mt-0.5">
-                        Rp {{ number_format((float) ($totalApprovedAmount ?? 0), 0, ',', '.') }}
+                        Rp {{ \App\Support\UiText::number((float) ($totalApprovedAmount ?? 0)) }}
                     </p>
                 </div>
                 <div
@@ -65,7 +65,7 @@
                 <div>
                     <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 block">Jumlah Data</span>
                     <p id="reimburseCountText" class="text-lg font-bold text-slate-900 font-mono mt-0.5">
-                        {{ $reimbursements->total() }} <span
+                        {{ \App\Support\UiText::number($reimbursements->total()) }} <span
                             class="font-sans text-xs font-normal text-slate-400">Klaim</span>
                     </p>
                 </div>
@@ -235,7 +235,7 @@
 
                                     {{-- Column 2: Amount --}}
                                     <td class="px-5 py-3.5 text-right font-mono font-bold text-slate-900 text-sm">
-                                        Rp {{ number_format((float) ($r->amount ?? 0), 0, ',', '.') }}
+                                        Rp {{ \App\Support\UiText::number((float) ($r->amount ?? 0)) }}
                                     </td>
 
                                     {{-- Column 3: Status --}}
@@ -291,7 +291,7 @@
 
                                             {{-- Archive --}}
                                             <button type="button"
-                                                onclick="confirmCancel('{{ $r->id }}', '{{ $r->person_name }}', 'Rp {{ number_format((float) ($r->amount ?? 0), 0, ',', '.') }}')"
+                                                onclick="confirmCancel('{{ $r->id }}', '{{ $r->person_name }}', 'Rp {{ \App\Support\UiText::number((float) ($r->amount ?? 0)) }}')"
                                                 title="Pindahkan ke Sampah"
                                                 class="inline-flex items-center justify-center transition-colors border rounded-lg cursor-pointer w-7 h-7 text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white">
                                                 <i class="fa-solid fa-trash-can text-[11px]"></i>
@@ -340,7 +340,7 @@
                             <div class="flex items-center justify-between p-2 text-xs rounded-lg bg-slate-50">
                                 <span class="text-xs font-bold text-slate-400 uppercase">{{ \App\Support\UiText::label($r->category) }}</span>
                                 <span class="font-mono font-bold text-slate-900">Rp
-                                    {{ number_format((float) ($r->amount ?? 0), 0, ',', '.') }}</span>
+                                    {{ \App\Support\UiText::number((float) ($r->amount ?? 0)) }}</span>
                             </div>
 
                             <div data-ui-row-actions class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
@@ -357,7 +357,7 @@
                                         <i class="fa-solid fa-eye"></i>
                                     </button>
                                     <button type="button"
-                                        onclick="confirmCancel('{{ $r->id }}', '{{ $r->person_name }}', 'Rp {{ number_format((float) ($r->amount ?? 0), 0, ',', '.') }}')"
+                                        onclick="confirmCancel('{{ $r->id }}', '{{ $r->person_name }}', 'Rp {{ \App\Support\UiText::number((float) ($r->amount ?? 0)) }}')"
                                         class="p-2 text-xs rounded-lg cursor-pointer text-rose-600 bg-rose-50">
                                         <i class="fa-solid fa-trash-can"></i>
                                     </button>

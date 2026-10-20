@@ -35,6 +35,7 @@
             class="overflow-hidden bg-white border shadow-xs border-slate-200/80 rounded-3xl">
             @csrf
             @method('PUT')
+            <input type="hidden" name="salary_history_version" value="{{ app(\App\Services\SalaryHistoryChanges::class)->version($employee) }}">
 
             <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
                 <h2 class="text-xs font-extrabold tracking-wider uppercase text-slate-700">Informasi Kepegawaian</h2>
@@ -233,14 +234,24 @@
                         </select>
                     </div>
 
+                    <div class="space-y-2 md:col-span-2">
+                        <label for="salary-change-mode" class="block text-xs font-bold uppercase text-slate-700">Jenis Perubahan Gaji</label>
+                        <select id="salary-change-mode" name="salary_change_mode" class="w-full border-slate-300 rounded-xl">
+                            <option value="change" @selected(old('salary_change_mode', 'change') === 'change')>Perubahan gaji sebenarnya</option>
+                            <option value="correction" @selected(old('salary_change_mode') === 'correction')>Koreksi salah input</option>
+                        </select>
+                        <p class="text-xs text-slate-500">Perubahan sebenarnya menambah histori. Koreksi memperbaiki catatan aktif terbaru, tanpa mencatat kenaikan/promosi. Alasan koreksi wajib diisi.</p>
+                        <p class="text-sm font-semibold text-blue-700">Gaji pokok setelah disimpan: <span id="salary-change-preview">Rp {{ \App\Support\UiText::number(old('basic_salary', $employee->basic_salary)) }}</span></p>
+                    </div>
+
                     {{-- ALASAN PERUBAHAN GAJI --}}
                     <div class="space-y-1.5 md:col-span-2">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">
-                            Alasan Perubahan Gaji (Jika ada)
+                            Alasan Perubahan / Koreksi Gaji
                         </label>
                         <input type="text" name="salary_change_reason"
                             class="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400"
-                            placeholder="Contoh: Promosi Jabatan, Penyesuaian UMK">
+                            value="{{ old('salary_change_reason') }}" placeholder="Contoh: Koreksi salah input nominal awal">
                     </div>
 
                     {{-- JOIN DATE --}}
@@ -362,6 +373,7 @@
                 </div>
             </div>
         </form>
+        @include('employee.allowances')
     </div>
 
     @push('scripts')
@@ -407,6 +419,7 @@
                     newSalaryDisplay.addEventListener('input', function(e) {
                         let rawValue = e.target.value.replace(/\D/g, '');
                         salaryReal.value = rawValue ? rawValue : 0;
+                        document.getElementById('salary-change-preview').textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(Number(rawValue) || 0);
                         e.target.value = formatRupiah(rawValue);
                     });
                 }

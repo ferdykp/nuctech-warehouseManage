@@ -92,7 +92,7 @@
                     <div class="pt-3 text-xs border-t border-slate-100">
                         <span class="text-slate-400 font-bold block uppercase text-xs tracking-wider">Nominal yang Diajukan</span>
                         <span class="font-black text-rose-600 text-xl block mt-0.5">
-                            Rp {{ number_format((float) $reimbursement->amount, 0, ',', '.') }}
+                            Rp {{ \App\Support\UiText::number((float) $reimbursement->amount) }}
                         </span>
                     </div>
 

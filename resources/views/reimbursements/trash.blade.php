@@ -115,7 +115,7 @@
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <span class="text-xs font-black text-slate-900">
-                                        Rp {{ number_format((float) ($r->amount ?? 0), 0, ',', '.') }}
+                                        Rp {{ \App\Support\UiText::number((float) ($r->amount ?? 0)) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
@@ -138,7 +138,7 @@
 
                                         {{-- FORCE DELETE BUTTON --}}
                                         <button type="button"
-                                            onclick="openForceDeleteModal({{ $r->id }}, '{{ $r->person_name }}', 'Rp {{ number_format((float) ($r->amount ?? 0), 0, ',', '.') }}')"
+                                            onclick="openForceDeleteModal({{ $r->id }}, '{{ $r->person_name }}', 'Rp {{ \App\Support\UiText::number((float) ($r->amount ?? 0)) }}')"
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 rounded-xl hover:bg-rose-100 active:scale-95 transition-all cursor-pointer"
                                             title="Hapus Permanen">
                                             <i class="fa-solid fa-ban"></i> Hapus

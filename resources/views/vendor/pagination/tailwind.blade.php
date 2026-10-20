@@ -1,8 +1,8 @@
 @if ($paginator->hasPages())
     <nav class="pagination ui-pagination" aria-label="Navigasi halaman data">
         <p class="ui-pagination-summary">
-            Menampilkan <strong>{{ $paginator->firstItem() ?? 0 }}</strong>–<strong>{{ $paginator->lastItem() ?? 0 }}</strong>
-            dari <strong>{{ $paginator->total() }}</strong> data
+            Menampilkan <strong>{{ \App\Support\UiText::number($paginator->firstItem() ?? 0) }}</strong>–<strong>{{ \App\Support\UiText::number($paginator->lastItem() ?? 0) }}</strong>
+            dari <strong>{{ \App\Support\UiText::number($paginator->total()) }}</strong> data
             <span class="ui-pagination-position">Halaman {{ $paginator->currentPage() }} dari {{ $paginator->lastPage() }}</span>
         </p>
         <div class="ui-pagination-pages">

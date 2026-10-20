@@ -223,6 +223,11 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     });
 
     Route::middleware(['role:superadmin|administration'])->group(function () {
+        Route::get('/employee/{employee}/salary-history/{history}/edit', [\App\Http\Controllers\SalaryHistoryController::class, 'edit'])->name('employee.salary-history.edit');
+        Route::put('/employee/{employee}/salary-history/{history}', [\App\Http\Controllers\SalaryHistoryController::class, 'update'])->name('employee.salary-history.update');
+        Route::post('/employee/{employee}/allowances', [\App\Http\Controllers\EmployeeAllowanceController::class, 'store'])->name('employee.allowances.store');
+        Route::put('/employee/{employee}/allowances/{allowance}/end', [\App\Http\Controllers\EmployeeAllowanceController::class, 'end'])->name('employee.allowances.end');
+        Route::get('/employee/{employee}/allowances/{allowance}/certificate', [\App\Http\Controllers\EmployeeAllowanceController::class, 'certificate'])->name('employee.allowances.certificate');
         Route::prefix('employee')->name('employee.')->group(function () {
             Route::get('/', [EmployeeController::class, 'index'])->name('index');
             Route::get('/export', [EmployeeController::class, 'export'])->name('export');

@@ -161,6 +161,7 @@
                         </select>
                     </div>
 
+                    <p class="text-sm text-slate-500 md:col-span-2">Tunjangan bulanan yang berlaku pada bulan ini otomatis ditambahkan saat disimpan. Nominal di atas tetap gaji pokok.</p>
                     {{-- MORE INFORMATION --}}
                     <div class="space-y-1.5 md:col-span-2">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">

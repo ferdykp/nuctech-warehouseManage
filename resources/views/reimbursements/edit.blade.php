@@ -169,7 +169,7 @@
                                 class="absolute left-3.5 z-10 flex items-center justify-center text-xs font-black text-slate-400 pointer-events-none">Rp</span>
 
                             <input type="text" id="amountDisplay"
-                                value="{{ number_format((float) old('amount', $reimbursement->amount), 0, ',', '.') }}"
+                                value="{{ \App\Support\UiText::number((float) old('amount', $reimbursement->amount)) }}"
                                 required placeholder="0" oninput="formatCurrency(this)"
                                 class="w-full py-2.5 pl-10 pr-3.5 text-xs sm:text-sm font-black border border-slate-200 rounded-xl focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 outline-none transition-all bg-slate-50 focus:bg-white text-slate-800">
 

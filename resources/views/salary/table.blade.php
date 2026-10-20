@@ -7,7 +7,7 @@
                 <th scope="col" class="px-6 py-4">Rekening Bank</th>
                 <th scope="col" class="px-6 py-4">
                     <div class="flex items-center gap-2">
-                        <span>Gaji Pokok</span>
+                        <span>Gaji + Tunjangan</span>
                         <button type="button" onclick="toggleTableSalaryVisibility()" title="Tampilkan atau sembunyikan gaji"
                             class="transition-colors cursor-pointer text-emerald-700 hover:text-emerald-900 focus:outline-none">
                             <i id="table_salary_toggle_icon" class="text-xs fa-solid fa-eye-slash"></i>
@@ -40,10 +40,13 @@
 
                     {{-- Basic Salary --}}
                     <td class="px-6 py-4 text-sm font-black text-emerald-700 whitespace-nowrap">
+                        <span class="block mb-1 text-xs font-medium text-slate-500">Gaji pokok</span>
                         <span class="salary-amount"
-                            data-salary="Rp {{ number_format((float) ($item->amount ?? 0), 0, ',', '.') }}">
-                            Rp {{ number_format((float) ($item->amount ?? 0), 0, ',', '.') }}
+                            data-salary="Rp {{ \App\Support\UiText::number((float) ($item->amount ?? 0)) }}">
+                            Rp {{ \App\Support\UiText::number((float) ($item->amount ?? 0)) }}
                         </span>
+                        <p class="mt-1 text-xs font-medium text-slate-500">Tunjangan: <span class="salary-amount" data-salary="Rp {{ \App\Support\UiText::number($item->allowance_total) }}">Rp {{ \App\Support\UiText::number($item->allowance_total) }}</span></p>
+                        <p class="mt-1 text-xs font-bold">Total: <span class="salary-amount" data-salary="Rp {{ \App\Support\UiText::number((float) $item->amount + $item->allowance_total) }}">Rp {{ \App\Support\UiText::number((float) $item->amount + $item->allowance_total) }}</span></p>
                     </td>
 
                     {{-- Information Badge --}}

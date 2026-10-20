@@ -214,7 +214,7 @@ function openAdjustModal(id, name, qty, condition, uom = 'Unit') {
     form.action = "/inventory/" + slug + "/adjust/" + id;
 
     document.getElementById('adjust-item-name').innerText = name;
-    document.getElementById('current-stock-display').innerText = qty + " " + uom;
+    document.getElementById('current-stock-display').innerText = window.formatNumber(qty) + " " + uom;
     document.getElementById('adjust-uom-badge').innerText = uom;
     document.getElementById('display-current-condition').innerText = window.uiLabel(condition);
     document.getElementById('input-current-condition').value = condition;
@@ -322,7 +322,7 @@ function openDetailModal(item, sites) {
             stockTable.innerHTML += `
             <tr class="transition-colors hover:bg-slate-50">
                 <td class="p-3 font-bold text-slate-800">${s.site?.machine_name || 'N/A'}</td>
-                <td class="p-3 font-extrabold text-center text-blue-600">${s.qty}</td>
+                <td class="p-3 font-extrabold text-center text-blue-600">${window.formatNumber(s.qty)}</td>
                 <td class="p-3 text-center"><span class="text-xs px-2 py-0.5 rounded-md bg-slate-100 font-bold uppercase text-slate-700">${window.uiLabel(s.condition)}</span></td>
             </tr>`;
         });
@@ -349,7 +349,7 @@ function openDetailModal(item, sites) {
                 <p class="text-xs font-bold text-slate-400 uppercase">${date}</p>
                 <p class="text-xs font-bold text-slate-900 mt-0.5">${window.uiLabel(h.action)}</p>
                 <p class="text-xs font-medium text-slate-600">${h.from_site?.machine_name || 'Awal'} &rarr; ${h.to_site?.machine_name || 'Tidak Diketahui'}</p>
-                <p class="text-xs italic font-semibold text-slate-400 mt-0.5">Jumlah: ${h.qty} | Kondisi: ${window.uiLabel(h.condition)}</p>
+                <p class="text-xs italic font-semibold text-slate-400 mt-0.5">Jumlah: ${window.formatNumber(h.qty)} | Kondisi: ${window.uiLabel(h.condition)}</p>
             </div>`;
         });
     }

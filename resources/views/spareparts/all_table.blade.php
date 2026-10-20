@@ -47,7 +47,7 @@
                     <td class="px-6 py-4 text-center">
                         <span
                             class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-black rounded-xl text-slate-800 bg-slate-100 border border-slate-200/80">
-                            {{ number_format($stock->qty) }}
+                            {{ \App\Support\UiText::number($stock->qty) }}
                             <small
                                 class="font-extrabold text-xs text-slate-400 uppercase tracking-wider">{{ $stock->sparepart?->uom ?? 'PCS' }}</small>
                         </span>

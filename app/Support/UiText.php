@@ -4,6 +4,12 @@ namespace App\Support;
 
 class UiText
 {
+    public static function number(int|float|string|null $value): string
+    {
+        $number = (float) ($value ?? 0);
+        return number_format($number, round($number, 2) == round($number) ? 0 : 2, ',', '.');
+    }
+
     /** Translate display values without changing stored values or permissions. */
     public static function label(?string $value): string
     {

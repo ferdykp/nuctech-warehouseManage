@@ -40,7 +40,7 @@
                 $quickStats = [
                     [
                         'label' => 'Jenis Suku Cadang',
-                        'value' => number_format($statsData['uniqueParts'] ?? 0),
+                        'value' => \App\Support\UiText::number($statsData['uniqueParts'] ?? 0),
                         'icon' => 'fa-box-archive',
                         'bg' => 'bg-blue-50',
                         'text' => 'text-blue-600',
@@ -48,7 +48,7 @@
                     ],
                     [
                         'label' => 'Total Unit',
-                        'value' => number_format($statsData['totalUnits'] ?? 0),
+                        'value' => \App\Support\UiText::number($statsData['totalUnits'] ?? 0),
                         'icon' => 'fa-cubes',
                         'bg' => 'bg-emerald-50',
                         'text' => 'text-emerald-600',
@@ -56,7 +56,7 @@
                     ],
                     [
                         'label' => 'Stok Menipis',
-                        'value' => number_format($statsData['lowStock'] ?? 0),
+                        'value' => \App\Support\UiText::number($statsData['lowStock'] ?? 0),
                         'icon' => 'fa-triangle-exclamation',
                         'bg' => 'bg-amber-50',
                         'text' => 'text-amber-600',
@@ -64,7 +64,7 @@
                     ],
                     [
                         'label' => 'Stok Rusak',
-                        'value' => number_format($statsData['damagedStock'] ?? 0),
+                        'value' => \App\Support\UiText::number($statsData['damagedStock'] ?? 0),
                         'icon' => 'fa-heart-crack',
                         'bg' => 'bg-rose-50',
                         'text' => 'text-rose-600',

@@ -314,6 +314,7 @@
                 </div>
             </div>
         </form>
+        <p class="text-sm text-slate-500">Setelah karyawan disimpan, buka Ubah Karyawan untuk menambahkan tunjangan bulanan.</p>
     </div>
 
     @push('scripts')

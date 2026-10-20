@@ -45,7 +45,7 @@
                     <td class="px-6 py-4 text-center">
                         <div
                             class="inline-flex flex-col items-center justify-center min-w-[60px] py-1 px-2.5 bg-blue-50/80 border border-blue-200/80 rounded-xl">
-                            <span class="text-base font-black leading-none text-blue-700">{{ $item->qty }}</span>
+                            <span class="text-base font-black leading-none text-blue-700">{{ \App\Support\UiText::number($item->qty) }}</span>
                             <span
                                 class="text-[8px] font-extrabold text-blue-500 uppercase tracking-wider mt-0.5">{{ $item->sparepart?->uom ?? 'PCS' }}</span>
                         </div>

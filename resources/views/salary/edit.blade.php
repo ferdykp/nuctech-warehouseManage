@@ -167,6 +167,15 @@
                         </select>
                     </div>
 
+                    <div class="p-4 space-y-2 border rounded-xl bg-emerald-50/50 md:col-span-2">
+                        <h3 class="text-sm font-bold">Tunjangan tersimpan · {{ $salary->created_at->format('m/Y') }}</h3>
+                        @forelse($salary->allowance_snapshot ?? [] as $allowance)
+                            <p class="text-sm break-words">{{ $allowance['name'] }}: Rp {{ \App\Support\UiText::number((float) $allowance['amount']) }}</p>
+                        @empty<p class="text-sm">Tidak ada tunjangan.</p>@endforelse
+                        <label class="flex items-start gap-2 text-sm"><input type="checkbox" name="refresh_allowances" value="1" @checked(old('refresh_allowances')) class="mt-1 rounded"><span>Perbarui tunjangan dari data karyawan sesuai periode payroll ini.</span></label>
+                        <p class="text-xs text-slate-500">Biarkan tidak dicentang untuk mempertahankan nominal tersimpan. Mengganti karyawan akan mengambil tunjangan karyawan pengganti.</p>
+                    </div>
+
                     {{-- MORE INFORMATION --}}
                     <div class="space-y-1.5 md:col-span-2">
                         <label class="block text-xs font-bold tracking-wider uppercase text-slate-700">

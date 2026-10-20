@@ -40,6 +40,11 @@ class Employee extends Model
         'pkwt_date' => 'date',
     ];
 
+    public function allowances()
+    {
+        return $this->hasMany(EmployeeAllowance::class)->orderByDesc('start_month')->orderByDesc('id');
+    }
+
     public function contracts()
     {
         return $this->hasMany(EmployeeContract::class)->orderByDesc('start_date');
@@ -57,7 +62,7 @@ class Employee extends Model
 
     public function salaryHistories()
     {
-        return $this->hasMany(EmployeeSalaryHistory::class, 'employee_id')->latest();
+        return $this->hasMany(EmployeeSalaryHistory::class, 'employee_id')->latest()->latest('id');
     }
 
     public function schedules()

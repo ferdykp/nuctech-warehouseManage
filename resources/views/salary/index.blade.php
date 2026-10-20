@@ -350,6 +350,12 @@
                     </div>
                 </div>
 
+                <div class="p-4 space-y-2 border border-emerald-100 rounded-2xl bg-emerald-50/40">
+                    <h6 class="text-sm font-bold text-emerald-800">Tunjangan Bulanan</h6>
+                    <ul id="detail_allowances" class="space-y-2 text-sm text-slate-700"></ul>
+                    <p class="text-sm font-bold">Total tunjangan: <span id="detail_allowance_total">Rp 0</span></p>
+                </div>
+
                 <!-- OVERTIME CALCULATION SUMMARY -->
                 <div class="p-4 space-y-2 border border-rose-100 rounded-2xl bg-rose-50/50">
                     <h6 class="text-xs font-extrabold text-rose-700 flex items-center gap-1.5 uppercase tracking-wider">
@@ -371,7 +377,7 @@
                         </div>
                     </div>
                     <div class="flex items-center justify-between pt-2.5 border-t border-rose-200/60">
-                        <span class="text-xs font-bold text-slate-700">Total Gaji Bersih:</span>
+                        <span class="text-xs font-bold text-slate-700">Total Gaji + Tunjangan + Lembur:</span>
                         <strong class="text-sm font-black text-blue-700" id="detail_total_pay">Rp 0</strong>
                     </div>
                 </div>

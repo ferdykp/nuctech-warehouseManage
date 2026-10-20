@@ -107,7 +107,7 @@ function fetchReportRows(targetUrl = null, historyMode = targetUrl ? 'push' : 'r
             const pagination = document.getElementById('report-pagination');
             if (pagination) pagination.innerHTML = data.pagination;
             const total = document.getElementById('report-total');
-            if (total) total.textContent = data.total;
+            if (total) total.textContent = window.formatNumber(data.total);
             const master = document.getElementById('select_all_id');
             if (master) master.checked = false;
             if (historyMode !== 'none') history[historyMode === 'push' ? 'pushState' : 'replaceState']({}, '', url.href);

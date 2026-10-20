@@ -1,3 +1,4 @@
+import { enhanceMoneyInputs, formatNumber } from './ui/numbers.js';
 import { enhanceTables } from './ui/tables.js';
 import { initDialogs } from './ui/dialogs.js';
 import { enhanceActions } from './ui/actions.js';
@@ -34,6 +35,7 @@ export function uiLabel(value) {
 
 export function initUi() {
     window.uiLabel = uiLabel;
+    window.formatNumber = formatNumber;
     const enhanceDialogs = initDialogs();
     let nextId = 0;
     const newId = prefix => `${prefix}-${++nextId}`;
@@ -90,6 +92,7 @@ export function initUi() {
 
     function enhance() {
         enhanceActions();
+        enhanceMoneyInputs();
         document.querySelectorAll('form').forEach((form, index) => {
             if (!form.dataset.uiKey) form.dataset.uiKey = form.id || `form-${index}`;
             if (form.method.toLowerCase() === 'post' && !form.querySelector('[name="_ui_form"]')) {

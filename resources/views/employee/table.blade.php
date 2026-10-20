@@ -57,7 +57,7 @@
                     </td>
                     <td class="px-6 py-4 text-xs font-black text-emerald-600">
                         <span class="table-salary-text"
-                            data-salary="Rp {{ number_format((float) ($employee->basic_salary ?? 0), 0, ',', '.') }}">••••••••</span>
+                            data-salary="Rp {{ \App\Support\UiText::number((float) ($employee->basic_salary ?? 0)) }}">••••••••</span>
                     </td>
                     {{-- <td class="px-4 py-4 text-center">
                         @if ($employee->mcu === 'yes')

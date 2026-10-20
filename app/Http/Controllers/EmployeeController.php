@@ -152,7 +152,7 @@ class EmployeeController extends Controller
             'phone_number'        => 'required|string|max:20',
             'position'            => 'nullable|string|max:100',
             'status'              => 'required|in:Permanent,Contract,Probation,Daily',
-            'basic_salary'        => 'nullable|numeric|min:0',
+            'basic_salary'        => 'nullable|numeric|min:0|max:999999999999.99|decimal:0,2',
             'bank_name'           => 'nullable|string|max:100',
             'bank_account_number' => 'nullable|string|max:100',
             'mcu'                 => 'nullable|in:yes,no',
@@ -192,61 +192,63 @@ class EmployeeController extends Controller
 
     public function update(Request $request, $id)
     {
-        $user = Auth::user();
-        $employeeId = is_object($id) ? $id->id : $id;
-        $employee = Employee::findOrFail($employeeId);
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $id) {
+            $user = Auth::user();
+            $employeeId = is_object($id) ? $id->id : $id;
+            $employee = Employee::lockForUpdate()->findOrFail($employeeId);
 
-        if ($user->role === 'employee_role' && (int)$employee->site_id !== (int)$user->site_id) {
-            abort(403, 'Anda tidak memiliki akses mengubah karyawan di site ini.');
-        }
+            if ($user->role === 'employee_role' && (int)$employee->site_id !== (int)$user->site_id) {
+                abort(403, 'Anda tidak memiliki akses mengubah karyawan di site ini.');
+            }
 
-        $validatedData = $request->validate([
-            'site_id'              => 'required|exists:sites,id',
-            'name'                 => 'required|string|max:255',
-            'email'                => 'nullable|email|max:255|unique:employees,email,' . $employee->id,
-            'nik'                  => 'nullable|string|max:16|unique:employees,nik,' . $employee->id,
-            'phone_number'         => 'required|string|max:20',
-            'position'             => 'nullable|string|max:100',
-            'status'               => 'required|in:Permanent,Contract,Probation,Daily,Resigned', // Tambahkan Resigned
-            'basic_salary'         => 'nullable|numeric|min:0',
-            'bank_name'            => 'nullable|string|max:100',
-            'bank_account_number'  => 'nullable|string|max:100',
-            'mcu'                  => 'nullable|in:yes,no',
-            'tld'                  => 'nullable|in:yes,no',
-            'salary_change_reason' => 'nullable|string|max:255',
-            'join_date'            => 'required|date',
-            'resign_date'          => 'nullable|required_if:status,Resigned|date', // Tambahkan validasi resign_date
-            'contract_start_date'  => 'nullable|date',
-            'pkwt_date'   => ['nullable', 'date'],
-            'pkwt_number' => ['nullable', 'string', 'max:150'],
-        ]);
-
-        $newSalary = $validatedData['basic_salary'] ?? 0;
-
-        if ((float)$employee->basic_salary !== (float)$newSalary) {
-            EmployeeSalaryHistory::create([
-                'employee_id' => $employee->id,
-                'old_salary'  => $employee->basic_salary ?? 0,
-                'new_salary'  => $newSalary,
-                'reason'      => $request->input('salary_change_reason') ?: 'Penyesuaian Gaji / Promosi',
-                'updated_by'  => $user->name ?? 'System Admin',
+            $validatedData = $request->validate([
+                'site_id'              => 'required|exists:sites,id',
+                'name'                 => 'required|string|max:255',
+                'email'                => 'nullable|email|max:255|unique:employees,email,' . $employee->id,
+                'nik'                  => 'nullable|string|max:16|unique:employees,nik,' . $employee->id,
+                'phone_number'         => 'required|string|max:20',
+                'position'             => 'nullable|string|max:100',
+                'status'               => 'required|in:Permanent,Contract,Probation,Daily,Resigned', // Tambahkan Resigned
+                'basic_salary'         => 'nullable|numeric|min:0|max:999999999999.99|decimal:0,2',
+                'bank_name'            => 'nullable|string|max:100',
+                'bank_account_number'  => 'nullable|string|max:100',
+                'mcu'                  => 'nullable|in:yes,no',
+                'tld'                  => 'nullable|in:yes,no',
+                'salary_history_version' => 'nullable|string|size:64',
+                'salary_change_mode' => 'nullable|in:change,correction',
+                'salary_change_reason' => 'nullable|string|max:255',
+                'join_date'            => 'required|date',
+                'resign_date'          => 'nullable|required_if:status,Resigned|date', // Tambahkan validasi resign_date
+                'contract_start_date'  => 'nullable|date',
+                'pkwt_date'   => ['nullable', 'date'],
+                'pkwt_number' => ['nullable', 'string', 'max:150'],
             ]);
-        }
 
-        $siteId = ($user->role === 'employee_role') ? $user->site_id : $validatedData['site_id'];
-        $site = Site::findOrFail($siteId);
+            $newSalary = $validatedData['basic_salary'] ?? 0;
 
-        $validatedData['site_id']   = $site->id;
-        $validatedData['branch_id'] = $site->branch_id;
-        $validatedData['mcu']       = $validatedData['mcu'] ?? $employee->mcu ?? 'no';
-        $validatedData['tld']       = $validatedData['tld'] ?? $employee->tld ?? 'no';
+            if ((float) $employee->basic_salary !== (float) $newSalary && $request->filled('salary_history_version')
+                && !hash_equals(app(\App\Services\SalaryHistoryChanges::class)->version($employee), $request->input('salary_history_version'))) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['salary_history_version' => 'Data gaji telah berubah. Muat ulang halaman sebelum menyimpan.']);
+            }
+            app(\App\Services\SalaryHistoryChanges::class)->record($employee, (string) $newSalary,
+                $request->input('salary_change_mode', 'change') ?? 'change', $request->input('salary_change_reason'), $user->name ?? 'System Admin');
+            unset($validatedData['salary_change_mode'], $validatedData['salary_change_reason'], $validatedData['salary_history_version']);
 
-        // Atur status aktifitas sistem
-        $validatedData['is_active'] = ($request->status !== 'Resigned');
+            $siteId = ($user->role === 'employee_role') ? $user->site_id : $validatedData['site_id'];
+            $site = Site::findOrFail($siteId);
 
-        $employee->update($validatedData);
+            $validatedData['site_id']   = $site->id;
+            $validatedData['branch_id'] = $site->branch_id;
+            $validatedData['mcu']       = $validatedData['mcu'] ?? $employee->mcu ?? 'no';
+            $validatedData['tld']       = $validatedData['tld'] ?? $employee->tld ?? 'no';
 
-        return redirect()->route('employee.index')->with('success', 'Data karyawan berhasil diperbarui.');
+            // Atur status aktifitas sistem
+            $validatedData['is_active'] = ($request->status !== 'Resigned');
+
+            $employee->update($validatedData);
+
+            return redirect()->route('employee.index')->with('success', 'Data karyawan berhasil diperbarui.');
+        });
     }
 
     public function show($id)
@@ -255,7 +257,7 @@ class EmployeeController extends Controller
             $user = Auth::user();
             $employeeId = is_object($id) ? $id->id : $id;
 
-            $employee = Employee::with(['site.branch', 'salaryHistories'])->findOrFail($employeeId);
+            $employee = Employee::with(['site.branch', 'branch', 'salaryHistories' => fn ($q) => $q->withCount('audits'), 'allowances'])->findOrFail($employeeId);
 
             if ($user && $user->role === 'employee_role' && (int)$employee->site_id !== (int)$user->site_id) {
                 return response()->json(['message' => 'Anda tidak memiliki akses ke data karyawan ini.'], 403);
@@ -285,7 +287,23 @@ class EmployeeController extends Controller
             $employee->contract_start_formatted = $employee->contract_start_date
                 ? Carbon::parse($employee->contract_start_date)->translatedFormat('d F Y')
                 : '-';
-            $employee->basic_salary_formatted = 'Rp ' . number_format($employee->basic_salary ?? 0, 0, ',', '.');
+            $employee->basic_salary_formatted = 'Rp ' . \App\Support\UiText::number($employee->basic_salary ?? 0);
+            $period = now()->format('Y-m');
+            $applicable = collect(app(\App\Services\PayrollCalculation::class)->allowancesAt($employee, $period));
+            $employee->allowance_period = now()->translatedFormat('F Y');
+            $employee->allowance_total = $applicable->sum(fn ($item) => (float) $item['amount']);
+            $employee->allowance_total_formatted = 'Rp ' . \App\Support\UiText::number($employee->allowance_total);
+            $employee->monthly_total_formatted = 'Rp ' . \App\Support\UiText::number((float) $employee->basic_salary + $employee->allowance_total);
+            $employee->allowance_details = $employee->allowances->map(fn ($item) => [
+                'name' => $item->name,
+                'amount_formatted' => 'Rp ' . \App\Support\UiText::number((float) $item->amount),
+                'start_month' => Carbon::parse($item->start_month . '-01')->translatedFormat('F Y'),
+                'end_month' => $item->end_month ? Carbon::parse($item->end_month . '-01')->translatedFormat('F Y') : 'Seterusnya',
+                'status' => $applicable->contains('id', $item->id) ? 'Berlaku bulan ini' : ($item->start_month > $period ? 'Terjadwal' : ($item->end_month && $item->end_month < $period ? 'Berakhir' : 'Tidak berlaku pada periode kerja ini')),
+                'notes' => $item->notes,
+                'certificate_url' => $item->certificate_path ? route('employee.allowances.certificate', [$employee, $item]) : null,
+            ]);
+            $employee->unsetRelation('allowances');
             $employee->mcu_formatted = strtoupper($employee->mcu ?? 'no');
             $employee->tld_formatted = strtoupper($employee->tld ?? 'no');
 
@@ -299,7 +317,7 @@ class EmployeeController extends Controller
     {
         $user = Auth::user();
         $employeeId = is_object($id) ? $id->id : $id;
-        $employee = Employee::with('salaryHistories')->findOrFail($employeeId);
+        $employee = Employee::with(['salaryHistories', 'allowances'])->findOrFail($employeeId);
 
         if ($user->role === 'employee_role' && (int)$employee->site_id !== (int)$user->site_id) {
             abort(403, 'Anda tidak memiliki akses mengubah karyawan di site ini.');

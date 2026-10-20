@@ -3,7 +3,6 @@
 namespace App\Exports;
 
 use App\Models\Salary;
-use App\Services\IndonesianHolidayService;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -168,6 +167,9 @@ class SalaryExport extends DefaultValueBinder implements FromCollection, WithHea
             'More Information',
             'Placement',
             'Get Information',
+            'Gaji Pokok',
+            'Total Tunjangan',
+            'Rincian Tunjangan',
         ];
     }
 
@@ -181,11 +183,10 @@ class SalaryExport extends DefaultValueBinder implements FromCollection, WithHea
             ?? ($salary->employee->site->branch->branch_name ?? '-');
 
         // Nilai nominal murni (float/int) agar bisa disum di Excel
-        $numericAmount = (float) ($salary->amount ?? 0);
+        $numericAmount = (float) ($salary->amount ?? 0) + $salary->allowance_total;
 
         $monthPeriod = sprintf('%04d-%02d', $this->year, (int)$this->month);
-        $holidayService = app(IndonesianHolidayService::class);
-        $calc = $this->calculations[$salary->id] ?? $this->calculateSalaryDetails($salary->employee_id, $monthPeriod, $holidayService, $salary->amount);
+        $calc = $this->calculations[$salary->id] ?? app(\App\Services\PayrollCalculation::class)->calculateMany(collect([$salary]), $monthPeriod)[$salary->id];
 
         // PENYESUAIAN KOLOM BEFORE/AFTER
         if ($calc['holiday_overtime_days'] > 0) {
@@ -236,7 +237,10 @@ class SalaryExport extends DefaultValueBinder implements FromCollection, WithHea
             $beforeAfter,
             $moreInformation,            // Start Join / Start Contract YYYY-MM-DD
             $placement,
-            $getInformation,             // Terisi otomatis dari catatan manual/catatan karyawan
+            $getInformation,
+            (float) $salary->amount,
+            $salary->allowance_total,
+            collect($salary->allowance_snapshot ?? [])->map(fn ($item) => $item['name'].' : Rp '.number_format((float) $item['amount'], 0, ',', '.'))->implode('; '),
         ];
     }
 
@@ -245,6 +249,8 @@ class SalaryExport extends DefaultValueBinder implements FromCollection, WithHea
         return [
             'A' => NumberFormat::FORMAT_NUMBER,
             'E' => NumberFormat::FORMAT_TEXT,      // Account No
+            'L' => '"Rp "#,##0',
+            'M' => '"Rp "#,##0',
             'F' => '"Rp "#,##0',                   // Amount Rupiah Format
         ];
     }
@@ -255,7 +261,7 @@ class SalaryExport extends DefaultValueBinder implements FromCollection, WithHea
 
         if ($highestRow >= 2) {
             // Border untuk seluruh tabel
-            $sheet->getStyle("A1:K{$highestRow}")
+            $sheet->getStyle("A1:N{$highestRow}")
                 ->getBorders()
                 ->getAllBorders()
                 ->setBorderStyle(Border::BORDER_THIN);
@@ -285,8 +291,4 @@ class SalaryExport extends DefaultValueBinder implements FromCollection, WithHea
         ];
     }
 
-    private function calculateSalaryDetails($employeeId, $monthPeriod, $holidayService, $monthlySalary)
-    {
-        return app(\App\Services\PayrollCalculation::class)->calculate($employeeId, $monthPeriod, (float) $monthlySalary);
-    }
 }

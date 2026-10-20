@@ -8,13 +8,25 @@ use Carbon\Carbon;
 
 class PayrollCalculation
 {
+    /** Full monthly allowances; amounts are captured when a payroll is created. */
+    public function allowancesAt(Employee $employee, string $period): array
+    {
+        $start = Carbon::createFromFormat('!Y-m', $period);
+        if (($employee->join_date && $employee->join_date->gt($start->copy()->endOfMonth()))
+            || ($employee->resign_date && $employee->resign_date->lt($start))) return [];
+
+        return $employee->allowances()->where('start_month', '<=', $period)
+            ->where(fn ($q) => $q->whereNull('end_month')->orWhere('end_month', '>=', $period))
+            ->get()->map(fn ($item) => ['id' => $item->id, 'name' => $item->name, 'amount' => $item->amount])->all();
+    }
+
     public function salaryAt(Employee $employee, Carbon $endOfMonth): float
     {
-        $previous = $employee->salaryHistories()->where('created_at', '<=', $endOfMonth)->reorder()->latest('created_at')->latest('id')->first();
+        $previous = $employee->salaryHistories()->whereNull('cancelled_at')->where('created_at', '<=', $endOfMonth)->reorder()->latest('created_at')->latest('id')->first();
         if ($previous) {
             return (float) $previous->new_salary;
         }
-        $next = $employee->salaryHistories()->where('created_at', '>', $endOfMonth)->reorder()->oldest('created_at')->oldest('id')->first();
+        $next = $employee->salaryHistories()->whereNull('cancelled_at')->where('created_at', '>', $endOfMonth)->reorder()->oldest('created_at')->oldest('id')->first();
 
         return (float) ($next?->old_salary ?? $employee->basic_salary ?? 0);
     }
@@ -44,13 +56,13 @@ class PayrollCalculation
             $employee = $employees->get($salary->employee_id);
             if (!$employee) $employee = Employee::findOrFail($salary->employee_id);
             $results[$salary->id] = $this->calculateFor($employee,
-                $attendances->get($employee->id)?->first(), $period, (float) $salary->amount, $holidays);
+                $attendances->get($employee->id)?->first(), $period, (float) $salary->amount, $holidays, $salary->allowance_snapshot ?? []);
         }
         return $results;
     }
 
     private function calculateFor(Employee $employee, ?\App\Models\Attendance $attendance,
-        string $monthPeriod, ?float $salaryAmount, array $rawHolidays): array
+        string $monthPeriod, ?float $salaryAmount, array $rawHolidays, array $allowances = []): array
     {
         $startOfMonth = Carbon::parse($monthPeriod.'-01')->startOfMonth();
         $endOfMonth = Carbon::parse($monthPeriod.'-01')->endOfMonth();
@@ -120,10 +132,13 @@ class PayrollCalculation
             : $monthlySalary;
 
         $holidayOvertimePay = $holidayOvertimeDays * $dailyRate;
-        $totalSalaryToPay = $monthlySalary + $holidayOvertimePay;
+        $allowanceTotal = array_sum(array_map(fn ($item) => (float) $item['amount'], $allowances));
+        $totalSalaryToPay = $monthlySalary + $allowanceTotal + $holidayOvertimePay;
 
         return [
             'monthly_salary' => $monthlySalary,
+            'allowances' => $allowances,
+            'allowance_total' => $allowanceTotal,
             'effective_working_days' => $effectiveWorkingDays,
             'total_attended_days' => $regularWorkDays + $holidayOvertimeDays,
             'regular_work_days' => $regularWorkDays,

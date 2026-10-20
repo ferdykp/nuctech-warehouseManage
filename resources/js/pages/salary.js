@@ -145,6 +145,25 @@ function showSalaryDetail(id) {
             document.getElementById('detail_bank').innerText = data.bank || '-';
             document.getElementById('detail_account_no').innerText = data.account_no || '-';
             document.getElementById('detail_amount').innerText = data.amount_formatted || 'Rp 0';
+            const allowanceList = document.getElementById('detail_allowances');
+            if (allowanceList) {
+                allowanceList.replaceChildren();
+                const items = data.calculation?.allowances || [];
+                for (const item of items) {
+                    const row = document.createElement('li');
+                    row.className = 'flex flex-wrap justify-between gap-2 break-words';
+                    const name = document.createElement('span');
+                    name.textContent = item.name;
+                    const amount = document.createElement('strong');
+                    amount.textContent = new Intl.NumberFormat('id-ID', {style: 'currency', currency: 'IDR', maximumFractionDigits: 0}).format(Number(item.amount));
+                    row.append(name, amount);
+                    allowanceList.append(row);
+                }
+                if (!items.length) allowanceList.textContent = 'Tidak ada tunjangan pada payroll ini.';
+            }
+            const allowanceTotal = document.getElementById('detail_allowance_total');
+            if (allowanceTotal) allowanceTotal.textContent = data.calculation?.allowance_total || 'Rp 0';
+
             document.getElementById('detail_before_after').innerText = data.before_after || '-';
             document.getElementById('detail_more_information').innerText = data.more_information ||
                 'Belum ada keterangan tambahan.';
