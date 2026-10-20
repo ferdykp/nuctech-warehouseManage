@@ -9,7 +9,7 @@
 <!-- SIDEBAR NAVIGATION -->
 <aside id="main-sidebar" :inert="!desktop && !sidebarOpen" :aria-hidden="!desktop && !sidebarOpen"
     :class="{ 'translate-x-0': sidebarOpen, '-translate-x-full': !sidebarOpen }"
-    class="fixed inset-y-0 left-0 z-50 -translate-x-full flex flex-col justify-between w-64 transition-transform duration-300 ease-in-out border-r shadow-xl bg-slate-900 text-slate-300 lg:translate-x-0 lg:static lg:inset-0 shrink-0 border-slate-800">
+    class="fixed inset-y-0 left-0 z-50 flex flex-col justify-between w-64 transition-transform duration-300 ease-in-out -translate-x-full border-r shadow-xl bg-slate-900 text-slate-300 lg:translate-x-0 lg:static lg:inset-0 shrink-0 border-slate-800">
 
     <!-- LOGO / BRANDING -->
     <div>
@@ -27,7 +27,8 @@
             </button>
         </div>
 
-        <nav id="sidebar-menu" data-scroll-key="sidebar-scroll-{{ auth()->id() }}" aria-label="Menu utama" class="p-4 space-y-5 overflow-y-auto max-h-[calc(100dvh-8rem)]">
+        <nav id="sidebar-menu" data-scroll-key="sidebar-scroll-{{ auth()->id() }}" aria-label="Menu utama"
+            class="p-4 space-y-5 overflow-y-auto max-h-[calc(100dvh-8rem)]">
             @php
                 $baseItemClass =
                     'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150';
@@ -114,7 +115,7 @@
             <div>
                 <p class="px-3 mb-2 text-xs font-bold tracking-wide text-slate-400">Kepegawaian</p>
                 <div class="space-y-1">
-                    @if (Auth::user()?->role === 'superadmin')
+                    @if (in_array(Auth::user()?->role, ['superadmin', 'administration']))
                         <a href="{{ route('employee.index') }}"
                             class="{{ $baseItemClass }} {{ request()->routeIs('employee.*') ? $activeClass : $defaultClass }}">
                             <i class="w-5 text-sm text-center fa-solid fa-users" aria-hidden="true">
@@ -122,8 +123,11 @@
                             <span>Karyawan</span>
                         </a>
                     @endif
-                    @if(in_array(Auth::user()?->role, ['superadmin', 'administration']))
-                    <a href="{{ route('contracts.index') }}" class="{{ $baseItemClass }} {{ request()->routeIs('contracts.*') ? $activeClass : $defaultClass }}"><i class="w-5 text-sm text-center fa-solid fa-file-contract" aria-hidden="true"></i><span>Kontrak Karyawan</span></a>
+                    @if (in_array(Auth::user()?->role, ['superadmin', 'administration']))
+                        <a href="{{ route('contracts.index') }}"
+                            class="{{ $baseItemClass }} {{ request()->routeIs('contracts.*') ? $activeClass : $defaultClass }}"><i
+                                class="w-5 text-sm text-center fa-solid fa-file-contract"
+                                aria-hidden="true"></i><span>Kontrak Karyawan</span></a>
                     @endif
                     <a href="{{ route('schedule.index') }}"
                         class="{{ $baseItemClass }} {{ request()->routeIs('schedule.*') ? $activeClass : $defaultClass }}">
@@ -203,17 +207,28 @@
                         const saved = sessionStorage.getItem(key);
                         const top = Number(saved);
                         if (saved !== null && Number.isFinite(top) && top >= 0) menu.scrollTop = top;
-                    } catch { /* Sidebar navigation also works when storage is unavailable. */ }
+                    } catch {
+                        /* Sidebar navigation also works when storage is unavailable. */
+                    }
                 };
                 const save = () => {
-                    try { sessionStorage.setItem(key, String(menu.scrollTop)); }
-                    catch { /* Storage may be disabled by the browser. */ }
+                    try {
+                        sessionStorage.setItem(key, String(menu.scrollTop));
+                    } catch {
+                        /* Storage may be disabled by the browser. */
+                    }
                 };
                 restore();
                 // Fonts and stylesheet loading can change the scrollable height.
-                window.addEventListener('load', restore, { once: true });
-                menu.addEventListener('scroll', save, { passive: true });
-                menu.addEventListener('click', save, { capture: true });
+                window.addEventListener('load', restore, {
+                    once: true
+                });
+                menu.addEventListener('scroll', save, {
+                    passive: true
+                });
+                menu.addEventListener('click', save, {
+                    capture: true
+                });
                 window.addEventListener('pagehide', save);
             })();
         </script>
@@ -228,7 +243,7 @@
             </div>
             <div class="flex-1 min-w-0">
                 <p class="text-xs font-bold truncate text-slate-200">{{ auth()->user()?->username ?? 'Tamu' }}</p>
-                <p class="text-xs font-semibold text-slate-400 capitalize truncate">
+                <p class="text-xs font-semibold capitalize truncate text-slate-400">
                     {{ \App\Support\UiText::label(auth()->user()?->role) }}</p>
             </div>
         </div>
