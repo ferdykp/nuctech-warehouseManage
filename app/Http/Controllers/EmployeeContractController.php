@@ -16,7 +16,54 @@ use Illuminate\Validation\ValidationException;
 
 class EmployeeContractController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, \App\Services\Contracts\ContractRenewalList $list, \App\Services\Contracts\RenewalListDocument $document)
+    {
+        $filters = $list->filters($request);
+        $rows = $list->rows($filters);
+        $page = max(1, $request->integer('page', 1));
+        $candidates = new \Illuminate\Pagination\LengthAwarePaginator($rows->forPage($page, 15)->values(), $rows->count(), 15, $page, ['path' => $request->url(), 'query' => $request->query()]);
+
+        return view('contracts.index', $this->renewalViewData($filters, $rows, $list, $document) + [
+            'candidates' => $candidates,
+            'branches' => Branch::orderBy('branch_name')->get(),
+            'sites' => \App\Models\Site::orderBy('machine_name')->get(),
+            'positions' => Employee::whereNotNull('position')->where('position', '!=', '')->distinct()->orderBy('position')->pluck('position'),
+        ]);
+    }
+
+    public function renewalExport(Request $request, \App\Services\Contracts\ContractRenewalList $list, \App\Services\Contracts\RenewalListDocument $document)
+    {
+        $filters = $list->filters($request);
+        $rows = $list->rows($filters);
+
+        return view('contracts.renewal-export', $this->renewalViewData($filters, $rows, $list, $document));
+    }
+
+    public function downloadRenewalList(Request $request, \App\Services\Contracts\ContractRenewalList $list, \App\Services\Contracts\RenewalListDocument $document)
+    {
+        $filters = $list->filters($request);
+        $rows = $list->rows($filters);
+        if ($rows->isEmpty()) {
+            return redirect()->route('contracts.renewals.export', $filters)->with('error', 'Tidak ada karyawan sesuai filter untuk diekspor.');
+        }
+        if ($rows->contains(fn ($r) => count($r['missing']) > 0) && ! $request->boolean('allow_incomplete')) {
+            return redirect()->route('contracts.renewals.export', $filters)->with('error', 'Ada data belum lengkap. Periksa ringkasan dan konfirmasi sebelum mengunduh.');
+        }
+        $path = $document->generate($rows, $list->period($filters, 'en'));
+
+        return response()->download($path, 'Remuneration-PKWT-'.$filters['year'].'-'.sprintf('%02d-%02d', $filters['month'], $filters['month_end']).'.docx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff',
+        ])->deleteFileAfterSend(true);
+    }
+
+    private function renewalViewData(array $filters, $rows, $list, $document): array
+    {
+        return ['filters' => $filters, 'rows' => $rows, 'period' => $list->period($filters), 'total' => $document->money($document->totalCents($rows)),
+            'missingCount' => $rows->filter(fn ($r) => count($r['missing']) > 0)->count(),
+            'months' => collect(range(1, 12))->mapWithKeys(fn ($m) => [$m => \Carbon\Carbon::create(2026, $m, 1)->locale('id')->translatedFormat('F')])->all()];
+    }
+
+    public function archive(Request $request)
     {
         $query = EmployeeContract::with('employee.site', 'employee.branch')->withExists(['renewals as has_approved_renewal' => fn ($q) => $q->where('status', 'active')]);
         if ($request->filled('search')) {
@@ -49,7 +96,7 @@ class EmployeeContractController extends Controller
             'attention' => EmployeeContract::whereIn('status', ['needs_verification', 'draft', 'pending_signature'])->count(),
         ];
 
-        return view('contracts.index', ['contracts' => $query->orderByDesc('created_at')->orderByDesc('id')->paginate(15)->withQueryString(), 'stats' => $stats, 'branches' => Branch::orderBy('branch_name')->get()]);
+        return view('contracts.archive', ['contracts' => $query->orderByDesc('created_at')->orderByDesc('id')->paginate(15)->withQueryString(), 'stats' => $stats, 'branches' => Branch::orderBy('branch_name')->get()]);
     }
 
     public function create(Request $request, ContractDocuments $documents)

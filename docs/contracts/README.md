@@ -1,5 +1,7 @@
 # Kontrak Karyawan
 
+Halaman utama menampilkan daftar perpanjangan bulanan, filter dan ekspor Word. Lihat [panduan daftar bulanan](monthly-renewals.md). Semua catatan kontrak tetap tersedia melalui **Arsip Semua Kontrak**.
+
 Modul tersedia melalui sidebar **Kontrak Karyawan** untuk Superadmin dan Administration, serta melalui tombol **Kontrak** pada tabel karyawan dan **Riwayat Kontrak** pada modal rincian karyawan.
 
 ## Alur penggunaan

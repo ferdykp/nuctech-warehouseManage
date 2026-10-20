@@ -5,7 +5,7 @@
                 class="text-xs font-extrabold tracking-wider uppercase border-b text-slate-500 bg-slate-50 border-slate-100">
                 <th scope="col" class="w-12 px-4 py-4 text-center">Nomor</th>
                 <th scope="col" class="px-6 py-4">Identitas Karyawan</th>
-                <th scope="col" class="px-6 py-4">Jabatan</th>
+                <th scope="col" class="px-6 py-4">Position</th>
                 <th scope="col" class="px-6 py-4">Lokasi & Cabang</th>
                 <th scope="col" class="px-6 py-4 text-emerald-700">
                     <div class="flex items-center gap-2">
@@ -98,8 +98,10 @@
                     <td class="px-6 py-4 text-center">
                         <div class="flex items-center justify-center gap-1.5">
                             {{-- VIEW DETAIL --}}
-                            @if(in_array(auth()->user()->role, ['superadmin','administration']))
-                            <a href="{{ route('contracts.index', ['employee_id'=>$employee->id]) }}" class="inline-flex items-center px-3 py-2 text-blue-700 border rounded-xl text-xs font-semibold" aria-label="Riwayat kontrak {{ $employee->name }}">Kontrak</a>
+                            @if (in_array(auth()->user()->role, ['superadmin', 'administration']))
+                                <a href="{{ route('contracts.archive', ['employee_id' => $employee->id]) }}"
+                                    class="inline-flex items-center px-3 py-2 text-xs font-semibold text-blue-700 border rounded-xl"
+                                    aria-label="Riwayat kontrak {{ $employee->name }}">Kontrak</a>
                             @endif
                             <button type="button" onclick="showEmployeeDetail({{ $employee->id }})"
                                 class="flex items-center justify-center w-8 h-8 text-blue-600 transition-all border border-blue-100 cursor-pointer rounded-xl bg-blue-50 hover:bg-blue-600 hover:text-white active:scale-95"

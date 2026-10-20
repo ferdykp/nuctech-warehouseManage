@@ -1284,7 +1284,7 @@
 
                 currentEmployeeData = data;
                 const contractLink = document.getElementById('detail_contract_link');
-                if (contractLink) contractLink.href = @json(route('contracts.index')) + '?employee_id=' + encodeURIComponent(data.id);
+                if (contractLink) contractLink.href = @json(route('contracts.archive')) + '?employee_id=' + encodeURIComponent(data.id);
 
                 const setText = (elementId, value) => {
                     const element = document.getElementById(elementId);

@@ -2,7 +2,7 @@
 @section('title','Detail Kontrak Karyawan')
 @section('content')
 <div class="space-y-5 pb-8">
-    <div class="flex flex-wrap justify-between items-start gap-3"><div><p class="text-sm text-slate-500">Kontrak Karyawan</p><h1 class="text-2xl font-bold">{{ $contract->snapshot['employee_name'] ?? $contract->employee->name }}</h1><p class="mt-2 text-sm">{{ $contract->contract_number ?? $contract->snapshot['legacy_contract_number'] ?? 'Nomor belum diverifikasi' }} · <strong>{{ $contract->display_status }}</strong></p></div><a href="{{ route('contracts.index',['employee_id'=>$contract->employee_id]) }}" class="px-4 py-3 border rounded-xl bg-white text-sm">Riwayat Karyawan</a></div>
+    <div class="flex flex-wrap justify-between items-start gap-3"><div><p class="text-sm text-slate-500">Kontrak Karyawan</p><h1 class="text-2xl font-bold">{{ $contract->snapshot['employee_name'] ?? $contract->employee->name }}</h1><p class="mt-2 text-sm">{{ $contract->contract_number ?? $contract->snapshot['legacy_contract_number'] ?? 'Nomor belum diverifikasi' }} · <strong>{{ $contract->display_status }}</strong></p></div><a href="{{ route('contracts.archive',['employee_id'=>$contract->employee_id]) }}" class="px-4 py-3 border rounded-xl bg-white text-sm">Riwayat Karyawan</a></div>
     @if($contract->status==='needs_verification')<p class="p-4 bg-amber-50 text-amber-900 border rounded-xl text-sm">Data PKWT lama belum memiliki periode terverifikasi. Periksa nomor, tanggal, dan periode dari dokumen asli sebelum membuat dokumen.</p>@endif
     <div class="grid lg:grid-cols-3 gap-5">
     <div class="lg:col-span-2 space-y-5">

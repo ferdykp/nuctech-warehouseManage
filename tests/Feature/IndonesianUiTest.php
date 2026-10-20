@@ -39,7 +39,7 @@ class IndonesianUiTest extends TestCase
             $this->assertStringContainsString('Reimbursement', $html);
             $this->assertStringContainsString('Laporan Harian', $html);
             $this->assertStringContainsString(route('schedule.index'), $html);
-            $this->assertSame($role === 'superadmin', str_contains($html, route('employee.index')));
+            $this->assertSame(in_array($role, ['superadmin', 'administration'], true), str_contains($html, route('employee.index')));
             $this->assertSame($role === 'superadmin', str_contains($html, route('salary.index')));
             $this->assertSame($role === 'superadmin', str_contains($html, route('branches.index')));
             $this->assertSame(in_array($role, ['superadmin', 'team_leader']), str_contains($html, route('sparepart.all')));

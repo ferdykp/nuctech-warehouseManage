@@ -172,9 +172,9 @@ class EmployeeContractsTest extends TestCase
         $this->actingAs(User::factory()->create(['role' => 'administration']));
         $e = $this->employee();
         $old = EmployeeContract::create(['employee_id' => $e->id, 'status' => 'active', 'contract_number' => 'CURRENT', 'start_date' => today()->subMonths(10), 'end_date' => today()->addDays(30)]);
-        $this->get(route('contracts.index', ['status' => 'due']))->assertOk()->assertSee('CURRENT');
+        $this->get(route('contracts.archive', ['status' => 'due']))->assertOk()->assertSee('CURRENT');
         EmployeeContract::create(['employee_id' => $e->id, 'status' => 'active', 'contract_number' => 'NEXT', 'previous_contract_id' => $old->id, 'start_date' => today()->addDays(31), 'end_date' => today()->addYear()]);
         $this->assertSame(0, EmployeeContract::needsRenewal()->whereBetween('end_date', [today(), today()->addDays(60)])->count());
-        $this->get(route('contracts.index', ['status' => 'due']))->assertOk()->assertDontSee('CURRENT');
+        $this->get(route('contracts.archive', ['status' => 'due']))->assertOk()->assertDontSee('CURRENT');
     }
 }

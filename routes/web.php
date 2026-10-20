@@ -49,6 +49,9 @@ Route::middleware(['auth', 'nocache'])->group(function () {
     Route::middleware('role:superadmin|administration')->prefix('contracts')->name('contracts.')->group(function () {
         $controller = \App\Http\Controllers\EmployeeContractController::class;
         Route::get('/', [$controller, 'index'])->name('index');
+        Route::get('/archive', [$controller, 'archive'])->name('archive');
+        Route::get('/renewals/export', [$controller, 'renewalExport'])->name('renewals.export');
+        Route::get('/renewals/download', [$controller, 'downloadRenewalList'])->name('renewals.download');
         Route::get('/create', [$controller, 'create'])->name('create');
         Route::post('/', [$controller, 'store'])->name('store');
         Route::get('/templates', [$controller, 'templates'])->name('templates');

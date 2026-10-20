@@ -1,0 +1,152 @@
+{
+  "environment": "Isolated synthetic SQLite QA",
+  "checks": [
+    {
+      "content": 314,
+      "main": 314,
+      "path": "/contracts",
+      "root": 320,
+      "width": 320
+    },
+    {
+      "content": 314,
+      "main": 314,
+      "path": "/contracts/renewals/export",
+      "root": 320,
+      "width": 320
+    },
+    {
+      "content": 314,
+      "main": 314,
+      "path": "/contracts/archive",
+      "root": 320,
+      "width": 320
+    },
+    {
+      "content": 369,
+      "main": 369,
+      "path": "/contracts",
+      "root": 375,
+      "width": 375
+    },
+    {
+      "content": 369,
+      "main": 369,
+      "path": "/contracts/renewals/export",
+      "root": 375,
+      "width": 375
+    },
+    {
+      "content": 369,
+      "main": 369,
+      "path": "/contracts/archive",
+      "root": 375,
+      "width": 375
+    },
+    {
+      "content": 762,
+      "main": 762,
+      "path": "/contracts",
+      "root": 768,
+      "width": 768
+    },
+    {
+      "content": 762,
+      "main": 762,
+      "path": "/contracts/renewals/export",
+      "root": 768,
+      "width": 768
+    },
+    {
+      "content": 762,
+      "main": 762,
+      "path": "/contracts/archive",
+      "root": 768,
+      "width": 768
+    },
+    {
+      "content": 762,
+      "main": 762,
+      "path": "/contracts",
+      "root": 1024,
+      "width": 1024
+    },
+    {
+      "content": 762,
+      "main": 762,
+      "path": "/contracts/renewals/export",
+      "root": 1024,
+      "width": 1024
+    },
+    {
+      "content": 762,
+      "main": 762,
+      "path": "/contracts/archive",
+      "root": 1024,
+      "width": 1024
+    },
+    {
+      "content": 1178,
+      "main": 1178,
+      "path": "/contracts",
+      "root": 1440,
+      "width": 1440
+    },
+    {
+      "content": 1178,
+      "main": 1178,
+      "path": "/contracts/renewals/export",
+      "root": 1440,
+      "width": 1440
+    },
+    {
+      "content": 1178,
+      "main": 1178,
+      "path": "/contracts/archive",
+      "root": 1440,
+      "width": 1440
+    },
+    {
+      "content": 1658,
+      "main": 1658,
+      "path": "/contracts",
+      "root": 1920,
+      "width": 1920
+    },
+    {
+      "content": 1658,
+      "main": 1658,
+      "path": "/contracts/renewals/export",
+      "root": 1920,
+      "width": 1920
+    },
+    {
+      "content": 1658,
+      "main": 1658,
+      "path": "/contracts/archive",
+      "root": 1920,
+      "width": 1920
+    },
+    {
+      "content": 3578,
+      "main": 3578,
+      "path": "/contracts",
+      "root": 3840,
+      "width": 3840
+    },
+    {
+      "content": 3578,
+      "main": 3578,
+      "path": "/contracts/renewals/export",
+      "root": 3840,
+      "width": 3840
+    },
+    {
+      "content": 3578,
+      "main": 3578,
+      "path": "/contracts/archive",
+      "root": 3840,
+      "width": 3840
+    }
+  ]
+}
