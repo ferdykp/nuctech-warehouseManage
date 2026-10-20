@@ -1,3 +1,4 @@
+import { enhanceMonthPickers } from './ui/months.js';
 import { enhanceMoneyInputs, formatNumber } from './ui/numbers.js';
 import { enhanceTables } from './ui/tables.js';
 import { initDialogs } from './ui/dialogs.js';
@@ -93,6 +94,7 @@ export function initUi() {
     function enhance() {
         enhanceActions();
         enhanceMoneyInputs();
+        enhanceMonthPickers();
         document.querySelectorAll('form').forEach((form, index) => {
             if (!form.dataset.uiKey) form.dataset.uiKey = form.id || `form-${index}`;
             if (form.method.toLowerCase() === 'post' && !form.querySelector('[name="_ui_form"]')) {
