@@ -313,20 +313,9 @@ class ReimbursementDocuments
      */
     private function resolveReceiptPath($receiptAttachment)
     {
-        $cleanPath = str_replace(['storage/', 'public/'], '', $receiptAttachment);
+        $path = SensitiveFiles::path($receiptAttachment);
 
-        $candidates = [
-            storage_path('app/public/' . $cleanPath),
-            public_path('storage/' . $cleanPath),
-        ];
-
-        foreach ($candidates as $candidate) {
-            if (file_exists($candidate)) {
-                return $candidate;
-            }
-        }
-
-        return null;
+        return is_file($path) ? $path : null;
     }
 
     /**
@@ -389,9 +378,7 @@ class ReimbursementDocuments
                     $pageHeight
                 );
 
-                $tempPath = storage_path(
-                    'app/public/receipts/landscape_half_' . uniqid('', true) . '_' . $side . '.pdf'
-                );
+                $tempPath = SensitiveFiles::temporaryPath('half_'.$side);
 
                 $out->Output($tempPath, 'F');
 
@@ -566,7 +553,7 @@ class ReimbursementDocuments
 
     public function convertPdfToVersion14($inputPath)
     {
-        $outputPath = storage_path('app/public/receipts/converted_' . uniqid() . '.pdf');
+        $outputPath = SensitiveFiles::temporaryPath('converted');
 
         // 🟢 Deteksi binary path Ghostscript (Aman untuk macOS Homebrew & Ubuntu)
         $gsBinary = 'gs';

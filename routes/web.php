@@ -66,6 +66,9 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::get('/{contract}/download/{kind}', [$controller, 'download'])->name('download');
     });
 
+    Route::get('/reimbursements/{reimbursement}/receipt', [\App\Http\Controllers\AttachmentController::class, 'receipt'])->middleware('role:superadmin|employee_role|team_leader|administration|manager|station_master')->name('reimbursements.receipt');
+    Route::get('/leave/{leave}/attachment', [\App\Http\Controllers\AttachmentController::class, 'leave'])->middleware('role:superadmin|employee_role|team_leader|administration')->name('leave.attachment');
+
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 

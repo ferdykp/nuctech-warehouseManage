@@ -29,7 +29,7 @@ class ReimbursementApproval
             \App\Services\ReimbursementAccess::approve($reimbursement);
             \App\Services\ReimbursementAccess::view($reimbursement);
             $user          = auth()->user();
-            $invoicePath   = storage_path('app/public/' . str_replace(['storage/', 'public/'], '', $reimbursement->receipt_attachment));
+            $invoicePath   = $reimbursement->receipt_attachment ? SensitiveFiles::path($reimbursement->receipt_attachment) : '';
             $extension     = strtolower(pathinfo($invoicePath, PATHINFO_EXTENSION));
 
             $newSignatures = [];
@@ -87,9 +87,9 @@ class ReimbursementApproval
                 $signatureImg = $manager->read($sigBytes);
 
                 $pngData = $signatureImg->toPng()->toString();
-                Storage::disk('public')->put($sigFileName, $pngData);
+                Storage::disk('sensitive')->put($sigFileName, $pngData);
 
-                $absolutePath = storage_path('app/public/' . $sigFileName);
+                $absolutePath = SensitiveFiles::path($sigFileName);
 
                 $sigPaths[] = [
                     'path'        => $absolutePath,

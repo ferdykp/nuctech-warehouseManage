@@ -18,8 +18,8 @@
             $canSign = true;
         }
 
-        $attachmentPath = storage_path('app/public/' . $reimbursement->receipt_attachment);
-        $fileVersion = file_exists($attachmentPath) ? filemtime($attachmentPath) : time();
+        $attachmentPath = $reimbursement->receipt_attachment ? \App\Services\SensitiveFiles::path($reimbursement->receipt_attachment) : null;
+        $fileVersion = $attachmentPath && file_exists($attachmentPath) ? filemtime($attachmentPath) : time();
     @endphp
 
     <div class="w-full space-y-6">
@@ -278,7 +278,7 @@
                     style="height: 800px;">
 
                     @if ($reimbursement->receipt_attachment)
-                        @if (pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf')
+                        @if (pathinfo((string) $reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf')
                             <div id="pdf-loading-indicator"
                                 class="py-4 text-xs font-bold tracking-widest text-white uppercase animate-pulse">
                                 <i class="fa-solid fa-spinner animate-spin mr-1.5"></i> Memuat halaman PDF...
@@ -288,7 +288,7 @@
                         @else
                             <div id="invoice-target-img"
                                 class="relative w-full max-w-full overflow-hidden transition-all duration-200 bg-white shadow-xl rounded-2xl">
-                                <img src="{{ asset('storage/' . $reimbursement->receipt_attachment) }}"
+                                <img src="{{ route('reimbursements.receipt', $reimbursement->id) }}"
                                     class="block object-contain w-full h-auto pointer-events-none"
                                     alt="Invoice Lampiran" />
                             </div>
@@ -319,6 +319,6 @@
 @endsection
 
 @push('scripts')
-    <script type="application/json" id="reimbursement-approval-config">{!! json_encode(['pdfUrl' => asset('storage/' . $reimbursement->receipt_attachment) . '?v=' . $fileVersion, 'isPdf' => pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+    <script type="application/json" id="reimbursement-approval-config">{!! json_encode(['pdfUrl' => route('reimbursements.receipt', $reimbursement->id) . '?v=' . $fileVersion, 'isPdf' => pathinfo((string) $reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
     @vite('resources/js/pages/reimbursement-approval.js')
 @endpush

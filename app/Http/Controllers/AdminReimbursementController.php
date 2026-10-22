@@ -109,14 +109,14 @@ class AdminReimbursementController extends Controller
                 }
 
                 $fileName = 'receipts/processed_' . time() . '_' . uniqid() . '.pdf';
-                Storage::disk('public')->put($fileName, $pdf->Output('S'));
+                Storage::disk('sensitive')->put($fileName, $pdf->Output('S'));
                 $path = $fileName;
             } catch (\Exception $e) {
                 Log::error("Gagal memproses PDF Slicing: " . $e->getMessage());
                 return redirect()->back()->with('error', 'Gagal memproses lampiran PDF.');
             }
         } else {
-            $path = $file->store('receipts', 'public');
+            $path = $file->store('receipts', 'sensitive');
         }
 
         $userRole = strtolower(auth()->user()->role ?? 'employee_role');
@@ -149,32 +149,7 @@ class AdminReimbursementController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $pdfBase64 = null;
-        if ($reimbursement->receipt_attachment && pathinfo($reimbursement->receipt_attachment, PATHINFO_EXTENSION) === 'pdf') {
-            $cleanPath = str_replace('storage/', '', $reimbursement->receipt_attachment);
-
-            $path1 = storage_path('app/public/' . $cleanPath);
-            $path2 = storage_path('app/' . $cleanPath);
-            $path3 = public_path('storage/' . $cleanPath);
-
-            $finalPath = null;
-            if (file_exists($path1)) {
-                $finalPath = $path1;
-            } elseif (file_exists($path2)) {
-                $finalPath = $path2;
-            } elseif (file_exists($path3)) {
-                $finalPath = $path3;
-            }
-
-            if ($finalPath && is_readable($finalPath)) {
-                $fileData = file_get_contents($finalPath);
-                $pdfBase64 = base64_encode($fileData);
-            } else {
-                Log::error("PDF Gagal dibaca. Path cek: 1=$path1 | 2=$path2 | 3=$path3");
-            }
-        }
-
-        return view('reimbursements.approval', compact('reimbursement', 'pdfBase64'));
+        return view('reimbursements.approval', compact('reimbursement'));
     }
 
     public function approve(Request $request, $id)
@@ -232,7 +207,7 @@ class AdminReimbursementController extends Controller
             $claim = Reimbursement::onlyTrashed()->lockForUpdate()->findOrFail($id);
             \App\Services\ReimbursementAccess::manage($claim);
             $claim->forceDelete();
-            \App\Jobs\DeletePublicFiles::dispatch([$claim->receipt_attachment])->afterCommit();
+            \App\Jobs\DeletePublicFiles::dispatch([$claim->receipt_attachment], 'sensitive')->afterCommit();
             return redirect()->route('reimbursements.trash')->with('success', 'Klaim berhasil dihapus permanen.');
         });
     }
@@ -403,14 +378,14 @@ class AdminReimbursementController extends Controller
                         }
 
                         $fileName = 'receipts/processed_' . time() . '_' . uniqid() . '.pdf';
-                        Storage::disk('public')->put($fileName, $pdf->Output('S'));
+                        Storage::disk('sensitive')->put($fileName, $pdf->Output('S'));
                         $dataToUpdate['receipt_attachment'] = $fileName;
                     } catch (\Exception $e) {
                         Log::error("Gagal memproses PDF Slicing saat edit: " . $e->getMessage());
                         return redirect()->back()->with('error', 'Gagal memproses lampiran PDF.');
                     }
                 } else {
-                    $dataToUpdate['receipt_attachment'] = $file->store('receipts', 'public');
+                    $dataToUpdate['receipt_attachment'] = $file->store('receipts', 'sensitive');
                 }
             }
 
@@ -421,7 +396,7 @@ class AdminReimbursementController extends Controller
             $oldReceipt = $reimbursement->receipt_attachment;
             $reimbursement->update($dataToUpdate);
             if (isset($dataToUpdate['receipt_attachment']) && $oldReceipt !== $dataToUpdate['receipt_attachment']) {
-                \App\Jobs\DeletePublicFiles::dispatch([$oldReceipt])->afterCommit();
+                \App\Jobs\DeletePublicFiles::dispatch([$oldReceipt], 'sensitive')->afterCommit();
             }
 
             return redirect()->route('reimbursements.index')->with('success', 'Klaim berhasil diperbarui.');
@@ -549,7 +524,7 @@ class AdminReimbursementController extends Controller
                 $reimbursement->forceDelete();
             }
 
-            \App\Jobs\DeletePublicFiles::dispatch($paths)->afterCommit();
+            \App\Jobs\DeletePublicFiles::dispatch($paths, 'sensitive')->afterCommit();
             return redirect()->route('reimbursements.trash')->with('success', 'Klaim terpilih berhasil dihapus permanen.');
         });
     }

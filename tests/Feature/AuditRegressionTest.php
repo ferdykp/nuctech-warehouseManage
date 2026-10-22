@@ -32,6 +32,7 @@ class AuditRegressionTest extends TestCase
         parent::setUp();
         Http::fake();
         Storage::fake('public');
+        Storage::fake('sensitive');
     }
 
     private function site(): Site
@@ -132,22 +133,22 @@ class AuditRegressionTest extends TestCase
         $other = $this->claim($this->user('employee_role', $this->site()));
         foreach ([$mine, $other] as $claim) {
             $claim->delete();
-            Storage::disk('public')->put($claim->receipt_attachment, 'test');
+            Storage::disk('sensitive')->put($claim->receipt_attachment, 'test');
         }
         $this->actingAs($user)->delete('/reimbursements/recycle-bin/bulk-force-delete', ['ids' => [$mine->id, $other->id]])->assertForbidden();
         foreach ([$mine, $other] as $claim) {
             $this->assertSoftDeleted($claim);
-            Storage::disk('public')->assertExists($claim->receipt_attachment);
+            Storage::disk('sensitive')->assertExists($claim->receipt_attachment);
         }
         Queue::assertNothingPushed();
         $this->delete('/reimbursements/recycle-bin/bulk-force-delete', ['ids' => [$mine->id]])->assertRedirect();
         $this->assertDatabaseMissing('reimbursements', ['id' => $mine->id]);
-        Queue::assertPushed(DeletePublicFiles::class, fn ($job) => $job->afterCommit && $job->paths === [$mine->receipt_attachment]);
-        $job = new DeletePublicFiles([$mine->receipt_attachment]);
+        Queue::assertPushed(DeletePublicFiles::class, fn ($job) => $job->afterCommit && $job->disk === 'sensitive' && $job->paths === [$mine->receipt_attachment]);
+        $job = new DeletePublicFiles([$mine->receipt_attachment], 'sensitive');
         $job->handle();
         $job->handle();
-        Storage::disk('public')->assertMissing($mine->receipt_attachment);
-        Storage::disk('public')->assertExists($other->receipt_attachment);
+        Storage::disk('sensitive')->assertMissing($mine->receipt_attachment);
+        Storage::disk('sensitive')->assertExists($other->receipt_attachment);
     }
 
     public function test_attendance_payload_excludes_personal_and_payroll_attributes(): void

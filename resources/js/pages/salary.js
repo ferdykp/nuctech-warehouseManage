@@ -187,8 +187,10 @@ function showSalaryDetail(id) {
                 'px-2.5 py-1 text-xs font-extrabold text-amber-800 bg-amber-50 border border-amber-200 rounded-full' :
                 'px-2.5 py-1 text-xs font-extrabold text-blue-800 bg-blue-50 border border-blue-200 rounded-full';
 
-            document.getElementById('detail_information_badge').innerHTML =
-                `<span class="${badgeClass}">${infoText}</span>`;
+            const infoBadge = document.createElement('span');
+            infoBadge.className = badgeClass;
+            infoBadge.textContent = infoText;
+            document.getElementById('detail_information_badge').replaceChildren(infoBadge);
 
             let modal = document.getElementById('salaryDetailModal');
             if (modal) {

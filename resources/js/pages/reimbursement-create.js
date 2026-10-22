@@ -1,8 +1,4 @@
-import * as pdfjsModule from 'pdfjs-dist/build/pdf.js';
-const pdfjsLib = pdfjsModule.default || pdfjsModule;
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.js?url';
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
+import { pdfjsLib, pdfOptions } from '../pdf.js';
 
 const fileInput = document.getElementById('fileInput');
 const dropzone = document.getElementById('dropzone');
@@ -67,7 +63,7 @@ async function renderPdfPreview(file) {
     try {
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({
-            data: arrayBuffer, isEvalSupported: false
+            data: arrayBuffer, ...pdfOptions
         }).promise;
 
         previewContainer.classList.replace('hidden', 'grid');

@@ -1,8 +1,4 @@
-import * as pdfjsModule from 'pdfjs-dist/build/pdf.js';
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.js?url';
-
-const pdfjsLib = pdfjsModule.default || pdfjsModule;
-pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
+import { pdfjsLib, pdfOptions } from '../pdf.js';
 
 async function preview(root) {
     const status = root.querySelector('[role="status"]');
@@ -16,7 +12,7 @@ async function preview(root) {
         documentTask?.destroy();
     }, { once: true });
     try {
-        documentTask = pdfjsLib.getDocument({ url: url.href, isEvalSupported: false });
+        documentTask = pdfjsLib.getDocument({ url: url.href, ...pdfOptions });
         const pdf = await documentTask.promise;
         if (pdf.numPages > 100) throw new Error('Too many pages');
         const firstPage = await pdf.getPage(1);

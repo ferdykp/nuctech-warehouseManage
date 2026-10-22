@@ -209,7 +209,7 @@
                                 <i class="text-xs fa-solid fa-paperclip text-amber-600"></i>
                                 <span class="flex-1 text-xs font-semibold truncate text-slate-700">File Saat Ini:
                                     {{ basename($reimbursement->receipt_attachment) }}</span>
-                                <a href="{{ asset('storage/' . $reimbursement->receipt_attachment) }}" target="_blank"
+                                <a href="{{ route('reimbursements.receipt', $reimbursement->id) }}" target="_blank"
                                     class="text-xs font-bold text-amber-700 hover:underline">Lihat Dokumen</a>
                             </div>
                         @endif

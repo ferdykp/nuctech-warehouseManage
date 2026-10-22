@@ -228,9 +228,15 @@ function openDetailModal(buttonElement) {
         minimumFractionDigits: 0
     }).format(data.amount || 0);
 
+    const escapeText = (value) => {
+        const node = document.createElement('span');
+        node.textContent = String(value ?? '-');
+        return node.innerHTML;
+    };
+
     if (data.category === 'transportation' || data.category === 'delivery') {
         document.getElementById('modal-route').innerHTML =
-            `<span class="font-semibold text-slate-900">${data.from_location || '-'}</span> <i class="mx-1 fa-solid fa-arrow-right text-slate-300"></i> <span class="font-semibold text-slate-900">${data.to_location || '-'}</span>`;
+            `<span class="font-semibold text-slate-900">${escapeText(data.from_location || '-')}</span> <i class="mx-1 fa-solid fa-arrow-right text-slate-300"></i> <span class="font-semibold text-slate-900">${escapeText(data.to_location || '-')}</span>`;
     } else {
         document.getElementById('modal-route').innerText = "Rute Tidak Diperlukan";
     }
@@ -284,7 +290,7 @@ function openDetailModal(buttonElement) {
 
     if (data.receipt_attachment) {
         const fileExt = data.receipt_attachment.split('.').pop().toLowerCase();
-        const fullUrl = `/storage/${data.receipt_attachment}`;
+        const fullUrl = `/reimbursements/${encodeURIComponent(data.id)}/receipt`;
 
         if (fileExt === 'pdf') {
             frame.innerHTML =

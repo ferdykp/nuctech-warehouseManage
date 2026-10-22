@@ -1,10 +1,7 @@
-import * as pdfjsModule from 'pdfjs-dist/build/pdf.js';
-const pdfjsLib = pdfjsModule.default || pdfjsModule;
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.js?url';
+import { pdfjsLib, pdfOptions } from '../pdf.js';
 import SignaturePad from 'signature_pad';
 const config = JSON.parse(document.getElementById('reimbursement-approval-config').textContent);
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
 
 let signaturePad = null;
 let loadedSignatureBase64 = null;
@@ -76,7 +73,7 @@ function renderPdfWithPdfJs(url) {
 
     container.innerHTML = '';
 
-    const loadingTask = pdfjsLib.getDocument({ url, isEvalSupported: false });
+    const loadingTask = pdfjsLib.getDocument({ url, ...pdfOptions });
     loadingTask.promise.then(async function(pdf) {
         const indicator = document.getElementById('pdf-loading-indicator');
         if (indicator) indicator.remove();

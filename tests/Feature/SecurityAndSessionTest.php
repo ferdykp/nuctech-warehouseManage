@@ -16,6 +16,7 @@ class SecurityAndSessionTest extends TestCase
         parent::setUp();
         Http::fake();
         Storage::fake('public');
+        Storage::fake('sensitive');
     }
 
     private function site(string $name = 'Machine'): Site

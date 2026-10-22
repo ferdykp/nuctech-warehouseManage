@@ -147,7 +147,7 @@
                     @if ($leaveRequest->attachment_file)
                         <div class="mb-2 text-xs font-medium text-slate-500">
                             <i class="fa-solid fa-paperclip text-slate-400"></i> File Saat Ini:
-                            <a href="{{ asset('storage/' . $leaveRequest->attachment_file) }}" target="_blank"
+                            <a href="{{ route('leave.attachment', $leaveRequest->id) }}" target="_blank"
                                 class="font-bold underline text-emerald-600">Lihat Lampiran</a>
                         </div>
                     @endif

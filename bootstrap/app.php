@@ -19,9 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role'    => \App\Http\Middleware\RoleMiddleware::class,
             'nocache' => \App\Http\Middleware\NoCache::class,
         ]);
-        $middleware->trustProxies(
-            at: '*'
-        );
+        $middleware->replace(\Illuminate\Http\Middleware\TrustProxies::class, \App\Http\Middleware\TrustConfiguredProxies::class);
 
         $middleware->redirectGuestsTo(fn() => route('login'));
     })

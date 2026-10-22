@@ -117,7 +117,7 @@ class LeaveRequestController extends Controller
         // Handle upload berkas
         $filePath = null;
         if ($request->hasFile('attachment_file')) {
-            $filePath = $request->file('attachment_file')->store('leave_attachments', 'public');
+            $filePath = $request->file('attachment_file')->store('leave_attachments', 'sensitive');
         }
 
         LeaveRequest::create([
@@ -273,10 +273,10 @@ class LeaveRequestController extends Controller
 
         // Handle update berkas
         if ($request->hasFile('attachment_file')) {
-            if ($leaveRequest->attachment_file && Storage::disk('public')->exists($leaveRequest->attachment_file)) {
-                Storage::disk('public')->delete($leaveRequest->attachment_file);
+            if ($leaveRequest->attachment_file && Storage::disk('sensitive')->exists($leaveRequest->attachment_file)) {
+                Storage::disk('sensitive')->delete($leaveRequest->attachment_file);
             }
-            $leaveRequest->attachment_file = $request->file('attachment_file')->store('leave_attachments', 'public');
+            $leaveRequest->attachment_file = $request->file('attachment_file')->store('leave_attachments', 'sensitive');
         }
 
         $leaveRequest->update([
@@ -319,8 +319,8 @@ class LeaveRequestController extends Controller
             }
 
             // Hapus file berkas jika ada
-            if ($leaveRequest->attachment_file && Storage::disk('public')->exists($leaveRequest->attachment_file)) {
-                Storage::disk('public')->delete($leaveRequest->attachment_file);
+            if ($leaveRequest->attachment_file && Storage::disk('sensitive')->exists($leaveRequest->attachment_file)) {
+                Storage::disk('sensitive')->delete($leaveRequest->attachment_file);
             }
 
             $leaveRequest->delete();
