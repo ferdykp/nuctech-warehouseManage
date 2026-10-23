@@ -130,7 +130,7 @@ class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, 
                 foreach ($categories as $catKey => $items) {
                     if ($items->count() > 0) {
                         foreach ($items as $item) {
-                            $snNumber = $claimMap[$item->id] ?? '-';
+                            $snNumber = $claimMap[$item->id];
 
                             $sheet->setCellValue('A' . $currentRow, $snNumber);
                             $sheet->setCellValue('B' . $currentRow, $categoryLabels[$catKey]);
@@ -139,15 +139,15 @@ class ReimbursementExport implements FromCollection, WithHeadings, WithMapping, 
                             $cleanDate = $item->date ? date('Y-m-d', strtotime($item->date)) : '-';
                             $sheet->setCellValue('C' . $currentRow, $cleanDate);
 
-                            $sheet->setCellValue('D' . $currentRow, $item->from_location ?? '-');
-                            $sheet->setCellValue('E' . $currentRow, $item->to_location ?? '-');
+                            $sheet->setCellValue('D' . $currentRow, $item->from_location);
+                            $sheet->setCellValue('E' . $currentRow, $item->to_location);
                             $sheet->setCellValue('F' . $currentRow, $item->person_name);
 
                             // Nominal ke kolom G
                             $sheet->setCellValue('G' . $currentRow, $item->amount);
 
                             // Comment ke kolom H
-                            $sheet->setCellValue('H' . $currentRow, $item->comment ?? '-');
+                            $sheet->setCellValue('H' . $currentRow, $item->comment);
 
                             $currentRow++;
                         }
