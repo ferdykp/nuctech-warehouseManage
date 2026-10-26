@@ -243,7 +243,8 @@ class AdminReimbursementController extends Controller
      */
     public function exportApprovedPdf(Request $request)
     {
-        return app(\App\Services\ReimbursementDocuments::class)->exportApprovedPdf($request);
+        return app(\App\Services\ReimbursementDocuments::class)
+            ->exportApprovedPdf($request);
     }
 
     public function exportSinglePdf($id)

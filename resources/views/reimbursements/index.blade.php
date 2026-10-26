@@ -3,22 +3,22 @@
 @section('title', 'Klaim Reimbursement')
 
 @section('content')
-                            @php
-                                $months = [
-                                    '01' => 'Januari',
-                                    '02' => 'Februari',
-                                    '03' => 'Maret',
-                                    '04' => 'April',
-                                    '05' => 'Mei',
-                                    '06' => 'Juni',
-                                    '07' => 'Juli',
-                                    '08' => 'Agustus',
-                                    '09' => 'September',
-                                    '10' => 'Oktober',
-                                    '11' => 'November',
-                                    '12' => 'Desember',
-                                ];
-                            @endphp
+    @php
+        $months = [
+            '01' => 'Januari',
+            '02' => 'Februari',
+            '03' => 'Maret',
+            '04' => 'April',
+            '05' => 'Mei',
+            '06' => 'Juni',
+            '07' => 'Juli',
+            '08' => 'Agustus',
+            '09' => 'September',
+            '10' => 'Oktober',
+            '11' => 'November',
+            '12' => 'Desember',
+        ];
+    @endphp
     <div class="w-full space-y-5">
 
         {{-- 1. HEADER & METRIC SUMMARY --}}
@@ -50,7 +50,8 @@
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div class="flex items-center justify-between p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs">
                 <div>
-                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 block">Total Nominal Klaim</span>
+                    <span class="block text-xs font-semibold tracking-wider uppercase text-slate-400">Total Nominal
+                        Klaim</span>
                     <p id="totalApprovedAmountText" class="text-lg font-bold text-slate-900 font-mono mt-0.5">
                         Rp {{ \App\Support\UiText::number((float) ($totalApprovedAmount ?? 0)) }}
                     </p>
@@ -63,7 +64,7 @@
 
             <div class="flex items-center justify-between p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs">
                 <div>
-                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 block">Jumlah Data</span>
+                    <span class="block text-xs font-semibold tracking-wider uppercase text-slate-400">Jumlah Data</span>
                     <p id="reimburseCountText" class="text-lg font-bold text-slate-900 font-mono mt-0.5">
                         {{ \App\Support\UiText::number($reimbursements->total()) }} <span
                             class="font-sans text-xs font-normal text-slate-400">Klaim</span>
@@ -77,7 +78,7 @@
 
             <div class="flex items-center justify-between p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs">
                 <div>
-                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 block">Periode Filter</span>
+                    <span class="block text-xs font-semibold tracking-wider uppercase text-slate-400">Periode Filter</span>
                     <p id="reimbursePeriodText" class="mt-1 text-sm font-semibold text-slate-800">
                         {{ request('month') && isset($months[request('month')]) ? $months[request('month')] : 'Semua Bulan' }}
                     </p>
@@ -96,15 +97,17 @@
             <div
                 class="p-4 border-b border-slate-100 bg-slate-50/40 flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
                 <form id="reimburseFilterForm" action="{{ route('reimbursements.index') }}" method="GET"
-                    onsubmit="event.preventDefault(); fetchReimbursementData();" class="flex flex-wrap items-center gap-2.5 flex-1">
+                    onsubmit="event.preventDefault(); fetchReimbursementData();"
+                    class="flex flex-wrap items-center gap-2.5 flex-1">
 
                     {{-- Search Input --}}
                     <div class="relative w-full sm:w-80">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
                             <i class="text-xs fa-solid fa-magnifying-glass"></i>
                         </span>
-                        <input type="text" id="reimburseSearchInput" aria-label="Cari klaim" name="search" value="{{ request('search') }}"
-                            placeholder="Cari pengaju, rute, atau nomor nota..." autocomplete="off"
+                        <input type="text" id="reimburseSearchInput" aria-label="Cari klaim" name="search"
+                            value="{{ request('search') }}" placeholder="Cari pengaju, rute, atau nomor nota..."
+                            autocomplete="off"
                             class="w-full h-10 pl-9.5 pr-8 text-xs bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all shadow-2xs">
 
                         <button type="button" id="clearSearchBtn" aria-label="Hapus pencarian" onclick="clearSearch()"
@@ -114,10 +117,12 @@
                     </div>
 
                     <div class="w-full sm:w-56">
-                        <select id="reimburseStatusSelect" name="status" aria-label="Tahap persetujuan klaim" class="w-full rounded-xl border border-slate-200 bg-white text-sm">
+                        <select id="reimburseStatusSelect" name="status" aria-label="Tahap persetujuan klaim"
+                            class="w-full text-sm bg-white border rounded-xl border-slate-200">
                             <option value="">Semua Status</option>
                             @foreach (['waiting' => 'Semua yang Menunggu', 'pending' => 'Tanda Tangan Pengaju', 'pending_leader' => 'Menunggu Ketua Tim', 'pending_station' => 'Menunggu Kepala Stasiun', 'pending_manager' => 'Menunggu Manajer', 'approved' => 'Disetujui', 'rejected' => 'Ditolak'] as $value => $label)
-                                <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
+                                <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -155,8 +160,8 @@
                         <span>Impor Excel</span>
                     </button>
 
-                    <a href="{{ route('reimbursements.export_pdf', ['month' => request('month')]) }}" id="pdfExportLink" title="Ekspor klaim yang sudah disetujui pada bulan terpilih"
-                        download title="Ekspor PDF"
+                    <a href="{{ route('reimbursements.export_pdf', ['month' => request('month')]) }}" id="pdfExportLink"
+                        title="Ekspor klaim yang sudah disetujui pada bulan terpilih" download title="Ekspor PDF"
                         class="h-10 px-3.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-2xs inline-flex items-center gap-2 active:scale-[0.98]">
                         <i class="text-sm fa-solid fa-file-pdf text-rose-500"></i>
                         <span>Ekspor PDF</span>
@@ -177,7 +182,7 @@
                     <table class="w-full text-left border-collapse min-w-[700px]">
                         <thead>
                             <tr
-                                class="text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50 border-b border-slate-100">
+                                class="text-xs font-bold tracking-wider uppercase border-b text-slate-400 bg-slate-50/50 border-slate-100">
                                 <th class="w-10 px-4 py-3 text-center">
                                     <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)"
                                         class="rounded cursor-pointer border-slate-300 text-slate-900 focus:ring-slate-900">
@@ -225,7 +230,7 @@
                                                         </span>
                                                     @elseif($r->comment)
                                                         <span>•</span>
-                                                        <span class="font-mono text-slate-500 text-xs">Ref:
+                                                        <span class="font-mono text-xs text-slate-500">Ref:
                                                             {{ $r->comment }}</span>
                                                     @endif
                                                 </div>
@@ -283,11 +288,11 @@
 
                                             {{-- Edit --}}
                                             @if (\App\Services\ReimbursementAccess::canEdit($r))
-<a href="{{ route('reimbursements.edit', $r->id) }}" title="Ubah Klaim"
-                                                class="inline-flex items-center justify-center transition-colors border rounded-lg w-7 h-7 text-slate-500 bg-slate-50 border-slate-200/80 hover:bg-slate-200 hover:text-slate-800">
-                                                <i class="fa-solid fa-pen-to-square text-[11px]"></i>
-                                            </a>
-@endif
+                                                <a href="{{ route('reimbursements.edit', $r->id) }}" title="Ubah Klaim"
+                                                    class="inline-flex items-center justify-center transition-colors border rounded-lg w-7 h-7 text-slate-500 bg-slate-50 border-slate-200/80 hover:bg-slate-200 hover:text-slate-800">
+                                                    <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+                                                </a>
+                                            @endif
 
                                             {{-- Archive --}}
                                             <button type="button"
@@ -308,7 +313,8 @@
                                                 <i class="text-sm fa-solid fa-receipt"></i>
                                             </div>
                                             <p class="text-xs font-bold text-slate-800">Klaim Tidak Ditemukan</p>
-                                            <p class="mt-0.5 text-xs text-slate-400">Tidak ada klaim yang sesuai dengan filter yang dipilih.</p>
+                                            <p class="mt-0.5 text-xs text-slate-400">Tidak ada klaim yang sesuai dengan
+                                                filter yang dipilih.</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -324,7 +330,7 @@
                             <div class="flex items-start justify-between gap-2">
                                 <div class="flex items-center gap-2">
                                     <div
-                                        class="w-7 h-7 font-bold text-slate-700 bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-center text-xs shrink-0">
+                                        class="flex items-center justify-center text-xs font-bold border rounded-lg w-7 h-7 text-slate-700 bg-slate-100 border-slate-200 shrink-0">
                                         {{ strtoupper(substr($r->person_name ?? '?', 0, 1)) }}
                                     </div>
                                     <div>
@@ -338,19 +344,21 @@
                             </div>
 
                             <div class="flex items-center justify-between p-2 text-xs rounded-lg bg-slate-50">
-                                <span class="text-xs font-bold text-slate-400 uppercase">{{ \App\Support\UiText::label($r->category) }}</span>
+                                <span
+                                    class="text-xs font-bold uppercase text-slate-400">{{ \App\Support\UiText::label($r->category) }}</span>
                                 <span class="font-mono font-bold text-slate-900">Rp
                                     {{ \App\Support\UiText::number((float) ($r->amount ?? 0)) }}</span>
                             </div>
 
-                            <div data-ui-row-actions class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                            <div data-ui-row-actions
+                                class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
                                 <div class="flex gap-1">
                                     @if (\App\Services\ReimbursementAccess::canEdit($r))
-<a href="{{ route('reimbursements.edit', $r->id) }}"
-                                        class="p-2 text-xs rounded-lg text-slate-600 bg-slate-100">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                                    </a>
-@endif
+                                        <a href="{{ route('reimbursements.edit', $r->id) }}"
+                                            class="p-2 text-xs rounded-lg text-slate-600 bg-slate-100">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+                                    @endif
                                     <button type="button" onclick="openDetailModal(this)"
                                         data-reimbursement="{{ json_encode($r, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) }}"
                                         class="p-2 text-xs rounded-lg cursor-pointer text-slate-600 bg-slate-100">
@@ -430,28 +438,33 @@
                 <div class="space-y-4 lg:col-span-2">
                     <div class="p-3.5 border border-slate-200/80 bg-slate-50/50 rounded-xl space-y-2">
                         <div>
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Diajukan oleh</span>
+                            <span class="block text-xs font-bold tracking-wider uppercase text-slate-400">Diajukan
+                                oleh</span>
                             <p id="modal-name" class="font-bold text-slate-900 text-sm mt-0.5">-</p>
                         </div>
                         <div class="pt-2 border-t border-slate-200/60">
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Tanggal Pengajuan</span>
+                            <span class="block text-xs font-bold tracking-wider uppercase text-slate-400">Tanggal
+                                Pengajuan</span>
                             <p id="modal-date" class="font-medium text-slate-800 mt-0.5">-</p>
                         </div>
                     </div>
 
                     <div class="p-3.5 border border-slate-200/80 rounded-xl space-y-2">
                         <div>
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Nominal Klaim</span>
+                            <span class="block text-xs font-bold tracking-wider uppercase text-slate-400">Nominal
+                                Klaim</span>
                             <p id="modal-amount" class="text-lg font-mono font-bold text-slate-900 mt-0.5">Rp 0</p>
                         </div>
                         <div class="pt-2 border-t border-slate-100">
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Informasi Rute</span>
+                            <span class="block text-xs font-bold tracking-wider uppercase text-slate-400">Informasi
+                                Rute</span>
                             <p id="modal-route" class="font-medium text-slate-800 mt-0.5">-</p>
                         </div>
                     </div>
 
                     <div>
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Catatan / Keterangan</span>
+                        <span class="block mb-1 text-xs font-bold tracking-wider uppercase text-slate-400">Catatan /
+                            Keterangan</span>
                         <div id="modal-comment"
                             class="p-3 italic border border-slate-200 bg-slate-50/50 rounded-xl text-slate-700">
                             "Belum ada keterangan."
@@ -459,7 +472,8 @@
                     </div>
 
                     <div>
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1.5">Tahapan Persetujuan</span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1.5">Tahapan
+                            Persetujuan</span>
                         <div class="p-3 space-y-2 border border-slate-200/80 rounded-xl bg-slate-50/30">
                             <div class="flex items-center justify-between pb-1.5 border-b border-slate-200/60">
                                 <span class="font-semibold text-slate-700">1. Karyawan Pengaju</span>
@@ -482,7 +496,7 @@
                 </div>
 
                 <div class="lg:col-span-3 flex flex-col space-y-1.5 min-h-[300px]">
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Lampiran Nota</span>
+                    <span class="block text-xs font-bold tracking-wider uppercase text-slate-400">Lampiran Nota</span>
                     <div id="modal-attachment-frame"
                         class="relative flex-1 w-full overflow-hidden border border-slate-200 bg-slate-100 rounded-xl">
                     </div>
