@@ -509,38 +509,25 @@ class ReimbursementDocuments
 
     private function resolveReceiptPath($receiptAttachment)
     {
-        if (!is_string($receiptAttachment) || trim($receiptAttachment) === '') {
+        if (empty($receiptAttachment)) {
             return null;
         }
 
-        // Utamakan filesystem yang sama dengan proses upload/store().
-        // Disk 'sensitive' harus merupakan disk lokal agar FPDI dapat membaca path.
-        try {
-            $disk = Storage::disk('sensitive');
-            if ($disk->exists($receiptAttachment)) {
-                $localPath = $disk->path($receiptAttachment);
-                if (is_file($localPath) && is_readable($localPath)) {
-                    return $localPath;
-                }
+        foreach (['sensitive', 'public'] as $diskName) {
+            $disk = \Illuminate\Support\Facades\Storage::disk($diskName);
+
+            if (!$disk->exists($receiptAttachment)) {
+                continue;
             }
-        } catch (\Throwable $e) {
-            Log::warning('Gagal menyelesaikan path receipt di disk sensitive', [
-                'message' => $e->getMessage(),
-            ]);
+
+            $path = $disk->path($receiptAttachment);
+
+            if (is_file($path) && is_readable($path)) {
+                return $path;
+            }
         }
 
-        // Fallback untuk lampiran lama dengan kebijakan path khusus.
-        try {
-            $legacyPath = SensitiveFiles::path($receiptAttachment);
-            return is_string($legacyPath) && is_file($legacyPath) && is_readable($legacyPath)
-                ? $legacyPath
-                : null;
-        } catch (\Throwable $e) {
-            Log::warning('Gagal menyelesaikan legacy receipt path', [
-                'message' => $e->getMessage(),
-            ]);
-            return null;
-        }
+        return null;
     }
 
     /**
