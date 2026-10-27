@@ -363,7 +363,7 @@ class EmployeeController extends Controller
     public function export(Request $request)
     {
         $fileName = 'Employee_List_' . date('Y-m-d_H-i-s') . '.xlsx';
-        return Excel::download(new EmployeesExport($request->all()), $fileName);
+        return Excel::download(new EmployeesExport(), $fileName);
     }
 
     public function import(Request $request)
