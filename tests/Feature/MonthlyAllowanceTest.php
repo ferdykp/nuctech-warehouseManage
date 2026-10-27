@@ -56,12 +56,25 @@ class MonthlyAllowanceTest extends TestCase
         $this->generate('12');
         $this->assertEquals(0, Salary::whereMonth('created_at', 12)->firstOrFail()->allowance_total);
         $this->assertEquals(7000000, $employee->fresh()->basic_salary);
+        $salary->update(['before_after' => 'Salary adjustment', 'get_information' => 'Payroll note']);
         $export = new SalaryExport('10', 2026);
         $row = $export->map($export->collection()->first());
         $this->assertEquals(8000000, $row[5]);
         $this->assertEquals('00123', $row[4]);
         $this->assertEquals(7000000, $row[11]);
         $this->assertEquals(1000000, $row[12]);
+        $this->assertSame('Salary adjustment', $row[7]);
+        $this->assertSame('Payroll note', $row[10]);
+        $this->assertSame('PPR : Rp 1.000.000', $row[13]);
+        $this->assertCount(count($row), $export->headings()[1]);
+
+        $workbook = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
+        $sheet = $workbook->getActiveSheet();
+        $sheet->fromArray($export->headings());
+        $sheet->fromArray([$row], null, 'A3');
+        $export->styles($sheet);
+        $this->assertSame('A2:N3', $sheet->getAutoFilter()->getRange());
+        $this->assertContains('A1:N1', $sheet->getMergeCells());
     }
 
     public function test_multiple_allowances_boundaries_and_legacy_payroll(): void

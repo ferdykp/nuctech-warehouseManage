@@ -130,6 +130,7 @@ class PrivateAttachmentsTest extends TestCase
         $this->assertNotSame($bytes, Storage::disk('sensitive')->get($claim->receipt_attachment));
         $this->assertCount(1, Storage::disk('sensitive')->allFiles('signatures'));
         $this->assertSame([], Storage::disk('public')->allFiles());
+        $claim->update(['receipt_attachment' => 'storage/'.$claim->receipt_attachment]);
         $this->actingAs($owner)->get('/reimbursements/'.$claim->id.'/export-single-pdf')
             ->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $this->assertSame([], Storage::disk('sensitive')->allFiles('temporary'));

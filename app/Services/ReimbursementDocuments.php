@@ -513,14 +513,11 @@ class ReimbursementDocuments
             return null;
         }
 
-        foreach (['sensitive', 'public'] as $diskName) {
-            $disk = \Illuminate\Support\Facades\Storage::disk($diskName);
+        $receiptAttachment = SensitiveFiles::normalize($receiptAttachment);
+        $disk = Storage::disk('sensitive');
 
-            if (!$disk->exists($receiptAttachment)) {
-                continue;
-            }
-
-            $path = $disk->path($receiptAttachment);
+        if ($disk->exists($receiptAttachment)) {
+            $path = SensitiveFiles::path($receiptAttachment);
 
             if (is_file($path) && is_readable($path)) {
                 return $path;

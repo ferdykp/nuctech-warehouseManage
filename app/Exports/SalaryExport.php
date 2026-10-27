@@ -271,17 +271,7 @@ class SalaryExport extends DefaultValueBinder implements
 
         return [
             [
-                $title,
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
+                $title, '', '', '', '', '', '', '', '', '', '', '', '', '',
             ],
             [
                 'No',
@@ -295,6 +285,9 @@ class SalaryExport extends DefaultValueBinder implements
                 'More Information',
                 'Placement',
                 'Get Information',
+                'Basic Salary',
+                'Monthly Allowance',
+                'Allowance Details',
             ],
         ];
     }
@@ -386,7 +379,7 @@ class SalaryExport extends DefaultValueBinder implements
             );
 
         /**
-         * Mempertahankan 11 kolom existing.
+         * Mempertahankan kolom existing dan menambahkan rincian tunjangan.
          */
         return [
             $this->rowNumber,
@@ -396,9 +389,12 @@ class SalaryExport extends DefaultValueBinder implements
             (string) $salary->account_no,
             $numericAmount,
             $salary->information ?? '-',
-            $salary->allowance_total,
+            $beforeAfter,
             $moreInformation,
             $placement,
+            $getInformation,
+            (float) ($salary->amount ?? 0),
+            (float) ($salary->allowance_total ?? 0),
             collect($salary->allowance_snapshot ?? [])
                 ->map(
                     fn($item) =>
@@ -418,7 +414,8 @@ class SalaryExport extends DefaultValueBinder implements
             'A' => NumberFormat::FORMAT_NUMBER,
             'E' => NumberFormat::FORMAT_TEXT,
             'F' => '"Rp "#,##0',
-            'H' => '"Rp "#,##0',
+            'L' => '"Rp "#,##0',
+            'M' => '"Rp "#,##0',
         ];
     }
 
@@ -431,10 +428,10 @@ class SalaryExport extends DefaultValueBinder implements
         $highestRow = max($sheet->getHighestRow(), 2);
 
         // JUDUL UTAMA - BARIS 1
-        $sheet->mergeCells('A1:K1');
+        $sheet->mergeCells('A1:N1');
         $sheet->getRowDimension(1)->setRowHeight(35);
 
-        $sheet->getStyle('A1:K1')->applyFromArray([
+        $sheet->getStyle('A1:N1')->applyFromArray([
             'font' => [
                 'name' => 'Calibri',
                 'bold' => true,
@@ -450,7 +447,7 @@ class SalaryExport extends DefaultValueBinder implements
         // HEADER KOLOM - BARIS 2
         $sheet->getRowDimension(2)->setRowHeight(28);
 
-        $sheet->getStyle('A2:K2')->applyFromArray([
+        $sheet->getStyle('A2:N2')->applyFromArray([
             'font' => [
                 'name' => 'Calibri',
                 'bold' => true,
@@ -466,14 +463,14 @@ class SalaryExport extends DefaultValueBinder implements
 
         // BORDER TABEL
         // BORDER SELURUH TABEL TERMASUK HEADER
-        $sheet->getStyle("A1:K{$highestRow}")
+        $sheet->getStyle("A1:N{$highestRow}")
             ->getBorders()
             ->getAllBorders()
             ->setBorderStyle(Border::BORDER_THIN);
 
         // ALIGNMENT DATA
         if ($highestRow >= 3) {
-            $sheet->getStyle("A3:K{$highestRow}")
+            $sheet->getStyle("A3:N{$highestRow}")
                 ->getAlignment()
                 ->setVertical(Alignment::VERTICAL_CENTER);
 
@@ -498,7 +495,7 @@ class SalaryExport extends DefaultValueBinder implements
         $sheet->freezePane('A3');
 
         // AUTOFILTER
-        $sheet->setAutoFilter("A2:K{$highestRow}");
+        $sheet->setAutoFilter("A2:N{$highestRow}");
 
         // PRINT SETTINGS
         $sheet->getPageSetup()
