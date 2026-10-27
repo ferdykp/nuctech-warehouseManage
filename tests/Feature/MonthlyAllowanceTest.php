@@ -61,20 +61,34 @@ class MonthlyAllowanceTest extends TestCase
         $row = $export->map($export->collection()->first());
         $this->assertEquals(8000000, $row[5]);
         $this->assertEquals('00123', $row[4]);
-        $this->assertEquals(7000000, $row[11]);
-        $this->assertEquals(1000000, $row[12]);
-        $this->assertSame('Salary adjustment', $row[7]);
-        $this->assertSame('Payroll note', $row[10]);
-        $this->assertSame('PPR : Rp 1.000.000', $row[13]);
-        $this->assertCount(count($row), $export->headings()[1]);
+        $this->assertEquals(7000000, $row[7]);
+        $this->assertSame('Payroll note; Additional Salary Rp 1.000.000 (PPR)', $row[10]);
+        $this->assertCount(11, $row);
+        $this->assertCount(11, $export->headings()[1]);
 
         $workbook = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
         $sheet = $workbook->getActiveSheet();
         $sheet->fromArray($export->headings());
         $sheet->fromArray([$row], null, 'A3');
         $export->styles($sheet);
-        $this->assertSame('A2:N3', $sheet->getAutoFilter()->getRange());
-        $this->assertContains('A1:N1', $sheet->getMergeCells());
+        $this->assertSame('A2:K3', $sheet->getAutoFilter()->getRange());
+        $this->assertContains('A1:K1', $sheet->getMergeCells());
+    }
+
+    public function test_salary_export_without_allowance_has_blank_optional_cells(): void
+    {
+        $employee = $this->employee();
+        $employee->update(['join_date' => null]);
+        $this->generate('10');
+        $salary = Salary::firstOrFail();
+        $salary->update(['get_information' => '-', 'more_information' => '-', 'before_after' => '-']);
+        $export = new SalaryExport('10', 2026);
+        $row = $export->map($export->collection()->first());
+        $this->assertEquals(7000000, $row[5]);
+        $this->assertSame('', $row[7]);
+        $this->assertSame('', $row[8]);
+        $this->assertSame('', $row[10]);
+        $this->assertNotContains('-', $row);
     }
 
     public function test_multiple_allowances_boundaries_and_legacy_payroll(): void
@@ -88,6 +102,13 @@ class MonthlyAllowanceTest extends TestCase
         $this->generate('10');
         $salary = Salary::firstOrFail();
         $this->assertEquals(1500000, $salary->allowance_total);
+        $export = new SalaryExport('10', 2026);
+        $row = $export->map($export->collection()->first());
+        $this->assertEquals(8500000, $row[5]);
+        $this->assertEquals(7000000, $row[7]);
+        $this->assertStringContainsString('Additional Salary Rp 1.000.000 (PPR)', $row[10]);
+        $this->assertStringContainsString('Additional Salary Rp 500.000 (Jabatan)', $row[10]);
+        $this->assertStringNotContainsString('Mendatang', $row[10]);
         $salary->update(['allowance_snapshot' => null]);
         $this->get(route('salary.show', $salary))->assertJsonPath('calculation.total_salary_to_pay', 'Rp 7.000.000');
         $this->put(route('salary.update', $salary), ['employee_id'=>$employee->id,'bank'=>'BCA','account_no'=>'00123','amount'=>7000000,'information'=>'regular salary','refresh_allowances'=>1])->assertRedirect();
