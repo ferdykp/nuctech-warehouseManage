@@ -161,7 +161,7 @@
                     </button>
 
                     <a href="{{ route('reimbursements.export_pdf', ['month' => request('month')]) }}" id="pdfExportLink"
-                        title="Ekspor klaim yang sudah disetujui pada bulan terpilih" download title="Ekspor PDF"
+                        title="Ekspor klaim yang sudah disetujui pada bulan terpilih"
                         class="h-10 px-3.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-2xs inline-flex items-center gap-2 active:scale-[0.98]">
                         <i class="text-sm fa-solid fa-file-pdf text-rose-500"></i>
                         <span>Ekspor PDF</span>
@@ -280,7 +280,7 @@
                                             </a>
 
                                             {{-- Download PDF --}}
-                                            <a href="{{ route('reimbursements.export_single_pdf', $r->id) }}" download
+                                            <a href="{{ route('reimbursements.export_single_pdf', $r->id) }}"
                                                 title="Unduh Nota PDF"
                                                 class="inline-flex items-center justify-center transition-colors border rounded-lg w-7 h-7 text-rose-600 bg-rose-50 border-rose-100 hover:bg-rose-600 hover:text-white">
                                                 <i class="fa-solid fa-file-pdf text-[11px]"></i>

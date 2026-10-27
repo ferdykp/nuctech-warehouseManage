@@ -139,6 +139,12 @@ class PrivateAttachmentsTest extends TestCase
         $claim->update(['receipt_attachment' => 'storage/'.$claim->receipt_attachment]);
         $this->actingAs($owner)->get('/reimbursements/'.$claim->id.'/export-single-pdf')
             ->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->actingAs(User::factory()->create(['role' => 'superadmin']));
+        $response = $this->get(route('reimbursements.export_pdf'));
+        $response->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF-', $response->getContent());
+        $html = $this->get(route('reimbursements.index'))->assertOk()->getContent();
+        $this->assertDoesNotMatchRegularExpression('/<a[^>]+(?:id="pdfExportLink"|export-single-pdf)[^>]*\bdownload\b/s', $html);
         $this->assertSame([], Storage::disk('sensitive')->allFiles('temporary'));
     }
 

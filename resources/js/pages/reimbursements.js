@@ -1,3 +1,6 @@
+let disposeReceiptPreview = () => {};
+let receiptPreviewVersion = 0;
+
 const config = JSON.parse(
     document.getElementById("reimbursements-config").textContent,
 );
@@ -459,6 +462,8 @@ function openDetailModal(buttonElement) {
 
     const frame = document.getElementById("modal-attachment-frame");
 
+    disposeReceiptPreview();
+    const previewVersion = ++receiptPreviewVersion;
     frame.innerHTML = "";
 
     if (data.receipt_attachment) {
@@ -467,7 +472,14 @@ function openDetailModal(buttonElement) {
         const fullUrl = `/reimbursements/${encodeURIComponent(data.id)}/receipt`;
 
         if (fileExt === "pdf") {
-            frame.innerHTML = `<object data="${fullUrl}#toolbar=0" type="application/pdf" title="Pratinjau bukti nota PDF" class="block w-full h-full min-h-[280px]"></object>`;
+            frame.textContent = 'Memuat pratinjau PDF…';
+            import('./receipt-preview.js').then(({ previewReceipt }) => {
+                if (previewVersion !== receiptPreviewVersion) return;
+                disposeReceiptPreview = previewReceipt(frame, fullUrl);
+            }).catch(() => {
+                if (previewVersion !== receiptPreviewVersion) return;
+                frame.textContent = 'Pratinjau gagal dimuat. Muat ulang halaman lalu coba kembali.';
+            });
         } else {
             frame.innerHTML = `<div class="flex items-center justify-center w-full h-full p-2 bg-slate-50"><img src="${fullUrl}" alt="Bukti nota klaim" class="object-contain max-w-full max-h-full rounded-lg" /></div>`;
         }
@@ -487,6 +499,8 @@ function openDetailModal(buttonElement) {
 }
 
 function closeDetailModal() {
+    ++receiptPreviewVersion;
+    disposeReceiptPreview();
     const m = document.getElementById("detailModal");
 
     if (m) {
