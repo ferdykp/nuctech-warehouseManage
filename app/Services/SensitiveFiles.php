@@ -25,6 +25,38 @@ class SensitiveFiles
         return Storage::disk('sensitive')->path(self::normalize($path));
     }
 
+    public static function receiptPath(string $path): ?string
+    {
+        $path = self::normalize($path);
+        if (! str_starts_with($path, 'receipts/')) {
+            throw new \InvalidArgumentException('Invalid receipt attachment path.');
+        }
+
+        foreach (['sensitive', 'public'] as $diskName) {
+            $disk = Storage::disk($diskName);
+            if ($disk->exists($path)) {
+                $file = $disk->path($path);
+                if (is_file($file) && is_readable($file)) {
+                    return $file;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static function receiptResponse(string $path)
+    {
+        $file = self::receiptPath($path);
+        abort_unless($file, 404);
+
+        return response()->file($file, [
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+            'Content-Security-Policy' => "sandbox; default-src 'none'",
+        ]);
+    }
+
     public static function temporaryPath(string $prefix): string
     {
         Storage::disk('sensitive')->makeDirectory('temporary');

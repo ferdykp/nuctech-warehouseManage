@@ -15,7 +15,7 @@ class AttachmentController extends Controller
         ReimbursementAccess::view($reimbursement);
         abort_unless($reimbursement->receipt_attachment, 404);
 
-        return SensitiveFiles::response($reimbursement->receipt_attachment);
+        return SensitiveFiles::receiptResponse($reimbursement->receipt_attachment);
     }
 
     public function leave(LeaveRequest $leave)

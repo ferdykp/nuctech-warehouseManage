@@ -99,11 +99,11 @@ class PrivateAttachmentsTest extends TestCase
 
     public static function receiptFormats(): array
     {
-        return [['png'], ['pdf']];
+        return [['png', 'sensitive'], ['pdf', 'sensitive'], ['png', 'public'], ['pdf', 'public']];
     }
 
     #[\PHPUnit\Framework\Attributes\DataProvider('receiptFormats')]
-    public function test_signing_and_pdf_export_work_with_private_receipts(string $extension): void
+    public function test_signing_and_pdf_export_work_with_private_receipts(string $extension, string $diskName): void
     {
         $owner = User::factory()->create(['role' => 'employee_role', 'site_id' => $this->site()->id]);
         $claim = $this->claim($owner);
@@ -129,7 +129,13 @@ class PrivateAttachmentsTest extends TestCase
         $this->assertSame('approved', $claim->fresh()->status);
         $this->assertNotSame($bytes, Storage::disk('sensitive')->get($claim->receipt_attachment));
         $this->assertCount(1, Storage::disk('sensitive')->allFiles('signatures'));
-        $this->assertSame([], Storage::disk('public')->allFiles());
+        if ($diskName === 'sensitive') {
+            $this->assertSame([], Storage::disk('public')->allFiles());
+        }
+        if ($diskName === 'public') {
+            Storage::disk('public')->put($claim->receipt_attachment, Storage::disk('sensitive')->get($claim->receipt_attachment));
+            Storage::disk('sensitive')->delete($claim->receipt_attachment);
+        }
         $claim->update(['receipt_attachment' => 'storage/'.$claim->receipt_attachment]);
         $this->actingAs($owner)->get('/reimbursements/'.$claim->id.'/export-single-pdf')
             ->assertOk()->assertHeader('Content-Type', 'application/pdf');
@@ -163,14 +169,16 @@ class PrivateAttachmentsTest extends TestCase
         $this->assertSame('different private data', Storage::disk('sensitive')->get('receipts/conflict.pdf'));
     }
 
-    public function test_legacy_prefix_resolves_privately_and_missing_file_does_not_fall_back_to_public(): void
+    public function test_legacy_receipt_falls_back_to_public_and_prefers_sensitive(): void
     {
         $owner = User::factory()->create(['role' => 'employee_role']);
         $claim = $this->claim($owner);
-        Storage::disk('public')->put($claim->receipt_attachment, 'public legacy');
-        $this->actingAs($owner)->get(route('reimbursements.receipt', $claim))->assertNotFound();
+        Storage::disk('public')->put($claim->receipt_attachment, '%PDF-1.4 public legacy');
+        $this->actingAs($owner)->get(route('reimbursements.receipt', $claim))->assertOk();
+        $this->assertSame(Storage::disk('public')->path($claim->receipt_attachment), SensitiveFiles::receiptPath($claim->receipt_attachment));
         $claim->update(['receipt_attachment' => 'storage/receipts/test.pdf']);
         Storage::disk('sensitive')->put('receipts/test.pdf', '%PDF-1.4 private');
+        $this->assertSame(Storage::disk('sensitive')->path('receipts/test.pdf'), SensitiveFiles::receiptPath($claim->receipt_attachment));
         $this->get(route('reimbursements.receipt', $claim))->assertOk();
     }
 
