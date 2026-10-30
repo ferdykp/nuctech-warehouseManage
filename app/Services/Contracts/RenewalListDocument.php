@@ -30,8 +30,15 @@ class RenewalListDocument
             foreach ($rows as $i => $row) {
                 $copy = $sample->cloneNode(true);
                 $e = $row['employee'];
-                $values = [(string) ($i + 1), $e->position ?: '—', $e->name.($row['legacy'] ? ' *' : ''), $e->bank_name ?: '—',
-                    $e->bank_account_number ?: '—', ContractRenewalList::amountLabel($row['amount'])];
+                $values = [
+                    (string) ($i + 1),
+                    $e->position ?: '—',
+                    // $e->name . ($row['legacy'] ? ' *' : ''),
+                    $e->name . ($row['legacy']),
+                    $e->bank_name ?: '—',
+                    $e->bank_account_number ?: '—',
+                    ContractRenewalList::amountLabel($row['amount'])
+                ];
                 foreach ($xp->query('./w:tc', $copy) as $n => $cell) {
                     $this->fill($xp, $cell, $values[$n]);
                 }
@@ -54,12 +61,12 @@ class RenewalListDocument
 
     public function totalCents(Collection $rows): int
     {
-        return $rows->sum(fn ($row) => (int) round((float) $row['amount'] * 100));
+        return $rows->sum(fn($row) => (int) round((float) $row['amount'] * 100));
     }
 
     public function money(int $cents): string
     {
-        return 'Rp'.number_format($cents / 100, $cents % 100 === 0 ? 0 : 2, ',', '.');
+        return 'Rp' . number_format($cents / 100, $cents % 100 === 0 ? 0 : 2, ',', '.');
     }
 
     private function fill(DOMXPath $xp, \DOMNode $cell, string $value): void

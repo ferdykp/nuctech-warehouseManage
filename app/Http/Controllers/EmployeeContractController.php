@@ -46,48 +46,64 @@ class EmployeeContractController extends Controller
         if ($rows->isEmpty()) {
             return redirect()->route('contracts.renewals.export', $filters)->with('error', 'Tidak ada karyawan sesuai filter untuk diekspor.');
         }
-        if ($rows->contains(fn ($r) => count($r['missing']) > 0) && ! $request->boolean('allow_incomplete')) {
+        if ($rows->contains(fn($r) => count($r['missing']) > 0) && ! $request->boolean('allow_incomplete')) {
             return redirect()->route('contracts.renewals.export', $filters)->with('error', 'Ada data belum lengkap. Periksa ringkasan dan konfirmasi sebelum mengunduh.');
         }
         $path = $document->generate($rows, $list->period($filters, 'en'));
 
-        return response()->download($path, 'Remuneration-PKWT-'.$filters['year'].'-'.sprintf('%02d-%02d', $filters['month'], $filters['month_end']).'.docx', [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff',
+        return response()->download($path, 'Remuneration-PKWT-' . $filters['year'] . '-' . sprintf('%02d-%02d', $filters['month'], $filters['month_end']) . '.docx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
         ])->deleteFileAfterSend(true);
     }
 
     private function renewalViewData(array $filters, $rows, $list, $document): array
     {
-        return ['filters' => $filters, 'rows' => $rows, 'period' => $list->period($filters), 'total' => $document->money($document->totalCents($rows)),
-            'missingCount' => $rows->filter(fn ($r) => count($r['missing']) > 0)->count(),
-            'months' => collect(range(1, 12))->mapWithKeys(fn ($m) => [$m => \Carbon\Carbon::create(2026, $m, 1)->locale('id')->translatedFormat('F')])->all()];
+        return [
+            'filters' => $filters,
+            'rows' => $rows,
+            'period' => $list->period($filters),
+            'total' => $document->money($document->totalCents($rows)),
+            'missingCount' => $rows->filter(fn($r) => count($r['missing']) > 0)->count(),
+            'months' => collect(range(1, 12))->mapWithKeys(fn($m) => [$m => \Carbon\Carbon::create(2026, $m, 1)->locale('id')->translatedFormat('F')])->all()
+        ];
     }
 
     public function archive(Request $request)
     {
-        $query = EmployeeContract::with('employee.site', 'employee.branch')->withExists(['renewals as has_approved_renewal' => fn ($q) => $q->where('status', 'active')]);
+        $query = EmployeeContract::with('employee.site', 'employee.branch')->withExists(['renewals as has_approved_renewal' => fn($q) => $q->where('status', 'active')]);
         if ($request->filled('search')) {
             $search = mb_substr((string) $request->search, 0, 150);
-            $query->where(fn ($q) => $q->where('contract_number', 'like', "%$search%")->orWhereHas('employee', fn ($e) => $e->where('name', 'like', "%$search%")));
+            $query->where(fn($q) => $q->where('contract_number', 'like', "%$search%")->orWhereHas('employee', fn($e) => $e->where('name', 'like', "%$search%")));
         }
         if ($request->filled('employee_id')) {
             $query->where('employee_id', $request->integer('employee_id'));
         }
         if ($request->filled('branch_id')) {
-            $query->whereHas('employee', fn ($e) => $e->where('branch_id', $request->integer('branch_id')));
+            $query->whereHas('employee', fn($e) => $e->where('branch_id', $request->integer('branch_id')));
         }
         switch ($request->status) {
-            case 'attention': $query->whereIn('status', ['needs_verification', 'draft', 'pending_signature']);
+            case 'attention':
+                $query->whereIn('status', ['needs_verification', 'draft', 'pending_signature']);
                 break;
-            case 'active': $query->where('status', 'active')->whereDate('start_date', '<=', today())->whereDate('end_date', '>=', today());
+            case 'active':
+                $query->where('status', 'active')->whereDate('start_date', '<=', today())->whereDate('end_date', '>=', today());
                 break;
-            case 'scheduled': $query->where('status', 'active')->whereDate('start_date', '>', today());
+            case 'scheduled':
+                $query->where('status', 'active')->whereDate('start_date', '>', today());
                 break;
-            case 'expired': $query->where('status', 'active')->whereDate('end_date', '<', today());
+            case 'expired':
+                $query->where('status', 'active')->whereDate('end_date', '<', today());
                 break;
-            case 'due': $query->needsRenewal()->whereBetween('end_date', [today()->toDateString(), today()->addDays(60)->toDateString()]);
+            case 'due':
+                $query->needsRenewal()->whereBetween('end_date', [today()->toDateString(), today()->addDays(60)->toDateString()]);
                 break;
-            case 'needs_verification': case 'draft': case 'pending_signature': case 'cancelled': $query->where('status', $request->status);
+            case 'needs_verification':
+            case 'draft':
+            case 'pending_signature':
+            case 'cancelled':
+                $query->where('status', $request->status);
                 break;
         }
         $stats = [
@@ -109,7 +125,9 @@ class EmployeeContractController extends Controller
         }
         $previous = $employee?->contracts()->where('status', 'active')->orderByDesc('end_date')->first();
         $documents->defaultTemplate();
-        $contract = new EmployeeContract(['employee_id' => $employee?->id, 'previous_contract_id' => $previous?->id,
+        $contract = new EmployeeContract([
+            'employee_id' => $employee?->id,
+            'previous_contract_id' => $previous?->id,
             'contract_date' => $previous?->end_date?->copy()->addDay() ?? $employee?->pkwt_date,
             'start_date' => $previous?->end_date?->copy()->addDay() ?? $employee?->pkwt_date,
             'end_date' => ($previous?->end_date?->copy()->addDay() ?? $employee?->pkwt_date)?->copy()->addYearNoOverflow()->subDay(),
@@ -134,8 +152,13 @@ class EmployeeContractController extends Controller
             }
             $previous = EmployeeContract::where('employee_id', $employee->id)->where('status', 'active')->orderByDesc('end_date')->first();
             $this->noOverlap($employee->id, $data['start_date'], $data['end_date']);
-            $contract = EmployeeContract::create($data + ['employee_id' => $employee->id, 'status' => 'draft', 'created_by' => auth()->id(),
-                'previous_contract_id' => $previous?->id, 'snapshot' => array_merge($this->snapshot($employee), $this->individual($request))]);
+            $contract = EmployeeContract::create($data + [
+                'employee_id' => $employee->id,
+                'status' => 'draft',
+                'created_by' => auth()->id(),
+                'previous_contract_id' => $previous?->id,
+                'snapshot' => array_merge($this->snapshot($employee), $this->individual($request))
+            ]);
             $this->event($contract, 'Draft dibuat');
 
             return redirect()->route('contracts.show', $contract)->with('success', 'Draft dibuat. Periksa data lalu buat dokumen.');
@@ -193,8 +216,10 @@ class EmployeeContractController extends Controller
             $contract->save();
             $this->event($contract, 'Dokumen dibuat', $result);
 
-            return redirect()->route('contracts.show', $contract)->with($result['conversion_error'] ? 'error' : 'success',
-                $result['conversion_error'] ? 'Word berhasil dibuat, tetapi konversi PDF belum tersedia. Periksa konfigurasi LibreOffice lalu coba Buat Ulang Dokumen.' : 'Word dan PDF siap diperiksa. Unggah dokumen bertanda tangan setelah proses selesai.');
+            return redirect()->route('contracts.show', $contract)->with(
+                $result['conversion_error'] ? 'error' : 'success',
+                $result['conversion_error'] ? 'Word berhasil dibuat, tetapi konversi PDF belum tersedia. Periksa konfigurasi LibreOffice lalu coba Buat Ulang Dokumen.' : 'Word dan PDF siap diperiksa. Unggah dokumen bertanda tangan setelah proses selesai.'
+            );
         });
     }
 
@@ -223,7 +248,7 @@ class EmployeeContractController extends Controller
                 $contract->status = 'pending_signature';
                 $contract->document_fingerprint = $contract->fingerprint();
             }
-            $path = $request->file('signed_document')->store('contracts/'.$contract->id.'/signed', 'local');
+            $path = $request->file('signed_document')->store('contracts/' . $contract->id . '/signed', 'local');
             abort_unless($path, 500, 'Dokumen gagal disimpan.');
             $contract->signed_document_path = $path;
             $contract->save();
@@ -287,11 +312,11 @@ class EmployeeContractController extends Controller
             $event = $contract->events()->findOrFail($request->integer('event'));
             $path = $event->details[$key] ?? null;
         }
-        abort_unless($path && str_starts_with($path, 'contracts/'.$contract->id.'/') && Storage::disk('local')->exists($path), 404);
-        $name = 'PKWT-'.$contract->id.'-'.$kind.'.'.($kind === 'docx' ? 'docx' : 'pdf');
+        abort_unless($path && str_starts_with($path, 'contracts/' . $contract->id . '/') && Storage::disk('local')->exists($path), 404);
+        $name = 'PKWT-' . $contract->id . '-' . $kind . '.' . ($kind === 'docx' ? 'docx' : 'pdf');
 
         return $request->boolean('preview') && $kind !== 'docx'
-            ? response()->file(Storage::disk('local')->path($path), ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="'.$name.'"', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff'])
+            ? response()->file(Storage::disk('local')->path($path), ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="' . $name . '"', 'Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff'])
             : Storage::disk('local')->download($path, $name, ['Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff']);
     }
 
@@ -318,16 +343,23 @@ class EmployeeContractController extends Controller
         $path = $documents->templatePath($template);
         abort_unless(is_file($path), 404);
 
-        return response()->download($path, 'Template-PKWT-'.$template->id.'.docx', ['Cache-Control' => 'private, no-store']);
+        return response()->download($path, 'Template-PKWT-' . $template->id . '.docx', ['Cache-Control' => 'private, no-store']);
     }
 
     private function validated(Request $request, EmployeeContract $contract): array
     {
         $data = $request->validate([
             'contract_number' => ['required', 'string', 'max:150', Rule::unique('employee_contracts')->ignore($contract->id)],
-            'pkwt_date' => 'required|date', 'start_date' => 'required|date', 'end_date' => 'required|date|after_or_equal:start_date',
-            'template_id' => 'required|exists:contract_templates,id', 'job_type' => 'required|string|max:200', 'working_hours' => 'required|string|max:200', 'leave_entitlement' => 'required|string|max:150',
-            'representative_name' => 'required|string|max:150', 'representative_position' => 'required|string|max:150', 'representative_address' => 'required|string|max:500',
+            'pkwt_date' => 'required|date',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'template_id' => 'required|exists:contract_templates,id',
+            'job_type' => 'required|string|max:200',
+            'working_hours' => 'required|string|max:200',
+            'leave_entitlement' => 'required|string|max:150',
+            'representative_name' => 'required|string|max:150',
+            'representative_position' => 'required|string|max:150',
+            'representative_address' => 'required|string|max:500',
         ]);
 
         // Contract issue date may differ from commencement; both remain explicit in the form.
@@ -338,12 +370,24 @@ class EmployeeContractController extends Controller
     {
         $branch = $e->branch ?? $e->site?->branch;
 
-        return ['employee_name' => $e->name, 'employee_nik' => $e->nik, 'employee_phone' => $e->phone_number,
-            'employee_address' => $branch?->branch_address ?: $branch?->branch_name, 'branch_name' => $branch?->branch_name,
-            'basic_salary' => (string) $e->basic_salary, 'position' => $e->position, 'work_location' => $branch?->branch_name ?: $e->site?->location,
-            'job_type' => $e->position, 'working_hours' => 'jam kerja kantor atau sistem shift', 'leave_entitlement' => '12 hari kerja per tahun',
-            'employer' => config('contracts.employer'), 'placement_company' => config('contracts.placement_company'),
-            'representative_name' => config('contracts.representative_name'), 'representative_position' => config('contracts.representative_position'), 'representative_address' => config('contracts.representative_address')];
+        return [
+            'employee_name' => $e->name,
+            'employee_nik' => $e->nik,
+            'employee_phone' => $e->phone_number,
+            'employee_address' => $branch?->branch_address ?: $branch?->branch_name,
+            'branch_name' => $branch?->branch_name,
+            'basic_salary' => (string) $e->basic_salary,
+            'position' => $e->position,
+            'work_location' => $branch?->branch_name ?: $e->site?->location,
+            'job_type' => $e->position,
+            'working_hours' => 'jam kerja kantor atau sistem shift',
+            'leave_entitlement' => '12 hari kerja per tahun',
+            'employer' => config('contracts.employer'),
+            'placement_company' => config('contracts.placement_company'),
+            'representative_name' => config('contracts.representative_name'),
+            'representative_position' => config('contracts.representative_position'),
+            'representative_address' => config('contracts.representative_address')
+        ];
     }
 
     private function validateSnapshot(array $snapshot): void
@@ -358,7 +402,7 @@ class EmployeeContractController extends Controller
             $missing[] = 'gaji pokok';
         }
         if ($missing) {
-            throw ValidationException::withMessages(['employee_id' => 'Lengkapi profil karyawan terlebih dahulu: '.implode(', ', $missing).'.']);
+            throw ValidationException::withMessages(['employee_id' => 'Lengkapi profil karyawan terlebih dahulu: ' . implode(', ', $missing) . '.']);
         }
     }
 
@@ -369,7 +413,7 @@ class EmployeeContractController extends Controller
 
     private function noOverlap(int $employee, string $start, string $end, ?int $except = null): void
     {
-        if (EmployeeContract::where('employee_id', $employee)->where('status', 'active')->when($except, fn ($q) => $q->where('id', '!=', $except))->whereDate('start_date', '<=', $end)->whereDate('end_date', '>=', $start)->exists()) {
+        if (EmployeeContract::where('employee_id', $employee)->where('status', 'active')->when($except, fn($q) => $q->where('id', '!=', $except))->whereDate('start_date', '<=', $end)->whereDate('end_date', '>=', $start)->exists()) {
             throw ValidationException::withMessages(['start_date' => 'Periode bertumpuk dengan kontrak yang sudah disetujui. Periksa riwayat dan tanggal mulai.']);
         }
     }
