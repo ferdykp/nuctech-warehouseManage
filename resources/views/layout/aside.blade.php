@@ -158,7 +158,8 @@
                         </i>
                         <span>Reimbursement</span>
                     </a>
-                    @if (Auth::user()?->role === 'superadmin')
+                    {{-- @if (Auth::user()?->role === 'superadmin') --}}
+                    @if (in_array(Auth::user()?->role, ['superadmin', 'administration']))
                         <a href="{{ route('salary.index') }}"
                             class="{{ $baseItemClass }} {{ request()->routeIs('salary.*') ? $activeClass : $defaultClass }}">
                             <i class="w-5 text-sm text-center fa-solid fa-wallet" aria-hidden="true">

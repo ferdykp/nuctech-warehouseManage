@@ -61,7 +61,7 @@ Route::middleware(['auth', 'nocache'])->group(function () {
         Route::get('/{contract}/edit', [$controller, 'edit'])->name('edit');
         Route::put('/{contract}', [$controller, 'update'])->name('update');
         foreach (['generate', 'reopen', 'signed', 'communication', 'activate', 'cancel'] as $action) {
-            Route::post('/{contract}/'.$action, [$controller, $action])->name($action);
+            Route::post('/{contract}/' . $action, [$controller, $action])->name($action);
         }
         Route::get('/{contract}/download/{kind}', [$controller, 'download'])->name('download');
     });
